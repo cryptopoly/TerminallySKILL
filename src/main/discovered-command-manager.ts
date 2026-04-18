@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir, readdir, unlink, rm } from 'fs/promises'
+import { readFile, mkdir, unlink, rm } from 'fs/promises'
 import { join, extname } from 'path'
 import type { DiscoveredCommand, DiscoveredCommandsData, CommandDefinition } from '../shared/command-schema'
+import { writeJsonAtomic } from './atomic-write'
 import { getDataDir } from './user-data-path'
 
 // Windows executable extensions that should be stripped from user-facing names.
@@ -79,7 +80,7 @@ export async function loadDiscoveredCommands(): Promise<DiscoveredCommandsData> 
  */
 async function save(): Promise<void> {
   await mkdir(getDataDir(), { recursive: true })
-  await writeFile(getDiscoveredFile(), JSON.stringify(cached, null, 2), 'utf-8')
+  await writeJsonAtomic(getDiscoveredFile(), cached)
 }
 
 /**
@@ -188,11 +189,7 @@ export async function saveEnrichedCommand(
 
   // Save full definition to enriched commands directory
   await mkdir(getEnrichedDir(), { recursive: true })
-  await writeFile(
-    join(getEnrichedDir(), `${executable}.json`),
-    JSON.stringify(definition, null, 2),
-    'utf-8'
-  )
+  await writeJsonAtomic(join(getEnrichedDir(), `${executable}.json`), definition)
 }
 
 /**
@@ -233,19 +230,11 @@ export async function saveEnrichedBulk(
     // Use id as filename to ensure uniqueness (e.g., "detected-openclaw-agent.json")
     const fileName = `${def.id}.json`
     fileNames.push(fileName)
-    await writeFile(
-      join(getEnrichedDir(), fileName),
-      JSON.stringify(def, null, 2),
-      'utf-8'
-    )
+    await writeJsonAtomic(join(getEnrichedDir(), fileName), def)
   }
 
   // Write manifest so loader knows which files belong to this executable
-  await writeFile(
-    manifestPath(executable),
-    JSON.stringify(fileNames, null, 2),
-    'utf-8'
-  )
+  await writeJsonAtomic(manifestPath(executable), fileNames)
 
   const nextFiles = new Set(fileNames)
   for (const oldFile of previousManifest) {

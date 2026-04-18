@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir } from 'fs/promises'
+import { readFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
+import { writeJsonAtomic } from './atomic-write'
 import type { Snippet, SnippetsData } from '../shared/snippet-schema'
 import type { StarterSnippetTemplate } from '../shared/starter-pack-schema'
 import { applySnippetUpdates, createSnippetRecord, duplicateSnippetRecord } from './snippet-persistence'
@@ -31,7 +32,7 @@ async function load(): Promise<SnippetsData> {
 async function save(data: SnippetsData): Promise<void> {
   await ensureDataDir()
   cached = data
-  await writeFile(getSnippetsFile(), JSON.stringify(data, null, 2), 'utf-8')
+  await writeJsonAtomic(getSnippetsFile(), data)
 }
 
 export async function getAllSnippets(): Promise<Snippet[]> {

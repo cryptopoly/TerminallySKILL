@@ -58,7 +58,7 @@ const TERMINAL_INPUT_MODES: { id: TerminalInputMode; label: string; desc: string
   }
 ]
 
-type SettingsTabId = 'general' | 'ai' | 'logs' | 'appearance' | 'about'
+type SettingsTabId = 'general' | 'data' | 'ai' | 'logs' | 'appearance' | 'about'
 
 type ProviderCatalogEntry = {
   id: AIProvider['id']
@@ -77,6 +77,7 @@ const SETTINGS_TABS: {
   icon: JSX.Element
 }[] = [
   { id: 'general', label: 'General', icon: <HelpCircle size={13} /> },
+  { id: 'data', label: 'Data', icon: <HardDrive size={13} /> },
   { id: 'ai', label: 'AI', icon: <Zap size={13} /> },
   { id: 'logs', label: 'Logs', icon: <FolderOpen size={13} /> },
   { id: 'appearance', label: 'Theme', icon: <Palette size={13} /> },
@@ -834,6 +835,131 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
           }}
         />
 
+        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-gray-200">Reset Command Trees</div>
+              <div className="text-xs text-gray-500 mt-1 leading-5">
+                Clear discovered/manual commands and generated help-enriched command trees so you can test from a clean command catalog.
+              </div>
+            </div>
+            <button
+              onClick={() => void handleResetCommandTrees()}
+              className="shrink-0 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              Reset
+            </button>
+          </div>
+          <div className="mt-3 text-[11px] text-gray-600 leading-5">
+            Scripts, snippets, projects, settings, and logs are not affected.
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderLogsTab = (): JSX.Element => (
+    <div className="space-y-4">
+      <SectionHeader icon={<FolderOpen size={12} />} title="Logs" />
+      <div className="space-y-3">
+        <SettingToggleCard
+          title="Save Terminal Logs"
+          description="Auto-save terminal sessions when they close, unless a project overrides this"
+          enabled={settings.saveTerminalLogs}
+          onToggle={async () => {
+            const next = !settings.saveTerminalLogs
+            setSaveTerminalLogs(next)
+            await window.electronAPI.updateSettings({ saveTerminalLogs: next })
+          }}
+        />
+
+        <div className="flex items-center justify-between rounded-xl border border-surface-border bg-surface-light p-4 gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium text-gray-200">Log Storage Folder</div>
+            <div className="text-xs text-gray-500 mt-1">Base folder for project-named terminal logs</div>
+            <div className="text-[11px] font-mono text-gray-600 mt-2 truncate">
+              {settings.logDirectory?.trim() || 'Default (app data folder)'}
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            {settings.logDirectory?.trim() && (
+              <button
+                onClick={async () => {
+                  setLogDirectory('')
+                  await window.electronAPI.updateSettings({ logDirectory: '' })
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:text-gray-300 hover:bg-surface transition-colors"
+              >
+                Reset
+              </button>
+            )}
+            <button
+              onClick={async () => {
+                const dir = await window.electronAPI.openDirectoryDialog()
+                if (dir) {
+                  setLogDirectory(dir)
+                  await window.electronAPI.updateSettings({ logDirectory: dir })
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface-border text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
+            >
+              <FolderOpen size={12} />
+              Browse
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderAppearanceTab = (): JSX.Element => (
+    <div className="space-y-4">
+      <SectionHeader icon={<Palette size={12} />} title="Theme" />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {([
+          { id: 'dark', label: 'Dark Themes', description: 'Low-glare palettes for longer terminal sessions.' },
+          { id: 'light', label: 'Light Themes', description: 'Brighter palettes with softer contrast and paper-like surfaces.' }
+        ] as const).map((group) => (
+          <div key={group.id} className="rounded-xl border border-surface-border bg-surface-light/70 p-3">
+            <div className="mb-3">
+              <div className="text-sm font-semibold text-gray-200">{group.label}</div>
+              <div className="mt-1 text-xs text-gray-500">{group.description}</div>
+            </div>
+            <div className="space-y-3">
+              {THEMES.filter((theme) => theme.family === group.id).map((theme) => (
+                <button
+                  key={theme.id}
+                  onClick={() => void handleThemeChange(theme.id)}
+                  className={clsx(
+                    'w-full rounded-xl border px-4 py-4 text-left transition-colors',
+                    settings.theme === theme.id
+                      ? 'border-accent bg-accent/10 text-gray-200'
+                      : 'border-surface-border bg-surface text-gray-500 hover:text-gray-300 hover:border-gray-500'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="h-4 w-4 rounded-full border border-white/15"
+                      style={{ background: theme.dot }}
+                    />
+                    <div>
+                      <div className="text-sm font-medium">{theme.label}</div>
+                      <div className="text-xs text-gray-600 mt-1">{theme.desc}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  const renderDataTab = (): JSX.Element => (
+    <div className="space-y-4">
+      <SectionHeader icon={<HardDrive size={12} />} title="Data" />
+      <div className="space-y-3">
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -1026,124 +1152,6 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
             </div>
           )}
         </div>
-
-        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-gray-200">Reset Command Trees</div>
-              <div className="text-xs text-gray-500 mt-1 leading-5">
-                Clear discovered/manual commands and generated help-enriched command trees so you can test from a clean command catalog.
-              </div>
-            </div>
-            <button
-              onClick={() => void handleResetCommandTrees()}
-              className="shrink-0 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-            >
-              Reset
-            </button>
-          </div>
-          <div className="mt-3 text-[11px] text-gray-600 leading-5">
-            Scripts, snippets, projects, settings, and logs are not affected.
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderLogsTab = (): JSX.Element => (
-    <div className="space-y-4">
-      <SectionHeader icon={<FolderOpen size={12} />} title="Logs" />
-      <div className="space-y-3">
-        <SettingToggleCard
-          title="Save Terminal Logs"
-          description="Auto-save terminal sessions when they close, unless a project overrides this"
-          enabled={settings.saveTerminalLogs}
-          onToggle={async () => {
-            const next = !settings.saveTerminalLogs
-            setSaveTerminalLogs(next)
-            await window.electronAPI.updateSettings({ saveTerminalLogs: next })
-          }}
-        />
-
-        <div className="flex items-center justify-between rounded-xl border border-surface-border bg-surface-light p-4 gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-gray-200">Log Storage Folder</div>
-            <div className="text-xs text-gray-500 mt-1">Base folder for project-named terminal logs</div>
-            <div className="text-[11px] font-mono text-gray-600 mt-2 truncate">
-              {settings.logDirectory?.trim() || 'Default (app data folder)'}
-            </div>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            {settings.logDirectory?.trim() && (
-              <button
-                onClick={async () => {
-                  setLogDirectory('')
-                  await window.electronAPI.updateSettings({ logDirectory: '' })
-                }}
-                className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:text-gray-300 hover:bg-surface transition-colors"
-              >
-                Reset
-              </button>
-            )}
-            <button
-              onClick={async () => {
-                const dir = await window.electronAPI.openDirectoryDialog()
-                if (dir) {
-                  setLogDirectory(dir)
-                  await window.electronAPI.updateSettings({ logDirectory: dir })
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface-border text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
-            >
-              <FolderOpen size={12} />
-              Browse
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderAppearanceTab = (): JSX.Element => (
-    <div className="space-y-4">
-      <SectionHeader icon={<Palette size={12} />} title="Theme" />
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {([
-          { id: 'dark', label: 'Dark Themes', description: 'Low-glare palettes for longer terminal sessions.' },
-          { id: 'light', label: 'Light Themes', description: 'Brighter palettes with softer contrast and paper-like surfaces.' }
-        ] as const).map((group) => (
-          <div key={group.id} className="rounded-xl border border-surface-border bg-surface-light/70 p-3">
-            <div className="mb-3">
-              <div className="text-sm font-semibold text-gray-200">{group.label}</div>
-              <div className="mt-1 text-xs text-gray-500">{group.description}</div>
-            </div>
-            <div className="space-y-3">
-              {THEMES.filter((theme) => theme.family === group.id).map((theme) => (
-                <button
-                  key={theme.id}
-                  onClick={() => void handleThemeChange(theme.id)}
-                  className={clsx(
-                    'w-full rounded-xl border px-4 py-4 text-left transition-colors',
-                    settings.theme === theme.id
-                      ? 'border-accent bg-accent/10 text-gray-200'
-                      : 'border-surface-border bg-surface text-gray-500 hover:text-gray-300 hover:border-gray-500'
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="h-4 w-4 rounded-full border border-white/15"
-                      style={{ background: theme.dot }}
-                    />
-                    <div>
-                      <div className="text-sm font-medium">{theme.label}</div>
-                      <div className="text-xs text-gray-600 mt-1">{theme.desc}</div>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   )
@@ -1180,21 +1188,6 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               await window.electronAPI.updateSettings({ checkForUpdatesOnStartup: next })
             }}
           />
-
-          <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Update Feed URL (Dev Override)</label>
-            <input
-              type="text"
-              value={updateFeedDraft}
-              onChange={(event) => setUpdateFeedDraft(event.target.value)}
-              onBlur={() => void persistUpdateFeedUrl()}
-              placeholder="http://localhost:9090 or https://example.com/latest.json"
-              className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-xs font-mono text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-accent/40"
-            />
-            <div className="mt-2 text-[11px] text-gray-600 leading-5">
-              Leave blank to use the built-in release feed later. Base URLs automatically try <span className="font-mono">/latest.json</span> first, then platform-specific <span className="font-mono">latest-*.yml</span> feeds like Electron Builder&apos;s <span className="font-mono">latest-mac.yml</span>.
-            </div>
-          </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -1306,6 +1299,29 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               )}
             </div>
           )}
+        </div>
+
+        <div className="rounded-xl border border-surface-border bg-surface-light p-4">
+          <div className="text-sm font-medium text-gray-200">Support</div>
+          <div className="text-xs text-gray-500 mt-1 leading-5">
+            TerminallySKILL is a solo indie project. If it&apos;s useful to you, tips help keep it going.
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => void window.electronAPI.openExternal('https://buymeacoffee.com/cryptoraptor')}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
+            >
+              <ExternalLink size={12} />
+              Buy me a coffee
+            </button>
+            <button
+              onClick={() => void window.electronAPI.openExternal('https://www.paypal.com/donate/?hosted_button_id=5VJ5KLNBQ9LRN')}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
+            >
+              <ExternalLink size={12} />
+              PayPal
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1766,6 +1782,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'general' && renderGeneralTab()}
+        {activeTab === 'data' && renderDataTab()}
         {activeTab === 'ai' && renderAITab()}
         {activeTab === 'logs' && renderLogsTab()}
         {activeTab === 'appearance' && renderAppearanceTab()}

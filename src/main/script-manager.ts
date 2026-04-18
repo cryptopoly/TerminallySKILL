@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir } from 'fs/promises'
+import { readFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
+import { writeJsonAtomic } from './atomic-write'
 import type { Script, ScriptsData } from '../shared/script-schema'
 import type { StarterScriptTemplate } from '../shared/starter-pack-schema'
 import type { TVFlowFile } from '../shared/tvflow-schema'
@@ -41,7 +42,7 @@ async function load(): Promise<ScriptsData> {
 async function save(data: ScriptsData): Promise<void> {
   await ensureDataDir()
   cached = data
-  await writeFile(getScriptsFile(), JSON.stringify(data, null, 2), 'utf-8')
+  await writeJsonAtomic(getScriptsFile(), data)
 }
 
 export async function getAllScripts(): Promise<Script[]> {

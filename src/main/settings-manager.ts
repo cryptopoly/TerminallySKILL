@@ -1,5 +1,6 @@
-import { readFile, writeFile, mkdir } from 'fs/promises'
+import { readFile, mkdir } from 'fs/promises'
 import { join } from 'path'
+import { writeJsonAtomic } from './atomic-write'
 import type { AppSettings, AIProvider } from '../shared/settings-schema'
 import { DEFAULT_SETTINGS } from '../shared/settings-schema'
 import { getStoredProviderApiKeys, setStoredProviderApiKeys } from './secret-manager'
@@ -68,7 +69,7 @@ async function save(): Promise<void> {
   await ensureDataDir()
   await setStoredProviderApiKeys(extractProviderApiKeys(cached))
   const persistable = stripProviderApiKeys(cached)
-  await writeFile(getSettingsFile(), JSON.stringify(persistable, null, 2), 'utf-8')
+  await writeJsonAtomic(getSettingsFile(), persistable)
 }
 
 export async function getSettings(): Promise<AppSettings> {

@@ -483,18 +483,23 @@ describe('run-manager', () => {
     const runsPath = join(dataDir, 'runs.json')
     await writeFile(runsPath, JSON.stringify(stale, null, 2), 'utf-8')
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    await chmod(runsPath, 0o444)
+    // Atomic save writes to a sibling .tmp file first, so blocking writes needs
+    // the parent directory to be unwritable, not just the target file.
+    await chmod(dataDir, 0o555)
 
-    const firstLoad = await getRunIndex('proj-1')
-    const secondLoad = await getRunIndex('proj-1')
+    try {
+      const firstLoad = await getRunIndex('proj-1')
+      const secondLoad = await getRunIndex('proj-1')
 
-    expect(firstLoad).toHaveLength(1)
-    expect(firstLoad[0].status).toBe('failed')
-    expect(secondLoad).toHaveLength(1)
-    expect(secondLoad[0].status).toBe('failed')
-    expect(errorSpy).toHaveBeenCalled()
-
-    errorSpy.mockRestore()
+      expect(firstLoad).toHaveLength(1)
+      expect(firstLoad[0].status).toBe('failed')
+      expect(secondLoad).toHaveLength(1)
+      expect(secondLoad[0].status).toBe('failed')
+      expect(errorSpy).toHaveBeenCalled()
+    } finally {
+      await chmod(dataDir, 0o755)
+      errorSpy.mockRestore()
+    }
   })
 
   it('keeps unfinished runs marked running while their terminal session is still active', async () => {

@@ -1,5 +1,6 @@
-import { readFile, writeFile, mkdir } from 'fs/promises'
+import { readFile, mkdir } from 'fs/promises'
 import { join } from 'path'
+import { writeJsonAtomic } from './atomic-write'
 import type { RunRecord, RunStepRecord, RunsData } from '../shared/run-schema'
 import { filterRuns, type RunStatusFilter } from '../shared/run-history'
 import { hasTerminalSession } from './terminal-session-registry'
@@ -176,7 +177,7 @@ async function load(): Promise<RunsData> {
 async function save(data: RunsData): Promise<void> {
   await ensureDataDir()
   cached = data
-  await writeFile(getRunsFile(), JSON.stringify(data, null, 2), 'utf-8')
+  await writeJsonAtomic(getRunsFile(), data)
 }
 
 export async function upsertRunRecord(run: RunRecord): Promise<RunRecord> {

@@ -29,3 +29,9 @@ Thumbs.db
 *.msi
 *.nsis
 *.blockmap
+
+# V8/Node diagnostic dumps
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+isolate-*-v8.log

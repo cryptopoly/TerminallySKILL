@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir } from 'fs/promises'
+import { readFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { safeStorage } from 'electron'
+import { writeJsonAtomic } from './atomic-write'
 import { getDataDir } from './user-data-path'
 
 export interface SecretEnvelope {
@@ -62,7 +63,7 @@ async function loadStore(): Promise<SecretStore> {
 
 async function saveStore(store: SecretStore): Promise<void> {
   await ensureDataDir()
-  await writeFile(getSecretsFile(), JSON.stringify(store, null, 2), 'utf-8')
+  await writeJsonAtomic(getSecretsFile(), store)
 }
 
 export async function getStoredProviderApiKeys(): Promise<Record<string, string>> {
