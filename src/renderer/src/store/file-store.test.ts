@@ -46,6 +46,8 @@ describe('file-store', () => {
     ])
     expect(state.activeFilePath).toBe('/repo/README.md')
     expect(state.activeFile?.name).toBe('README.md')
+    expect(state.activeFile?.readAccess).toBe('permissive')
+    expect(state.activeFile?.source).toBe('unknown')
     expect(state.fileViewerVisible).toBe(true)
   })
 
@@ -112,5 +114,40 @@ describe('file-store', () => {
     expect(state.activeFile?.draftContent).toBe('console.log("after")')
     expect(state.activeFile?.externalModified).toBe(false)
     expect(state.activeFile?.dirty).toBe(false)
+  })
+
+  it('preserves scoped trust metadata across disk refreshes', () => {
+    useFileStore.getState().hydrateFiles(
+      [
+        {
+          path: '/repo/src/app.ts',
+          name: 'app.ts',
+          content: 'console.log("before")',
+          truncated: false,
+          tooLarge: false,
+          size: 21,
+          modifiedAt: 100,
+          readAccess: 'scoped',
+          source: 'project-browser'
+        }
+      ],
+      '/repo/src/app.ts',
+      true
+    )
+
+    useFileStore.getState().refreshFileFromDisk({
+      path: '/repo/src/app.ts',
+      name: 'app.ts',
+      content: 'console.log("after")',
+      truncated: false,
+      tooLarge: false,
+      size: 20,
+      modifiedAt: 200
+    })
+
+    const state = useFileStore.getState()
+    expect(state.activeFile?.content).toBe('console.log("after")')
+    expect(state.activeFile?.readAccess).toBe('scoped')
+    expect(state.activeFile?.source).toBe('project-browser')
   })
 })

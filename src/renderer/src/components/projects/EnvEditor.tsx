@@ -55,9 +55,13 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
     if (!filePath) return
 
     try {
-      const result = await window.electronAPI.readFileContent(filePath)
+      const result = await window.electronAPI.readScopedFileContent(filePath)
       if ('error' in result) {
         setImportError(result.error)
+        return
+      }
+      if ('tooLarge' in result) {
+        setImportError('File is too large to import')
         return
       }
       const parsed = parseDotEnv(result.content)

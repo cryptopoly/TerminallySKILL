@@ -29,17 +29,20 @@ import {
   deleteLog,
   getLogBasePath,
   getLogIndex,
+  readLogContent,
   sanitizeTimestamp,
   sanitizeLogFolderName,
   saveSessionLog,
   searchLogs,
   shouldSaveSessionLog
 } from './log-manager'
+import { resetPathAccessCacheForTests } from './path-access'
 
 describe('log-manager', () => {
   let tempDir: string
 
   beforeEach(async () => {
+    resetPathAccessCacheForTests()
     tempDir = await mkdtemp(join(tmpdir(), 'tv-logs-'))
     mockGetSettings.mockResolvedValue({
       saveTerminalLogs: true,
@@ -47,14 +50,33 @@ describe('log-manager', () => {
     })
     mockGetAllProjects.mockResolvedValue({
       projects: [
-        { id: 'proj-1', name: 'Alpha', logPreference: 'inherit' },
-        { id: 'proj-2', name: 'Beta', logPreference: 'disabled' },
-        { id: 'proj-3', name: 'Gamma', logPreference: 'enabled' }
+        {
+          id: 'proj-1',
+          name: 'Alpha',
+          logPreference: 'inherit',
+          workingDirectory: '/repo/alpha',
+          workspaceTarget: { type: 'local', cwd: '/repo/alpha' }
+        },
+        {
+          id: 'proj-2',
+          name: 'Beta',
+          logPreference: 'disabled',
+          workingDirectory: '/repo/beta',
+          workspaceTarget: { type: 'local', cwd: '/repo/beta' }
+        },
+        {
+          id: 'proj-3',
+          name: 'Gamma',
+          logPreference: 'enabled',
+          workingDirectory: '/repo/gamma',
+          workspaceTarget: { type: 'local', cwd: '/repo/gamma' }
+        }
       ]
     })
   })
 
   afterEach(async () => {
+    resetPathAccessCacheForTests()
     mockGetSettings.mockReset()
     mockGetAllProjects.mockReset()
     await rm(tempDir, { recursive: true, force: true })
@@ -131,6 +153,30 @@ describe('log-manager', () => {
 
     const index = await getLogIndex(null)
     expect(index).toEqual([])
+  })
+
+  it('reads log content through the observed path-access layer', async () => {
+    const log = await saveSessionLog({
+      sessionId: 'term-12',
+      projectId: 'proj-1',
+      projectName: 'Alpha',
+      shell: '/bin/zsh',
+      cwd: '/repo',
+      startedAt: '2026-03-08T15:04:00.000Z',
+      exitCode: 0,
+      content: 'ready\n'
+    })
+
+    await expect(readLogContent(log!.logFilePath)).resolves.toBe('ready\n')
+  })
+
+  it('rejects log reads outside configured log roots', async () => {
+    const externalLogPath = join(tempDir, '..', 'outside.log')
+    await writeFile(externalLogPath, 'outside\n', 'utf8')
+
+    await expect(readLogContent(externalLogPath)).rejects.toThrow(
+      '[path-access] logs:read-content blocked path outside expected roots'
+    )
   })
 
   it('caps search matches per file and skips corrupt metadata files', async () => {

@@ -197,6 +197,24 @@ export const electronAPI = {
   > =>
     ipcRenderer.invoke(IPC_CHANNELS.FILES_READ_CONTENT, filePath),
 
+  readScopedFileContent: (
+    filePath: string
+  ): Promise<
+    | { content: string; truncated: boolean; size: number; modifiedAt: number }
+    | { tooLarge: true; size: number; modifiedAt: number }
+    | { error: string }
+  > =>
+    ipcRenderer.invoke(IPC_CHANNELS.FILES_READ_SCOPED_CONTENT, filePath),
+
+  readApprovedFileContent: (
+    filePath: string
+  ): Promise<
+    | { content: string; truncated: boolean; size: number; modifiedAt: number }
+    | { tooLarge: true; size: number; modifiedAt: number }
+    | { error: string }
+  > =>
+    ipcRenderer.invoke(IPC_CHANNELS.FILES_READ_APPROVED_CONTENT, filePath),
+
   writeFileContent: (
     filePath: string,
     content: string

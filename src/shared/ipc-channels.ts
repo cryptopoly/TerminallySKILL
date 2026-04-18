@@ -38,6 +38,8 @@ export const IPC_CHANNELS = {
   FILES_CREATE_FILE: 'files:create-file',
   FILES_GET_METADATA: 'files:get-metadata',
   FILES_READ_CONTENT: 'files:read-content',
+  FILES_READ_SCOPED_CONTENT: 'files:read-scoped-content',
+  FILES_READ_APPROVED_CONTENT: 'files:read-approved-content',
   FILES_WRITE_CONTENT: 'files:write-content',
   FILES_OPEN_IN_EXPLORER: 'files:open-in-explorer',
   FILES_REVEAL_IN_EXPLORER: 'files:reveal-in-explorer',

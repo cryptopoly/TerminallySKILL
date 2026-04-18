@@ -83,7 +83,7 @@ export function FileBrowser(): JSX.Element {
     const filePath = `${currentPath}/${entry.name}`
     setOpeningFile(entry.name)
     try {
-      const result = await window.electronAPI.readFileContent(filePath)
+      const result = await window.electronAPI.readScopedFileContent(filePath)
       if ('error' in result) {
         // Binary or unreadable — fall back to reveal in Finder
         window.electronAPI.revealInExplorer(filePath)
@@ -95,7 +95,10 @@ export function FileBrowser(): JSX.Element {
           content: '',
           truncated: false,
           tooLarge: true,
-          size: result.size
+          size: result.size,
+          modifiedAt: result.modifiedAt,
+          readAccess: 'scoped',
+          source: 'project-browser'
         })
       } else {
         setActiveFile({
@@ -105,7 +108,9 @@ export function FileBrowser(): JSX.Element {
           truncated: result.truncated,
           tooLarge: false,
           size: result.size,
-          modifiedAt: result.modifiedAt
+          modifiedAt: result.modifiedAt,
+          readAccess: 'scoped',
+          source: 'project-browser'
         })
       }
     } finally {
@@ -172,7 +177,9 @@ export function FileBrowser(): JSX.Element {
         content: '',
         truncated: false,
         tooLarge: false,
-        size: 0
+        size: 0,
+        readAccess: 'scoped',
+        source: 'created-file'
       })
       await loadDirectory(currentPath, showHidden)
       cancelCreateFile()

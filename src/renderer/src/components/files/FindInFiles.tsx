@@ -4,7 +4,6 @@ import clsx from 'clsx'
 import { useProjectStore } from '../../store/project-store'
 import { useFileStore } from '../../store/file-store'
 import { resolveProjectWorkingDirectory, isLocalProjectWorkspaceTarget } from '../../../../shared/project-schema'
-import path from 'path-browserify'
 
 interface SearchMatch {
   lineNumber: number
@@ -103,14 +102,34 @@ export function FindInFiles(): JSX.Element {
   }
 
   const openFileAtLine = useCallback(async (filePath: string, lineNumber: number) => {
-    const result = await window.electronAPI.readFileContent(filePath)
+    const result = await window.electronAPI.readScopedFileContent(filePath)
     if ('error' in result) return
     const name = getFileName(filePath)
     setPendingJumpLine(lineNumber)
     if ('tooLarge' in result) {
-      setActiveFile({ path: filePath, name, content: '', truncated: false, tooLarge: true, size: result.size })
+      setActiveFile({
+        path: filePath,
+        name,
+        content: '',
+        truncated: false,
+        tooLarge: true,
+        size: result.size,
+        modifiedAt: result.modifiedAt,
+        readAccess: 'scoped',
+        source: 'find-in-files'
+      })
     } else {
-      setActiveFile({ path: filePath, name, content: result.content, truncated: result.truncated, tooLarge: false, size: result.size, modifiedAt: result.modifiedAt })
+      setActiveFile({
+        path: filePath,
+        name,
+        content: result.content,
+        truncated: result.truncated,
+        tooLarge: false,
+        size: result.size,
+        modifiedAt: result.modifiedAt,
+        readAccess: 'scoped',
+        source: 'find-in-files'
+      })
     }
   }, [setActiveFile, setPendingJumpLine])
 

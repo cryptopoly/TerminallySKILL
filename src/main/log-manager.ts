@@ -3,6 +3,7 @@ import { join } from 'path'
 import type { SessionLogMeta, LogSearchResult } from '../shared/log-schema'
 import { getSettings } from './settings-manager'
 import { getAllProjects } from './project-manager'
+import { observePathAccess } from './path-access'
 import { getLogsDir } from './user-data-path'
 
 export async function resolveLogBaseDir(): Promise<string> {
@@ -147,7 +148,12 @@ export async function getLogsByProject(projectId: string): Promise<SessionLogMet
 }
 
 export async function readLogContent(logFilePath: string): Promise<string> {
-  return readFile(logFilePath, 'utf-8')
+  const observed = await observePathAccess(logFilePath, {
+    purpose: 'logs:read-content',
+    expectedKinds: ['logs-dir', 'configured-log-dir'],
+    mode: 'enforce'
+  })
+  return readFile(observed.path, 'utf-8')
 }
 
 export async function searchLogs(
@@ -178,13 +184,19 @@ export async function searchLogs(
 }
 
 export async function deleteLog(logFilePath: string): Promise<void> {
+  const observed = await observePathAccess(logFilePath, {
+    purpose: 'logs:delete',
+    expectedKinds: ['logs-dir', 'configured-log-dir'],
+    mode: 'enforce'
+  })
+
   try {
-    await unlink(logFilePath)
+    await unlink(observed.path)
   } catch {
     // ignore
   }
   // Delete companion .meta.json
-  const metaPath = logFilePath.replace(/\.log$/, '.meta.json')
+  const metaPath = observed.path.replace(/\.log$/, '.meta.json')
   try {
     await unlink(metaPath)
   } catch {

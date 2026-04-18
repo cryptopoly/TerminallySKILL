@@ -1,5 +1,14 @@
 import { create } from 'zustand'
 
+export type FileReadAccess = 'scoped' | 'permissive'
+export type FileOpenSource =
+  | 'project-browser'
+  | 'project-restore'
+  | 'find-in-files'
+  | 'created-file'
+  | 'terminal-link'
+  | 'unknown'
+
 export interface ActiveFile {
   path: string
   name: string
@@ -8,6 +17,8 @@ export interface ActiveFile {
   tooLarge: boolean
   size: number
   modifiedAt?: number
+  readAccess?: FileReadAccess
+  source?: FileOpenSource
 }
 
 export interface FileTab extends ActiveFile {
@@ -15,10 +26,32 @@ export interface FileTab extends ActiveFile {
   editMode: boolean
   dirty: boolean
   externalModified: boolean
+  readAccess: FileReadAccess
+  source: FileOpenSource
 }
 
 function getDefaultEditMode(file: ActiveFile): boolean {
   return !file.truncated && !file.tooLarge
+}
+
+function resolveFileReadAccess(file: ActiveFile): FileReadAccess {
+  return file.readAccess ?? 'permissive'
+}
+
+function resolveFileOpenSource(file: ActiveFile): FileOpenSource {
+  return file.source ?? 'unknown'
+}
+
+function createFileTab(file: ActiveFile): FileTab {
+  return {
+    ...file,
+    readAccess: resolveFileReadAccess(file),
+    source: resolveFileOpenSource(file),
+    draftContent: file.content,
+    editMode: getDefaultEditMode(file),
+    dirty: false,
+    externalModified: false
+  }
 }
 
 function deriveActiveFile(openFiles: FileTab[], activeFilePath: string | null): FileTab | null {
@@ -63,13 +96,7 @@ export const useFileStore = create<FileStore>((set) => ({
   requestCloseActiveFile: () => set((state) => ({ closeActiveFileRequest: state.closeActiveFileRequest + 1 })),
   hydrateFiles: (files, activeFilePath, visible = false) =>
     set(() => {
-      const nextOpenFiles: FileTab[] = files.map((file) => ({
-        ...file,
-        draftContent: file.content,
-        editMode: getDefaultEditMode(file),
-        dirty: false,
-        externalModified: false
-      }))
+      const nextOpenFiles: FileTab[] = files.map((file) => createFileTab(file))
       const nextActiveFilePath =
         activeFilePath && nextOpenFiles.some((file) => file.path === activeFilePath)
           ? activeFilePath
@@ -121,15 +148,11 @@ export const useFileStore = create<FileStore>((set) => ({
               truncated: file.truncated,
               tooLarge: file.tooLarge,
               size: file.size,
-              modifiedAt: file.modifiedAt
+              modifiedAt: file.modifiedAt,
+              readAccess: file.readAccess ?? existingFile.readAccess,
+              source: file.source ?? existingFile.source
             }
-          : {
-              ...file,
-              draftContent: file.content,
-              editMode: getDefaultEditMode(file),
-              dirty: false,
-              externalModified: false
-            }
+          : createFileTab(file)
 
         const nextOpenFiles = state.openFiles.map((openFile, index) =>
           index === existingIndex ? nextFile : openFile
@@ -143,13 +166,7 @@ export const useFileStore = create<FileStore>((set) => ({
         }
       }
 
-      const nextFile: FileTab = {
-        ...file,
-        draftContent: file.content,
-        editMode: getDefaultEditMode(file),
-        dirty: false,
-        externalModified: false
-      }
+      const nextFile = createFileTab(file)
       const nextOpenFiles = [...state.openFiles, nextFile]
 
       return {
@@ -262,6 +279,8 @@ export const useFileStore = create<FileStore>((set) => ({
           ? {
               ...openFile,
               ...file,
+              readAccess: file.readAccess ?? openFile.readAccess,
+              source: file.source ?? openFile.source,
               draftContent: file.content,
               editMode: getDefaultEditMode(file),
               dirty: false,

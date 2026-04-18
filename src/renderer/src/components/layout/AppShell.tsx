@@ -42,6 +42,15 @@ function areStringArraysEqual(left: string[], right: string[]): boolean {
   return left.every((value, index) => value === right[index])
 }
 
+function isPathWithinRoot(pathValue: string, rootPath: string): boolean {
+  const normalizedRoot = rootPath.replace(/[\\/]+$/, '')
+  return (
+    pathValue === normalizedRoot ||
+    pathValue.startsWith(`${normalizedRoot}/`) ||
+    pathValue.startsWith(`${normalizedRoot}\\`)
+  )
+}
+
 export function AppShell(): JSX.Element {
   const isMac = navigator.platform.toLowerCase().includes('mac')
   const terminalVisible = useTerminalStore((s) => s.terminalVisible)
@@ -387,6 +396,7 @@ export function AppShell(): JSX.Element {
       const shouldShowFileViewer = activeProject.workspaceLayout.sidebarTab === 'files'
       const savedPaths = activeProject.workspaceLayout.openFilePaths ?? []
       const savedActiveFilePath = activeProject.workspaceLayout.activeFilePath
+      const projectRoot = resolveProjectWorkingDirectory(activeProject)
 
       if (!isLocalProjectWorkspaceTarget(activeProject.workspaceTarget) || savedPaths.length === 0) {
         if (!cancelled) {
@@ -400,7 +410,10 @@ export function AppShell(): JSX.Element {
 
       for (const filePath of savedPaths) {
         try {
-          const result = await window.electronAPI.readFileContent(filePath)
+          const useScopedRead = isPathWithinRoot(filePath, projectRoot)
+          const result = useScopedRead
+            ? await window.electronAPI.readScopedFileContent(filePath)
+            : await window.electronAPI.readFileContent(filePath)
           if ('error' in result) {
             continue
           }
@@ -413,7 +426,9 @@ export function AppShell(): JSX.Element {
               truncated: false,
               tooLarge: true,
               size: result.size,
-              modifiedAt: result.modifiedAt
+              modifiedAt: result.modifiedAt,
+              readAccess: useScopedRead ? 'scoped' : 'permissive',
+              source: 'project-restore'
             })
             continue
           }
@@ -425,7 +440,9 @@ export function AppShell(): JSX.Element {
             truncated: result.truncated,
             tooLarge: false,
             size: result.size,
-            modifiedAt: result.modifiedAt
+            modifiedAt: result.modifiedAt,
+            readAccess: useScopedRead ? 'scoped' : 'permissive',
+            source: 'project-restore'
           })
         } catch (error) {
           console.error(`Failed to restore persisted file tab for ${filePath}:`, error)

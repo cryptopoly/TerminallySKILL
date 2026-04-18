@@ -1868,7 +1868,7 @@ function XTermInstance({
                 ? text.replace('~/', `${process.env.HOME ?? '/Users'}`)
                 : text
               void (async () => {
-                const result = await window.electronAPI.readFileContent(resolvedPath)
+                const result = await window.electronAPI.readApprovedFileContent(resolvedPath)
                 if ('error' in result || 'tooLarge' in result) {
                   window.electronAPI.revealInExplorer(resolvedPath)
                 } else {
@@ -1878,7 +1878,11 @@ function XTermInstance({
                     name,
                     content: result.content,
                     truncated: result.truncated ?? false,
-                    size: result.size
+                    tooLarge: false,
+                    size: result.size,
+                    modifiedAt: result.modifiedAt,
+                    readAccess: 'scoped',
+                    source: 'terminal-link'
                   })
                   useFileStore.getState().setFileViewerVisible(true)
                 }

@@ -280,7 +280,9 @@ export function FileViewer(): JSX.Element {
     const currentFile = useFileStore.getState().openFiles.find((file) => file.path === filePath)
     if (!currentFile) return
 
-    const result = await window.electronAPI.readFileContent(filePath)
+    const result = currentFile.readAccess === 'scoped'
+      ? await window.electronAPI.readScopedFileContent(filePath)
+      : await window.electronAPI.readFileContent(filePath)
     if ('error' in result) {
       setRunError(`Could not reload ${currentFile.name}: ${result.error}`)
       return
