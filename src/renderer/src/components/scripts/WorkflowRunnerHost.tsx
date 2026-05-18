@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useRunScript } from '../../hooks/useRunScript'
 import clsx from 'clsx'
 import { AlertTriangle, CheckCircle2, Loader2, PauseCircle, Play, Square, XCircle } from 'lucide-react'
@@ -17,25 +18,28 @@ import { useProjectStore } from '../../store/project-store'
 import { buildEnvOverrides } from '../../../../shared/project-schema'
 import type { RunRecord, RunStepRecord, TerminalSessionInfo } from '../../../../shared/run-schema'
 import { buildProjectWorkspaceCommandString } from '../../../../shared/workspace-target'
+import { formatWorkflowRunError } from '../../lib/workflow-run-errors'
 
-function getStatusLabel(status: WorkflowRunStatus): string {
+type ScriptTranslator = (key: string, options?: Record<string, unknown>) => string
+
+function getStatusLabel(status: WorkflowRunStatus, t: ScriptTranslator): string {
   switch (status) {
     case 'waiting_for_shell':
-      return 'Waiting for shell'
+      return t('runner.status.waitingForShell')
     case 'waiting_for_delay':
-      return 'Waiting for delay'
+      return t('runner.status.waitingForDelay')
     case 'awaiting_approval':
-      return 'Awaiting approval'
+      return t('runner.status.awaitingApproval')
     case 'running_command':
-      return 'Running step'
+      return t('runner.status.runningStep')
     case 'completed':
-      return 'Completed'
+      return t('runner.status.completed')
     case 'failed':
-      return 'Failed'
+      return t('runner.status.failed')
     case 'cancelled':
-      return 'Cancelled'
+      return t('runner.status.cancelled')
     default:
-      return 'Running'
+      return t('runner.status.running')
   }
 }
 
@@ -250,6 +254,7 @@ export function WorkflowRunPanel({
   sessionId: string
   className?: string
 }): JSX.Element | null {
+  const { t } = useTranslation('scripts')
   const activeRun = useWorkflowRunnerStore((s) => s.runsBySession[sessionId] ?? null)
   const { approveCurrentStep, cancelRun, dismissRun } = useWorkflowRunnerStore()
 
@@ -272,7 +277,7 @@ export function WorkflowRunPanel({
         <div className="min-w-0">
           <div className="text-sm font-semibold text-gray-200 truncate">{activeRun.script.name}</div>
           <div className={`text-xs mt-1 ${statusTone}`}>
-            {getStatusLabel(activeRun.status)}
+            {getStatusLabel(activeRun.status, t)}
             {progressLabel ? ` · ${progressLabel}` : ''}
           </div>
         </div>
@@ -283,7 +288,7 @@ export function WorkflowRunPanel({
               className="tv-btn-accent h-8 px-3 text-xs"
             >
               <Play size={12} />
-              Continue
+              {t('runner.actions.continue')}
             </button>
           )}
           {!isTerminalRunStatus(activeRun.status) ? (
@@ -297,14 +302,14 @@ export function WorkflowRunPanel({
               className="tv-btn-ghost h-8 px-3 text-xs"
             >
               <Square size={12} />
-              Stop
+              {t('runner.actions.stop')}
             </button>
           ) : (
             <button
               onClick={() => dismissRun(sessionId)}
               className="tv-btn-ghost h-8 px-3 text-xs"
             >
-              Close
+              {t('runner.actions.close')}
             </button>
           )}
         </div>
@@ -357,7 +362,7 @@ export function WorkflowRunPanel({
                 )}
                 {isCurrent && step.type === 'command' && (
                   <span className="ml-auto text-[10px] text-gray-500 shrink-0">
-                    attempt {Math.max(step.attempts, 1)} / {step.retryCount + 1}
+                    {t('runner.attempt', { current: Math.max(step.attempts, 1), total: step.retryCount + 1 })}
                   </span>
                 )}
               </div>
@@ -374,7 +379,7 @@ export function WorkflowRunPanel({
 
               {isExpanded && step.type === 'command' && step.exitCode !== null && (
                 <div className="mt-1.5 text-[11px] text-gray-500">
-                  exit {step.exitCode}
+                  {t('runner.exit', { code: step.exitCode })}
                 </div>
               )}
             </div>
@@ -384,7 +389,7 @@ export function WorkflowRunPanel({
         {activeRun.error && (
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-gray-400 flex items-start gap-2">
             <AlertTriangle size={13} className="mt-0.5 shrink-0 text-destructive" />
-            <span>{activeRun.error}</span>
+            <span>{formatWorkflowRunError(activeRun.error, t)}</span>
           </div>
         )}
       </div>

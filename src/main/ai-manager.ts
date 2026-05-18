@@ -1,5 +1,10 @@
 import { getSettings } from './settings-manager'
-import type { AIProvider, AIRoutingTarget } from '../shared/settings-schema'
+import type { AIProvider, AIRoutingTarget, AppSettings } from '../shared/settings-schema'
+import {
+  LOCALE_METADATA,
+  resolveAIResponseLocale,
+  resolveLocalePreference
+} from '../shared/locale-schema'
 import type {
   CommandDefinition,
   CommandOption,
@@ -36,6 +41,28 @@ const OPENAI_COMPATIBLE_PROVIDER_IDS = new Set<AIProvider['id']>([
   'openai-compatible',
   'lmstudio'
 ])
+
+function getHostLocaleCandidates(): string[] {
+  const resolved = Intl.DateTimeFormat().resolvedOptions().locale
+  return resolved ? [resolved] : []
+}
+
+function withLocaleInstruction(
+  prompt: { instructions: string; input: string },
+  settings: AppSettings
+): { instructions: string; input: string } {
+  const appLocale = resolveLocalePreference(settings.uiLocale, getHostLocaleCandidates())
+  const responseLocale = resolveAIResponseLocale(settings.aiResponseLocale, appLocale)
+  const languageName = LOCALE_METADATA[responseLocale].englishName
+  const instruction =
+    `Respond in ${languageName}. User-facing prose and JSON string values should use this language. ` +
+    'Preserve terminal commands, executable names, flags, file paths, environment variables, code, and shell output exactly as written unless the user explicitly asks to translate surrounding prose only.'
+
+  return {
+    ...prompt,
+    instructions: `${prompt.instructions}\n\n${instruction}`
+  }
+}
 
 export function buildCommandReviewPrompt(request: AICommandReviewRequest): {
   instructions: string
@@ -1183,6 +1210,9 @@ export async function runAIAction(request: AIActionRequest): Promise<AIActionRes
     default:
       throw new Error(`Unsupported AI action: ${(request as { action?: string }).action ?? 'unknown'}`)
   }
+
+  prompt = withLocaleInstruction(prompt, settings)
+
   let content: string | null = null
   let resolvedModel = routingCandidates[0].model
   let resolvedProvider = routingCandidates[0].provider

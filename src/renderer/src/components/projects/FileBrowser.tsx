@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import {
   Folder,
   File,
@@ -28,6 +29,7 @@ interface FileEntry {
 }
 
 export function FileBrowser(): JSX.Element {
+  const { t } = useTranslation('files')
   const activeProject = useProjectStore((s) => s.activeProject)
   const setActiveFile = useFileStore((s) => s.setActiveFile)
   const [currentPath, setCurrentPath] = useState<string>('')
@@ -148,11 +150,11 @@ export function FileBrowser(): JSX.Element {
   const submitCreateFile = async (): Promise<void> => {
     const trimmedName = newFileName.trim()
     if (!trimmedName) {
-      setCreateError('Enter a file name, including its extension if you want one.')
+      setCreateError(t('browser.errors.enterFileName'))
       return
     }
     if (trimmedName === '.' || trimmedName === '..' || /[\\/]/.test(trimmedName)) {
-      setCreateError('Use a file name only, not a nested path.')
+      setCreateError(t('browser.errors.fileNameOnly'))
       return
     }
 
@@ -164,9 +166,9 @@ export function FileBrowser(): JSX.Element {
       const result = await window.electronAPI.createFile(filePath)
       if ('error' in result) {
         if (result.error.includes('EEXIST')) {
-          setCreateError('A file with that name already exists here.')
+          setCreateError(t('browser.errors.exists'))
         } else {
-          setCreateError('Could not create that file just now.')
+          setCreateError(t('browser.errors.failed'))
         }
         return
       }
@@ -205,7 +207,7 @@ export function FileBrowser(): JSX.Element {
   if (!activeProject) {
     return (
       <div className="h-full flex items-center justify-center text-gray-600 text-sm p-4">
-        Select a project to browse files
+        {t('browser.selectProject')}
       </div>
     )
   }
@@ -214,10 +216,14 @@ export function FileBrowser(): JSX.Element {
     return (
       <div className="h-full flex items-center justify-center p-6">
         <div className="max-w-sm text-center space-y-3">
-          <div className="text-sm font-medium text-gray-300">File browser is local-only for now</div>
+          <div className="text-sm font-medium text-gray-300">{t('browser.localOnlyTitle')}</div>
           <div className="text-xs text-gray-500 leading-6">
-            This workspace targets <span className="font-mono text-gray-400">{getProjectWorkspaceTargetSummary(activeProject)}</span>.
-            Run commands over SSH from the command builder, scripts, or snippets instead.
+            <Trans
+              i18nKey="browser.localOnlyDescription"
+              ns="files"
+              values={{ target: getProjectWorkspaceTargetSummary(activeProject) }}
+              components={{ target: <span className="font-mono text-gray-400" /> }}
+            />
           </div>
         </div>
       </div>
@@ -231,28 +237,28 @@ export function FileBrowser(): JSX.Element {
         <button
           onClick={navigateUp}
           className="p-1.5 rounded hover:bg-surface-light text-gray-500 hover:text-gray-300 transition-colors"
-          title="Go up"
+          title={t('browser.goUp')}
         >
           <ChevronLeft size={14} />
         </button>
         <button
           onClick={goHome}
           className="p-1.5 rounded hover:bg-surface-light text-gray-500 hover:text-gray-300 transition-colors"
-          title="Project root"
+          title={t('browser.projectRoot')}
         >
           <Home size={14} />
         </button>
         <button
           onClick={() => loadDirectory(currentPath)}
           className="p-1.5 rounded hover:bg-surface-light text-gray-500 hover:text-gray-300 transition-colors"
-          title="Refresh"
+          title={t('browser.refresh')}
         >
           <RefreshCw size={14} />
         </button>
         <button
           onClick={beginCreateFile}
           className="p-1.5 rounded hover:bg-surface-light text-gray-500 hover:text-gray-300 transition-colors"
-          title="Create file in this folder"
+          title={t('browser.createFile')}
         >
           <FilePlus size={14} />
         </button>
@@ -270,7 +276,7 @@ export function FileBrowser(): JSX.Element {
               ? 'bg-accent/20 text-accent-light'
               : 'hover:bg-surface-light text-gray-500 hover:text-gray-300'
           )}
-          title="Toggle hidden files"
+          title={t('browser.toggleHidden')}
         >
           <Eye size={14} />
         </button>
@@ -303,7 +309,7 @@ export function FileBrowser(): JSX.Element {
         <button
           onClick={openInExplorer}
           className="p-1.5 rounded hover:bg-surface-light text-gray-500 hover:text-gray-300 transition-colors"
-          title="Open in Finder/Explorer"
+          title={t('browser.openExternal')}
         >
           <ExternalLink size={14} />
         </button>
@@ -336,7 +342,7 @@ export function FileBrowser(): JSX.Element {
               onClick={() => void submitCreateFile()}
               disabled={creatingFile}
               className="h-9 px-3 rounded-lg border border-surface-border bg-accent text-white hover:bg-accent/90 disabled:opacity-60 transition-colors"
-              title="Create file"
+              title={t('browser.createFileAction')}
             >
               <Check size={14} />
             </button>
@@ -344,7 +350,7 @@ export function FileBrowser(): JSX.Element {
               onClick={cancelCreateFile}
               disabled={creatingFile}
               className="h-9 px-3 rounded-lg border border-surface-border text-gray-400 hover:text-gray-200 hover:bg-surface-light disabled:opacity-60 transition-colors"
-              title="Cancel"
+              title={t('browser.cancel')}
             >
               <X size={14} />
             </button>
@@ -353,7 +359,12 @@ export function FileBrowser(): JSX.Element {
             <div className="mt-2 text-xs text-red-400">{createError}</div>
           ) : (
             <div className="mt-2 text-xs text-gray-500">
-              Create an empty file in <span className="font-mono text-gray-400">{currentPath}</span>.
+              <Trans
+                i18nKey="browser.createEmptyFile"
+                ns="files"
+                values={{ path: currentPath }}
+                components={{ path: <span className="font-mono text-gray-400" /> }}
+              />
             </div>
           )}
         </div>
@@ -362,9 +373,9 @@ export function FileBrowser(): JSX.Element {
       {/* File list */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="text-center text-gray-500 text-sm py-8">Loading...</div>
+          <div className="text-center text-gray-500 text-sm py-8">{t('browser.loading')}</div>
         ) : entries.length === 0 ? (
-          <div className="text-center text-gray-600 text-sm py-8">Empty directory</div>
+          <div className="text-center text-gray-600 text-sm py-8">{t('browser.emptyDirectory')}</div>
         ) : (
           <div className="py-1">
             {entries.map((entry) => (

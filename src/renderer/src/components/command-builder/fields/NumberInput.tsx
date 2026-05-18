@@ -1,4 +1,5 @@
 import { Minus, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { CommandOption } from '../../../../../shared/command-schema'
 import { OptionInfoIcon } from '../../ui/OptionInfoIcon'
 
@@ -9,6 +10,7 @@ interface NumberInputProps {
 }
 
 export function NumberInput({ option, value, onChange }: NumberInputProps): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const flag = option.short || option.long || ''
   const min = option.validation?.min
   const max = option.validation?.max
@@ -60,9 +62,9 @@ export function NumberInput({ option, value, onChange }: NumberInputProps): JSX.
         </button>
         {(min !== undefined || max !== undefined) && (
           <span className="text-xs text-gray-500 ml-2">
-            {min !== undefined && `min: ${min}`}
+            {min !== undefined && t('fields.min', { value: min })}
             {min !== undefined && max !== undefined && ' / '}
-            {max !== undefined && `max: ${max}`}
+            {max !== undefined && t('fields.max', { value: max })}
           </span>
         )}
       </div>

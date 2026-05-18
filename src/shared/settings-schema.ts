@@ -1,3 +1,10 @@
+import type { AIResponseLocalePreference, LocalePreference } from './locale-schema'
+import {
+  DEFAULT_AI_RESPONSE_LOCALE,
+  DEFAULT_FORMAT_LOCALE,
+  DEFAULT_UI_LOCALE
+} from './locale-schema'
+
 export type Theme = 'void' | 'ember' | 'dusk' | 'forest' | 'chalk' | 'mist' | 'sand' | 'stone'
 export type TerminalInputMode = 'classic' | 'editor'
 export type AIProviderConnectionType = 'api-key' | 'local'
@@ -61,6 +68,12 @@ export interface AppSettings {
   startupBehavior: 'dashboard' | 'last-project'
   /** Custom data directory. Empty string = use default Electron userData path */
   customDataDirectory: string
+  /** UI language. "system" follows the OS/browser preference. */
+  uiLocale: LocalePreference
+  /** Locale used for date, time, number, and sort formatting. */
+  formatLocale: LocalePreference
+  /** Language requested for AI prose responses. Commands and code stay literal. */
+  aiResponseLocale: AIResponseLocalePreference
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -83,6 +96,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sidebarTabOrder: ['scripts', 'commands', 'snippets', 'files', 'logs'],
   startupBehavior: 'dashboard',
   customDataDirectory: '',
+  uiLocale: DEFAULT_UI_LOCALE,
+  formatLocale: DEFAULT_FORMAT_LOCALE,
+  aiResponseLocale: DEFAULT_AI_RESPONSE_LOCALE,
   aiProviders: [
     {
       id: 'openai',

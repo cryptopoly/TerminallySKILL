@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, Check, Square, CheckSquare, Layers, Loader2, Radar } from 'lucide-react'
 import { CATEGORY_LABELS } from '../../../../shared/category-labels'
 
@@ -19,6 +20,7 @@ export function CategorySelector({
   scanning,
   onClose
 }: CategorySelectorProps): JSX.Element {
+  const { t } = useTranslation('commands')
   const [selected, setSelected] = useState<Set<string>>(new Set(enabledCategories))
 
   // Show all categories that have commands OR are in the labels map
@@ -57,7 +59,7 @@ export function CategorySelector({
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
           <div className="flex items-center gap-2">
             <Layers size={16} className="text-accent-light" />
-            <h2 className="text-lg font-semibold text-gray-200">Command Groups</h2>
+            <h2 className="text-lg font-semibold text-gray-200">{t('categorySelector.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -73,17 +75,17 @@ export function CategorySelector({
             onClick={selectAll}
             className="text-xs text-accent-light hover:text-accent transition-colors"
           >
-            Select All
+            {t('categorySelector.selectAll')}
           </button>
           <span className="text-gray-700">|</span>
           <button
             onClick={deselectAll}
             className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
           >
-            Deselect All
+            {t('categorySelector.deselectAll')}
           </button>
           <span className="ml-auto text-xs text-gray-600">
-            {selected.size} of {categoriesWithCommands.length} selected
+            {t('categorySelector.selectedOfTotal', { selected: selected.size, total: categoriesWithCommands.length })}
           </span>
         </div>
 
@@ -107,7 +109,7 @@ export function CategorySelector({
                 <span className={`flex-1 text-sm ${isChecked ? 'text-gray-200' : 'text-gray-400'}`}>
                   {CATEGORY_LABELS[cat] || cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                 </span>
-                <span className="text-xs text-gray-600">{count} cmd{count !== 1 ? 's' : ''}</span>
+                <span className="text-xs text-gray-600">{t('categorySelector.commandCount', { count })}</span>
               </button>
             )
           })}
@@ -124,18 +126,17 @@ export function CategorySelector({
               {scanning ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  Scanning...
+                  {t('categorySelector.scanning')}
                 </>
               ) : (
                 <>
                   <Radar size={14} />
-                  Scan for Installed Commands
+                  {t('categorySelector.scanInstalled')}
                 </>
               )}
             </button>
             <p className="mt-2 text-[11px] text-gray-600 leading-relaxed">
-              This scan only shows commands that are actually installed on this machine.
-              Use it to choose which command trees should appear in TerminallySKILL.
+              {t('categorySelector.scanDescription')}
             </p>
           </div>
         )}
@@ -146,14 +147,14 @@ export function CategorySelector({
             onClick={onClose}
             className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors"
           >
-            Cancel
+            {t('common:actions.cancel')}
           </button>
           <button
             onClick={() => onSave(Array.from(selected))}
             className="flex items-center gap-2 px-5 py-2 rounded-lg bg-accent hover:bg-accent-light text-white text-sm font-medium transition-colors"
           >
             <Check size={14} />
-            Save
+            {t('categorySelector.save')}
           </button>
         </div>
       </div>

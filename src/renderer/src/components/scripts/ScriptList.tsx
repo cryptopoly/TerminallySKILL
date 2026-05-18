@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, ScrollText, Clock, Trash2, Copy, Play, X, Download, Share2 } from 'lucide-react'
 import clsx from 'clsx'
 import { useScriptStore } from '../../store/script-store'
 import { useProjectStore } from '../../store/project-store'
+import { useSettingsStore } from '../../store/settings-store'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
 import { isTerminalRunStatus, useWorkflowRunnerStore } from '../../store/workflow-runner-store'
 import { ScriptSelector, type ScriptSelection } from './ScriptSelector'
@@ -12,18 +14,21 @@ import { buildScriptExecutionPlan, buildScriptPreparationSteps } from '../../../
 import { WorkflowRunDialog } from './WorkflowRunDialog'
 import { createProjectTerminalSession, ensureProjectExecutionSession } from '../../lib/workspace-session'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { formatDate } from '../../i18n/format'
 
 interface ScriptListProps {
   onSelectScript: (script: Script) => void
 }
 
 export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
+  const { t } = useTranslation('scripts')
   const scripts = useScriptStore((s) => s.scripts)
   const activeScript = useScriptStore((s) => s.activeScript)
   const { addScriptToStore, removeScriptFromStore } = useScriptStore()
   const activeProject = useProjectStore((s) => s.activeProject)
   const projects = useProjectStore((s) => s.projects)
   const { updateProjectInStore } = useProjectStore()
+  const settings = useSettingsStore((s) => s.settings)
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
   const startWorkflowRun = useWorkflowRunnerStore((s) => s.startRun)
   const { activeSessionId, splitSessionId, sessions, setTerminalVisible, addSession } = useTerminalStore()
@@ -287,7 +292,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
   const getExecutableStepCount = (script: Script): number => buildScriptExecutionPlan(script).steps.length
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full min-h-0 flex flex-col overflow-hidden">
       {/* Create new / Add scripts */}
       <div className="p-3 border-b border-surface-border">
         {creating ? (
@@ -303,7 +308,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                   setNewName('')
                 }
               }}
-              placeholder="Script name..."
+              placeholder={t('placeholders.scriptName')}
               className="tv-input"
               autoFocus
             />
@@ -312,7 +317,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                 onClick={handleCreate}
                 className="tv-btn-accent flex-1"
               >
-                Create
+                {t('actions.create')}
               </button>
               <button
                 onClick={() => {
@@ -321,7 +326,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                 }}
                 className="tv-btn-ghost"
               >
-                Cancel
+                {t('actions.cancel')}
               </button>
             </div>
           </div>
@@ -332,19 +337,19 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
               className="tv-btn-dashed flex-1"
             >
               <Plus size={14} />
-              Add Script
+              {t('actions.addScript')}
             </button>
             <button
               onClick={() => setCreating(true)}
               className="tv-btn-dashed px-2.5"
-              title="Create new script"
+              title={t('actions.createNewScript')}
             >
               <ScrollText size={14} />
             </button>
             <button
               onClick={handleImport}
               className="tv-btn-dashed px-2.5"
-              title="Import .tvflow script"
+              title={t('actions.importTvflow')}
             >
               <Download size={14} />
             </button>
@@ -356,12 +361,12 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
               className="tv-btn-dashed flex-1"
             >
               <Plus size={14} />
-              New Script
+              {t('actions.newScript')}
             </button>
             <button
               onClick={handleImport}
               className="tv-btn-dashed px-2.5"
-              title="Import .tvflow script"
+              title={t('actions.importTvflow')}
             >
               <Download size={14} />
             </button>
@@ -370,26 +375,26 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
       </div>
 
       {/* Script list */}
-      <div className="flex-1 overflow-y-auto px-2 py-2">
+      <div className="flex-1 min-h-0 overflow-y-auto px-2 pt-2 pb-12">
         {sorted.length === 0 ? (
           <div className="text-center text-gray-600 text-sm py-8">
             <ScrollText size={24} className="mx-auto mb-2 text-gray-700" />
             {activeProject ? (
               <>
-                <p>No scripts added to this project</p>
-                <p className="text-xs mt-1">Add existing scripts or create new ones</p>
+                <p>{t('empty.projectTitle')}</p>
+                <p className="text-xs mt-1">{t('empty.projectDescription')}</p>
                 <button
                   onClick={() => setScriptSelectorOpen(true)}
                   className="tv-btn-dashed mt-3 text-xs"
                 >
                   <Plus size={12} />
-                  Add Scripts
+                  {t('actions.addScript')}
                 </button>
               </>
             ) : (
               <>
-                <p>No scripts yet</p>
-                <p className="text-xs mt-1">Create one or add commands from the builder</p>
+                <p>{t('empty.globalTitle')}</p>
+                <p className="text-xs mt-1">{t('empty.globalDescription')}</p>
               </>
             )}
           </div>
@@ -436,8 +441,8 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                       )}
                       title={
                         isRunning
-                          ? `Running in ${runCount} terminal${runCount !== 1 ? 's' : ''}. Start another run`
-                          : `Run ${getExecutableStepCount(script)} command${getExecutableStepCount(script) !== 1 ? 's' : ''}`
+                          ? t('meta.running', { count: runCount })
+                          : t('meta.runCommand', { count: getExecutableStepCount(script) })
                       }
                     >
                       <Play size={11} />
@@ -445,14 +450,14 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                     <span
                       onClick={(e) => handleExport(e, script)}
                       className="tv-btn-icon-sm"
-                      title="Export as .tvflow"
+                      title={t('actions.exportTvflow')}
                     >
                       <Share2 size={11} />
                     </span>
                     <span
                       onClick={(e) => handleDuplicate(e, script)}
                       className="tv-btn-icon-sm"
-                      title="Duplicate"
+                      title={t('actions.duplicate')}
                     >
                       <Copy size={11} />
                     </span>
@@ -460,7 +465,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                       <span
                         onClick={(e) => handleRemoveFromProject(e, script)}
                         className="tv-btn-icon-sm"
-                        title="Remove from project"
+                        title={t('actions.removeFromProject')}
                       >
                         <X size={11} />
                       </span>
@@ -468,7 +473,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                     <span
                       onClick={(e) => { e.stopPropagation(); setConfirmDelete(script) }}
                       className="tv-btn-icon-sm hover:text-destructive"
-                      title="Delete permanently"
+                      title={t('actions.deletePermanently')}
                     >
                       <Trash2 size={11} />
                     </span>
@@ -476,25 +481,25 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 flex-wrap">
                   <span className="tv-pill normal-case tracking-normal">
-                    {script.steps.length} step{script.steps.length !== 1 ? 's' : ''}
+                    {t('meta.step', { count: script.steps.length })}
                   </span>
                   <span className="tv-pill normal-case tracking-normal">
                     {script.projectId === null
-                      ? 'Global'
+                      ? t('meta.global')
                       : script.projectId === activeProject?.id
-                        ? 'This Project'
-                        : projectNameById[script.projectId] ?? 'Other Project'}
+                        ? t('meta.thisProject')
+                        : projectNameById[script.projectId] ?? t('meta.otherProject')}
                   </span>
                   {script.inputs.length > 0 && (
                     <span className="tv-pill normal-case tracking-normal">
-                      {script.inputs.length} input{script.inputs.length !== 1 ? 's' : ''}
+                      {t('meta.input', { count: script.inputs.length })}
                     </span>
                   )}
                   {script.description && <span className="truncate min-w-0 flex-1">{script.description}</span>}
                   {script.lastRunAt && (
                     <span className="flex items-center gap-1 ml-auto shrink-0">
                       <Clock size={10} />
-                      {new Date(script.lastRunAt).toLocaleDateString()}
+                      {formatDate(script.lastRunAt, settings)}
                     </span>
                   )}
                 </div>
@@ -542,8 +547,8 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
       {pendingRun && (
         <WorkflowRunDialog
           script={pendingRun.script}
-          title={`Run ${pendingRun.script.name}`}
-          confirmLabel="Run Workflow"
+          title={t('run.title', { name: pendingRun.script.name })}
+          confirmLabel={t('actions.runWorkflow')}
           onCancel={() => setPendingRun(null)}
           onConfirm={(values) => {
             const run = pendingRun
@@ -554,8 +559,8 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
       )}
       {confirmDelete && (
         <ConfirmDialog
-          title="Delete Script"
-          message={`"${confirmDelete.name}" will be permanently deleted. This cannot be undone.`}
+          title={t('delete.title')}
+          message={t('delete.message', { name: confirmDelete.name })}
           onConfirm={() => void handleDelete(confirmDelete)}
           onCancel={() => setConfirmDelete(null)}
         />

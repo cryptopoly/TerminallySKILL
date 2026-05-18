@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import Fuse from 'fuse.js'
 import {
   Search,
@@ -6,11 +7,7 @@ import {
   ScrollText,
   Braces,
   TerminalSquare,
-  Clock,
-  Settings,
-  Plus,
-  FolderOpen,
-  Info
+  Clock
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useCommandStore } from '../../store/command-store'
@@ -19,6 +16,7 @@ import { useSnippetStore } from '../../store/snippet-store'
 import { useTerminalStore } from '../../store/terminal-store'
 import { useProjectStore } from '../../store/project-store'
 import { useBuilderStore } from '../../store/builder-store'
+import { useSettingsStore } from '../../store/settings-store'
 import {
   buildProjectExecutionCommand,
   createProjectTerminalSession,
@@ -42,14 +40,6 @@ const TYPE_ICON: Record<PaletteItem['type'], React.ReactNode> = {
   history: <Clock size={13} />
 }
 
-const TYPE_LABEL: Record<PaletteItem['type'], string> = {
-  action: 'Action',
-  command: 'Command',
-  script: 'Script',
-  snippet: 'Snippet',
-  history: 'History'
-}
-
 interface CommandPaletteProps {
   onClose: () => void
   onNewTerminal: () => void
@@ -65,6 +55,7 @@ export function CommandPalette({
   onOpenInfo,
   onCreateProject
 }: CommandPaletteProps): JSX.Element {
+  const { t } = useTranslation('layout')
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -90,16 +81,16 @@ export function CommandPalette({
     items.push({
       id: 'action:terminal',
       type: 'action',
-      label: 'New Terminal',
-      detail: 'Open a new terminal tab',
+      label: t('palette.actions.newTerminal'),
+      detail: t('palette.actions.newTerminalDescription'),
       action: () => { onNewTerminal(); onClose() }
     })
     if (activeProject?.workspaceTarget.type === 'ssh') {
       items.push({
         id: 'action:ssh-shell',
         type: 'action',
-        label: 'Open SSH Shell',
-        detail: 'Open a new interactive SSH shell for this workspace',
+        label: t('palette.actions.openSshShell'),
+        detail: t('palette.actions.openSshShellDescription'),
         action: () => {
           void openInteractiveProjectShell(activeProject, useTerminalStore.getState().addSession)
           onClose()
@@ -109,22 +100,22 @@ export function CommandPalette({
     items.push({
       id: 'action:settings',
       type: 'action',
-      label: 'Settings',
-      detail: 'Open app settings',
+      label: t('palette.actions.settings'),
+      detail: t('palette.actions.settingsDescription'),
       action: () => { onOpenSettings(); onClose() }
     })
     items.push({
       id: 'action:info',
       type: 'action',
-      label: 'How it works',
-      detail: 'Open the getting started guide',
+      label: t('palette.actions.info'),
+      detail: t('palette.actions.infoDescription'),
       action: () => { onOpenInfo(); onClose() }
     })
     items.push({
       id: 'action:project',
       type: 'action',
-      label: 'New Project',
-      detail: 'Create a new project',
+      label: t('palette.actions.newProject'),
+      detail: t('palette.actions.newProjectDescription'),
       action: () => { onCreateProject(); onClose() }
     })
 
@@ -155,7 +146,7 @@ export function CommandPalette({
         id: `script:${script.id}`,
         type: 'script',
         label: script.name,
-        detail: `${script.steps.length} step${script.steps.length !== 1 ? 's' : ''}${script.description ? ' · ' + script.description : ''}`,
+        detail: `${t('palette.scriptStep', { count: script.steps.length })}${script.description ? ' · ' + script.description : ''}`,
         action: () => {
           setActiveScript(script)
           setActiveCommand(null)
@@ -191,7 +182,7 @@ export function CommandPalette({
         id: `history:${i}`,
         type: 'history',
         label: cmd,
-        detail: 'Run again in terminal',
+        detail: t('palette.historyRunAgain'),
         action: () => {
           runHistoryCommand(cmd)
           onClose()
@@ -200,7 +191,7 @@ export function CommandPalette({
     }
 
     return items
-  }, [commands, scripts, snippets, history, activeProject, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onCreateProject])
+  }, [commands, scripts, snippets, history, activeProject, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onCreateProject, resetValues, setActiveCommand, setActiveScript, setActiveSnippet, t])
 
   const runHistoryCommand = useCallback(async (cmd: string) => {
     const envOverrides = useProjectStore.getState().getActiveEnvOverrides()
@@ -307,7 +298,7 @@ export function CommandPalette({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search commands, scripts, snippets..."
+            placeholder={t('palette.searchPlaceholder')}
             className="flex-1 bg-transparent text-sm text-gray-200 placeholder-gray-600 focus:outline-none"
           />
           <kbd className="text-[10px] text-gray-600 px-1.5 py-0.5 rounded border border-surface-border bg-surface-light">
@@ -319,7 +310,7 @@ export function CommandPalette({
         <div ref={listRef} className="overflow-y-auto py-1.5">
           {results.length === 0 ? (
             <div className="py-8 text-center text-sm text-gray-600">
-              No results for &ldquo;{query}&rdquo;
+              {t('palette.noResults', { query })}
             </div>
           ) : (
             results.map((item, i) => (
@@ -362,7 +353,7 @@ export function CommandPalette({
                       : 'bg-surface-lighter text-gray-600'
                   )}
                 >
-                  {TYPE_LABEL[item.type]}
+                  {t(`palette.types.${item.type}`)}
                 </span>
               </button>
             ))
@@ -373,15 +364,15 @@ export function CommandPalette({
         <div className="flex items-center gap-4 px-4 py-2 border-t border-surface-border text-[10px] text-gray-600">
           <span className="flex items-center gap-1">
             <kbd className="px-1 py-px rounded border border-surface-border bg-surface-light">↑↓</kbd>
-            navigate
+            {t('palette.shortcuts.navigate')}
           </span>
           <span className="flex items-center gap-1">
             <kbd className="px-1 py-px rounded border border-surface-border bg-surface-light">↵</kbd>
-            select
+            {t('palette.shortcuts.select')}
           </span>
           <span className="flex items-center gap-1">
             <kbd className="px-1 py-px rounded border border-surface-border bg-surface-light">esc</kbd>
-            close
+            {t('palette.shortcuts.close')}
           </span>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { Plus, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { CommandOption } from '../../../../../shared/command-schema'
 import { OptionInfoIcon } from '../../ui/OptionInfoIcon'
 
@@ -9,6 +10,7 @@ interface RepeatableInputProps {
 }
 
 export function RepeatableInput({ option, value, onChange }: RepeatableInputProps): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const flag = option.short || option.long || ''
 
   const add = (): void => {
@@ -39,7 +41,7 @@ export function RepeatableInput({ option, value, onChange }: RepeatableInputProp
               type="text"
               value={entry}
               onChange={(e) => update(i, e.target.value)}
-              placeholder={option.description || `Value ${i + 1}`}
+              placeholder={option.description || t('fields.valuePlaceholder', { index: i + 1 })}
               className="flex-1 bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
             />
             <button
@@ -55,7 +57,7 @@ export function RepeatableInput({ option, value, onChange }: RepeatableInputProp
           className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-accent-light transition-colors px-2 py-1.5"
         >
           <Plus size={12} />
-          Add value
+          {t('fields.addValue')}
         </button>
       </div>
     </div>

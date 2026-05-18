@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import {
   ExternalLink,
   AlertTriangle,
@@ -15,7 +16,7 @@ import {
 import { useProjectStore } from '../../store/project-store'
 import { useCommandStore } from '../../store/command-store'
 import type { CommandDefinition } from '../../../../shared/command-schema'
-import { getCommandDisplayDescription } from '../../lib/command-display'
+import { getCommandDisplayDescription, getCommandDisplayName } from '../../lib/command-display'
 import type { AICommandTreeGenerationSuggestion } from '../../../../shared/ai-schema'
 import { useSettingsStore } from '../../store/settings-store'
 import { HelpTip } from '../ui/HelpTip'
@@ -25,6 +26,9 @@ import {
   findCLIInstallCatalogEntry,
   getPrimaryInstallRecipe
 } from '../../../../shared/cli-install-catalog'
+import { resolveAIResponseLocale } from '../../../../shared/locale-schema'
+import { resolveAppLocale } from '../../i18n'
+import { formatDateTime } from '../../i18n/format'
 
 interface CommandHeaderProps {
   command: CommandDefinition
@@ -87,21 +91,26 @@ function hasStructuredTreeData(command: CommandDefinition, commands: CommandDefi
   )
 }
 
-function formatGeneratedHelpTimestamp(timestamp: string | undefined): string | null {
+function formatGeneratedHelpTimestamp(
+  timestamp: string | undefined,
+  settings: Parameters<typeof formatDateTime>[1]
+): string | null {
   if (!timestamp) return null
 
   const value = new Date(timestamp)
   if (Number.isNaN(value.getTime())) return null
 
-  return value.toLocaleString()
+  return formatDateTime(value, settings)
 }
 
 export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const danger = dangerConfig[command.dangerLevel || 'safe']
   const DangerIcon = danger.icon
   const activeProject = useProjectStore((s) => s.activeProject)
   const updateProjectInStore = useProjectStore((s) => s.updateProjectInStore)
-  const activeAIProvider = useSettingsStore((s) => s.settings.activeAIProvider)
+  const settings = useSettingsStore((s) => s.settings)
+  const activeAIProvider = settings.activeAIProvider
   const commands = useCommandStore((s) => s.commands)
   const { updateCommand, addCommands, removeCommand } = useCommandStore()
   const [parsing, setParsing] = useState(false)
@@ -122,6 +131,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
   const isRefresh = command.enriched || isCliRoot
   const rootTags = isCliRoot ? [...new Set([...(command.tags ?? []), 'cli-root'])] : command.tags
   const description = getCommandDisplayDescription(command)
+  const displayName = getCommandDisplayName(command)
   const hasStructuredTree = useMemo(
     () => hasStructuredTreeData(command, commands),
     [command, commands]
@@ -133,7 +143,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
   const showInlineReferenceHelp = !hasStructuredTree && Boolean(command.referenceHelp?.content)
   const showTopAIHelpButton = showHelpButton && !command.referenceHelp?.content
   const showSavedHelpIcon = hasStructuredTree && Boolean(command.referenceHelp?.content)
-  const savedHelpTimestamp = formatGeneratedHelpTimestamp(command.referenceHelp?.generatedAt)
+  const savedHelpTimestamp = formatGeneratedHelpTimestamp(command.referenceHelp?.generatedAt, settings)
   const referenceHelpTreeSuggestion = useMemo(
     () => buildCommandTreeFromReferenceHelp(command.referenceHelp?.sections),
     [command.referenceHelp?.sections]
@@ -299,7 +309,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
 
   const handleGenerateTreeFromReferenceHelp = async (): Promise<void> => {
     if (!referenceHelpTreeSuggestion) {
-      setAiHelpError('Saved help does not contain enough structured options or arguments to build a command tree yet.')
+      setAiHelpError(t('referenceHelp.insufficientStructuredHelp'))
       return
     }
 
@@ -317,7 +327,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
         [],
         'AI Help'
       )
-      setAiHelpSuccess(`Generated command tree from saved AI help for ${command.executable}`)
+      setAiHelpSuccess(t('referenceHelp.generatedTreeSuccess', { executable: command.executable }))
     } catch (error) {
       console.error('AI help command-tree generation error:', error)
       setAiHelpError(error instanceof Error ? error.message : String(error))
@@ -349,18 +359,17 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
       if (!resolvedPath) {
         const installHint = getInstallHint(command.executable)
         setParseError(
-          `${command.executable} was not found in your shell PATH, so TerminallySKILL could not inspect its help output${
-            installHint ? `. Try: ${installHint}` : ''
-          }`
+          [
+            t('referenceHelp.notFoundForHelp', { executable: command.executable }),
+            installHint ? t('referenceHelp.tryInstallHint', { hint: installHint }) : null
+          ].filter(Boolean).join('. ')
         )
         return
       }
 
       const result = await window.electronAPI.parseHelp(command.executable)
       if (!result) {
-        setParseError(
-          'Could not find structured --help output for this command. If it does not expose a normal help screen here, try Generate Help from AI instead.'
-        )
+        setParseError(t('referenceHelp.noStructuredHelp'))
         return
       }
 
@@ -371,9 +380,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
         topLevelSubcommands.length > 0
 
       if (!hasStructuredResult) {
-        setParseError(
-          'No structured --help output was detected for this command. Some CLIs like ls do not expose machine-parseable help here. Try Generate Help from AI instead.'
-        )
+        setParseError(t('referenceHelp.noMachineHelp'))
         return
       }
 
@@ -402,7 +409,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
       }
     } catch (err) {
       console.error('Help parse error:', err)
-      setParseError('Failed to run --help for this command')
+      setParseError(t('referenceHelp.parseFailed'))
     } finally {
       setParsing(false)
     }
@@ -450,6 +457,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
           generatedAt: new Date().toISOString(),
           providerLabel: response.providerLabel,
           model: response.model,
+          locale: resolveAIResponseLocale(settings.aiResponseLocale, resolveAppLocale(settings)),
           format: helpFormat,
           sections: helpSections
         }
@@ -466,7 +474,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
         console.error('Failed to persist AI help:', saveErr)
       }
 
-      setAiHelpSuccess(`Saved AI help locally for ${command.executable}`)
+      setAiHelpSuccess(t('referenceHelp.savedAIHelpSuccess', { executable: command.executable }))
       setHelpDialogOpen(hasStructuredTree)
     } catch (aiError) {
       console.error('AI help generation error:', aiError)
@@ -479,22 +487,25 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
   return (
     <div>
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold font-mono text-gray-200">{command.name}</h1>
+        <h1 className="text-2xl font-bold font-mono text-gray-200">{displayName}</h1>
         {command.source && command.source !== 'builtin' && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border border-gray-600/30 text-gray-500 bg-gray-600/10 cursor-default" title={command.source === 'detected' ? 'Detected from shell PATH' : 'Manually added'}>
-            {command.source === 'detected' ? 'Detected' : 'Saved'}
+          <span
+            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border border-gray-600/30 text-gray-500 bg-gray-600/10 cursor-default"
+            title={command.source === 'detected' ? t('referenceHelp.detectedTitle') : t('referenceHelp.manualTitle')}
+          >
+            {command.source === 'detected' ? t('referenceHelp.detected') : t('referenceHelp.saved')}
           </span>
         )}
         {showSavedHelpIcon && (
           <HelpTip
-            label="Saved Help"
-            description="Open the saved AI-generated help reference for this command."
+            label={t('referenceHelp.savedHelp')}
+            description={t('referenceHelp.savedHelpDescription')}
           >
             <button
               type="button"
               onClick={() => setHelpDialogOpen(true)}
               className="text-gray-500 hover:text-accent-light transition-colors"
-              title="Open saved help"
+              title={t('referenceHelp.openSavedHelp')}
             >
               <CircleHelp size={16} />
             </button>
@@ -508,7 +519,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
                 ? 'text-caution'
                 : 'text-gray-600 hover:text-caution'
             }`}
-            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            title={isFavorite ? t('commands:favorites.remove') : t('commands:favorites.add')}
           >
             <Star size={16} fill={isFavorite ? 'currentColor' : 'none'} />
           </button>
@@ -519,7 +530,7 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
             target="_blank"
             rel="noreferrer"
             className="text-gray-500 hover:text-accent-light transition-colors"
-            title="Open documentation"
+            title={t('referenceHelp.openDocumentation')}
           >
             <ExternalLink size={14} />
           </a>
@@ -538,12 +549,12 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
               {parsing ? (
                 <>
                   <Loader2 size={12} className="animate-spin" />
-                  Generating from --help...
+                  {t('referenceHelp.generatingFromHelp')}
                 </>
               ) : (
                 <>
                   <RefreshCw size={12} />
-                  Generate Command Tree from --help
+                  {t('referenceHelp.generateFromHelp')}
                 </>
               )}
             </button>
@@ -555,19 +566,19 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-gray-600/30 bg-gray-600/10 text-accent-light hover:bg-gray-600/20"
                 title={
                   activeAIProvider
-                    ? 'Generate saved reference help with AI for commands that do not expose useful --help output'
-                    : 'Select an active AI provider in Settings to generate saved help with AI'
+                    ? t('referenceHelp.generateHelpFromAIEnabled')
+                    : t('referenceHelp.generateHelpFromAIDisabled')
                 }
               >
                 {aiHelping ? (
                   <>
                     <Loader2 size={12} className="animate-spin" />
-                    Generating Help from AI...
+                    {t('referenceHelp.generatingHelpFromAI')}
                   </>
                 ) : (
                   <>
                     <Sparkles size={12} />
-                    Generate Help from AI
+                    {t('referenceHelp.generateHelpFromAI')}
                   </>
                 )}
               </button>
@@ -600,17 +611,17 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
                   onClick={handleGenerateTreeFromReferenceHelp}
                   disabled={generatingTreeFromReferenceHelp}
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-gray-600/30 bg-gray-600/10 text-gray-300 hover:bg-gray-600/20"
-                  title="Turn saved AI help options into a reusable command tree"
+                  title={t('referenceHelp.generateTreeFromSavedHelpTitle')}
                 >
                   {generatingTreeFromReferenceHelp ? (
                     <>
                       <Loader2 size={12} className="animate-spin" />
-                      Generating Command Tree...
+                      {t('referenceHelp.generatingCommandTree')}
                     </>
                   ) : (
                     <>
                       <RefreshCw size={12} />
-                      Generate Command Tree from Saved Help
+                      {t('referenceHelp.generateTreeFromSavedHelp')}
                     </>
                   )}
                 </button>
@@ -622,19 +633,19 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-gray-600/30 bg-gray-600/10 text-accent-light hover:bg-gray-600/20"
                 title={
                   activeAIProvider
-                    ? 'Regenerate and resave this AI help reference'
-                    : 'Select an active AI provider in Settings to refresh saved help with AI'
+                    ? t('referenceHelp.refreshHelpEnabled')
+                    : t('referenceHelp.refreshHelpDisabled')
                 }
               >
                 {aiHelping ? (
                   <>
                     <Loader2 size={12} className="animate-spin" />
-                    Refreshing Help from AI...
+                    {t('referenceHelp.refreshingHelpFromAI')}
                   </>
                 ) : (
                   <>
                     <Sparkles size={12} />
-                    Refresh Help from AI
+                    {t('referenceHelp.refreshHelpFromAI')}
                   </>
                 )}
               </button>
@@ -658,17 +669,17 @@ export function CommandHeader({ command }: CommandHeaderProps): JSX.Element {
               <div className="flex items-center gap-3 border-b border-surface-border px-5 py-4">
                 <CircleHelp size={18} className="text-accent-light" />
                 <div className="min-w-0">
-                  <h2 className="text-base font-semibold text-gray-200">{command.executable} Help</h2>
+                  <h2 className="text-base font-semibold text-gray-200">{t('referenceHelp.title', { executable: command.executable })}</h2>
                   <div className="text-xs text-gray-500">
-                    {command.referenceHelp.providerLabel ?? 'AI'}{command.referenceHelp.model ? ` · ${command.referenceHelp.model}` : ''}
-                    {savedHelpTimestamp ? ` · Saved ${savedHelpTimestamp}` : ''}
+                    {command.referenceHelp.providerLabel ?? t('referenceHelp.aiProviderFallback')}{command.referenceHelp.model ? ` · ${command.referenceHelp.model}` : ''}
+                    {savedHelpTimestamp ? ` · ${t('referenceHelp.savedMeta', { timestamp: savedHelpTimestamp })}` : ''}
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setHelpDialogOpen(false)}
                   className="ml-auto rounded-lg p-2 text-gray-500 hover:bg-surface hover:text-gray-200 transition-colors"
-                  title="Close saved help"
+                  title={t('referenceHelp.closeSavedHelp')}
                 >
                   <X size={16} />
                 </button>

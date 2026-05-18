@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useCommandStore } from '../../store/command-store'
 import { useBuilderStore } from '../../store/builder-store'
 import { CommandHeader } from './CommandHeader'
@@ -9,6 +10,7 @@ import { CommandPreview } from './CommandPreview'
 import type { CommandOption } from '../../../../shared/command-schema'
 
 export function CommandBuilder(): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const command = useCommandStore((s) => s.activeCommand)!
   const values = useBuilderStore((s) => s.values)
 
@@ -16,7 +18,7 @@ export function CommandBuilder(): JSX.Element {
     if (!command.options) return {}
     const groups: Record<string, CommandOption[]> = {}
     for (const opt of command.options) {
-      const group = opt.group || 'Options'
+      const group = opt.group || t('optionGroups.options')
       if (!groups[group]) groups[group] = []
       groups[group].push(opt)
     }
@@ -25,7 +27,7 @@ export function CommandBuilder(): JSX.Element {
       groups[key].sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
     }
     return groups
-  }, [command])
+  }, [command, t])
 
   return (
     <div className="h-full flex flex-col bg-surface-light">

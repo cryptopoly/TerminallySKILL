@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, Trash2, Upload, ToggleLeft, ToggleRight, AlertCircle } from 'lucide-react'
 import type { EnvVar } from '../../../../shared/project-schema'
 
@@ -27,6 +28,7 @@ function parseDotEnv(content: string): EnvVar[] {
 }
 
 export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
+  const { t } = useTranslation('projects')
   const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -61,12 +63,12 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
         return
       }
       if ('tooLarge' in result) {
-        setImportError('File is too large to import')
+        setImportError(t('env.errors.tooLarge'))
         return
       }
       const parsed = parseDotEnv(result.content)
       if (parsed.length === 0) {
-        setImportError('No valid KEY=VALUE entries found')
+        setImportError(t('env.errors.noEntries'))
         return
       }
       // Merge: update existing keys, add new ones
@@ -81,7 +83,7 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
       }
       onChange(merged)
     } catch {
-      setImportError('Failed to read file')
+      setImportError(t('env.errors.readFailed'))
     }
   }
 
@@ -91,18 +93,18 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
     <div>
       <div className="flex items-center justify-between mb-2">
         <label className="block text-sm text-gray-300">
-          Environment Variables
+          {t('env.title')}
           {enabledCount > 0 && (
-            <span className="ml-1.5 text-xs text-accent">({enabledCount} active)</span>
+            <span className="ml-1.5 text-xs text-accent">({t('env.active', { count: enabledCount })})</span>
           )}
         </label>
         <button
           onClick={handleImportFile}
           className="flex items-center gap-1 text-xs text-gray-500 hover:text-accent-light transition-colors"
-          title="Import from .env file"
+          title={t('env.importTitle')}
         >
           <Upload size={12} />
-          Import .env
+          {t('env.importEnv')}
         </button>
       </div>
 
@@ -126,7 +128,7 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
                 className={`shrink-0 transition-colors ${
                   v.enabled ? 'text-safe' : 'text-gray-600'
                 }`}
-                title={v.enabled ? 'Enabled — click to disable' : 'Disabled — click to enable'}
+                title={v.enabled ? t('env.enabledTitle') : t('env.disabledTitle')}
               >
                 {v.enabled ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
               </button>
@@ -136,7 +138,7 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
                 type="text"
                 value={v.key}
                 onChange={(e) => updateVar(i, 'key', e.target.value.replace(/\s/g, '_').toUpperCase())}
-                placeholder="KEY"
+                placeholder={t('env.keyPlaceholder')}
                 className={`w-[120px] bg-surface border border-surface-border rounded-md px-2 py-1.5 text-xs font-mono placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors ${
                   v.enabled ? 'text-gray-200' : 'text-gray-500'
                 }`}
@@ -149,7 +151,7 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
                 type="text"
                 value={v.value}
                 onChange={(e) => updateVar(i, 'value', e.target.value)}
-                placeholder="value"
+                placeholder={t('env.valuePlaceholder')}
                 className={`flex-1 bg-surface border border-surface-border rounded-md px-2 py-1.5 text-xs font-mono placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors ${
                   v.enabled ? 'text-gray-200' : 'text-gray-500'
                 }`}
@@ -159,7 +161,7 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
               <button
                 onClick={() => removeVar(i)}
                 className="shrink-0 p-0.5 text-gray-600 opacity-0 group-hover:opacity-100 hover:text-destructive transition-all"
-                title="Remove variable"
+                title={t('env.removeVariable')}
               >
                 <Trash2 size={12} />
               </button>
@@ -173,7 +175,7 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
         className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-accent-light transition-colors"
       >
         <Plus size={12} />
-        Add variable
+        {t('env.addVariable')}
       </button>
 
       {importError && (
@@ -185,7 +187,7 @@ export function EnvEditor({ envVars, onChange }: EnvEditorProps): JSX.Element {
 
       {envVars.length > 0 && (
         <p className="text-xs text-gray-600 mt-2">
-          Variables are injected into new terminal sessions for this project.
+          {t('env.description')}
         </p>
       )}
     </div>

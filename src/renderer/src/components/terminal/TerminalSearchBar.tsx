@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, ChevronUp, ChevronDown } from 'lucide-react'
 import type { SearchAddon } from '@xterm/addon-search'
 
@@ -8,6 +9,7 @@ interface TerminalSearchBarProps {
 }
 
 export function TerminalSearchBar({ searchAddon, onClose }: TerminalSearchBarProps): JSX.Element {
+  const { t } = useTranslation('terminal')
   const [query, setQuery] = useState('')
   const [matchCount, setMatchCount] = useState<number | null>(null)
   const [caseSensitive, setCaseSensitive] = useState(false)
@@ -75,7 +77,7 @@ export function TerminalSearchBar({ searchAddon, onClose }: TerminalSearchBarPro
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Find in terminal…"
+        placeholder={t('search.placeholder')}
         className="w-48 bg-transparent text-xs text-gray-200 placeholder-gray-600 outline-none px-1 py-0.5"
       />
 
@@ -85,7 +87,7 @@ export function TerminalSearchBar({ searchAddon, onClose }: TerminalSearchBarPro
         className={`px-1.5 py-0.5 text-[10px] font-mono font-bold rounded transition-colors ${
           caseSensitive ? 'text-accent bg-accent/15' : 'text-gray-500 hover:text-gray-300'
         }`}
-        title="Case sensitive"
+        title={t('search.caseSensitive')}
       >
         Aa
       </button>
@@ -94,7 +96,7 @@ export function TerminalSearchBar({ searchAddon, onClose }: TerminalSearchBarPro
         className={`px-1.5 py-0.5 text-[10px] font-mono font-bold rounded transition-colors ${
           regex ? 'text-accent bg-accent/15' : 'text-gray-500 hover:text-gray-300'
         }`}
-        title="Regular expression"
+        title={t('search.regex')}
       >
         .*
       </button>
@@ -103,7 +105,7 @@ export function TerminalSearchBar({ searchAddon, onClose }: TerminalSearchBarPro
         className={`px-1.5 py-0.5 text-[10px] font-mono font-bold rounded transition-colors ${
           wholeWord ? 'text-accent bg-accent/15' : 'text-gray-500 hover:text-gray-300'
         }`}
-        title="Whole word"
+        title={t('search.wholeWord')}
       >
         ab
       </button>
@@ -114,14 +116,14 @@ export function TerminalSearchBar({ searchAddon, onClose }: TerminalSearchBarPro
       <button
         onClick={() => doSearch('prev')}
         className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
-        title="Previous match (Shift+Enter)"
+        title={t('search.previous')}
       >
         <ChevronUp size={13} />
       </button>
       <button
         onClick={() => doSearch('next')}
         className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
-        title="Next match (Enter)"
+        title={t('search.next')}
       >
         <ChevronDown size={13} />
       </button>
@@ -134,7 +136,7 @@ export function TerminalSearchBar({ searchAddon, onClose }: TerminalSearchBarPro
           onClose()
         }}
         className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
-        title="Close (Esc)"
+        title={t('search.close')}
       >
         <X size={13} />
       </button>

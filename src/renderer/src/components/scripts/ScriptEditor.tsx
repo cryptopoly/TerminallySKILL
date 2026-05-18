@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Play,
   Trash2,
@@ -21,6 +22,7 @@ import clsx from 'clsx'
 import { useScriptStore } from '../../store/script-store'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
 import { useProjectStore } from '../../store/project-store'
+import { useSettingsStore } from '../../store/settings-store'
 import { isTerminalRunStatus, useWorkflowRunnerStore } from '../../store/workflow-runner-store'
 import { HelpTip } from '../ui/HelpTip'
 import {
@@ -36,8 +38,10 @@ import { WorkflowInputEditor } from './WorkflowInputEditor'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { WorkflowRunDialog } from './WorkflowRunDialog'
 import { createProjectTerminalSession, ensureProjectExecutionSession } from '../../lib/workspace-session'
+import { formatDate } from '../../i18n/format'
 
 export function ScriptEditor(): JSX.Element {
+  const { t } = useTranslation('scripts')
   const activeScript = useScriptStore((s) => s.activeScript)
   const { updateScriptInStore, addScriptToStore, setActiveScript } = useScriptStore()
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
@@ -45,6 +49,7 @@ export function ScriptEditor(): JSX.Element {
   const { addSession, activeSessionId, setTerminalVisible } = useTerminalStore()
   const activeProject = useProjectStore((s) => s.activeProject)
   const { updateProjectInStore } = useProjectStore()
+  const settings = useSettingsStore((s) => s.settings)
   const [editingName, setEditingName] = useState(false)
   const [editingDesc, setEditingDesc] = useState(false)
   const [name, setName] = useState('')
@@ -90,8 +95,8 @@ export function ScriptEditor(): JSX.Element {
       <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-4">
         <ScrollText size={48} className="text-surface-lighter" />
         <div className="text-center">
-          <h2 className="text-lg font-medium text-gray-400">No script selected</h2>
-          <p className="text-sm mt-1">Select a script from the sidebar or create a new one</p>
+          <h2 className="text-lg font-medium text-gray-400">{t('editor.noSelectionTitle')}</h2>
+          <p className="text-sm mt-1">{t('editor.noSelectionDescription')}</p>
         </div>
       </div>
     )
@@ -104,10 +109,10 @@ export function ScriptEditor(): JSX.Element {
 
   const scriptScopeLabel =
     activeScript.projectId === null
-      ? 'Global'
+      ? t('meta.global')
       : activeProject && activeScript.projectId === activeProject.id
-        ? 'This Project'
-        : 'Other Project'
+        ? t('meta.thisProject')
+        : t('meta.otherProject')
 
   const canDetachToProject =
     !!activeProject &&
@@ -403,7 +408,7 @@ export function ScriptEditor(): JSX.Element {
                     setEditingDesc(false)
                   }
                 }}
-                placeholder="Add a description..."
+                placeholder={t('editor.addDescriptionPlaceholder')}
                 className="mt-2 text-sm text-gray-400 bg-transparent border-b border-surface-border focus:outline-none focus:border-accent w-full max-w-lg"
                 autoFocus
               />
@@ -415,7 +420,7 @@ export function ScriptEditor(): JSX.Element {
                   setEditingDesc(true)
                 }}
               >
-                {activeScript.description || 'Click to add description...'}
+                {activeScript.description || t('editor.clickToAddDescription')}
               </p>
             )}
           </div>
@@ -426,11 +431,11 @@ export function ScriptEditor(): JSX.Element {
             </span>
             {canDetachToProject && (
               <HelpTip
-                label={activeScript.projectId === null ? 'Detach to Project' : 'Clone to This Project'}
+                label={activeScript.projectId === null ? t('editor.detachToProject') : t('editor.cloneToProject')}
                 description={
                   activeScript.projectId === null
-                    ? 'Create a project-local copy so changes in this project do not affect the shared global script.'
-                    : 'Create a project-local copy so changes here do not affect the script in the other project.'
+                    ? t('editor.detachToProjectHelp')
+                    : t('editor.cloneToProjectHelp')
                 }
               >
                 <button
@@ -438,29 +443,31 @@ export function ScriptEditor(): JSX.Element {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface-border text-xs text-gray-300 hover:text-gray-200 hover:border-gray-500 transition-colors"
                 >
                   <Copy size={12} />
-                  {activeScript.projectId === null ? 'Detach to Project' : 'Clone to Project'}
+                  {activeScript.projectId === null
+                    ? t('editor.detachToProject')
+                    : t('editor.cloneToProject')}
                 </button>
               </HelpTip>
             )}
             <button
               onClick={() => window.electronAPI.exportScript(activeScript.id)}
               className="p-1.5 rounded-lg text-gray-500 hover:text-accent-light hover:bg-surface-light transition-colors"
-              title="Export as .tvflow"
+              title={t('actions.exportTvflow')}
             >
               <Share2 size={14} />
             </button>
             <span className="text-xs text-gray-500">
-              {enabledCount} step{enabledCount !== 1 ? 's' : ''}
+              {t('meta.step', { count: enabledCount })}
             </span>
             {activeScript.inputs.length > 0 && (
               <span className="text-xs text-gray-500">
-                {activeScript.inputs.length} input{activeScript.inputs.length !== 1 ? 's' : ''}
+                {t('meta.input', { count: activeScript.inputs.length })}
               </span>
             )}
             {activeScript.lastRunAt && (
               <span className="text-xs text-gray-600 flex items-center gap-1">
                 <Clock size={10} />
-                {new Date(activeScript.lastRunAt).toLocaleDateString()}
+                {formatDate(activeScript.lastRunAt, settings)}
               </span>
             )}
           </div>
@@ -495,9 +502,9 @@ export function ScriptEditor(): JSX.Element {
                 onChangeType={(newType) => {
                   const updatedSteps = activeScript.steps.map((s) => {
                     if (s.id !== step.id) return s
-                    if (newType === 'command') return { id: s.id, type: 'command' as const, commandString: '', commandId: null, label: s.label || 'Step ' + (index + 1), continueOnError: false, delayMs: 0, enabled: s.enabled, retryCount: 0 }
-                    if (newType === 'approval') return { id: s.id, type: 'approval' as const, label: s.label || 'Approval required', enabled: s.enabled, message: '', requireConfirmation: true }
-                    return { id: s.id, type: 'note' as const, label: s.label || 'Note', enabled: s.enabled, content: '' }
+                    if (newType === 'command') return { id: s.id, type: 'command' as const, commandString: '', commandId: null, label: s.label || t('editor.generatedStepLabel', { index: index + 1 }), continueOnError: false, delayMs: 0, enabled: s.enabled, retryCount: 0 }
+                    if (newType === 'approval') return { id: s.id, type: 'approval' as const, label: s.label || t('editor.approvalRequired'), enabled: s.enabled, message: '', requireConfirmation: true }
+                    return { id: s.id, type: 'note' as const, label: s.label || t('editor.stepTypes.note'), enabled: s.enabled, content: '' }
                   })
                   void saveUpdates({ steps: updatedSteps })
                 }}
@@ -533,7 +540,7 @@ export function ScriptEditor(): JSX.Element {
                         : 'border-surface-border text-gray-400 hover:text-gray-200 hover:border-gray-500'
                     )}
                   >
-                    {type === 'command' ? 'Command' : type === 'approval' ? 'Approval' : 'Note'}
+                    {t(`editor.stepTypes.${type}`)}
                   </button>
                 ))}
               </div>
@@ -541,7 +548,7 @@ export function ScriptEditor(): JSX.Element {
                 type="text"
                 value={newStepLabel}
                 onChange={(e) => setNewStepLabel(e.target.value)}
-                placeholder="Step label (optional)"
+                placeholder={t('editor.stepLabelPlaceholder')}
                 className="w-full bg-surface-light border border-surface-border rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               />
               {newStepType === 'command' ? (
@@ -552,7 +559,7 @@ export function ScriptEditor(): JSX.Element {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') addManualStep()
                   }}
-                  placeholder="Command (e.g. npm run build)"
+                  placeholder={t('editor.commandPlaceholder')}
                   className="w-full bg-surface-light border border-surface-border rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent font-mono"
                   autoFocus
                 />
@@ -565,8 +572,8 @@ export function ScriptEditor(): JSX.Element {
                 }}
                 placeholder={
                   newStepType === 'approval'
-                    ? 'Approval message shown before the workflow runs'
-                    : 'Reference notes for the operator'
+                    ? t('editor.approvalPlaceholder')
+                    : t('editor.notePlaceholder')
                 }
                 rows={3}
                 className="w-full bg-surface-light border border-surface-border rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
@@ -578,7 +585,7 @@ export function ScriptEditor(): JSX.Element {
                   onClick={addManualStep}
                   className="px-4 py-1.5 rounded-lg bg-accent hover:bg-accent-light text-white text-xs font-medium transition-colors"
                 >
-                  Add {newStepType === 'command' ? 'Command' : newStepType === 'approval' ? 'Approval' : 'Note'}
+                  {t('editor.addStepType', { type: t(`editor.stepTypes.${newStepType}`) })}
                 </button>
                 <button
                   onClick={() => {
@@ -589,7 +596,7 @@ export function ScriptEditor(): JSX.Element {
                   }}
                   className="px-4 py-1.5 rounded-lg text-xs text-gray-400 hover:text-gray-200 transition-colors"
                 >
-                  Cancel
+                  {t('actions.cancel')}
                 </button>
               </div>
             </div>
@@ -599,7 +606,7 @@ export function ScriptEditor(): JSX.Element {
               className="flex items-center gap-2 text-sm text-gray-500 hover:text-accent-light transition-colors px-2 py-2"
             >
               <Plus size={14} />
-              Add Step
+              {t('editor.addStep')}
             </button>
           )}
         </div>
@@ -628,24 +635,28 @@ export function ScriptEditor(): JSX.Element {
         <div className="sticky bottom-0 bg-surface border-t border-surface-border px-4 py-2 shadow-lg shadow-black/20">
           <div className="flex items-center gap-3">
             <div className="flex-1 text-xs text-gray-400">
-              {enabledCount} of {activeScript.steps.length} steps enabled · {executableCount} executable
+              {t('editor.enabledSummary', {
+                enabled: enabledCount,
+                total: activeScript.steps.length,
+                executable: executableCount
+              })}
             </div>
             <button
               onClick={handleCopyAll}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-lighter border border-surface-border text-xs text-gray-300 hover:text-gray-200 hover:border-gray-500 transition-colors"
-              title="Copy all commands as a shell script"
+              title={t('editor.copyAllTitle')}
             >
               <Copy size={13} />
-              Copy All
+              {t('editor.copyAll')}
             </button>
             <button
               onClick={handleRunAll}
               disabled={executableCount === 0}
               className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors"
-              title="Run all enabled steps"
+              title={t('editor.runAllTitle')}
             >
               <Play size={13} />
-              Run Script
+              {t('editor.runScript')}
             </button>
           </div>
         </div>
@@ -655,8 +666,8 @@ export function ScriptEditor(): JSX.Element {
           script={activeScript}
           fromIndex={pendingRun.fromIndex}
           singleOnly={pendingRun.singleOnly}
-          title={pendingRun.singleOnly ? 'Run Step' : pendingRun.fromIndex > 0 ? 'Run From Here' : `Run ${activeScript.name}`}
-          confirmLabel={pendingRun.singleOnly ? 'Run Step' : 'Run Workflow'}
+          title={pendingRun.singleOnly ? t('editor.runStep') : pendingRun.fromIndex > 0 ? t('editor.runFromHere') : t('run.title', { name: activeScript.name })}
+          confirmLabel={pendingRun.singleOnly ? t('editor.runStep') : t('editor.runWorkflow')}
           onCancel={() => setPendingRun(null)}
           onConfirm={(values) => {
             const run = pendingRun
@@ -667,9 +678,9 @@ export function ScriptEditor(): JSX.Element {
       )}
       {confirmDeleteStepId && (
         <ConfirmDialog
-          title="Delete Step"
-          message="This step will be permanently removed from the script. This cannot be undone."
-          confirmLabel="Delete Step"
+          title={t('editor.deleteStepTitle')}
+          message={t('editor.deleteStepMessage')}
+          confirmLabel={t('editor.deleteStepTitle')}
           onConfirm={() => {
             void removeStep(confirmDeleteStepId)
             setConfirmDeleteStepId(null)
@@ -731,6 +742,7 @@ function StepCard({
   onDrop: () => void
   onDragEnd: () => void
 }): JSX.Element {
+  const { t } = useTranslation('scripts')
   const [editingLabel, setEditingLabel] = useState(false)
   const [editingBody, setEditingBody] = useState(() => {
     // Auto-enter edit mode for empty command steps
@@ -839,7 +851,7 @@ function StepCard({
                   setEditingLabel(true)
                 }}
               >
-                + label
+                {t('step.addLabel')}
               </button>
             )}
             {(() => {
@@ -858,22 +870,22 @@ function StepCard({
                       canSwitch && 'cursor-pointer hover:opacity-80'
                     )}
                     onClick={canSwitch ? () => setShowTypeMenu(!showTypeMenu) : undefined}
-                    title={canSwitch ? 'Click to change step type' : undefined}
+                    title={canSwitch ? t('step.changeTypeTitle') : undefined}
                   >
-                    {step.type}
+                    {t(`editor.stepTypes.${step.type}`)}
                   </span>
                   {showTypeMenu && canSwitch && (
                     <div className="absolute top-full left-0 mt-1 z-20 rounded-lg border border-surface-border bg-surface-light shadow-lg py-1 min-w-[7rem]">
-                      {(['command', 'approval', 'note'] as const).map((t) => (
+                      {(['command', 'approval', 'note'] as const).map((type) => (
                         <button
-                          key={t}
-                          onClick={() => { onChangeType(t); setShowTypeMenu(false) }}
+                          key={type}
+                          onClick={() => { onChangeType(type); setShowTypeMenu(false) }}
                           className={clsx(
                             'w-full text-left px-3 py-1.5 text-xs transition-colors',
-                            t === step.type ? 'text-accent-light bg-accent/10' : 'text-gray-300 hover:bg-surface hover:text-gray-200'
+                            type === step.type ? 'text-accent-light bg-accent/10' : 'text-gray-300 hover:bg-surface hover:text-gray-200'
                           )}
                         >
-                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                          {t(`editor.stepTypes.${type}`)}
                         </button>
                       ))}
                     </div>
@@ -890,17 +902,17 @@ function StepCard({
                     : 'border-surface-border bg-surface-light text-gray-500'
                 )}
               >
-                {step.requireConfirmation ? 'manual confirm' : 'auto checkpoint'}
+                {step.requireConfirmation ? t('step.manualConfirm') : t('step.autoCheckpoint')}
               </span>
             )}
             {step.type === 'command' && step.continueOnError && (
               <span className="text-[9px] px-1.5 py-0.5 rounded bg-caution/10 text-caution border border-caution/20 uppercase tracking-[0.16em]">
-                continue on error
+                {t('step.continueOnError')}
               </span>
             )}
             {isRunning && (
               <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent/20 text-accent-light animate-pulse uppercase tracking-[0.16em]">
-                running
+                {t('step.running')}
               </span>
             )}
           </div>
@@ -958,12 +970,12 @@ function StepCard({
                     setBodyValue(step.commandString)
                     setEditingBody(true)
                   }}
-                  title="Click to edit"
+                  title={t('step.clickToEdit')}
                 >
-                  {step.commandString || 'Click to add a command...'}
+                  {step.commandString || t('step.addCommand')}
                 </code>
                 {!step.commandString && (
-                  <span className="text-[10px] text-gray-600 mt-0.5 block">Click the type badge above to switch to Approval or Note</span>
+                  <span className="text-[10px] text-gray-600 mt-0.5 block">{t('step.switchTypeHint')}</span>
                 )}
               </div>
             ) : (
@@ -973,9 +985,9 @@ function StepCard({
                   setBodyValue(bodyText)
                   setEditingBody(true)
                 }}
-                title="Click to edit"
+                title={t('step.clickToEdit')}
               >
-                {bodyText || (step.type === 'approval' ? 'Add an approval message...' : 'Add a note...')}
+                {bodyText || (step.type === 'approval' ? t('step.addApproval') : t('step.addNote'))}
               </p>
             )
           )}
@@ -990,7 +1002,7 @@ function StepCard({
                 onClick={onRunStep}
                 disabled={disableRunActions}
                 className="p-1 rounded text-gray-600 hover:text-safe disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                title={disableRunActions ? 'A workflow is already running' : 'Run this step in the current terminal'}
+                title={disableRunActions ? t('step.alreadyRunning') : t('step.runStepTitle')}
               >
                 <Play size={12} />
               </button>
@@ -999,7 +1011,7 @@ function StepCard({
               onClick={onRunFromHere}
               disabled={disableRunActions}
               className="p-1 rounded text-gray-600 hover:text-safe disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              title={disableRunActions ? 'A workflow is already running' : 'Run from this step onwards in the current terminal'}
+              title={disableRunActions ? t('step.alreadyRunning') : t('step.runFromHereTitle')}
             >
               <ChevronsRight size={12} />
             </button>
@@ -1008,7 +1020,7 @@ function StepCard({
               onClick={() => onMove(-1)}
               disabled={index === 0}
               className="p-1 rounded text-gray-600 hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Move up"
+              title={t('step.moveUp')}
             >
               <ChevronUp size={14} />
             </button>
@@ -1016,7 +1028,7 @@ function StepCard({
               onClick={() => onMove(1)}
               disabled={index === totalSteps - 1}
               className="p-1 rounded text-gray-600 hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Move down"
+              title={t('step.moveDown')}
             >
               <ChevronDown size={14} />
             </button>
@@ -1027,7 +1039,7 @@ function StepCard({
                   'p-1 rounded transition-colors',
                   step.continueOnError ? 'text-caution' : 'text-gray-600 hover:text-gray-300'
                 )}
-                title={step.continueOnError ? 'Will continue on error' : 'Will stop on error'}
+                title={step.continueOnError ? t('step.willContinueOnError') : t('step.willStopOnError')}
               >
                 <AlertTriangle size={14} />
               </button>
@@ -1038,14 +1050,14 @@ function StepCard({
                 'p-1 rounded transition-colors',
                 step.enabled ? 'text-safe' : 'text-gray-600'
               )}
-              title={step.enabled ? 'Disable step' : 'Enable step'}
+              title={step.enabled ? t('step.disableStep') : t('step.enableStep')}
             >
               {step.enabled ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
             </button>
             <button
               onClick={onRemove}
               className="p-1 rounded text-gray-600 hover:text-destructive transition-colors"
-              title="Remove step"
+              title={t('step.removeStep')}
             >
               <X size={14} />
             </button>
@@ -1054,7 +1066,7 @@ function StepCard({
           {step.type === 'command' && (
             <div className="flex items-center justify-end gap-2 w-full">
               <label className="flex items-center gap-1 rounded-md border border-surface-border bg-surface-light/40 px-1.5 py-1">
-                <span className="text-[9px] uppercase tracking-[0.16em] text-gray-500">Delay</span>
+                <span className="text-[9px] uppercase tracking-[0.16em] text-gray-500">{t('step.delay')}</span>
                 <input
                   type="number"
                   min={0}
@@ -1065,7 +1077,7 @@ function StepCard({
                 />
               </label>
               <label className="flex items-center gap-1 rounded-md border border-surface-border bg-surface-light/40 px-1.5 py-1">
-                <span className="text-[9px] uppercase tracking-[0.16em] text-gray-500">Retries</span>
+                <span className="text-[9px] uppercase tracking-[0.16em] text-gray-500">{t('step.retries')}</span>
                 <input
                   type="number"
                   min={0}
@@ -1086,7 +1098,7 @@ function StepCard({
                 onChange={() => onToggleRequireConfirmation()}
                 className="rounded border-surface-border bg-surface"
               />
-              <span className="truncate">Pause for manual confirmation</span>
+              <span className="truncate">{t('step.pauseForConfirmation')}</span>
             </label>
           )}
         </div>

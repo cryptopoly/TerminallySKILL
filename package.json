@@ -1,6 +1,6 @@
 {
   "name": "terminallyskill",
-  "version": "0.9.101",
+  "version": "0.9.102",
   "description": "TerminallySKILL prompt-aware command builder and workspace",
   "author": {
     "name": "TerminallySKILL",
@@ -30,6 +30,7 @@
     "package:all": "node scripts/package-all.mjs",
     "package:all:cross": "npm run package:mac:x64 && npm run package:mac:arm64 && npm run package:linux:x64 && npm run package:linux:arm64 && npm run package:win:x64 && npm run package:win:arm64",
     "postinstall": "electron-builder install-app-deps",
+    "i18n:check": "node scripts/check-i18n.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -45,10 +46,12 @@
     "electron-updater": "^6.8.3",
     "fuse.js": "^7.0.0",
     "highlight.js": "^11.11.1",
+    "i18next": "^26.1.0",
     "lucide-react": "^0.468.0",
     "node-pty": "^1.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-i18next": "^17.0.7",
     "react-resizable-panels": "^2.1.7",
     "ws": "^8.20.0",
     "zustand": "^5.0.2"

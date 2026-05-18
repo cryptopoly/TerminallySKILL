@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Search, ChevronDown, ChevronRight, Loader2, X, CaseSensitive, Regex, Filter } from 'lucide-react'
 import clsx from 'clsx'
 import { useProjectStore } from '../../store/project-store'
@@ -45,6 +46,7 @@ function highlightMatch(text: string, query: string, caseSensitive: boolean): Re
 }
 
 export function FindInFiles(): JSX.Element {
+  const { t } = useTranslation('files')
   const activeProject = useProjectStore((s) => s.activeProject)
   const { setActiveFile, setPendingJumpLine } = useFileStore()
 
@@ -146,8 +148,8 @@ export function FindInFiles(): JSX.Element {
     return (
       <div className="flex-1 flex items-center justify-center p-6 text-center">
         <div>
-          <p className="text-sm font-medium text-gray-400">No local project open</p>
-          <p className="text-xs text-gray-600 mt-1">Find in Files works with local workspace projects.</p>
+          <p className="text-sm font-medium text-gray-400">{t('search.noLocalProjectTitle')}</p>
+          <p className="text-xs text-gray-600 mt-1">{t('search.noLocalProjectDescription')}</p>
         </div>
       </div>
     )
@@ -165,28 +167,28 @@ export function FindInFiles(): JSX.Element {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Search in project…"
+              placeholder={t('search.placeholder')}
               className="w-full bg-surface border border-surface-border rounded-lg pl-7 pr-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
               autoFocus
             />
           </div>
           {/* Toggles */}
           <button
-            title="Case sensitive"
+            title={t('search.caseSensitive')}
             onClick={() => setCaseSensitive((v) => !v)}
             className={clsx('p-1.5 rounded-md transition-colors', caseSensitive ? 'bg-accent/20 text-accent-light' : 'text-gray-600 hover:text-gray-400')}
           >
             <CaseSensitive size={14} />
           </button>
           <button
-            title="Use regex"
+            title={t('search.regex')}
             onClick={() => setUseRegex((v) => !v)}
             className={clsx('p-1.5 rounded-md transition-colors', useRegex ? 'bg-accent/20 text-accent-light' : 'text-gray-600 hover:text-gray-400')}
           >
             <Regex size={14} />
           </button>
           <button
-            title="Filter options"
+            title={t('search.filterOptions')}
             onClick={() => setShowOptions((v) => !v)}
             className={clsx('p-1.5 rounded-md transition-colors', (showOptions || globFilter) ? 'bg-accent/20 text-accent-light' : 'text-gray-600 hover:text-gray-400')}
           >
@@ -200,7 +202,7 @@ export function FindInFiles(): JSX.Element {
             value={globFilter}
             onChange={(e) => setGlobFilter(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="File filter, e.g. *.ts, src/**/*.tsx"
+            placeholder={t('search.globPlaceholder')}
             className="w-full bg-surface border border-surface-border rounded-lg px-3 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors font-mono"
           />
         )}
@@ -210,7 +212,9 @@ export function FindInFiles(): JSX.Element {
           disabled={!query.trim() || loading}
           className="w-full py-1.5 rounded-lg bg-accent/15 border border-accent/20 text-accent-light text-xs font-medium hover:bg-accent/25 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
         >
-          {loading ? <><Loader2 size={11} className="animate-spin" /> Searching…</> : <><Search size={11} /> Search</>}
+          {loading
+            ? <><Loader2 size={11} className="animate-spin" /> {t('search.searching')}</>
+            : <><Search size={11} /> {t('search.search')}</>}
         </button>
       </div>
 
@@ -224,8 +228,12 @@ export function FindInFiles(): JSX.Element {
           <div className="px-2 py-1.5 flex items-center justify-between">
             <span className="text-[11px] text-gray-500">
               {results.length === 0
-                ? 'No results'
-                : `${totalMatches} match${totalMatches !== 1 ? 'es' : ''} in ${results.length} file${results.length !== 1 ? 's' : ''}`}
+                ? t('search.noResults')
+                : t('search.resultSummary', {
+                    count: totalMatches,
+                    matches: totalMatches,
+                    files: results.length
+                  })}
             </span>
             <div className="flex items-center gap-2">
               {usedRipgrep && <span className="text-[10px] text-gray-600 font-mono">rg</span>}
@@ -233,7 +241,7 @@ export function FindInFiles(): JSX.Element {
                 <button
                   onClick={() => setResults(null)}
                   className="text-gray-600 hover:text-gray-400 transition-colors"
-                  title="Clear results"
+                  title={t('search.clearResults')}
                 >
                   <X size={11} />
                 </button>
@@ -289,14 +297,20 @@ export function FindInFiles(): JSX.Element {
 
         {results?.length === 0 && (
           <div className="px-4 py-8 text-center">
-            <p className="text-sm text-gray-500">No matches for <span className="text-gray-300 font-mono">{query}</span></p>
-            {globFilter && <p className="text-xs text-gray-600 mt-1">in files matching <span className="font-mono">{globFilter}</span></p>}
+            <p className="text-sm text-gray-500">
+              {t('search.noMatchesFor', { query })}
+            </p>
+            {globFilter && (
+              <p className="text-xs text-gray-600 mt-1">
+                {t('search.inFilesMatching', { glob: globFilter })}
+              </p>
+            )}
           </div>
         )}
 
         {!results && !loading && !error && (
           <div className="px-4 py-8 text-center text-xs text-gray-600">
-            Press Enter or click Search to find across all files in this project
+            {t('search.hint')}
           </div>
         )}
       </div>

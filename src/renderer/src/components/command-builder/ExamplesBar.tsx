@@ -1,4 +1,5 @@
 import { Lightbulb } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useBuilderStore } from '../../store/builder-store'
 import type { CommandExample } from '../../../../shared/command-schema'
 
@@ -7,12 +8,13 @@ interface ExamplesBarProps {
 }
 
 export function ExamplesBar({ examples }: ExamplesBarProps): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const setValues = useBuilderStore((s) => s.setValues)
 
   return (
     <div className="mt-4 flex items-center gap-2 flex-wrap">
       <Lightbulb size={14} className="text-gray-500 shrink-0" />
-      <span className="text-xs text-gray-500">Command Tree Root:</span>
+      <span className="text-xs text-gray-500">{t('examples.commandTreeRoot')}</span>
       {examples.map((example, i) => (
         <button
           key={i}

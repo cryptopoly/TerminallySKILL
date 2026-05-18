@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Braces, ScrollText, Sparkles, Star, X } from 'lucide-react'
 import clsx from 'clsx'
 import {
@@ -8,26 +9,18 @@ import {
 
 const TARGETS: Array<{
   id: TerminalPromotionTarget
-  label: string
-  description: string
   icon: React.ReactNode
 }> = [
   {
     id: 'script',
-    label: 'Workflow Script',
-    description: 'Create a script with this command as its first runnable step.',
     icon: <ScrollText size={14} />
   },
   {
     id: 'snippet',
-    label: 'Snippet',
-    description: 'Save the command as a reusable template you can run later.',
     icon: <Braces size={14} />
   },
   {
     id: 'command',
-    label: 'Command',
-    description: 'Open or create a command-builder entry for the root executable.',
     icon: <Star size={14} />
   }
 ]
@@ -47,18 +40,19 @@ export function PromoteCommandDialog({
   onClose: () => void
   onPromote: (target: TerminalPromotionTarget, name: string) => Promise<void> | void
 }): JSX.Element {
+  const { t } = useTranslation('terminal')
   const [target, setTarget] = useState<TerminalPromotionTarget>('script')
   const [name, setName] = useState(buildPromotionDefaultName(commandString, 'script'))
 
   const helperCopy = useMemo(() => {
     if (target === 'command') {
       return existingCommand
-        ? 'This executable is already known. Promote will open the existing command builder and enable it for this project if needed.'
-        : 'This creates a placeholder command entry. You can enrich it from `--help` later for a richer builder.'
+        ? t('promote.helpers.existingCommand')
+        : t('promote.helpers.newCommand')
     }
 
-    return 'You can rename this now, then refine the script or snippet immediately after it opens.'
-  }, [existingCommand, target])
+    return t('promote.helpers.artifact')
+  }, [existingCommand, target, t])
 
   useEffect(() => {
     setName(buildPromotionDefaultName(commandString, target))
@@ -90,9 +84,9 @@ export function PromoteCommandDialog({
             <Sparkles size={15} />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-semibold text-gray-200">Promote From Terminal</h2>
+            <h2 className="text-sm font-semibold text-gray-200">{t('promote.title')}</h2>
             <p className="mt-1 text-xs text-gray-500">
-              Turn the last command into a reusable workflow artifact without retyping it.
+              {t('promote.description')}
             </p>
           </div>
           <button
@@ -106,7 +100,7 @@ export function PromoteCommandDialog({
 
         <div className="px-5 py-4 space-y-4">
           <div className="rounded-xl border border-surface-border bg-surface-light/40 px-4 py-3">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Last Command</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">{t('promote.lastCommand')}</div>
             <code className="mt-2 block text-sm font-mono text-gray-200 whitespace-pre-wrap break-all">
               {commandString}
             </code>
@@ -127,22 +121,22 @@ export function PromoteCommandDialog({
               >
                 <div className="flex items-center gap-2 text-sm font-medium">
                   {option.icon}
-                  {option.label}
+                  {t(`promote.targets.${option.id}.label`)}
                 </div>
                 <p className="mt-2 text-[11px] leading-5 text-gray-500">
-                  {option.description}
+                  {t(`promote.targets.${option.id}.description`)}
                 </p>
               </button>
             ))}
           </div>
 
           <label className="block">
-            <span className="mb-1.5 block text-xs text-gray-500">Name</span>
+            <span className="mb-1.5 block text-xs text-gray-500">{t('promote.name')}</span>
             <input
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Choose a name..."
+              placeholder={t('promote.namePlaceholder')}
               className="w-full rounded-lg border border-surface-border bg-surface-light px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               autoFocus
             />
@@ -166,7 +160,7 @@ export function PromoteCommandDialog({
             disabled={loading}
             className="px-3 py-1.5 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
           >
-            Cancel
+            {t('common:actions.cancel')}
           </button>
           <button
             type="button"
@@ -176,10 +170,10 @@ export function PromoteCommandDialog({
           >
             {loading ? <Sparkles size={13} className="animate-pulse" /> : <Sparkles size={13} />}
             {target === 'command'
-              ? existingCommand ? 'Open Command' : 'Create Command'
+              ? existingCommand ? t('promote.openCommand') : t('promote.createCommand')
               : target === 'snippet'
-                ? 'Create Snippet'
-                : 'Create Script'}
+                ? t('promote.createSnippet')
+                : t('promote.createScript')}
           </button>
         </div>
       </div>

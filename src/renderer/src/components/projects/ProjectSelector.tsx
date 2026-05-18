@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FolderOpen,
   ChevronDown,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useProjectStore } from '../../store/project-store'
+import { useSettingsStore } from '../../store/settings-store'
 import { useTerminalStore } from '../../store/terminal-store'
 import { useWorkflowRunnerStore, isTerminalRunStatus } from '../../store/workflow-runner-store'
 import {
@@ -21,6 +23,7 @@ import {
   resolveProjectWorkingDirectory,
   type Project
 } from '../../../../shared/project-schema'
+import { compareLocalized } from '../../i18n/format'
 
 /** Parse "Group / Name" convention. Returns group=null for ungrouped projects. */
 function parseProjectGroup(name: string): { group: string | null; displayName: string } {
@@ -35,7 +38,9 @@ interface ProjectSelectorProps {
 }
 
 export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorProps): JSX.Element {
+  const { t } = useTranslation('projects')
   const { projects, activeProject } = useProjectStore()
+  const settings = useSettingsStore((s) => s.settings)
   const sessions = useTerminalStore((s) => s.sessions)
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
   const [open, setOpen] = useState(false)
@@ -96,10 +101,10 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
     if (ungrouped?.length) result.push({ group: null, projects: ungrouped })
     const named = [...map.entries()]
       .filter(([k]) => k !== null)
-      .sort(([a], [b]) => (a as string).localeCompare(b as string))
+      .sort(([a], [b]) => compareLocalized(a as string, b as string, settings))
     for (const [group, projects] of named) result.push({ group: group as string, projects })
     return result
-  }, [filtered, search])
+  }, [filtered, search, settings])
 
   // Flat list of currently visible projects (respects collapsed groups) for keyboard nav
   const visibleProjects = useMemo(() => {
@@ -216,7 +221,7 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
         ) : (
           <>
             <FolderOpen size={14} className="text-gray-500" />
-            <span className="text-gray-400">No project</span>
+            <span className="text-gray-400">{t('selector.none')}</span>
           </>
         )}
         <ChevronDown size={12} className="text-gray-500 ml-0.5 shrink-0" />
@@ -236,7 +241,7 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search projects..."
+                placeholder={t('selector.searchPlaceholder')}
                 className="tv-input-compact pl-8"
               />
             </div>
@@ -246,11 +251,11 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
           <div ref={listRef} className="max-h-96 overflow-y-auto py-1">
             {projects.length === 0 ? (
               <div className="px-4 py-6 text-center text-gray-500 text-sm">
-                No projects yet. Create one to get started.
+                {t('selector.empty')}
               </div>
             ) : filtered.length === 0 ? (
               <div className="px-4 py-4 text-center text-gray-500 text-sm">
-                No matching projects
+                {t('selector.noMatches')}
               </div>
             ) : (() => {
               let visibleIdx = 0
@@ -292,7 +297,11 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
                                   ? 'bg-green-500/15 text-green-400'
                                   : 'bg-gray-500/15 text-gray-400'
                               )}
-                              title={termInfo.hasActive ? `${termInfo.count} terminal(s), process running` : `${termInfo.count} terminal(s)`}
+                              title={
+                                termInfo.hasActive
+                                  ? t('selector.terminalCountActive', { count: termInfo.count })
+                                  : t('selector.terminalCount', { count: termInfo.count })
+                              }
                             >
                               <Terminal size={9} />
                               {termInfo.count}
@@ -314,7 +323,7 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
                         void window.electronAPI.openProjectInNewWindow(project.id)
                       }}
                       className="tv-btn-icon-sm shrink-0"
-                      title="Open in new window"
+                      title={t('selector.openNewWindow')}
                     >
                       <ExternalLink size={12} />
                     </button>
@@ -325,6 +334,7 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
                         onEditProject(project)
                       }}
                       className="tv-btn-icon-sm shrink-0"
+                      title={t('selector.edit')}
                     >
                       <Settings size={12} />
                     </button>
@@ -378,7 +388,7 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
               className="flex items-center gap-2 text-sm text-gray-400 hover:text-accent-light transition-colors"
             >
               <Plus size={14} />
-              New Project
+              {t('selector.newProject')}
             </button>
             <span className="text-[10px] text-gray-600 font-mono">
               {navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl+'}P

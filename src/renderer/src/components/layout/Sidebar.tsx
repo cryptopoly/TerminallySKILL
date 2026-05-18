@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import Fuse from 'fuse.js'
+import { useTranslation } from 'react-i18next'
 import {
   Star,
   TerminalSquare,
@@ -39,6 +40,8 @@ import type { Script } from '../../../../shared/script-schema'
 import type { Snippet } from '../../../../shared/snippet-schema'
 import { createProjectTerminalSession } from '../../lib/workspace-session'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { getCommandSearchText } from '../../lib/command-display'
+import { compareLocalized } from '../../i18n/format'
 
 const POPULAR_COMMAND_EXECUTABLES = [
   'git',
@@ -73,10 +76,6 @@ const POPULAR_COMMAND_EXECUTABLES = [
   'ruby',
   'java'
 ] as const
-
-function formatCountLabel(count: number, singular: string, plural = `${singular}s`): string {
-  return `${count} ${count === 1 ? singular : plural}`
-}
 
 function buildCommandKey(command: CommandDefinition): string {
   if (command.subcommands && command.subcommands.length > 0) {
@@ -114,6 +113,7 @@ function resolveRootDescription(executable: string, description: string | undefi
 }
 
 export function Sidebar(): JSX.Element {
+  const { t, i18n } = useTranslation('layout')
   const commands = useCommandStore((s) => s.commands)
   const activeCommand = useCommandStore((s) => s.activeCommand)
   const loading = useCommandStore((s) => s.loading)
@@ -129,6 +129,7 @@ export function Sidebar(): JSX.Element {
   const addTerminalSession = useTerminalStore((s) => s.addSession)
   const hiddenCommandExecutables = useSettingsStore((s) => s.settings.hiddenCommandExecutables)
   const sidebarTabOrder = useSettingsStore((s) => s.settings.sidebarTabOrder)
+  const settings = useSettingsStore((s) => s.settings)
   const { setSettings } = useSettingsStore()
   const scripts = useScriptStore((s) => s.scripts)
   const snippets = useSnippetStore((s) => s.snippets)
@@ -154,7 +155,7 @@ export function Sidebar(): JSX.Element {
     const el = sidebarRef.current
     if (!el) return
     const observer = new ResizeObserver(([entry]) => {
-      setNarrow(entry.contentRect.width < 260)
+      setNarrow(entry.contentRect.width < 500)
     })
     observer.observe(el)
     return () => observer.disconnect()
@@ -197,16 +198,22 @@ export function Sidebar(): JSX.Element {
 
   const fuse = useMemo(
     () =>
-      new Fuse(commands, {
-        keys: ['name', 'description', 'tags', 'category'],
-        threshold: 0.4
-      }),
-    [commands]
+      new Fuse(
+        commands.map((command) => ({
+          command,
+          searchText: getCommandSearchText(command)
+        })),
+        {
+          keys: ['searchText'],
+          threshold: 0.4
+        }
+      ),
+    [commands, i18n.language]
   )
 
   const filtered = useMemo(() => {
     if (!query.trim()) return commands
-    return fuse.search(query).map((r) => r.item)
+    return fuse.search(query).map((r) => r.item.command)
   }, [query, fuse, commands])
 
   const starterPack = activeProject?.starterPack ?? null
@@ -234,16 +241,16 @@ export function Sidebar(): JSX.Element {
         const leftRank = isCliRoot(left) ? 0 : (left.subcommands?.length ?? 0) <= 1 ? 1 : 2
         const rightRank = isCliRoot(right) ? 0 : (right.subcommands?.length ?? 0) <= 1 ? 1 : 2
         if (leftRank !== rightRank) return leftRank - rightRank
-        return left.name.localeCompare(right.name)
+        return compareLocalized(left.name, right.name, settings)
       })
     }
 
     return groups
-  }, [filtered, hiddenCommandExecutables])
+  }, [filtered, hiddenCommandExecutables, settings])
 
   const commandTreeKeys = useMemo(
-    () => Object.keys(grouped).sort((left, right) => left.localeCompare(right)),
-    [grouped]
+    () => Object.keys(grouped).sort((left, right) => compareLocalized(left, right, settings)),
+    [grouped, settings]
   )
 
   const allCommandTreesCollapsed =
@@ -368,7 +375,7 @@ export function Sidebar(): JSX.Element {
         discovered: filteredDiscovered,
         existingExecutables: filteredExistingExecutables,
         visibleExecutables: filteredVisibleExecutables,
-        title: mode === 'popular' ? 'Popular Installed Commands' : 'Scan Results'
+        title: mode === 'popular' ? t('sidebar.commands.popularInstalled') : t('sidebar.commands.scanResults')
       })
     } catch (err) {
       console.error('Failed to scan PATH:', err)
@@ -383,8 +390,8 @@ export function Sidebar(): JSX.Element {
       if (command.subcommands && command.subcommands.length > 0 && !isCliRoot(command)) continue
       executableSet.add(command.executable)
     }
-    return [...executableSet].sort((left, right) => left.localeCompare(right))
-  }, [commands])
+    return [...executableSet].sort((left, right) => compareLocalized(left, right, settings))
+  }, [commands, settings])
 
   const handleApplyScanResults = async (selectedExecutables: string[]): Promise<void> => {
     const selectedSet = new Set(selectedExecutables)
@@ -681,7 +688,7 @@ export function Sidebar(): JSX.Element {
   }, [grouped, sidebarTab])
 
   return (
-    <div ref={sidebarRef} className="h-full bg-surface flex flex-col border-r border-surface-border">
+    <div ref={sidebarRef} className="h-full min-h-0 bg-surface flex flex-col border-r border-surface-border overflow-hidden">
       {/* Tab switcher — labels when wide, scrollable icons when narrow */}
       <div className={clsx(
         'flex border-b border-surface-border shrink-0 bg-surface',
@@ -689,12 +696,12 @@ export function Sidebar(): JSX.Element {
       )}>
         {(() => {
           const allTabs = [
-            { id: 'commands', label: 'Commands', icon: <TerminalSquare size={13} /> },
-            { id: 'scripts',  label: 'Scripts',  icon: <ScrollText size={13} /> },
-            { id: 'snippets', label: 'Snippets', icon: <Braces size={13} /> },
-            { id: 'files', label: 'Files', icon: <FolderTree size={13} /> },
-            { id: 'logs',     label: 'Logs',     icon: <FileText size={13} /> },
-            { id: 'search',   label: 'Search',   icon: <Search size={13} /> },
+            { id: 'commands', label: t('sidebar.tabs.commands'), icon: <TerminalSquare size={13} /> },
+            { id: 'scripts',  label: t('sidebar.tabs.scripts'),  icon: <ScrollText size={13} /> },
+            { id: 'snippets', label: t('sidebar.tabs.snippets'), icon: <Braces size={13} /> },
+            { id: 'files', label: t('sidebar.tabs.files'), icon: <FolderTree size={13} /> },
+            { id: 'logs',     label: t('sidebar.tabs.logs'),     icon: <FileText size={13} /> },
+            { id: 'search',   label: t('sidebar.tabs.search'),   icon: <Search size={13} /> },
           ] as { id: ProjectSidebarTab; label: string; icon: React.ReactNode }[]
           const order = sidebarTabOrder.length > 0 ? sidebarTabOrder : allTabs.map((t) => t.id)
           const orderedTabs = order
@@ -748,9 +755,9 @@ export function Sidebar(): JSX.Element {
         ) : (
           <div className="flex-1 min-h-0 flex items-center justify-center p-6">
             <div className="max-w-sm text-center space-y-3">
-              <div className="text-sm font-medium text-gray-300">Open a project to browse files</div>
+              <div className="text-sm font-medium text-gray-300">{t('sidebar.files.noProjectTitle')}</div>
               <div className="text-xs text-gray-500 leading-6">
-                Files are shown per project so we can keep tabs, edits, and file history scoped to the right workspace.
+                {t('sidebar.files.noProjectDescription')}
               </div>
             </div>
           </div>
@@ -769,7 +776,7 @@ export function Sidebar(): JSX.Element {
               <button
                 onClick={() => handleSetAllCommandTreesCollapsed(!allCommandTreesCollapsed)}
                 className="tv-btn-icon shrink-0"
-                title={allCommandTreesCollapsed ? 'Expand all command trees' : 'Collapse all command trees'}
+                title={allCommandTreesCollapsed ? t('sidebar.commands.expandAll') : t('sidebar.commands.collapseAll')}
               >
                 {allCommandTreesCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
               </button>
@@ -777,14 +784,14 @@ export function Sidebar(): JSX.Element {
             <button
               onClick={() => setAddCommandOpen(true)}
               className="tv-btn-icon shrink-0"
-              title="Add command manually"
+              title={t('sidebar.commands.addManual')}
             >
               <Plus size={14} />
             </button>
             <button
               onClick={() => void handleScan('all')}
               className="tv-btn-icon shrink-0"
-              title="Scan for installed commands"
+              title={t('sidebar.commands.scanInstalled')}
             >
               <Radar size={14} />
             </button>
@@ -794,7 +801,7 @@ export function Sidebar(): JSX.Element {
               <div className="mb-2">
                 <div className="flex items-center gap-1.5 px-2 py-1.5 tv-section-label text-caution">
                   <Star size={11} fill="currentColor" />
-                  Favorites
+                  {t('sidebar.commands.favorites')}
                 </div>
                 <div className="space-y-0.5 ml-1">
                   {favorites.map((cmd) => (
@@ -815,33 +822,33 @@ export function Sidebar(): JSX.Element {
             )}
 
             {loading ? (
-              <div className="text-center text-gray-500 text-sm mt-8">Loading commands...</div>
+              <div className="text-center text-gray-500 text-sm mt-8">{t('sidebar.commands.loading')}</div>
             ) : Object.keys(grouped).length === 0 && (query.trim() || commands.length > 0) ? (
               <div className="mx-2 mt-8 rounded-xl border border-surface-border/50 bg-surface-light/20 p-4 text-center">
-                <p className="text-sm text-gray-500">No commands match your search</p>
-                <p className="text-xs text-gray-600 mt-1">Try a different keyword or clear the search</p>
+                <p className="text-sm text-gray-500">{t('sidebar.commands.noMatches')}</p>
+                <p className="text-xs text-gray-600 mt-1">{t('sidebar.commands.noMatchesHint')}</p>
               </div>
             ) : Object.keys(grouped).length === 0 ? (
               <div className="mx-2 mt-8 rounded-2xl border border-surface-border bg-surface-light/40 p-5 text-center">
                 <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent-light">
                   <Sparkles size={18} />
                 </div>
-                <h3 className="text-base font-semibold text-gray-200">No Command Trees Yet</h3>
+                <h3 className="text-base font-semibold text-gray-200">{t('sidebar.commands.emptyTitle')}</h3>
                 <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-gray-500">
-                  Start from a blank slate and add only the tools that are actually installed on this computer.
+                  {t('sidebar.commands.emptyDescription')}
                 </p>
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
                   <button
                     onClick={() => void handleScan('popular')}
                     className="tv-btn-accent"
                   >
-                    Pick Popular Installed Commands
+                    {t('sidebar.commands.pickPopular')}
                   </button>
                   <button
                     onClick={() => void handleScan('all')}
                     className="tv-btn-secondary"
                   >
-                    Scan All Installed Commands
+                    {t('sidebar.commands.scanAll')}
                   </button>
                 </div>
               </div>
@@ -881,9 +888,9 @@ export function Sidebar(): JSX.Element {
 
           {confirmDeleteCommand && (
             <ConfirmDialog
-              title="Remove Command"
-              message={`"${confirmDeleteCommand.name}" will be permanently removed. This cannot be undone.`}
-              confirmLabel="Remove"
+              title={t('sidebar.commands.removeTitle')}
+              message={t('sidebar.commands.removeMessage', { name: confirmDeleteCommand.name })}
+              confirmLabel={t('sidebar.commands.remove')}
               onConfirm={() => {
                 void handleRemoveSavedCommand(confirmDeleteCommand)
                 setConfirmDeleteCommand(null)
@@ -895,7 +902,7 @@ export function Sidebar(): JSX.Element {
       )}
 
       <div className="shrink-0 border-t border-surface-border px-3 py-2 text-[11px] text-gray-600">
-        {appVersion ? `v${appVersion}` : 'Version loading...'}
+        {appVersion ? `v${appVersion}` : t('sidebar.versionLoading')}
       </div>
     </div>
   )
@@ -912,6 +919,8 @@ function CategoryListFavoriteCard({
   onToggleFavorite: () => void
   onRemove?: () => void
 }): JSX.Element {
+  const { t } = useTranslation('layout')
+
   return (
     <div className="w-full px-3 py-1.5 rounded-lg text-sm hover:bg-surface-light text-gray-300 border border-transparent transition-colors flex items-center gap-2">
       <button onClick={onSelect} className="flex-1 min-w-0 text-left">
@@ -924,7 +933,7 @@ function CategoryListFavoriteCard({
           onToggleFavorite()
         }}
         className="shrink-0 p-1 rounded text-caution"
-        title="Remove from favorites"
+        title={t('sidebar.commands.removeFavorite')}
       >
         <Star size={12} fill="currentColor" />
       </button>
@@ -936,7 +945,7 @@ function CategoryListFavoriteCard({
             onRemove()
           }}
           className="shrink-0 p-1 rounded text-gray-600 hover:text-destructive transition-colors"
-          title="Remove saved command"
+          title={t('sidebar.commands.removeSaved')}
         >
           <X size={12} />
         </button>
@@ -954,6 +963,8 @@ function StarterPackCallout({
   onOpenTab: (tab: ProjectSidebarTab) => void
   onDismiss: () => void
 }): JSX.Element {
+  const { t } = useTranslation('layout')
+
   return (
     <div className="shrink-0 px-3 pt-3">
       <div className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/12 via-surface-light to-surface p-3 shadow-lg shadow-black/10">
@@ -963,17 +974,17 @@ function StarterPackCallout({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-200">Starter pack applied</span>
+              <span className="text-sm font-semibold text-gray-200">{t('sidebar.starterPack.title')}</span>
               <button
                 onClick={onDismiss}
                 className="ml-auto p-1 rounded-md text-gray-500 hover:text-gray-300 hover:bg-surface-light transition-colors"
-                title="Dismiss"
+                title={t('sidebar.starterPack.dismiss')}
               >
                 <X size={12} />
               </button>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-gray-400">
-              This project was preloaded with repo-aware defaults so the first session is not blank.
+              {t('sidebar.starterPack.description')}
             </p>
           </div>
         </div>
@@ -997,9 +1008,9 @@ function StarterPackCallout({
             disabled={starterPack.categoryIds.length === 0}
             className="rounded-xl border border-surface-border bg-surface/80 px-2 py-2 text-left text-gray-300 hover:border-accent/30 hover:text-gray-200 transition-colors disabled:opacity-40 disabled:hover:border-surface-border disabled:hover:text-gray-300"
           >
-            <div className="text-[10px] uppercase tracking-wider text-gray-500">Commands</div>
+            <div className="text-[10px] uppercase tracking-wider text-gray-500">{t('sidebar.starterPack.commands')}</div>
             <div className="mt-1 font-medium">
-              {formatCountLabel(starterPack.categoryIds.length, 'starter command')}
+              {t('sidebar.starterPack.starterCommand', { count: starterPack.categoryIds.length })}
             </div>
           </button>
           <button
@@ -1007,9 +1018,9 @@ function StarterPackCallout({
             disabled={starterPack.scriptIds.length === 0}
             className="rounded-xl border border-surface-border bg-surface/80 px-2 py-2 text-left text-gray-300 hover:border-accent/30 hover:text-gray-200 transition-colors disabled:opacity-40 disabled:hover:border-surface-border disabled:hover:text-gray-300"
           >
-            <div className="text-[10px] uppercase tracking-wider text-gray-500">Scripts</div>
+            <div className="text-[10px] uppercase tracking-wider text-gray-500">{t('sidebar.starterPack.scripts')}</div>
             <div className="mt-1 font-medium">
-              {formatCountLabel(starterPack.scriptIds.length, 'starter script')}
+              {t('sidebar.starterPack.starterScript', { count: starterPack.scriptIds.length })}
             </div>
           </button>
           <button
@@ -1017,9 +1028,9 @@ function StarterPackCallout({
             disabled={starterPack.snippetIds.length === 0}
             className="rounded-xl border border-surface-border bg-surface/80 px-2 py-2 text-left text-gray-300 hover:border-accent/30 hover:text-gray-200 transition-colors disabled:opacity-40 disabled:hover:border-surface-border disabled:hover:text-gray-300"
           >
-            <div className="text-[10px] uppercase tracking-wider text-gray-500">Snippets</div>
+            <div className="text-[10px] uppercase tracking-wider text-gray-500">{t('sidebar.starterPack.snippets')}</div>
             <div className="mt-1 font-medium">
-              {formatCountLabel(starterPack.snippetIds.length, 'starter snippet')}
+              {t('sidebar.starterPack.starterSnippet', { count: starterPack.snippetIds.length })}
             </div>
           </button>
         </div>

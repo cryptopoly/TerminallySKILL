@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useMemo, useState, useRef, type MutableRefObject } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useRunScript } from '../../hooks/useRunScript'
 import { createPortal } from 'react-dom'
 import {
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react'
 import { useLogStore } from '../../store/log-store'
 import { useProjectStore } from '../../store/project-store'
+import { useSettingsStore } from '../../store/settings-store'
 import { HelpTip } from '../ui/HelpTip'
 import type { SessionLogMeta, LogSearchResult } from '../../../../shared/log-schema'
 import type { RunRecord, RunStatus, RunStepRecord } from '../../../../shared/run-schema'
@@ -35,8 +37,13 @@ import {
   findPreviousComparableRun,
   type RunComparisonRow
 } from '../../../../shared/run-history'
+import { formatDateTime } from '../../i18n/format'
+import { formatWorkflowRunError } from '../../lib/workflow-run-errors'
+
+type LogTranslator = (key: string, options?: Record<string, unknown>) => string
 
 export function LogBrowser(): JSX.Element {
+  const { t } = useTranslation('logs')
   const activeProject = useProjectStore((s) => s.activeProject)
   const [runs, setRuns] = useState<RunRecord[]>([])
   const [selectedRun, setSelectedRun] = useState<RunRecord | null>(null)
@@ -83,10 +90,10 @@ export function LogBrowser(): JSX.Element {
         const content = await window.electronAPI.readLogContent(log.logFilePath)
         setSelectedLogContent(content)
       } catch {
-        setSelectedLogContent('[Could not read log file]')
+        setSelectedLogContent(t('list.readError'))
       }
     },
-    [setSelectedLog, setSelectedLogContent]
+    [setSelectedLog, setSelectedLogContent, t]
   )
 
   const handleBack = useCallback(() => {
@@ -230,6 +237,7 @@ function LogList({
   onRefresh: () => void
   onOpenLogsFolder: () => void
 }): JSX.Element {
+  const { t } = useTranslation('logs')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [showRuns, setShowRuns] = useState(true)
   const [showLogs, setShowLogs] = useState(true)
@@ -267,14 +275,14 @@ function LogList({
           />
           <input
             type="text"
-            placeholder="Search logs and runs..."
+            placeholder={t('list.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => handleChange(e.target.value)}
             className="tv-input-compact pl-8"
           />
         </div>
         <div className="mt-2 flex items-center gap-2">
-          <HelpTip label="Workflow Runs" description="Show or hide workflow script runs">
+          <HelpTip label={t('list.workflowRuns')} description={t('list.workflowRunsDescription')}>
             <button
               onClick={() => setShowRuns((v) => !v)}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] transition-colors ${
@@ -284,10 +292,10 @@ function LogList({
               }`}
             >
               <PlayCircle size={12} />
-              Runs
+              {t('list.runs')}
             </button>
           </HelpTip>
-          <HelpTip label="Terminal Logs" description="Show or hide saved terminal session logs">
+          <HelpTip label={t('list.terminalLogs')} description={t('list.terminalLogsDescription')}>
             <button
               onClick={() => setShowLogs((v) => !v)}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] transition-colors ${
@@ -297,17 +305,17 @@ function LogList({
               }`}
             >
               <Terminal size={12} />
-              Logs
+              {t('list.logs')}
             </button>
           </HelpTip>
           <div className="ml-auto pl-2 shrink-0">
-            <HelpTip label="Open Logs Folder" description="Open the resolved logs directory for this project">
+            <HelpTip label={t('list.openLogsFolder')} description={t('list.openLogsFolderDescription')}>
               <button
                 onClick={onOpenLogsFolder}
                 className="tv-btn-secondary text-[11px] shrink-0"
               >
                 <FolderOpen size={11} />
-                Open Logs Folder
+                {t('list.openLogsFolder')}
               </button>
             </HelpTip>
           </div>
@@ -317,29 +325,29 @@ function LogList({
       {/* Log entries */}
       <div className="flex-1 overflow-y-auto px-2 pb-4">
         {loading ? (
-          <div className="text-center text-gray-500 text-sm mt-8">Loading history...</div>
+          <div className="text-center text-gray-500 text-sm mt-8">{t('list.loading')}</div>
         ) : mergedItems.length === 0 ? (
           <div className="text-center py-12">
             <ScrollText size={28} className="mx-auto mb-3 text-gray-700" />
             <p className="text-gray-500 text-sm">
               {searchQuery.trim()
-                ? 'No matching runs or logs'
+                ? t('list.emptyMatching')
                 : !showRuns && !showLogs
-                  ? 'All filters are off'
-                  : 'No saved history yet'}
+                  ? t('list.emptyFilters')
+                  : t('list.emptyHistory')}
             </p>
             <p className="text-gray-600 text-xs mt-1">
               {searchQuery.trim()
-                ? 'Try a different search term.'
+                ? t('list.tryDifferentSearch')
                 : !showRuns && !showLogs
-                  ? 'Enable at least one filter above to see results.'
-                  : 'Workflow runs are captured live, and terminal sessions are auto-saved when closed.'}
+                  ? t('list.enableFilter')
+                  : t('list.historyHint')}
             </p>
             <button
               onClick={onRefresh}
               className="mt-3 text-xs text-accent-light hover:text-accent transition-colors"
             >
-              Refresh
+              {t('list.refresh')}
             </button>
           </div>
         ) : (
@@ -365,8 +373,10 @@ function RunEntry({
   run: RunRecord
   onClick: () => void
 }): JSX.Element {
+  const { t } = useTranslation('logs')
+  const settings = useSettingsStore((s) => s.settings)
   const date = new Date(run.endedAt ?? run.startedAt)
-  const statusMeta = getRunStatusMeta(run.status)
+  const statusMeta = getRunStatusMeta(run.status, t)
   const completedSteps = run.steps.filter((step) => step.status === 'completed').length
 
   return (
@@ -384,11 +394,10 @@ function RunEntry({
           <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-600">
             <span className="flex items-center gap-1">
               <Clock size={10} />
-              {date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{' '}
-              {date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+              {formatDateTime(date, settings)}
             </span>
             <span>
-              {completedSteps}/{run.steps.length} steps
+              {t('labels.stepsComplete', { completed: completedSteps, total: run.steps.length })}
             </span>
             {run.projectName && <span className="truncate">{run.projectName}</span>}
           </div>
@@ -410,15 +419,10 @@ function LogEntry({
   searchQuery: string
   onClick: () => void
 }): JSX.Element {
+  const { t } = useTranslation('logs')
+  const settings = useSettingsStore((s) => s.settings)
   const date = new Date(log.endedAt)
-  const timeStr = date.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric'
-  })
-  const clockStr = date.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  const timeStr = formatDateTime(date, settings)
 
   const exitColor =
     log.exitCode === 0
@@ -428,7 +432,11 @@ function LogEntry({
         : 'text-destructive'
 
   const exitLabel =
-    log.exitCode === null ? 'closed' : log.exitCode === 0 ? 'ok' : `exit ${log.exitCode}`
+    log.exitCode === null
+      ? t('status.closed')
+      : log.exitCode === 0
+        ? t('status.ok')
+        : t('step.exit', { code: log.exitCode })
 
   // Format file size
   const sizeStr =
@@ -462,9 +470,9 @@ function LogEntry({
       <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-600">
         <span className="flex items-center gap-1">
           <Clock size={10} />
-          {timeStr} {clockStr}
+          {timeStr}
         </span>
-        <span>{log.lineCount} lines</span>
+        <span>{t('labels.lines', { count: log.lineCount })}</span>
         <span>{sizeStr}</span>
       </div>
       {searchQuery.trim() && matchLines.length > 0 && (
@@ -534,11 +542,13 @@ function RunDetail({
   onCompare: (baseline: RunRecord, candidate: RunRecord) => void
   onOpenLinkedLog: (run: RunRecord) => void
 }): JSX.Element {
+  const { t } = useTranslation('logs')
+  const settings = useSettingsStore((s) => s.settings)
   const { runScript, runningScriptId, canRunScript } = useRunScript()
-  const statusMeta = getRunStatusMeta(run.status)
+  const statusMeta = getRunStatusMeta(run.status, t)
   const started = new Date(run.startedAt)
   const ended = run.endedAt ? new Date(run.endedAt) : null
-  const durationStr = ended ? formatDuration(ended.getTime() - started.getTime()) : 'In progress'
+  const durationStr = ended ? formatDuration(ended.getTime() - started.getTime()) : t('status.inProgress')
   const failedCommandStep = useMemo(
     () =>
       [...run.steps]
@@ -578,13 +588,13 @@ function RunDetail({
 
         <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px] text-gray-500 ml-7">
           <span>
-            Started: {started.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+            {t('labels.started')}: {formatDateTime(started, settings)}
           </span>
-          <span>Duration: {durationStr}</span>
-          <span>Session: {run.sessionId}</span>
-          <span>Steps: {run.steps.length}</span>
-          <span>Shell: {run.shell ?? 'Unknown'}</span>
-          <span>{run.projectName ?? 'No project'}</span>
+          <span>{t('labels.duration')}: {durationStr}</span>
+          <span>{t('labels.session')}: {run.sessionId}</span>
+          <span>{t('labels.steps')}: {run.steps.length}</span>
+          <span>{t('labels.shell')}: {run.shell ?? t('labels.unknown')}</span>
+          <span>{run.projectName ?? t('labels.noProject')}</span>
         </div>
         {run.cwd && (
           <div className="flex items-center gap-1 text-[11px] text-gray-600 mt-1 ml-7 font-mono truncate">
@@ -595,12 +605,12 @@ function RunDetail({
         {Object.keys(run.inputValues).length > 0 && (
           <div className="mt-3 ml-7 rounded-lg border border-surface-border bg-surface px-3 py-2">
             <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500">
-              Inputs
+              {t('labels.inputs')}
             </div>
             <div className="mt-2 space-y-1 text-xs text-gray-300 font-mono">
               {Object.entries(run.inputValues).map(([key, value]) => (
                 <div key={key}>
-                  {key}: {value === undefined ? '<unset>' : String(value)}
+                  {key}: {value === undefined ? t('labels.unset') : String(value)}
                 </div>
               ))}
             </div>
@@ -609,7 +619,9 @@ function RunDetail({
         {run.error && (
           <div className="mt-3 ml-7 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
             <div className="flex items-start gap-2">
-              <span className="flex-1">{run.error}</span>
+              <span className="flex-1">
+                {formatWorkflowRunError(run.error, (key, options) => t(key, { ns: 'scripts', ...options }))}
+              </span>
               <ExitDiagnosticsButton diagnostics={runDiagnostics} />
             </div>
           </div>
@@ -624,7 +636,7 @@ function RunDetail({
               {runningScriptId === run.scriptId
                 ? <Loader2 size={12} className="animate-spin" />
                 : <Play size={12} />}
-              Rerun
+              {t('actions.rerun')}
             </button>
           )}
           {run.logFilePath && (
@@ -633,7 +645,7 @@ function RunDetail({
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-surface-border text-xs text-gray-300 hover:text-gray-200 hover:border-gray-500 transition-colors"
             >
               <Terminal size={12} />
-              Open Log
+              {t('actions.openLog')}
             </button>
           )}
           {compareTarget && (
@@ -642,7 +654,7 @@ function RunDetail({
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-surface-border text-xs text-gray-300 hover:text-gray-200 hover:border-gray-500 transition-colors"
             >
               <ArrowLeftRight size={12} />
-              Compare Previous
+              {t('actions.comparePrevious')}
             </button>
           )}
         </div>
@@ -658,13 +670,14 @@ function RunDetail({
 }
 
 function RunStepCard({ step }: { step: RunStepRecord }): JSX.Element {
-  const statusMeta = getRunStatusMeta(step.status === 'running' ? 'running_command' : step.status)
+  const { t } = useTranslation('logs')
+  const statusMeta = getRunStatusMeta(step.status === 'running' ? 'running_command' : step.status, t)
   const durationStr =
     step.startedAt && step.endedAt
       ? formatDuration(new Date(step.endedAt).getTime() - new Date(step.startedAt).getTime())
-      : step.startedAt
-        ? 'In progress'
-        : 'Not started'
+    : step.startedAt
+        ? t('status.inProgress')
+        : t('status.notStarted')
   const stepDiagnostics =
     step.type === 'command' && step.exitCode !== null && step.exitCode !== 0
       ? buildExitDiagnostics({
@@ -690,19 +703,19 @@ function RunStepCard({ step }: { step: RunStepRecord }): JSX.Element {
             : step.content}
       </div>
       <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-gray-500">
-        <span>step {step.sourceIndex + 1}</span>
-        <span>duration {durationStr}</span>
-        {step.type === 'command' && <span>attempts {step.attempts}</span>}
+        <span>{t('labels.step')} {step.sourceIndex + 1}</span>
+        <span>{t('step.duration', { duration: durationStr })}</span>
+        {step.type === 'command' && <span>{t('step.attempts', { count: step.attempts })}</span>}
         {step.exitCode !== null && (
           <span className="inline-flex items-center gap-1.5">
-            <span>exit {step.exitCode}</span>
+            <span>{t('step.exit', { code: step.exitCode })}</span>
             {stepDiagnostics && <ExitDiagnosticsButton diagnostics={stepDiagnostics} compact />}
           </span>
         )}
-        {step.type === 'command' && step.retryCount > 0 && <span>retries {step.retryCount}</span>}
-        {step.type === 'command' && step.delayMs > 0 && <span>delay {step.delayMs}ms</span>}
+        {step.type === 'command' && step.retryCount > 0 && <span>{t('step.retries', { count: step.retryCount })}</span>}
+        {step.type === 'command' && step.delayMs > 0 && <span>{t('step.delay', { ms: step.delayMs })}</span>}
         {step.type === 'approval' && (
-          <span>{step.requireConfirmation ? 'manual confirmation' : 'auto checkpoint'}</span>
+          <span>{step.requireConfirmation ? t('step.manualConfirmation') : t('step.autoCheckpoint')}</span>
         )}
       </div>
     </div>
@@ -718,6 +731,8 @@ function RunCompareDialog({
   candidate: RunRecord
   onClose: () => void
 }): JSX.Element {
+  const { t } = useTranslation('logs')
+  const settings = useSettingsStore((s) => s.settings)
   const [changedOnly, setChangedOnly] = useState(false)
   const rows = useMemo(() => buildRunComparisonRows(baseline, candidate), [baseline, candidate])
   const summary = useMemo(() => buildRunComparisonSummary(baseline, candidate), [baseline, candidate])
@@ -730,10 +745,12 @@ function RunCompareDialog({
           <div className="flex items-center gap-2">
             <ArrowLeftRight size={16} className="text-accent-light" />
             <div>
-              <div className="text-sm font-semibold text-gray-200">Run Comparison</div>
+              <div className="text-sm font-semibold text-gray-200">{t('compare.title')}</div>
               <div className="text-xs text-gray-500">
-                {baseline.scriptName} · {new Date(baseline.startedAt).toLocaleString()} vs{' '}
-                {new Date(candidate.startedAt).toLocaleString()}
+                {baseline.scriptName} · {t('compare.versus', {
+                  baseline: formatDateTime(baseline.startedAt, settings),
+                  candidate: formatDateTime(candidate.startedAt, settings)
+                })}
               </div>
             </div>
           </div>
@@ -746,15 +763,15 @@ function RunCompareDialog({
         </div>
 
         <div className="px-4 py-3 border-b border-surface-border grid grid-cols-4 gap-3 text-xs">
-          <CompareSummaryCard label="Changed Steps" value={String(summary.changedSteps)} tone="text-accent-light" />
+          <CompareSummaryCard label={t('compare.changedSteps')} value={String(summary.changedSteps)} tone="text-accent-light" />
           <CompareSummaryCard
-            label="Regressions / Fixes"
+            label={t('compare.regressionsFixes')}
             value={`${summary.regressions} / ${summary.fixes}`}
             tone={summary.regressions > 0 ? 'text-destructive' : 'text-safe'}
           />
           <CompareSummaryCard
-            label="Duration Delta"
-            value={formatDurationDelta(summary.durationDeltaMs)}
+            label={t('compare.durationDelta')}
+            value={formatDurationDelta(summary.durationDeltaMs, t)}
             tone={
               summary.durationDeltaMs === null
                 ? 'text-gray-500'
@@ -766,7 +783,7 @@ function RunCompareDialog({
             }
           />
           <CompareSummaryCard
-            label="Added / Removed"
+            label={t('compare.addedRemoved')}
             value={`${summary.addedSteps} / ${summary.removedSteps}`}
             tone="text-gray-300"
           />
@@ -774,30 +791,30 @@ function RunCompareDialog({
 
         <div className="grid grid-cols-2 border-b border-surface-border text-xs">
           <div className="px-4 py-3 border-r border-surface-border">
-            <div className="text-gray-400 uppercase tracking-[0.16em] mb-1">Previous</div>
+            <div className="text-gray-400 uppercase tracking-[0.16em] mb-1">{t('compare.previous')}</div>
             <div className="text-gray-200">{baseline.scriptName}</div>
             <div className="text-gray-500 mt-1">
-              {getRunStatusMeta(baseline.status).label} · {baseline.steps.length} steps ·{' '}
+              {getRunStatusMeta(baseline.status, t).label} · {t('labels.stepCount', { count: baseline.steps.length })} ·{' '}
               {baseline.endedAt
                 ? formatDuration(new Date(baseline.endedAt).getTime() - new Date(baseline.startedAt).getTime())
-                : 'In progress'}
+                : t('status.inProgress')}
             </div>
           </div>
           <div className="px-4 py-3">
-            <div className="text-gray-400 uppercase tracking-[0.16em] mb-1">Current</div>
+            <div className="text-gray-400 uppercase tracking-[0.16em] mb-1">{t('compare.current')}</div>
             <div className="text-gray-200">{candidate.scriptName}</div>
             <div className="text-gray-500 mt-1">
-              {getRunStatusMeta(candidate.status).label} · {candidate.steps.length} steps ·{' '}
+              {getRunStatusMeta(candidate.status, t).label} · {t('labels.stepCount', { count: candidate.steps.length })} ·{' '}
               {candidate.endedAt
                 ? formatDuration(new Date(candidate.endedAt).getTime() - new Date(candidate.startedAt).getTime())
-                : 'In progress'}
+                : t('status.inProgress')}
             </div>
           </div>
         </div>
 
         <div className="px-4 py-2 border-b border-surface-border flex items-center justify-between gap-3">
           <div className="text-xs text-gray-500">
-            {visibleRows.length} of {rows.length} steps shown
+            {t('compare.shown', { visible: visibleRows.length, total: rows.length })}
           </div>
           <button
             onClick={() => setChangedOnly((value) => !value)}
@@ -807,13 +824,13 @@ function RunCompareDialog({
                 : 'border-surface-border text-gray-400 hover:text-gray-200'
             }`}
           >
-            {changedOnly ? 'Showing changed only' : 'Show changed only'}
+            {changedOnly ? t('compare.showingChangedOnly') : t('compare.showChangedOnly')}
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {visibleRows.map((row) => {
-            const changeMeta = getRunComparisonChangeMeta(row)
+            const changeMeta = getRunComparisonChangeMeta(row, t)
             return (
             <div
               key={row.key}
@@ -823,7 +840,7 @@ function RunCompareDialog({
             >
               <div className="px-3 py-2 border-b border-surface-border flex items-center justify-between gap-2 text-[11px]">
                 <span className="text-gray-500 uppercase tracking-[0.16em]">
-                  Step {row.index + 1}
+                  {t('compare.stepLabel', { index: row.index + 1 })}
                 </span>
                 <span className={`${changeMeta.tone} uppercase tracking-[0.16em]`}>
                   {changeMeta.label}
@@ -838,7 +855,7 @@ function RunCompareDialog({
           })}
           {visibleRows.length === 0 && (
             <div className="rounded-xl border border-surface-border bg-surface-light px-4 py-8 text-center text-sm text-gray-500">
-              No changed steps between these runs.
+              {t('compare.noChangedSteps')}
             </div>
           )}
         </div>
@@ -871,21 +888,22 @@ function RunCompareCell({
   step: RunStepRecord | null
   bordered?: boolean
 }): JSX.Element {
+  const { t } = useTranslation('logs')
   if (!step) {
     return (
       <div className={`px-4 py-3 text-xs text-gray-600 ${bordered ? 'border-l border-surface-border' : ''}`}>
-        No step in this run.
+        {t('compare.noStep')}
       </div>
     )
   }
 
-  const statusMeta = getRunStatusMeta(step.status === 'running' ? 'running_command' : step.status)
+  const statusMeta = getRunStatusMeta(step.status === 'running' ? 'running_command' : step.status, t)
   const durationStr =
     step.startedAt && step.endedAt
       ? formatDuration(new Date(step.endedAt).getTime() - new Date(step.startedAt).getTime())
       : step.startedAt
-        ? 'In progress'
-        : 'Not started'
+        ? t('status.inProgress')
+        : t('status.notStarted')
 
   return (
     <div className={`px-4 py-3 ${bordered ? 'border-l border-surface-border' : ''}`}>
@@ -903,9 +921,9 @@ function RunCompareCell({
       </div>
       <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-gray-500">
         <span>{statusMeta.label}</span>
-        <span>duration {durationStr}</span>
-        {step.type === 'command' && <span>attempts {step.attempts}</span>}
-        {step.exitCode !== null && <span>exit {step.exitCode}</span>}
+        <span>{t('step.duration', { duration: durationStr })}</span>
+        {step.type === 'command' && <span>{t('step.attempts', { count: step.attempts })}</span>}
+        {step.exitCode !== null && <span>{t('step.exit', { code: step.exitCode })}</span>}
       </div>
     </div>
   )
@@ -930,6 +948,8 @@ function LogDetail({
   onBack: () => void
   onDelete: (log: SessionLogMeta) => void
 }): JSX.Element {
+  const { t } = useTranslation('logs')
+  const settings = useSettingsStore((s) => s.settings)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [aiReview, setAIReview] = useState<string | null>(null)
   const [aiReviewMeta, setAIReviewMeta] = useState<{ providerLabel: string; model: string } | null>(null)
@@ -949,12 +969,7 @@ function LogDetail({
   const started = new Date(log.startedAt)
   const ended = new Date(log.endedAt)
   const durationMs = ended.getTime() - started.getTime()
-  const durationStr =
-    durationMs < 60_000
-      ? `${Math.round(durationMs / 1000)}s`
-      : durationMs < 3_600_000
-        ? `${Math.round(durationMs / 60_000)}m`
-        : `${(durationMs / 3_600_000).toFixed(1)}h`
+  const durationStr = formatDuration(durationMs)
 
   const exitColor =
     log.exitCode === 0
@@ -1002,7 +1017,7 @@ function LogDetail({
         action: 'output-review',
         source: 'log',
         focus: 'command-block',
-        title: 'Selected log text',
+        title: t('detail.selectedLogText'),
         transcript: selectedText,
         cwd: log.cwd,
         shell: log.shell,
@@ -1020,7 +1035,7 @@ function LogDetail({
     } finally {
       setAILoading(false)
     }
-  }, [getSelectedText, log.cwd, log.exitCode, log.shell])
+  }, [getSelectedText, log.cwd, log.exitCode, log.shell, t])
 
   const sendAIFollowUp = useCallback(async () => {
     const question = aiFollowUpInput.trim()
@@ -1083,7 +1098,7 @@ function LogDetail({
           <span className="font-mono text-sm text-gray-300">{log.sessionId}</span>
           {log.exitCode !== null && (
             <span className={`ml-auto text-xs ${exitColor}`}>
-              Exit code: {log.exitCode}
+              {t('labels.exitCode')}: {log.exitCode}
             </span>
           )}
         </div>
@@ -1091,11 +1106,11 @@ function LogDetail({
         {/* Metadata grid */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px] text-gray-500 ml-7">
           <span>
-            Started: {started.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+            {t('labels.started')}: {formatDateTime(started, settings)}
           </span>
-          <span>Duration: {durationStr}</span>
-          <span>Shell: {log.shell}</span>
-          <span>{log.lineCount} lines</span>
+          <span>{t('labels.duration')}: {durationStr}</span>
+          <span>{t('labels.shell')}: {log.shell}</span>
+          <span>{t('labels.lines', { count: log.lineCount })}</span>
         </div>
         <div className="flex items-center gap-1 text-[11px] text-gray-600 mt-1 ml-7 font-mono truncate">
           <FolderOpen size={10} className="shrink-0" />
@@ -1116,7 +1131,7 @@ function LogDetail({
                   )
                 }
               }}
-              placeholder="Highlight text in this log… (Enter / Shift+Enter to navigate)"
+              placeholder={t('detail.searchPlaceholder')}
               className="flex-1 bg-transparent text-xs text-gray-300 placeholder:text-gray-600 focus:outline-none"
             />
             {matches.length > 0 && (
@@ -1127,7 +1142,7 @@ function LogDetail({
           </div>
           {searchQuery.trim() && matches.length === 0 && (
             <div className="mt-2 text-[11px] text-gray-500">
-              No matches found in this log.
+              {t('detail.noMatches')}
             </div>
           )}
         </div>
@@ -1166,7 +1181,7 @@ function LogDetail({
               className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-200 hover:bg-surface-lighter transition-colors disabled:opacity-50"
             >
               <Sparkles size={14} className="text-accent-light" />
-              AI Review Selection
+              {t('actions.aiReviewSelection')}
             </button>
             <button
               onClick={async () => {
@@ -1177,7 +1192,7 @@ function LogDetail({
               className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-200 hover:bg-surface-lighter transition-colors"
             >
               <Copy size={14} className="text-gray-400" />
-              Copy
+              {t('actions.copy')}
             </button>
           </div>
         </>,
@@ -1192,7 +1207,7 @@ function LogDetail({
               <div className="flex items-center gap-3 min-w-0">
                 <Sparkles size={18} className={aiError ? 'text-destructive' : 'text-accent-light'} />
                 <div className="min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-200">AI Review · Log Selection</h3>
+                  <h3 className="text-lg font-semibold text-gray-200">{t('detail.aiTitle')}</h3>
                 </div>
               </div>
               <button
@@ -1215,7 +1230,7 @@ function LogDetail({
               {aiLoading && (
                 <div className="flex items-center gap-2 text-sm text-gray-400 py-8 justify-center">
                   <Loader2 size={16} className="animate-spin" />
-                  Reviewing selected text...
+                  {t('detail.reviewing')}
                 </div>
               )}
               {aiError && (
@@ -1241,7 +1256,7 @@ function LogDetail({
               {aiFollowUpLoading && (
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   <Loader2 size={14} className="animate-spin" />
-                  Thinking...
+                  {t('detail.thinking')}
                 </div>
               )}
             </div>
@@ -1258,7 +1273,7 @@ function LogDetail({
                         void sendAIFollowUp()
                       }
                     }}
-                    placeholder="Ask a follow-up question..."
+                    placeholder={t('detail.followUpPlaceholder')}
                     disabled={aiFollowUpLoading}
                     className="flex-1 bg-surface rounded-lg border border-surface-border px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-accent/40 disabled:opacity-50"
                   />
@@ -1288,18 +1303,18 @@ function LogDetail({
       <div className="px-3 py-2 border-t border-surface-border shrink-0 flex justify-end">
         {confirmDelete ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-destructive">Delete this log?</span>
+            <span className="text-xs text-destructive">{t('detail.deleteConfirm')}</span>
             <button
               onClick={() => onDelete(log)}
               className="px-2.5 py-1 text-xs rounded-md bg-destructive/20 text-destructive hover:bg-destructive/30 transition-colors"
             >
-              Confirm
+              {t('actions.confirm')}
             </button>
             <button
               onClick={() => setConfirmDelete(false)}
               className="px-2.5 py-1 text-xs rounded-md text-gray-500 hover:text-gray-300 transition-colors"
             >
-              Cancel
+              {t('actions.cancel')}
             </button>
           </div>
         ) : (
@@ -1308,7 +1323,7 @@ function LogDetail({
             className="flex items-center gap-1.5 px-2 py-1 text-xs rounded-md text-gray-600 hover:text-destructive transition-colors"
           >
             <Trash2 size={12} />
-            Delete log
+            {t('actions.deleteLog')}
           </button>
         )}
       </div>
@@ -1376,6 +1391,7 @@ function ExitDiagnosticsButton({
   diagnostics: ExitDiagnostics | null
   compact?: boolean
 }): JSX.Element | null {
+  const { t } = useTranslation('logs')
   const [open, setOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -1447,7 +1463,7 @@ function ExitDiagnosticsButton({
         className={`rounded-full border border-surface-border text-gray-500 hover:text-accent-light hover:border-accent/30 transition-colors ${
           compact ? 'p-0.5' : 'p-1'
         }`}
-        title="Likely causes"
+        title={t('diagnostics.likelyCauses')}
       >
         <Info size={compact ? 11 : 12} />
       </button>
@@ -1465,7 +1481,7 @@ function ExitDiagnosticsButton({
           >
             <div className="px-3 py-2 border-b border-surface-border">
               <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-light">
-                Suspected Issues
+                {t('diagnostics.title')}
               </div>
               <div className="mt-1 text-xs text-gray-400 leading-5">
                 {diagnostics.summary}
@@ -1473,7 +1489,7 @@ function ExitDiagnosticsButton({
             </div>
             <div className="px-3 py-3 space-y-3 overflow-auto">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.16em] text-gray-500">Likely causes</div>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-gray-500">{t('diagnostics.likelyCauses')}</div>
                 <ul className="mt-2 space-y-1.5 text-xs text-gray-300 leading-5 list-disc pl-4">
                   {diagnostics.suspectedIssues.map((issue) => (
                     <li key={issue}>{issue}</li>
@@ -1481,7 +1497,7 @@ function ExitDiagnosticsButton({
                 </ul>
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-[0.16em] text-gray-500">Next checks</div>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-gray-500">{t('diagnostics.nextChecks')}</div>
                 <ul className="mt-2 space-y-1.5 text-xs text-gray-400 leading-5 list-disc pl-4">
                   {diagnostics.nextChecks.map((check) => (
                     <li key={check}>{check}</li>
@@ -1503,55 +1519,55 @@ function formatDuration(durationMs: number): string {
   return `${(durationMs / 3_600_000).toFixed(1)}h`
 }
 
-function formatDurationDelta(durationMs: number | null): string {
-  if (durationMs === null) return 'n/a'
-  if (durationMs === 0) return 'no change'
+function formatDurationDelta(durationMs: number | null, t: LogTranslator): string {
+  if (durationMs === null) return t('compare.notAvailable')
+  if (durationMs === 0) return t('compare.noChange')
   const prefix = durationMs > 0 ? '+' : '-'
   return `${prefix}${formatDuration(Math.abs(durationMs))}`
 }
 
-function getRunStatusMeta(status: RunStatus | RunStepRecord['status']): {
+function getRunStatusMeta(status: RunStatus | RunStepRecord['status'], t?: LogTranslator): {
   label: string
   tone: string
   icon: typeof PlayCircle
 } {
   switch (status) {
     case 'completed':
-      return { label: 'completed', tone: 'text-safe', icon: CheckCircle2 }
+      return { label: t?.('status.completed') ?? 'completed', tone: 'text-safe', icon: CheckCircle2 }
     case 'failed':
-      return { label: 'failed', tone: 'text-destructive', icon: XCircle }
+      return { label: t?.('status.failed') ?? 'failed', tone: 'text-destructive', icon: XCircle }
     case 'cancelled':
-      return { label: 'cancelled', tone: 'text-destructive', icon: XCircle }
+      return { label: t?.('status.cancelled') ?? 'cancelled', tone: 'text-destructive', icon: XCircle }
     case 'awaiting_approval':
-      return { label: 'awaiting approval', tone: 'text-caution', icon: PauseCircle }
+      return { label: t?.('status.awaitingApproval') ?? 'awaiting approval', tone: 'text-caution', icon: PauseCircle }
     case 'running':
     case 'running_command':
     case 'waiting_for_shell':
     case 'waiting_for_delay':
-      return { label: 'running', tone: 'text-accent-light', icon: PlayCircle }
+      return { label: t?.('status.running') ?? 'running', tone: 'text-accent-light', icon: PlayCircle }
     case 'pending':
-      return { label: 'pending', tone: 'text-gray-500', icon: PlayCircle }
+      return { label: t?.('status.pending') ?? 'pending', tone: 'text-gray-500', icon: PlayCircle }
     default:
       return { label: status, tone: 'text-gray-500', icon: PlayCircle }
   }
 }
 
-function getRunComparisonChangeMeta(row: RunComparisonRow): {
+function getRunComparisonChangeMeta(row: RunComparisonRow, t: LogTranslator): {
   label: string
   tone: string
 } {
   switch (row.changeKind) {
     case 'added':
-      return { label: 'added', tone: 'text-safe' }
+      return { label: t('compare.added'), tone: 'text-safe' }
     case 'removed':
-      return { label: 'removed', tone: 'text-gray-400' }
+      return { label: t('compare.removed'), tone: 'text-gray-400' }
     case 'type-changed':
-      return { label: 'type changed', tone: 'text-caution' }
+      return { label: t('compare.typeChanged'), tone: 'text-caution' }
     case 'status-changed':
-      return { label: 'status changed', tone: 'text-destructive' }
+      return { label: t('compare.statusChanged'), tone: 'text-destructive' }
     case 'content-changed':
-      return { label: 'content changed', tone: 'text-accent-light' }
+      return { label: t('compare.contentChanged'), tone: 'text-accent-light' }
     default:
-      return { label: 'unchanged', tone: 'text-gray-500' }
+      return { label: t('compare.unchanged'), tone: 'text-gray-500' }
   }
 }

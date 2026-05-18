@@ -1,5 +1,9 @@
 import type { AppSettings, AIProvider } from '../shared/settings-schema'
 import { DEFAULT_SETTINGS } from '../shared/settings-schema'
+import {
+  normalizeAIResponseLocalePreference,
+  normalizeLocalePreference
+} from '../shared/locale-schema'
 
 export function backfillSettings(raw: Partial<AppSettings>): AppSettings {
   const rawProviders = raw.aiProviders ?? []
@@ -104,6 +108,9 @@ export function backfillSettings(raw: Partial<AppSettings>): AppSettings {
         : DEFAULT_SETTINGS.customDataDirectory,
     startupBehavior:
       raw.startupBehavior === 'last-project' ? 'last-project' : 'dashboard',
+    uiLocale: normalizeLocalePreference(raw.uiLocale),
+    formatLocale: normalizeLocalePreference(raw.formatLocale),
+    aiResponseLocale: normalizeAIResponseLocalePreference(raw.aiResponseLocale),
     aiProviders: providers
   }
 }

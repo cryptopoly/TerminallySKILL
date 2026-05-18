@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, Braces, Clock, Trash2, Copy, Play, X } from 'lucide-react'
 import clsx from 'clsx'
 import { useSnippetStore } from '../../store/snippet-store'
 import { useProjectStore } from '../../store/project-store'
+import { useSettingsStore } from '../../store/settings-store'
 import { useTerminalStore } from '../../store/terminal-store'
 import { resolveTemplate } from '../../../../shared/snippet-schema'
 import type { Snippet } from '../../../../shared/snippet-schema'
@@ -12,17 +14,20 @@ import {
   ensureProjectExecutionSession
 } from '../../lib/workspace-session'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { formatDate } from '../../i18n/format'
 
 interface SnippetListProps {
   onSelectSnippet: (snippet: Snippet) => void
 }
 
 export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element {
+  const { t } = useTranslation('snippets')
   const snippets = useSnippetStore((s) => s.snippets)
   const activeSnippet = useSnippetStore((s) => s.activeSnippet)
   const { addSnippetToStore, removeSnippetFromStore, updateSnippetInStore } = useSnippetStore()
   const activeProject = useProjectStore((s) => s.activeProject)
   const { updateProjectInStore } = useProjectStore()
+  const settings = useSettingsStore((s) => s.settings)
   const { activeSessionId, setTerminalVisible, addToHistory } = useTerminalStore()
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
@@ -147,7 +152,7 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="Snippet name..."
+              placeholder={t('placeholders.name')}
               className="tv-input"
               autoFocus
             />
@@ -163,19 +168,23 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
                   setNewTemplate('')
                 }
               }}
-              placeholder="e.g. git checkout {{branch}}"
+              placeholder={t('placeholders.template')}
               className="tv-input font-mono"
             />
             <p className="text-[11px] text-gray-500 leading-relaxed">
-              Use <code className="text-accent-light/70">{'{{name}}'}</code> for required variables and <code className="text-accent-light/70">{'{{name:default}}'}</code> for optional ones with defaults.
-              Examples: <code className="text-gray-400">docker run -p {'{{port:3000}}'}:{'{{port:3000}}'} {'{{image}}'}</code>, <code className="text-gray-400">curl -H &quot;Authorization: {'{{token}}'}&quot; {'{{url}}'}</code>
+              {t('help.variables')}{' '}
+              <code className="text-accent-light/70">{'{{name}}'}</code>
+              {' / '}
+              <code className="text-accent-light/70">{'{{name:default}}'}</code>.
+              {' '}{t('help.examples')}{' '}
+              <code className="text-gray-400">docker run -p {'{{port:3000}}'}:{'{{port:3000}}'} {'{{image}}'}</code>, <code className="text-gray-400">curl -H &quot;Authorization: {'{{token}}'}&quot; {'{{url}}'}</code>
             </p>
             <div className="flex gap-2">
               <button
                 onClick={handleCreate}
                 className="tv-btn-accent flex-1"
               >
-                Create
+                {t('actions.create')}
               </button>
               <button
                 onClick={() => {
@@ -185,7 +194,7 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
                 }}
                 className="tv-btn-ghost"
               >
-                Cancel
+                {t('actions.cancel')}
               </button>
             </div>
           </div>
@@ -195,7 +204,7 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
             className="tv-btn-dashed w-full"
           >
             <Plus size={14} />
-            New Snippet
+            {t('actions.newSnippet')}
           </button>
         )}
       </div>
@@ -205,9 +214,9 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
         {sorted.length === 0 ? (
           <div className="text-center text-gray-600 text-sm py-8">
             <Braces size={24} className="mx-auto mb-2 text-gray-700" />
-            <p>No snippets yet</p>
+            <p>{t('empty.title')}</p>
             <p className="text-xs mt-1">
-              Create reusable command templates with {'{{variables}}'}
+              {t('empty.description')}
             </p>
           </div>
         ) : (
@@ -232,8 +241,8 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
                       className="tv-btn-icon-sm hover:text-safe"
                       title={
                         snippet.variables.some((v) => !v.defaultValue)
-                          ? 'Fill variables & run'
-                          : 'Quick run'
+                          ? t('actions.fillVariablesRun')
+                          : t('actions.quickRun')
                       }
                     >
                       <Play size={11} />
@@ -241,7 +250,7 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
                     <span
                       onClick={(e) => handleDuplicate(e, snippet)}
                       className="tv-btn-icon-sm"
-                      title="Duplicate"
+                      title={t('actions.duplicate')}
                     >
                       <Copy size={11} />
                     </span>
@@ -249,7 +258,7 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
                       <span
                         onClick={(e) => handleRemoveFromProject(e, snippet)}
                         className="tv-btn-icon-sm"
-                        title="Remove from project"
+                        title={t('actions.removeFromProject')}
                       >
                         <X size={11} />
                       </span>
@@ -257,7 +266,7 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
                     <span
                       onClick={(e) => { e.stopPropagation(); setConfirmDelete(snippet) }}
                       className="tv-btn-icon-sm hover:text-destructive"
-                      title="Delete permanently"
+                      title={t('actions.deletePermanently')}
                     >
                       <Trash2 size={11} />
                     </span>
@@ -267,13 +276,13 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
                   <span className="font-mono truncate min-w-0 flex-1">{snippet.template}</span>
                   {snippet.variables.length > 0 && (
                     <span className="tv-pill normal-case tracking-normal shrink-0">
-                      {snippet.variables.length} var{snippet.variables.length !== 1 ? 's' : ''}
+                      {t('meta.variable', { count: snippet.variables.length })}
                     </span>
                   )}
                   {snippet.lastRunAt && (
                     <span className="flex items-center gap-1 ml-auto shrink-0">
                       <Clock size={10} />
-                      {new Date(snippet.lastRunAt).toLocaleDateString()}
+                      {formatDate(snippet.lastRunAt, settings)}
                     </span>
                   )}
                 </div>
@@ -284,8 +293,8 @@ export function SnippetList({ onSelectSnippet }: SnippetListProps): JSX.Element 
       </div>
       {confirmDelete && (
         <ConfirmDialog
-          title="Delete Snippet"
-          message={`"${confirmDelete.name}" will be permanently deleted. This cannot be undone.`}
+          title={t('delete.title')}
+          message={t('delete.message', { name: confirmDelete.name })}
           onConfirm={() => void handleDelete(confirmDelete)}
           onCancel={() => setConfirmDelete(null)}
         />

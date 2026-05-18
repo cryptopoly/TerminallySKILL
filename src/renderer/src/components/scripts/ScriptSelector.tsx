@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, Check, Square, CheckSquare, ScrollText, Search } from 'lucide-react'
 import type { Script } from '../../../../shared/script-schema'
 
@@ -28,6 +29,7 @@ export function ScriptSelector({
   onCreateNew,
   onClose
 }: ScriptSelectorProps): JSX.Element {
+  const { t } = useTranslation('scripts')
   const [selected, setSelected] = useState<Set<string>>(new Set(enabledScriptIds))
   const [filter, setFilter] = useState('')
   const [attachModes, setAttachModes] = useState<Record<string, ScriptAttachMode>>(
@@ -76,7 +78,7 @@ export function ScriptSelector({
 
   const handleSave = (): void => {
     if (canCreateNew && selected.size === 0) {
-      // No existing scripts selected — create new with the search text as name
+      // No existing scripts selected: create new with the search text as name.
       onCreateNew(filter.trim())
       return
     }
@@ -99,7 +101,7 @@ export function ScriptSelector({
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
           <div className="flex items-center gap-2">
             <ScrollText size={16} className="text-accent-light" />
-            <h2 className="text-lg font-semibold text-gray-200">Add Scripts</h2>
+            <h2 className="text-lg font-semibold text-gray-200">{t('selector.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -117,7 +119,7 @@ export function ScriptSelector({
               type="text"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Search scripts or type a name to create..."
+              placeholder={t('selector.searchPlaceholder')}
               className="w-full bg-surface border border-surface-border rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               autoFocus
             />
@@ -129,12 +131,12 @@ export function ScriptSelector({
           {allScripts.length === 0 && !filter.trim() ? (
             <div className="text-center text-gray-600 text-sm py-6">
               <ScrollText size={24} className="mx-auto mb-2 text-gray-700" />
-              <p>No scripts exist yet</p>
-              <p className="text-xs mt-1">Type a name above to create your first script</p>
+              <p>{t('selector.emptyTitle')}</p>
+              <p className="text-xs mt-1">{t('selector.emptyDescription')}</p>
             </div>
           ) : filteredScripts.length === 0 && !canCreateNew ? (
             <div className="text-center text-gray-500 text-sm py-4">
-              No scripts match your search
+              {t('selector.noMatches')}
             </div>
           ) : (
             <>
@@ -158,15 +160,15 @@ export function ScriptSelector({
                       </div>
                       <div className="text-xs text-gray-600 flex items-center gap-2 flex-wrap">
                         <span>
-                          {script.steps.length} step{script.steps.length !== 1 ? 's' : ''}
+                          {t('selector.step', { count: script.steps.length })}
                         </span>
                         {script.projectId === null ? (
-                          <span className="tv-pill normal-case tracking-normal">Global</span>
+                          <span className="tv-pill normal-case tracking-normal">{t('selector.global')}</span>
                         ) : script.projectId === activeProjectId ? (
-                          <span className="tv-pill normal-case tracking-normal">This Project</span>
+                          <span className="tv-pill normal-case tracking-normal">{t('selector.thisProject')}</span>
                         ) : (
                           <span className="tv-pill normal-case tracking-normal">
-                            {projectNameById[script.projectId] ?? 'Other Project'}
+                            {projectNameById[script.projectId] ?? t('selector.otherProject')}
                           </span>
                         )}
                         {script.description && (
@@ -186,9 +188,9 @@ export function ScriptSelector({
                                 ? 'bg-accent/20 text-accent-light'
                                 : 'text-gray-500 hover:text-gray-300 hover:bg-surface'
                             }`}
-                            title="Clone this global script into the current project so you can customize it safely"
+                            title={t('selector.cloneToProjectTitle')}
                           >
-                            Clone to Project
+                            {t('selector.cloneToProject')}
                           </button>
                           <button
                             type="button"
@@ -201,15 +203,15 @@ export function ScriptSelector({
                                 ? 'bg-accent/20 text-accent-light'
                                 : 'text-gray-500 hover:text-gray-300 hover:bg-surface'
                             }`}
-                            title="Use the shared global script as-is across projects"
+                            title={t('selector.useGlobalTitle')}
                           >
-                            Use Global
+                            {t('selector.useGlobal')}
                           </button>
                         </div>
                       )}
                       {isChecked && script.projectId !== null && script.projectId !== activeProjectId && (
                         <div className="mt-2 text-[11px] text-gray-500">
-                          This will be cloned into the current project so your changes stay local.
+                          {t('selector.cloneNotice')}
                         </div>
                       )}
                     </div>
@@ -225,7 +227,7 @@ export function ScriptSelector({
                   >
                     <ScrollText size={16} className="shrink-0" />
                     <span className="text-sm">
-                      Create new script &ldquo;{filter.trim()}&rdquo;
+                      {t('selector.createNew', { name: filter.trim() })}
                     </span>
                   </button>
                 </div>
@@ -240,7 +242,7 @@ export function ScriptSelector({
             onClick={onClose}
             className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors"
           >
-            Cancel
+            {t('selector.cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -248,7 +250,7 @@ export function ScriptSelector({
             className="flex items-center gap-2 px-5 py-2 rounded-lg bg-accent hover:bg-accent-light text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Check size={14} />
-            Save
+            {t('selector.save')}
           </button>
         </div>
       </div>

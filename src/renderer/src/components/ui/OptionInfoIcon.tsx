@@ -1,4 +1,5 @@
 import { Info } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Tooltip } from './Tooltip'
 import { AIExplainIcon } from './AIExplainIcon'
 import type { CommandOption } from '../../../../shared/command-schema'
@@ -9,18 +10,8 @@ interface OptionInfoIconProps {
   option: CommandOption
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  boolean: 'Flag',
-  string: 'Text',
-  number: 'Number',
-  enum: 'Choice',
-  'file-path': 'File path',
-  'directory-path': 'Directory path',
-  'multi-select': 'Multi-select',
-  repeatable: 'Repeatable'
-}
-
 export function OptionInfoIcon({ option }: OptionInfoIconProps): JSX.Element | null {
+  const { t } = useTranslation('commandBuilder')
   const activeCommand = useCommandStore((s) => s.activeCommand)
   const explainRequest = activeCommand ? buildOptionExplainRequest(activeCommand, option) : null
   const hasInfoContent = Boolean(option.description || option.long || option.short)
@@ -28,6 +19,8 @@ export function OptionInfoIcon({ option }: OptionInfoIconProps): JSX.Element | n
   if (!hasInfoContent && !explainRequest) return null
 
   const flags = [option.long, option.short].filter(Boolean).join(' / ')
+  const typeKey = option.type.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase())
+  const typeLabel = t(`optionInfo.types.${typeKey}`, { defaultValue: option.type })
 
   return (
     <div className="inline-flex items-center gap-1">
@@ -42,10 +35,10 @@ export function OptionInfoIcon({ option }: OptionInfoIconProps): JSX.Element | n
                 <p className="text-gray-300">{option.description}</p>
               )}
               <div className="flex items-center gap-3 text-gray-500">
-                <span>{TYPE_LABELS[option.type] || option.type}</span>
-                {option.required && <span className="text-accent">Required</span>}
+                <span>{typeLabel}</span>
+                {option.required && <span className="text-accent">{t('optionInfo.required')}</span>}
                 {option.defaultValue !== undefined && option.defaultValue !== '' && option.defaultValue !== false && (
-                  <span>Default: <code className="text-gray-400">{String(option.defaultValue)}</code></span>
+                  <span>{t('optionInfo.defaultValue')} <code className="text-gray-400">{String(option.defaultValue)}</code></span>
                 )}
               </div>
             </div>

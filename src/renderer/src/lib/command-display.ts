@@ -1,4 +1,5 @@
 import type { CommandDefinition } from '../../../shared/command-schema'
+import { i18n } from '../i18n'
 
 /**
  * Parse a shell individually-quoted argument string back into plain tokens.
@@ -103,8 +104,44 @@ function isPlaceholderRootDescription(description: string | undefined): boolean 
 
 export function getCommandDisplayDescription(command: CommandDefinition): string {
   if (isCommandTreeRoot(command) && isPlaceholderRootDescription(command.description)) {
-    return `${command.executable} Command Tree Root`
+    return i18n.t('descriptions.commandTreeRoot', {
+      ns: 'commands',
+      executable: command.executable,
+      defaultValue: `${command.executable} Command Tree Root`
+    })
   }
 
-  return command.description
+  if (command.description === 'Click "Generate Command Tree from --help" to populate options') {
+    return i18n.t('descriptions.generateCommandTree', {
+      ns: 'commands',
+      defaultValue: command.description
+    })
+  }
+
+  return i18n.t(`definitions.${command.id}.description`, {
+    ns: 'commands',
+    defaultValue: command.description
+  })
+}
+
+export function getCommandDisplayName(command: CommandDefinition): string {
+  return i18n.t(`definitions.${command.id}.name`, {
+    ns: 'commands',
+    defaultValue: command.name
+  })
+}
+
+export function getCommandSearchText(command: CommandDefinition): string {
+  return [
+    command.name,
+    command.description,
+    getCommandDisplayName(command),
+    getCommandDisplayDescription(command),
+    command.executable,
+    command.category,
+    ...(command.tags ?? []),
+    ...(command.subcommands ?? [])
+  ]
+    .filter(Boolean)
+    .join(' ')
 }

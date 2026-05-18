@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { Loader2, Sparkles, X } from 'lucide-react'
 import { HelpTip } from './HelpTip'
@@ -17,20 +18,12 @@ interface PopoverPosition {
   ready: boolean
 }
 
-function buildDraftPrompt(commandString: string, commandDescription?: string): string {
-  return [
-    `Help me build a command using this fragment: ${commandString}`,
-    commandDescription ? `Context: ${commandDescription}` : null
-  ]
-    .filter(Boolean)
-    .join('\n')
-}
-
 export function AIExplainIcon({
   commandName,
   commandString,
   commandDescription
 }: AIExplainIconProps): JSX.Element {
+  const { t } = useTranslation('ai')
   const activeAIProvider = useSettingsStore((s) => s.settings.activeAIProvider)
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -164,7 +157,9 @@ export function AIExplainIcon({
     window.dispatchEvent(
       new CustomEvent('tv:open-ai-draft', {
         detail: {
-          prompt: buildDraftPrompt(commandString, commandDescription)
+          prompt: commandDescription
+            ? t('explain.draftPromptWithContext', { commandString, commandDescription })
+            : t('explain.draftPrompt', { commandString })
         }
       })
     )
@@ -174,11 +169,11 @@ export function AIExplainIcon({
   return (
     <>
       <HelpTip
-        label="Explain with AI"
+        label={t('explain.label')}
         description={
           activeAIProvider
-            ? 'Ask your active AI provider to explain this command part and give a usage example.'
-            : 'Select an active AI provider in Settings to explain this command part with AI.'
+            ? t('explain.enabledDescription')
+            : t('explain.disabledDescription')
         }
         disabled={open}
       >
@@ -188,7 +183,7 @@ export function AIExplainIcon({
           onClick={handleToggle}
           disabled={!activeAIProvider}
           className="p-0.5 rounded text-gray-600 hover:text-accent-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          aria-label="Explain with AI"
+          aria-label={t('explain.label')}
         >
           <Sparkles size={12} />
         </button>
@@ -209,7 +204,7 @@ export function AIExplainIcon({
             <div className="flex items-center gap-2 border-b border-surface-border px-3 py-2">
               <Sparkles size={13} className="text-accent-light" />
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                Explain With AI
+                {t('explain.title')}
               </span>
               {meta && (
                 <span className="ml-auto text-[11px] text-gray-500">
@@ -220,15 +215,15 @@ export function AIExplainIcon({
                 type="button"
                 onClick={handleOpenDraft}
                 className="rounded-md px-2 py-1 text-[11px] font-medium text-gray-400 hover:bg-surface hover:text-accent-light transition-colors"
-                title="Open AI Draft"
+                title={t('explain.openDraft')}
               >
-                AI Draft
+                {t('explain.aiDraft')}
               </button>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 className="rounded-md p-1 text-gray-500 hover:bg-surface hover:text-gray-200 transition-colors"
-                title="Close"
+                title={t('explain.close')}
               >
                 <X size={13} />
               </button>
@@ -240,7 +235,7 @@ export function AIExplainIcon({
               {loading && (
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   <Loader2 size={14} className="animate-spin" />
-                  Asking AI for an explanation...
+                  {t('explain.loading')}
                 </div>
               )}
               {error && <div className="text-sm text-destructive whitespace-pre-wrap">{error}</div>}

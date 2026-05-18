@@ -6,6 +6,7 @@ import type {
   Theme
 } from '../../../shared/settings-schema'
 import { DEFAULT_SETTINGS } from '../../../shared/settings-schema'
+import type { AIResponseLocalePreference, LocalePreference } from '../../../shared/locale-schema'
 
 function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme)
@@ -28,6 +29,9 @@ interface SettingsStore {
   setDevUpdateFeedUrl: (url: string) => void
   setBackupDirectory: (dir: string) => void
   setLastBackupAt: (timestamp: string | null) => void
+  setUiLocale: (locale: LocalePreference) => void
+  setFormatLocale: (locale: LocalePreference) => void
+  setAIResponseLocale: (locale: AIResponseLocalePreference) => void
 }
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
@@ -73,5 +77,11 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   setBackupDirectory: (dir) =>
     set((state) => ({ settings: { ...state.settings, backupDirectory: dir } })),
   setLastBackupAt: (timestamp) =>
-    set((state) => ({ settings: { ...state.settings, lastBackupAt: timestamp } }))
+    set((state) => ({ settings: { ...state.settings, lastBackupAt: timestamp } })),
+  setUiLocale: (locale) =>
+    set((state) => ({ settings: { ...state.settings, uiLocale: locale } })),
+  setFormatLocale: (locale) =>
+    set((state) => ({ settings: { ...state.settings, formatLocale: locale } })),
+  setAIResponseLocale: (locale) =>
+    set((state) => ({ settings: { ...state.settings, aiResponseLocale: locale } }))
 }))

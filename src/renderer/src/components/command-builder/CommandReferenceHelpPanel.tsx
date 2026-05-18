@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { CommandReferenceHelp } from '../../../../shared/command-schema'
+import { useSettingsStore } from '../../store/settings-store'
+import { formatDateTime } from '../../i18n/format'
 
 interface CommandReferenceHelpPanelProps {
   help: CommandReferenceHelp
@@ -22,6 +25,8 @@ export function CommandReferenceHelpPanel({
   footer,
   showHeader = true
 }: CommandReferenceHelpPanelProps): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
+  const settings = useSettingsStore((s) => s.settings)
   const sections = help.sections
   const hasStructuredSections =
     Boolean(sections?.overview) ||
@@ -40,12 +45,18 @@ export function CommandReferenceHelpPanel({
       }
     >
       {showHeader && (
-        <div className="border-b border-surface-border px-4 py-3">
-          <div className="text-sm font-semibold text-gray-200">{executable} Help</div>
+          <div className="border-b border-surface-border px-4 py-3">
+          <div className="text-sm font-semibold text-gray-200">
+            {t('referenceHelp.title', { executable })}
+          </div>
           <div className="text-xs text-gray-500">
             {help.providerLabel ?? 'AI'}
             {help.model ? ` · ${help.model}` : ''}
-            {help.generatedAt ? ` · Saved ${new Date(help.generatedAt).toLocaleString()}` : ''}
+            {help.generatedAt
+              ? ` · ${t('referenceHelp.savedMeta', {
+                  timestamp: formatDateTime(help.generatedAt, settings)
+                })}`
+              : ''}
           </div>
         </div>
       )}
@@ -55,14 +66,14 @@ export function CommandReferenceHelpPanel({
           <>
             {sections?.overview && (
               <section className="space-y-2">
-                <SectionTitle>Overview</SectionTitle>
+                <SectionTitle>{t('referenceHelp.overview')}</SectionTitle>
                 <p className="text-sm leading-7 text-gray-200">{sections.overview}</p>
               </section>
             )}
 
             {sections?.commonOptions?.length ? (
               <section className="space-y-4">
-                <SectionTitle>Common Options</SectionTitle>
+                <SectionTitle>{t('referenceHelp.commonOptions')}</SectionTitle>
                 {sections.commonOptions.map((group) => (
                   <div key={group.title} className="space-y-2">
                     <div className="text-sm font-medium text-gray-200">{group.title}</div>
@@ -91,7 +102,7 @@ export function CommandReferenceHelpPanel({
 
             {sections?.arguments?.length ? (
               <section className="space-y-3">
-                <SectionTitle>Arguments</SectionTitle>
+                <SectionTitle>{t('referenceHelp.arguments')}</SectionTitle>
                 <div className="space-y-2">
                   {sections.arguments.map((row) => (
                     <div
@@ -101,7 +112,9 @@ export function CommandReferenceHelpPanel({
                       <div className="space-y-1">
                         <div className="font-mono text-sm text-accent-light">{row.label}</div>
                         {row.required && (
-                          <div className="text-[11px] uppercase tracking-wider text-caution">Required</div>
+                          <div className="text-[11px] uppercase tracking-wider text-caution">
+                            {t('referenceHelp.required')}
+                          </div>
                         )}
                       </div>
                       <div className="text-sm text-gray-200">{row.description}</div>
@@ -113,7 +126,7 @@ export function CommandReferenceHelpPanel({
 
             {sections?.examples?.length ? (
               <section className="space-y-3">
-                <SectionTitle>Examples</SectionTitle>
+                <SectionTitle>{t('referenceHelp.examples')}</SectionTitle>
                 <div className="space-y-2">
                   {sections.examples.map((example) => (
                     <div
@@ -130,7 +143,7 @@ export function CommandReferenceHelpPanel({
 
             {sections?.platformNotes?.length ? (
               <section className="space-y-3">
-                <SectionTitle>Platform Notes</SectionTitle>
+                <SectionTitle>{t('referenceHelp.platformNotes')}</SectionTitle>
                 <div className="space-y-2">
                   {sections.platformNotes.map((note) => (
                     <div
@@ -146,7 +159,7 @@ export function CommandReferenceHelpPanel({
 
             {sections?.cautions?.length ? (
               <section className="space-y-3">
-                <SectionTitle>Cautions</SectionTitle>
+                <SectionTitle>{t('referenceHelp.cautions')}</SectionTitle>
                 <div className="space-y-2">
                   {sections.cautions.map((caution) => (
                     <div
