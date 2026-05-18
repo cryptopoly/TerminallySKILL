@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Info, Loader2, Plus, Settings2, Sparkles, Trash2, Wand2, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { normalizeWorkflowInputDefinitions, normalizeWorkflowInputId } from '../../../../shared/workflow-validation'
@@ -79,6 +80,7 @@ export function WorkflowInputEditor({
   steps,
   onChange
 }: WorkflowInputEditorProps): JSX.Element {
+  const { t } = useTranslation('scripts')
   const [confirmDeleteIndex, setConfirmDeleteIndex] = useState<number | null>(null)
   const [showAIDraft, setShowAIDraft] = useState(false)
   const [aiDraftPrompt, setAIDraftPrompt] = useState('')
@@ -125,7 +127,7 @@ export function WorkflowInputEditor({
   const handleAIDraft = async (): Promise<void> => {
     if (!activeAIProvider) return
     if (!aiDraftPrompt.trim()) {
-      setAIDraftError('Describe what this workflow does so AI can suggest inputs.')
+      setAIDraftError(t('inputs.describePromptRequired'))
       return
     }
 
@@ -135,26 +137,26 @@ export function WorkflowInputEditor({
     setAIDraftMeta(null)
 
     const stepsDescription = steps.length > 0
-      ? steps.map((s, i) => `Step ${i + 1}: ${s.label}${s.commandString ? ` — ${s.commandString}` : ''}`).join('\n')
-      : 'No steps defined yet.'
+      ? steps.map((s, i) => `${t('inputs.stepLabel', { index: i + 1 })}: ${s.label}${s.commandString ? ` - ${s.commandString}` : ''}`).join('\n')
+      : t('inputs.noStepsDefined')
 
     const existingInputs = inputs.length > 0
-      ? inputs.map((inp) => `- {{${inp.id}}} (${inp.type}${inp.required ? ', required' : ''}): ${inp.description || inp.label}`).join('\n')
-      : 'None.'
+      ? inputs.map((inp) => `- {{${inp.id}}} (${inp.type}${inp.required ? `, ${t('inputs.requiredMeta')}` : ''}): ${inp.description || inp.label}`).join('\n')
+      : t('inputs.none')
 
     try {
       const response = await window.electronAPI.runAIAction({
         action: 'command-review',
-        commandName: 'Workflow Input Draft',
-        commandString: `User description: ${aiDraftPrompt}\n\nWorkflow Steps:\n${stepsDescription}\n\nExisting Inputs:\n${existingInputs}`,
-        commandDescription: 'Based on the user\'s description and the workflow steps above, suggest workflow inputs that would make this script reusable. For each input suggest: a label, placeholder key (snake_case), type (string/number/boolean/choice), whether it should be required, a sensible default value, and a brief description. Also point out any hardcoded values in the steps that could be parameterised with {{placeholder}} syntax. Format as a clear list. Be concise and practical.'
+        commandName: t('inputs.aiCommandName'),
+        commandString: `${t('inputs.userDescription')}: ${aiDraftPrompt}\n\n${t('inputs.workflowSteps')}:\n${stepsDescription}\n\n${t('inputs.existingInputs')}:\n${existingInputs}`,
+        commandDescription: t('inputs.aiCommandDescription', { open: '{{', close: '}}' })
       })
       setAIDraftResult(response.text)
       if (response.providerLabel && response.model) {
         setAIDraftMeta({ providerLabel: response.providerLabel, model: response.model })
       }
     } catch {
-      setAIDraftError('Could not reach AI provider. Check your AI settings.')
+      setAIDraftError(t('inputs.providerError'))
     } finally {
       setAIDraftLoading(false)
     }
@@ -164,10 +166,10 @@ export function WorkflowInputEditor({
     <section className="space-y-2">
       <div className="flex items-center gap-2">
         <Settings2 size={14} className="text-accent-light shrink-0" />
-        <h3 className="text-sm font-semibold text-gray-200">Workflow Inputs</h3>
+        <h3 className="text-sm font-semibold text-gray-200">{t('inputs.title')}</h3>
         <HelpTip
-          label="Workflow Inputs"
-          description={`Define variables that get filled in each time you run this script. Reference them in command steps using {{placeholder_key}} syntax.\n\nExample: A deploy script could have inputs for environment (staging/prod), version number, and whether to run migrations — making the same script reusable across contexts.\n\nTypes: Text, Number, Boolean (checkbox), or Choice (dropdown). Mark inputs as Required to prevent running without a value.`}
+          label={t('inputs.title')}
+          description={t('inputs.help', { open: '{{', close: '}}' })}
         >
           <span className="text-gray-500 hover:text-gray-300 cursor-help transition-colors"><Info size={13} /></span>
         </HelpTip>
@@ -176,10 +178,10 @@ export function WorkflowInputEditor({
             <button
               onClick={() => setShowAIDraft(true)}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-gray-400 hover:text-accent-light transition-colors"
-              title="Get AI suggestions for workflow inputs based on your steps"
+              title={t('inputs.aiDraftTooltip')}
             >
               <Wand2 size={12} />
-              AI Draft
+              {t('inputs.aiDraft')}
             </button>
           )}
           <button
@@ -187,7 +189,7 @@ export function WorkflowInputEditor({
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-surface-border text-xs text-gray-300 hover:text-gray-200 hover:border-gray-500 transition-colors"
           >
             <Plus size={12} />
-            Add Input
+            {t('inputs.addInput')}
           </button>
         </div>
       </div>
@@ -211,8 +213,8 @@ export function WorkflowInputEditor({
                             : input.id
                       })
                     }
-                    placeholder="Label"
-                    title="Display name shown to the user when running this workflow"
+                    placeholder={t('inputs.labelPlaceholder')}
+                    title={t('inputs.labelTitle')}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent min-w-0"
                   />
                   <input
@@ -224,8 +226,8 @@ export function WorkflowInputEditor({
                         id: normalizeWorkflowInputId(e.target.value, index)
                       })
                     }
-                    placeholder="placeholder_key"
-                    title="Use {{this_key}} in command steps to insert the value at run time"
+                    placeholder={t('inputs.keyPlaceholder')}
+                    title={t('inputs.keyTitle', { open: '{{', close: '}}' })}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs font-mono text-gray-200 focus:outline-none focus:border-accent min-w-0"
                   />
                   <select
@@ -233,18 +235,18 @@ export function WorkflowInputEditor({
                     onChange={(e) =>
                       updateInput(index, normalizeInputType(input, e.target.value as WorkflowInputDefinition['type']))
                     }
-                    title="Data type — Text (free text), Number (numeric with optional min/max), Boolean (true/false checkbox), Choice (dropdown list)"
+                    title={t('inputs.typeTitle')}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                   >
-                    <option value="string">Text</option>
-                    <option value="number">Number</option>
-                    <option value="boolean">Boolean</option>
-                    <option value="choice">Choice</option>
+                    <option value="string">{t('inputs.types.string')}</option>
+                    <option value="number">{t('inputs.types.number')}</option>
+                    <option value="boolean">{t('inputs.types.boolean')}</option>
+                    <option value="choice">{t('inputs.types.choice')}</option>
                   </select>
                   <div className="flex items-center gap-1">
                     <label
                       className="flex items-center gap-1 text-[11px] text-gray-400 cursor-pointer"
-                      title="When checked, this input must be filled in before the workflow can run"
+                      title={t('inputs.requiredTitle')}
                     >
                       <input
                         type="checkbox"
@@ -252,12 +254,12 @@ export function WorkflowInputEditor({
                         onChange={(e) => updateInput(index, { ...input, required: e.target.checked })}
                         className="rounded border-surface-border bg-surface w-3 h-3"
                       />
-                      Req
+                      {t('inputs.requiredShort')}
                     </label>
                     <button
                       onClick={() => setConfirmDeleteIndex(index)}
                       className="p-1 text-gray-500 hover:text-destructive transition-colors"
-                      title="Remove this input from the workflow"
+                      title={t('inputs.removeTitle')}
                     >
                       <Trash2 size={11} />
                     </button>
@@ -271,24 +273,24 @@ export function WorkflowInputEditor({
                     type="text"
                     value={input.description}
                     onChange={(e) => updateInput(index, { ...input, description: e.target.value })}
-                    placeholder="Description"
-                    title="Help text shown below the input field when running the workflow"
+                    placeholder={t('inputs.descriptionPlaceholder')}
+                    title={t('inputs.descriptionTitle')}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                   />
                   <input
                     type="text"
                     value={input.defaultValue ?? ''}
                     onChange={(e) => updateInput(index, { ...input, defaultValue: e.target.value })}
-                    placeholder="Default"
-                    title="Pre-filled value — the user can change it before running"
+                    placeholder={t('inputs.defaultPlaceholder')}
+                    title={t('inputs.defaultTextTitle')}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                   />
                   <input
                     type="text"
                     value={input.placeholder}
                     onChange={(e) => updateInput(index, { ...input, placeholder: e.target.value })}
-                    placeholder="Placeholder text"
-                    title="Greyed-out hint shown inside the input when it is empty"
+                    placeholder={t('inputs.placeholderText')}
+                    title={t('inputs.placeholderTitle')}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                   />
                 </div>
@@ -305,8 +307,8 @@ export function WorkflowInputEditor({
                         defaultValue: e.target.value === '' ? undefined : Number(e.target.value)
                       })
                     }
-                    placeholder="Default"
-                    title="Pre-filled numeric value"
+                    placeholder={t('inputs.defaultPlaceholder')}
+                    title={t('inputs.defaultNumberTitle')}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                   />
                   <input
@@ -318,8 +320,8 @@ export function WorkflowInputEditor({
                         min: e.target.value === '' ? undefined : Number(e.target.value)
                       })
                     }
-                    placeholder="Min"
-                    title="Minimum allowed value (optional)"
+                    placeholder={t('inputs.minPlaceholder')}
+                    title={t('inputs.minTitle')}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                   />
                   <input
@@ -331,8 +333,8 @@ export function WorkflowInputEditor({
                         max: e.target.value === '' ? undefined : Number(e.target.value)
                       })
                     }
-                    placeholder="Max"
-                    title="Maximum allowed value (optional)"
+                    placeholder={t('inputs.maxPlaceholder')}
+                    title={t('inputs.maxTitle')}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                   />
                   <input
@@ -344,22 +346,22 @@ export function WorkflowInputEditor({
                         step: e.target.value === '' ? undefined : Number(e.target.value)
                       })
                     }
-                    placeholder="Step"
-                    title="Increment step for the number input (e.g. 0.1 for decimals)"
+                    placeholder={t('inputs.stepPlaceholder')}
+                    title={t('inputs.stepTitle')}
                     className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                   />
                 </div>
               )}
 
               {input.type === 'boolean' && (
-                <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer" title="Whether this boolean defaults to checked (true) or unchecked (false)">
+                <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer" title={t('inputs.booleanDefaultTitle')}>
                   <input
                     type="checkbox"
                     checked={Boolean(input.defaultValue)}
                     onChange={(e) => updateInput(index, { ...input, defaultValue: e.target.checked })}
                     className="rounded border-surface-border bg-surface"
                   />
-                  Default to true
+                  {t('inputs.defaultToTrue')}
                 </label>
               )}
 
@@ -383,8 +385,8 @@ export function WorkflowInputEditor({
                       })
                     }
                     rows={3}
-                    placeholder="Options (one per line, label=value optional)"
-                    title="Each line becomes a dropdown option. Use label=value to show a friendly label while passing a different value"
+                    placeholder={t('inputs.optionsPlaceholder')}
+                    title={t('inputs.optionsTitle')}
                     className="w-full bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                   />
                   <div className="grid grid-cols-2 gap-2">
@@ -392,18 +394,18 @@ export function WorkflowInputEditor({
                       type="text"
                       value={input.defaultValue ?? ''}
                       onChange={(e) => updateInput(index, { ...input, defaultValue: e.target.value })}
-                      placeholder="Default option"
-                      title="Which option is pre-selected (must match a value from the list above)"
+                      placeholder={t('inputs.defaultOptionPlaceholder')}
+                      title={t('inputs.defaultOptionTitle')}
                       className="bg-surface-light border border-surface-border rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-accent"
                     />
-                    <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer" title="Allow the user to type a custom value not in the dropdown list">
+                    <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer" title={t('inputs.allowCustomTitle')}>
                       <input
                         type="checkbox"
                         checked={input.allowCustomValue}
                         onChange={(e) => updateInput(index, { ...input, allowCustomValue: e.target.checked })}
                         className="rounded border-surface-border bg-surface"
                       />
-                      Allow custom values
+                      {t('inputs.allowCustom')}
                     </label>
                   </div>
                 </div>
@@ -415,9 +417,14 @@ export function WorkflowInputEditor({
 
       {confirmDeleteIndex !== null && (
         <ConfirmDialog
-          title="Remove Input"
-          message={`"${inputs[confirmDeleteIndex]?.label || inputs[confirmDeleteIndex]?.id || 'this input'}" will be removed. Any {{${inputs[confirmDeleteIndex]?.id ?? ''}}} placeholders in steps will no longer be substituted.`}
-          confirmLabel="Remove"
+          title={t('inputs.removeDialogTitle')}
+          message={t('inputs.removeDialogMessage', {
+            name: inputs[confirmDeleteIndex]?.label || inputs[confirmDeleteIndex]?.id || t('inputs.unnamedInput'),
+            open: '{{',
+            key: inputs[confirmDeleteIndex]?.id ?? '',
+            close: '}}'
+          })}
+          confirmLabel={t('inputs.remove')}
           onConfirm={() => removeInput(confirmDeleteIndex)}
           onCancel={() => setConfirmDeleteIndex(null)}
         />
@@ -428,9 +435,9 @@ export function WorkflowInputEditor({
           <div className="mt-8 mb-8 w-full max-w-3xl rounded-2xl border border-surface-border bg-surface-light shadow-2xl shadow-black/50 overflow-hidden">
             <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-surface-border">
               <div>
-                <h3 className="text-lg font-semibold text-gray-200">AI Input Draft</h3>
+                <h3 className="text-lg font-semibold text-gray-200">{t('inputs.aiDraftTitle')}</h3>
                 <p className="text-xs text-gray-500 mt-1">
-                  Describe your workflow and AI will suggest inputs to make it reusable.
+                  {t('inputs.aiDraftDescription')}
                 </p>
               </div>
               <button
@@ -446,12 +453,12 @@ export function WorkflowInputEditor({
 
             <div className="px-6 py-5 space-y-5 max-h-[calc(100vh-10rem)] overflow-y-auto">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-200">What does this workflow do?</label>
+                <label className="text-sm font-medium text-gray-200">{t('inputs.promptLabel')}</label>
                 <textarea
                   value={aiDraftPrompt}
                   onChange={(e) => setAIDraftPrompt(e.target.value)}
                   rows={3}
-                  placeholder="Example: Deploy a service to a chosen environment with optional database migration and rollback support."
+                  placeholder={t('inputs.promptPlaceholder')}
                   className="w-full rounded-xl border border-surface-border bg-surface px-4 py-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                   onKeyDown={(e) => {
                     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -469,7 +476,7 @@ export function WorkflowInputEditor({
                   ) : (
                     <Wand2 size={14} />
                   )}
-                  {aiDraftLoading ? 'Generating...' : 'Generate Suggestions'}
+                  {aiDraftLoading ? t('inputs.generating') : t('inputs.generateSuggestions')}
                 </button>
               </div>
 
@@ -484,7 +491,7 @@ export function WorkflowInputEditor({
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles size={14} className="text-accent-light" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      AI Suggestions
+                      {t('inputs.suggestions')}
                     </span>
                     {aiDraftMeta && (
                       <span className="text-[11px] text-gray-500 ml-auto">

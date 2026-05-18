@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 import type { CommandOption } from '../../../../../shared/command-schema'
 import { OptionInfoIcon } from '../../ui/OptionInfoIcon'
@@ -10,6 +11,7 @@ interface StringInputProps {
 }
 
 export function StringInput({ option, value, onChange }: StringInputProps): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const [error, setError] = useState<string | null>(null)
   const flag = option.short || option.long || ''
 
@@ -20,15 +22,15 @@ export function StringInput({ option, value, onChange }: StringInputProps): JSX.
     }
     const v = option.validation
     if (v.minLength && val.length < v.minLength && val.length > 0) {
-      setError(v.message || `Minimum ${v.minLength} characters`)
+      setError(v.message || t('fields.minimumCharacters', { count: v.minLength }))
       return
     }
     if (v.maxLength && val.length > v.maxLength) {
-      setError(v.message || `Maximum ${v.maxLength} characters`)
+      setError(v.message || t('fields.maximumCharacters', { count: v.maxLength }))
       return
     }
     if (v.pattern && val && !new RegExp(v.pattern).test(val)) {
-      setError(v.message || 'Invalid format')
+      setError(v.message || t('fields.invalidFormat'))
       return
     }
     setError(null)
@@ -40,7 +42,7 @@ export function StringInput({ option, value, onChange }: StringInputProps): JSX.
         <label className="text-sm text-gray-200">{option.label}</label>
         <code className="text-xs text-gray-500 font-mono">{flag}</code>
         <OptionInfoIcon option={option} />
-        {option.required && <span className="text-xs text-accent">required</span>}
+        {option.required && <span className="text-xs text-accent">{t('fields.required')}</span>}
       </div>
       <input
         type="text"

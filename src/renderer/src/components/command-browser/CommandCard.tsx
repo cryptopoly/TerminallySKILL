@@ -1,7 +1,8 @@
 import clsx from 'clsx'
 import { AlertTriangle, ShieldAlert, Star, CircleAlert, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { CommandDefinition } from '../../../../shared/command-schema'
-import { getCommandDisplayDescription } from '../../lib/command-display'
+import { getCommandDisplayDescription, getCommandDisplayName } from '../../lib/command-display'
 
 interface CommandCardProps {
   command: CommandDefinition
@@ -20,7 +21,9 @@ export function CommandCard({
   onToggleFavorite,
   onRemove
 }: CommandCardProps): JSX.Element {
+  const { t } = useTranslation('commands')
   const description = getCommandDisplayDescription(command)
+  const name = getCommandDisplayName(command)
   const showRemove = Boolean(onRemove && command.tags?.includes('saved-command'))
 
   return (
@@ -34,14 +37,14 @@ export function CommandCard({
     >
       <button onClick={onClick} className="flex-1 min-w-0 text-left">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-xs truncate">{command.name}</span>
+          <span className="font-mono text-xs truncate">{name}</span>
           {command.installed === false && (
             <span
               className="inline-flex items-center gap-1 rounded-full border border-caution/25 bg-caution/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-caution shrink-0"
-              title="This CLI was not detected on this machine"
+              title={t('status.missingTitle')}
             >
               <CircleAlert size={10} />
-              Missing
+              {t('status.missing')}
             </span>
           )}
           {command.dangerLevel === 'caution' && (
@@ -64,7 +67,7 @@ export function CommandCard({
             'shrink-0 p-1 rounded transition-colors',
             isFavorite ? 'text-caution' : 'text-gray-600 hover:text-caution'
           )}
-          title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          title={isFavorite ? t('favorites.remove') : t('favorites.add')}
         >
           <Star size={13} fill={isFavorite ? 'currentColor' : 'none'} />
         </button>
@@ -77,7 +80,7 @@ export function CommandCard({
             onRemove?.()
           }}
           className="shrink-0 p-1 rounded text-gray-600 hover:text-destructive transition-colors"
-          title="Remove saved command"
+          title={t('saved.remove')}
         >
           <X size={13} />
         </button>

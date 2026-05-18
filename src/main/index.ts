@@ -12,6 +12,11 @@ console.log('[terminallyskill] Main process loaded (v2 — shell integration + l
 
 const APP_DISPLAY_NAME = 'TerminallySKILL'
 const LINUX_DESKTOP_FILE = 'terminallyskill.desktop'
+const USER_DATA_DIR_OVERRIDE = process.env.TERMINALLYSKILL_USER_DATA_DIR?.trim()
+
+if (USER_DATA_DIR_OVERRIDE) {
+  app.setPath('userData', resolve(USER_DATA_DIR_OVERRIDE))
+}
 
 if (process.platform === 'linux') {
   app.disableHardwareAcceleration()

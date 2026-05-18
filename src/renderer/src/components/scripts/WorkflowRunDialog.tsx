@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Play, ScrollText, X } from 'lucide-react'
 import type { Script } from '../../../../shared/script-schema'
 import type { WorkflowInputValues } from '../../../../shared/workflow-execution'
@@ -30,6 +31,7 @@ export function WorkflowRunDialog({
   onCancel,
   onConfirm
 }: WorkflowRunDialogProps): JSX.Element {
+  const { t } = useTranslation('scripts')
   const [values, setValues] = useState<WorkflowInputValues>(() =>
     getWorkflowInputInitialValues(script.inputs)
   )
@@ -68,7 +70,7 @@ export function WorkflowRunDialog({
             <div>
               <h2 className="text-lg font-semibold text-gray-200">{title}</h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                {executionPlan.steps.length} command{executionPlan.steps.length !== 1 ? 's' : ''} ready to run
+                {t('workflowRun.readyCommand', { count: executionPlan.steps.length })}
               </p>
             </div>
           </div>
@@ -84,9 +86,9 @@ export function WorkflowRunDialog({
           {script.inputs.length > 0 && (
             <section className="space-y-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-200">Inputs</h3>
+                <h3 className="text-sm font-semibold text-gray-200">{t('workflowRun.inputs')}</h3>
                 <p className="text-xs text-gray-500 mt-1">
-                  Values replace matching placeholders like <code>{'{{target}}'}</code>.
+                  {t('workflowRun.inputDescription', { example: '{{target}}' })}
                 </p>
               </div>
               <div className="space-y-3">
@@ -99,7 +101,7 @@ export function WorkflowRunDialog({
                       </span>
                       {input.required && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent-light border border-accent/20 uppercase tracking-wide">
-                          Required
+                          {t('workflowRun.required')}
                         </span>
                       )}
                     </div>
@@ -114,7 +116,7 @@ export function WorkflowRunDialog({
                           }
                           className="rounded border-surface-border bg-surface"
                         />
-                        <span>Set to true</span>
+                        <span>{t('workflowRun.setTrue')}</span>
                       </label>
                     ) : input.type === 'choice' && !input.allowCustomValue ? (
                       <select
@@ -124,7 +126,7 @@ export function WorkflowRunDialog({
                         }
                         className="w-full bg-surface-light border border-surface-border rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                       >
-                        {!input.required && <option value="">No selection</option>}
+                        {!input.required && <option value="">{t('workflowRun.noSelection')}</option>}
                         {input.options.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
@@ -167,14 +169,16 @@ export function WorkflowRunDialog({
             <div className="rounded-xl border border-caution/30 bg-caution/10 px-4 py-3 text-sm text-caution space-y-2">
               {unknownPlaceholders.length > 0 && (
                 <div>
-                  Unknown placeholders detected:{' '}
-                  {unknownPlaceholders.map((placeholder) => `{{${placeholder}}}`).join(', ')}.
+                  {t('workflowRun.unknownPlaceholders', {
+                    placeholders: unknownPlaceholders.map((placeholder) => `{{${placeholder}}}`).join(', ')
+                  })}
                 </div>
               )}
               {invalidInputs.length > 0 && (
                 <div>
-                  Fix these input values before running:{' '}
-                  {invalidInputs.map((issue) => `${issue.label}: ${issue.message}`).join(' ')}
+                  {t('workflowRun.invalidInputValues', {
+                    issues: invalidInputs.map((issue) => `${issue.label}: ${issue.message}`).join(' ')
+                  })}
                 </div>
               )}
             </div>
@@ -183,9 +187,9 @@ export function WorkflowRunDialog({
           {preparationSteps.length > 0 && (
             <section className="space-y-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-200">Preparation</h3>
+                <h3 className="text-sm font-semibold text-gray-200">{t('workflowRun.preparation')}</h3>
                 <p className="text-xs text-gray-500 mt-1">
-                  Notes are included for context. Approval steps can either pause the run for confirmation or act as informational checkpoints.
+                  {t('workflowRun.preparationDescription')}
                 </p>
               </div>
               <div className="space-y-3">
@@ -211,12 +215,12 @@ export function WorkflowRunDialog({
                     </p>
                     {step.type === 'approval' && step.requireConfirmation && (
                       <div className="mt-3 text-xs text-caution">
-                        This step will require confirmation during the run.
+                        {t('workflowRun.requiresConfirmation')}
                       </div>
                     )}
                     {step.type === 'approval' && !step.requireConfirmation && (
                       <div className="mt-3 text-xs text-gray-500">
-                        This checkpoint will be shown for context and then continue automatically.
+                        {t('workflowRun.autoCheckpoint')}
                       </div>
                     )}
                   </div>
@@ -228,35 +232,38 @@ export function WorkflowRunDialog({
           {attemptedSubmit && !canRun && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {missingInputs.length > 0 && (
-                <div>Required inputs missing: {missingInputs.map((input) => input.label).join(', ')}</div>
+                <div>{t('workflowRun.requiredInputsMissing', { inputs: missingInputs.map((input) => input.label).join(', ') })}</div>
               )}
               {invalidInputs.length > 0 && (
                 <div>
-                  Invalid input values: {invalidInputs.map((issue) => `${issue.label} (${issue.message})`).join(', ')}
+                  {t('workflowRun.invalidInputs', {
+                    issues: invalidInputs.map((issue) => `${issue.label} (${issue.message})`).join(', ')
+                  })}
                 </div>
               )}
               {unknownPlaceholders.length > 0 && (
                 <div>
-                  Unknown placeholders must be fixed before running: {' '}
-                  {unknownPlaceholders.map((placeholder) => `{{${placeholder}}}`).join(', ')}
+                  {t('workflowRun.unknownMustBeFixed', {
+                    placeholders: unknownPlaceholders.map((placeholder) => `{{${placeholder}}}`).join(', ')
+                  })}
                 </div>
               )}
-              {executionPlan.steps.length === 0 && <div>No command steps are enabled in this selection.</div>}
+              {executionPlan.steps.length === 0 && <div>{t('workflowRun.noCommandSteps')}</div>}
             </div>
           )}
         </div>
 
         <div className="flex items-center justify-between px-6 py-4 border-t border-surface-border">
           <div className="text-xs text-gray-500">
-            {preparationSteps.length} prep step{preparationSteps.length !== 1 ? 's' : ''} · {' '}
-            {executionPlan.steps.length} command{executionPlan.steps.length !== 1 ? 's' : ''}
+            {t('workflowRun.prepStep', { count: preparationSteps.length })} ·{' '}
+            {t('workflowRun.command', { count: executionPlan.steps.length })}
           </div>
           <div className="flex gap-2">
             <button
               onClick={onCancel}
               className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors"
             >
-              Cancel
+              {t('common:actions.cancel')}
             </button>
             <button
               onClick={() => {

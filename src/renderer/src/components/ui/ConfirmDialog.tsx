@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 
 interface ConfirmDialogProps {
   title: string
@@ -12,10 +13,13 @@ interface ConfirmDialogProps {
 export function ConfirmDialog({
   title,
   message,
-  confirmLabel = 'Delete',
+  confirmLabel,
   onConfirm,
   onCancel
 }: ConfirmDialogProps): JSX.Element {
+  const { t } = useTranslation('common')
+  const resolvedConfirmLabel = confirmLabel ?? t('actions.delete')
+
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60"
@@ -39,13 +43,13 @@ export function ConfirmDialog({
             onClick={onCancel}
             className="px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-gray-200 transition-colors"
           >
-            Cancel
+            {t('actions.cancel')}
           </button>
           <button
             onClick={onConfirm}
             className="px-3 py-1.5 rounded-lg bg-destructive hover:bg-destructive/80 text-white text-xs font-medium transition-colors"
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </button>
         </div>
       </div>

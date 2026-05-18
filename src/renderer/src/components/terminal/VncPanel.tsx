@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import RFB from '@novnc/novnc/lib/rfb.js'
 import { MonitorOff, Loader2, Eye, EyeOff, Maximize2, Minimize2, RefreshCw, Clipboard } from 'lucide-react'
 
@@ -14,6 +15,7 @@ interface VncPanelProps {
 type VncStatus = 'connecting' | 'connected' | 'disconnected' | 'error'
 
 export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visible }: VncPanelProps): JSX.Element {
+  const { t } = useTranslation('terminal')
   const containerRef = useRef<HTMLDivElement>(null)
   const rfbRef = useRef<InstanceType<typeof RFB> | null>(null)
   const [status, setStatus] = useState<VncStatus>('connecting')
@@ -156,7 +158,7 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
           setStatus('disconnected')
         } else {
           setStatus('error')
-          setErrorMessage(`Connection lost — check that a VNC server is running on the remote machine (port ${vncPort})`)
+          setErrorMessage(t('vnc.connectionLost', { port: vncPort }))
         }
       })
 
@@ -190,7 +192,7 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
       rfbRef.current?.disconnect()
       rfbRef.current = null
     }
-  }, [wsPort, token, sessionId, storageKey, connectKey])
+  }, [wsPort, token, sessionId, storageKey, connectKey, vncPort, t])
 
   return (
     <div
@@ -204,21 +206,21 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
           {status === 'connecting' && (
             <>
               <Loader2 size={24} className="text-accent-light animate-spin" />
-              <p className="text-sm text-gray-400">Connecting via SSH tunnel…</p>
+              <p className="text-sm text-gray-400">{t('vnc.connecting')}</p>
             </>
           )}
           {(status === 'disconnected' || status === 'error') && (
             <>
               <MonitorOff size={24} className="text-gray-500" />
               <p className="text-sm text-gray-400 text-center max-w-xs px-4">
-                {status === 'error' ? (errorMessage ?? 'Connection error') : 'Disconnected'}
+                {status === 'error' ? (errorMessage ?? t('vnc.connectionError')) : t('vnc.disconnected')}
               </p>
               <button
                 onClick={reconnect}
                 className="mt-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-surface-border text-xs text-gray-300 hover:text-white hover:border-accent/50 transition-colors"
               >
                 <RefreshCw size={12} />
-                Reconnect
+                {t('vnc.reconnect')}
               </button>
             </>
           )}
@@ -230,8 +232,8 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
           <div className="bg-surface border border-surface-border rounded-xl shadow-2xl shadow-black/50 p-6 w-80 flex flex-col gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-200">VNC Password Required</p>
-              <p className="text-xs text-gray-500 mt-1">The VNC server on the remote machine requires its own password (separate from SSH)</p>
+              <p className="text-sm font-medium text-gray-200">{t('vnc.passwordRequired')}</p>
+              <p className="text-xs text-gray-500 mt-1">{t('vnc.passwordDescription')}</p>
             </div>
             <div className="relative">
               <input
@@ -239,7 +241,7 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') submitPassword() }}
-                placeholder="VNC password"
+                placeholder={t('vnc.passwordPlaceholder')}
                 autoFocus
                 className="w-full bg-surface border border-surface-border rounded-lg px-3 py-2 pr-9 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
               />
@@ -259,8 +261,8 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
                 onChange={(e) => setRememberPassword(e.target.checked)}
                 className="rounded border-surface-border bg-surface"
               />
-              <span className="text-xs text-gray-400">Remember password</span>
-              <span className="text-xs text-gray-600 ml-auto">(saved to OS keychain)</span>
+              <span className="text-xs text-gray-400">{t('vnc.rememberPassword')}</span>
+              <span className="text-xs text-gray-600 ml-auto">({t('vnc.keychain')})</span>
             </label>
             <div className="flex gap-2 justify-end">
               <button
@@ -268,14 +270,14 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
                 onClick={() => { setPasswordPrompt(false); setPasswordInput('') }}
                 className="px-3 py-1.5 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors"
               >
-                Cancel
+                {t('common:actions.cancel')}
               </button>
               <button
                 type="button"
                 onClick={submitPassword}
                 className="px-3 py-1.5 rounded-lg bg-accent text-sm text-white hover:bg-accent/90 transition-colors"
               >
-                Connect
+                {t('vnc.connect')}
               </button>
             </div>
           </div>
@@ -292,14 +294,14 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
           <button
             onClick={() => void pasteToRemote()}
             className="p-1.5 rounded-lg bg-black/60 border border-white/10 text-gray-400 hover:text-white hover:bg-black/80 transition-colors"
-            title="Paste from clipboard (Ctrl+V)"
+            title={t('vnc.pasteClipboard')}
           >
             <Clipboard size={14} />
           </button>
           <button
             onClick={toggleFullscreen}
             className="p-1.5 rounded-lg bg-black/60 border border-white/10 text-gray-400 hover:text-white hover:bg-black/80 transition-colors"
-            title={isFullscreen ? 'Exit fullscreen (Esc)' : 'Enter fullscreen'}
+            title={isFullscreen ? t('vnc.exitFullscreen') : t('vnc.enterFullscreen')}
           >
             {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </button>

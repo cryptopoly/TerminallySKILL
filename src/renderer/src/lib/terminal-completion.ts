@@ -5,12 +5,6 @@ export interface TerminalCompletionSuggestion {
   source: 'history' | 'command' | 'directory'
 }
 
-export function getTerminalCompletionSourceLabel(source: TerminalCompletionSuggestion['source']): string {
-  if (source === 'history') return 'History'
-  if (source === 'directory') return 'Directory'
-  return 'Command'
-}
-
 function normalize(value: string): string {
   return value.trim().toLowerCase()
 }

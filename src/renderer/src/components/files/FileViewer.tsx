@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertTriangle,
   Check,
@@ -166,6 +167,7 @@ function detectRunnableScript(file: FileTab): { runtime: string; label: string }
 }
 
 export function FileViewer(): JSX.Element {
+  const { t } = useTranslation('files')
   const {
     openFiles,
     activeFile,
@@ -284,7 +286,7 @@ export function FileViewer(): JSX.Element {
       ? await window.electronAPI.readScopedFileContent(filePath)
       : await window.electronAPI.readFileContent(filePath)
     if ('error' in result) {
-      setRunError(`Could not reload ${currentFile.name}: ${result.error}`)
+      setRunError(t('viewer.errors.reloadFailed', { name: currentFile.name, error: result.error }))
       return
     }
 
@@ -310,7 +312,7 @@ export function FileViewer(): JSX.Element {
       size: result.size,
       modifiedAt: result.modifiedAt
     })
-  }, [refreshFileFromDisk])
+  }, [refreshFileFromDisk, t])
 
   const syncEditScroll = useCallback((target: HTMLTextAreaElement): void => {
     if (editHighlightRef.current) {
@@ -366,7 +368,7 @@ export function FileViewer(): JSX.Element {
       if (activeFile.dirty) {
         const saved = await persistFile(activeFile.path)
         if (!saved) {
-          setRunError('Save the file first before running it.')
+          setRunError(t('viewer.errors.saveBeforeRun'))
           return
         }
       }
@@ -413,7 +415,7 @@ export function FileViewer(): JSX.Element {
     } finally {
       setRunningScript(false)
     }
-  }, [activeFile, activeProject, activeSessionId, addSession, persistFile, runnableScript, setTerminalVisible, waitForShellReady])
+  }, [activeFile, activeProject, activeSessionId, addSession, persistFile, runnableScript, setTerminalVisible, t, waitForShellReady])
 
   const handleMakeExecutable = useCallback(async (): Promise<void> => {
     if (!activeFile) return
@@ -555,6 +557,12 @@ export function FileViewer(): JSX.Element {
 
   const isSavingActiveFile = savingPath === activeFile.path
   const saveStateForActiveFile = saveStatus?.path === activeFile.path ? saveStatus : null
+  const activeLineCount = activeFile.editMode ? editLines.length : lines.length
+  const runnableScriptLabel = runnableScript
+    ? (runnableScript.runtime === 'bash' || runnableScript.runtime === 'sh'
+      ? t('viewer.runScript')
+      : t('viewer.runRuntime', { runtime: runnableScript.runtime }))
+    : ''
 
   return (
     <div ref={fileViewerRef} className="h-full min-h-0 flex flex-col bg-surface overflow-hidden">
@@ -581,7 +589,7 @@ export function FileViewer(): JSX.Element {
             <button
               onClick={() => requestCloseFile(file.path)}
               className="tv-btn-icon-sm h-5 w-5"
-              title={file.dirty ? 'Close tab (unsaved changes)' : 'Close tab'}
+              title={file.dirty ? t('viewer.closeTabUnsaved') : t('viewer.closeTab')}
             >
               <X size={11} />
             </button>
@@ -597,9 +605,9 @@ export function FileViewer(): JSX.Element {
             type="button"
             onClick={() => void handleCopyFilePath(activeFile.path)}
             className="block max-w-full truncate text-left text-[11px] font-mono text-gray-600 transition-colors hover:text-gray-400"
-            title={copiedPath === activeFile.path ? 'Copied!' : 'Copy file path'}
+            title={copiedPath === activeFile.path ? t('viewer.copied') : t('viewer.copyFilePath')}
           >
-            {copiedPath === activeFile.path ? 'Copied!' : activeFile.path}
+            {copiedPath === activeFile.path ? t('viewer.copied') : activeFile.path}
           </button>
         </div>
 
@@ -607,17 +615,17 @@ export function FileViewer(): JSX.Element {
           {saveStateForActiveFile?.status === 'saved' && (
             <span className="flex items-center gap-1 text-xs text-safe">
               <Check size={11} />
-              Saved
+              {t('viewer.saved')}
             </span>
           )}
           {saveStateForActiveFile?.status === 'error' && (
             <span className="flex items-center gap-1 text-xs text-destructive" title={saveStateForActiveFile.error}>
               <AlertTriangle size={11} />
-              Save failed
+              {t('viewer.saveFailed')}
             </span>
           )}
           <span className="tv-pill normal-case tracking-normal">
-            {sizeLabel} · {activeFile.editMode ? editLines.length : lines.length} lines{language ? ` · ${language}` : ''}
+            {sizeLabel} · {t('viewer.line', { count: activeLineCount })}{language ? ` · ${language}` : ''}
           </span>
         </div>
 
@@ -626,7 +634,7 @@ export function FileViewer(): JSX.Element {
             <button
               onClick={() => setFileEditMode(activeFile.path, !activeFile.editMode)}
               className="tv-btn-icon"
-              title={activeFile.editMode ? 'Preview file' : 'Edit file'}
+              title={activeFile.editMode ? t('viewer.previewFile') : t('viewer.editFile')}
             >
               {activeFile.editMode ? <Eye size={13} /> : <Pencil size={13} />}
             </button>
@@ -636,32 +644,32 @@ export function FileViewer(): JSX.Element {
               onClick={() => void handleRunScript()}
               disabled={runningScript || isSavingActiveFile}
               className="tv-btn-secondary"
-              title={runnableScript.label}
+              title={runnableScriptLabel}
             >
               <Play size={12} />
-              {activeFile.dirty ? 'Save & Run' : runnableScript.label}
+              {activeFile.dirty ? t('viewer.saveAndRun') : runnableScriptLabel}
             </button>
           )}
           <button
             onClick={() => void persistFile(activeFile.path)}
             disabled={isSavingActiveFile || activeFile.truncated || activeFile.tooLarge || !activeFile.dirty}
             className="tv-btn-accent"
-            title="Save file (⌘S)"
+            title={t('viewer.saveFile')}
           >
             <Save size={12} />
-            {isSavingActiveFile ? 'Saving…' : 'Save'}
+            {isSavingActiveFile ? t('viewer.saving') : t('viewer.save')}
           </button>
           <button
             onClick={() => window.electronAPI.revealInExplorer(activeFile.path)}
             className="tv-btn-icon"
-            title="Reveal in Finder"
+            title={t('viewer.reveal')}
           >
             <ExternalLink size={13} />
           </button>
           <button
             onClick={() => requestCloseFile(activeFile.path)}
             className="tv-btn-icon"
-            title="Close tab"
+            title={t('viewer.closeTab')}
           >
             <XCircle size={13} />
           </button>
@@ -672,14 +680,14 @@ export function FileViewer(): JSX.Element {
         <div className="flex items-center justify-between gap-3 px-4 py-2 bg-caution/10 border-b border-caution/20 text-xs text-caution shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <AlertTriangle size={12} className="shrink-0" />
-            <span>This file is not executable — it needs <code className="font-mono">chmod +x</code> before it can be run directly.</span>
+            <span>{t('viewer.notExecutable')}</span>
           </div>
           <button
             onClick={() => void handleMakeExecutable()}
             disabled={makingExecutable}
             className="tv-btn-secondary shrink-0"
           >
-            {makingExecutable ? 'Fixing…' : 'Run chmod +x'}
+            {makingExecutable ? t('viewer.fixing') : t('viewer.chmod')}
           </button>
         </div>
       )}
@@ -696,7 +704,7 @@ export function FileViewer(): JSX.Element {
           <div className="flex items-center gap-2 min-w-0">
             <AlertTriangle size={12} className="shrink-0" />
             <span className="truncate">
-              This file changed on disk while it was open. Reload to see the newer version, or keep your current edits for now.
+              {t('viewer.externalChanged')}
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -705,14 +713,14 @@ export function FileViewer(): JSX.Element {
                 onClick={() => clearExternalFileChange(activeFile.path)}
                 className="tv-btn-secondary"
               >
-                Keep My Edits
+                {t('viewer.keepEdits')}
               </button>
             )}
             <button
               onClick={() => void loadFileFromDisk(activeFile.path)}
               className="tv-btn-secondary"
             >
-              Reload
+              {t('viewer.reload')}
             </button>
           </div>
         </div>
@@ -722,9 +730,9 @@ export function FileViewer(): JSX.Element {
         <div className="flex-1 flex flex-col items-center justify-center text-gray-600 gap-3 px-8 text-center">
           <AlertTriangle size={32} className="text-caution/60" />
           <div>
-            <p className="text-sm font-medium text-gray-400">File too large to open</p>
+            <p className="text-sm font-medium text-gray-400">{t('viewer.tooLargeTitle')}</p>
             <p className="text-xs mt-1 text-gray-600">
-              {sizeLabel} — files over 50 MB are not loaded in the viewer.
+              {t('viewer.tooLargeDescription', { size: sizeLabel })}
             </p>
           </div>
           <button
@@ -732,7 +740,7 @@ export function FileViewer(): JSX.Element {
             className="tv-btn-secondary"
           >
             <ExternalLink size={12} />
-            Reveal in Finder
+            {t('viewer.reveal')}
           </button>
         </div>
       )}
@@ -740,7 +748,7 @@ export function FileViewer(): JSX.Element {
       {activeFile.truncated && (
         <div className="flex items-center gap-2 px-4 py-2 bg-caution/10 border-b border-caution/20 text-xs text-caution shrink-0">
           <AlertTriangle size={12} />
-          File is larger than 5 MB — showing first 5 MB only. Editing is not available for large files.
+          {t('viewer.truncated')}
         </div>
       )}
 
@@ -797,7 +805,7 @@ export function FileViewer(): JSX.Element {
             </div>
           </div>
           <div className="text-xs text-gray-600 px-4 py-1.5 border-t border-surface-border bg-surface-light shrink-0">
-            Opens in edit mode by default · ⌘S saves · Esc previews · Tab indents
+            {t('viewer.editModeHint')}
           </div>
         </div>
       ) : (
@@ -831,9 +839,11 @@ export function FileViewer(): JSX.Element {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl border border-surface-border bg-surface shadow-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-surface-border">
-              <h2 className="text-sm font-semibold text-gray-200">Unsaved changes</h2>
+              <h2 className="text-sm font-semibold text-gray-200">{t('viewer.unsavedTitle')}</h2>
               <p className="mt-1 text-xs text-gray-500">
-                {openFiles.find((file) => file.path === pendingClosePath)?.name ?? 'This file'} has unsaved changes. Save before closing the tab?
+                {t('viewer.unsavedMessage', {
+                  name: openFiles.find((file) => file.path === pendingClosePath)?.name ?? t('viewer.fallbackFileName')
+                })}
               </p>
             </div>
             <div className="flex items-center justify-end gap-2 px-5 py-4 bg-surface-light/20">
@@ -841,7 +851,7 @@ export function FileViewer(): JSX.Element {
                 onClick={() => setPendingClosePath(null)}
                 className="tv-btn-ghost text-sm"
               >
-                Cancel
+                {t('common:actions.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -850,7 +860,7 @@ export function FileViewer(): JSX.Element {
                 }}
                 className="tv-btn-secondary text-sm"
               >
-                Discard
+                {t('viewer.discard')}
               </button>
               <button
                 onClick={async () => {
@@ -863,7 +873,7 @@ export function FileViewer(): JSX.Element {
                 }}
                 className="tv-btn-accent text-sm"
               >
-                Save & Close
+                {t('viewer.saveAndClose')}
               </button>
             </div>
           </div>

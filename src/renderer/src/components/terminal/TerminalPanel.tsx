@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState, useMemo, useLayoutEffect } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
@@ -24,9 +25,9 @@ import { useFileStore } from '../../store/file-store'
 import { WorkflowRunPanel } from '../scripts/WorkflowRunnerHost'
 import { extractCommandTranscriptFromLines } from '../../lib/terminal-transcript'
 import { formatCommandForDisplay, isSSHSessionCommand, getSSHHost } from '../../lib/command-display'
+import { formatTime } from '../../i18n/format'
 import {
   buildTerminalCompletionSuggestions,
-  getTerminalCompletionSourceLabel,
   getTerminalCompletionSuffix
 } from '../../lib/terminal-completion'
 import {
@@ -40,6 +41,7 @@ import {
   getBracketedPasteModeChange,
   wrapBracketedPaste
 } from '../../lib/terminal-safety'
+import type { SensitivePromptKind, TerminalPasteReason } from '../../lib/terminal-safety'
 import { confirmTerminalClose } from '../../lib/terminal-close'
 import type { Theme } from '../../../../shared/settings-schema'
 import { resolveProjectWorkingDirectory } from '../../../../shared/project-schema'
@@ -58,6 +60,7 @@ export function TerminalPanel({
   presentation?: 'docked' | 'quick'
   onRequestClose?: () => void
 } = {}): JSX.Element {
+  const { t } = useTranslation('terminal')
   const {
     sessions,
     activeSessionId,
@@ -118,7 +121,7 @@ export function TerminalPanel({
 
   const handleClose = useCallback(async (sessionId: string): Promise<void> => {
     const session = sessions.find((s) => s.id === sessionId)
-    const shouldClose = session?.mode === 'vnc' || await confirmTerminalClose(sessionId, runsBySession)
+    const shouldClose = session?.mode === 'vnc' || await confirmTerminalClose(sessionId, runsBySession, t)
     if (!shouldClose) return
 
     if (session?.mode === 'vnc') {
@@ -127,7 +130,7 @@ export function TerminalPanel({
       window.electronAPI.killTerminal(sessionId)
     }
     removeSession(sessionId)
-  }, [removeSession, runsBySession, sessions])
+  }, [removeSession, runsBySession, sessions, t])
 
   const handleSplit = async (direction: 'horizontal' | 'vertical'): Promise<void> => {
     // Save the current primary session BEFORE addSession changes activeSessionId
@@ -169,13 +172,13 @@ export function TerminalPanel({
   }
 
   const handleCloseSplitPane = useCallback(async (sessionId: string): Promise<void> => {
-    const shouldClose = await confirmTerminalClose(sessionId, runsBySession)
+    const shouldClose = await confirmTerminalClose(sessionId, runsBySession, t)
     if (!shouldClose) return
 
     closeSplitPane(sessionId)
     window.electronAPI.killTerminal(sessionId)
     removeSession(sessionId)
-  }, [closeSplitPane, removeSession, runsBySession])
+  }, [closeSplitPane, removeSession, runsBySession, t])
 
   const isSplit = !!splitProjectSessionId
 
@@ -305,7 +308,7 @@ export function TerminalPanel({
                             : 'border-surface-border bg-surface-light text-gray-400'
                     )}
                   >
-                    {workflowIsActive ? 'Run' : workflowRun.status}
+                    {workflowIsActive ? t('panel.runBadge') : workflowRun.status}
                   </span>
                 )}
                 {session.mode === 'ssh-interactive' && (
@@ -329,7 +332,7 @@ export function TerminalPanel({
               </button>
             )
           })}
-          <HelpTip label="New Terminal" description="Open a new shell tab for your project workspace">
+          <HelpTip label={t('panel.newTerminal')} description={t('panel.newTerminalDescription')}>
             <button
               onClick={handleNewTab}
               className="p-2 text-gray-500 hover:text-accent-light transition-colors"
@@ -338,7 +341,7 @@ export function TerminalPanel({
             </button>
           </HelpTip>
           {activeProject?.workspaceTarget.type === 'ssh' && (
-            <HelpTip label="SSH Shell" description="Open a new interactive SSH shell for this workspace">
+            <HelpTip label={t('panel.sshShell')} description={t('panel.sshShellDescription')}>
               <button
                 onClick={handleOpenInteractiveSSH}
                 className="p-2 text-gray-500 hover:text-accent-light transition-colors"
@@ -349,7 +352,7 @@ export function TerminalPanel({
           )}
           {activeProject?.workspaceTarget.type === 'ssh' && (
             <div className="flex items-center">
-              <HelpTip label="VNC Viewer" description="Open a remote desktop session via encrypted SSH tunnel">
+              <HelpTip label={t('panel.vncViewer')} description={t('panel.vncViewerDescription')}>
                 <button
                   onClick={() => void handleOpenVnc()}
                   className="p-2 text-gray-500 hover:text-accent-light transition-colors"
@@ -362,26 +365,26 @@ export function TerminalPanel({
                 content={
                   <div className="space-y-2.5">
                     <div>
-                      <p className="font-semibold text-gray-200 mb-1">VNC Server Setup</p>
-                      <p className="text-gray-400">First, check if a VNC server is running on your VPS via the SSH tab:</p>
+                      <p className="font-semibold text-gray-200 mb-1">{t('vncSetup.title')}</p>
+                      <p className="text-gray-400">{t('vncSetup.checkServer')}</p>
                       <pre className="mt-1 text-gray-200 font-mono text-[11px] bg-surface rounded px-2 py-1 whitespace-pre-wrap">ss -tlnp | grep 5901</pre>
                     </div>
                     <div>
-                      <p className="text-gray-400 mb-1">If nothing is returned, install TigerVNC:</p>
+                      <p className="text-gray-400 mb-1">{t('vncSetup.installTiger')}</p>
                       <pre className="text-gray-200 font-mono text-[11px] bg-surface rounded px-2 py-1 whitespace-pre-wrap">{'apt update && apt install -y \\\n  tigervnc-standalone-server\nvncpasswd'}</pre>
                     </div>
                     <div>
-                      <p className="text-gray-400 mb-1">Install XFCE4 (lightweight, works great over VNC):</p>
+                      <p className="text-gray-400 mb-1">{t('vncSetup.installDesktop')}</p>
                       <pre className="text-gray-200 font-mono text-[11px] bg-surface rounded px-2 py-1 whitespace-pre-wrap">{'apt install xfce4 xfce4-goodies -y'}</pre>
                     </div>
                     <div>
-                      <p className="text-gray-400 mb-1">Configure VNC to launch the desktop:</p>
+                      <p className="text-gray-400 mb-1">{t('vncSetup.configureStartup')}</p>
                       <pre className="text-gray-200 font-mono text-[11px] bg-surface rounded px-2 py-1 whitespace-pre-wrap">{'mkdir -p ~/.vnc\ncat > ~/.vnc/xstartup << \'EOF\'\n#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nexec startxfce4\nEOF\nchmod +x ~/.vnc/xstartup'}</pre>
                     </div>
                     <div>
-                      <p className="text-gray-400 mb-1">Start a session:</p>
+                      <p className="text-gray-400 mb-1">{t('vncSetup.startSession')}</p>
                       <pre className="text-gray-200 font-mono text-[11px] bg-surface rounded px-2 py-1 whitespace-pre-wrap">{'vncserver :1 -geometry 1920x1080 -depth 24'}</pre>
-                      <p className="text-gray-500 mt-1"><span className="text-gray-400">:1</span> = port 5901 &nbsp;·&nbsp; <span className="text-gray-400">:0</span> = port 5900</p>
+                      <p className="text-gray-500 mt-1">{t('vncSetup.portHint')}</p>
                     </div>
                   </div>
                 }
@@ -399,8 +402,8 @@ export function TerminalPanel({
           {activeProjectSessionId && (
             <>
               <HelpTip
-                label={isSplit && splitDirection === 'vertical' ? 'Close Split' : 'Split Vertical'}
-                description="Open a second terminal side by side"
+                label={isSplit && splitDirection === 'vertical' ? t('panel.closeSplit') : t('panel.splitVertical')}
+                description={t('panel.splitVerticalDescription')}
                 shortcut="⌘D"
               >
                 <button
@@ -415,8 +418,8 @@ export function TerminalPanel({
                 </button>
               </HelpTip>
               <HelpTip
-                label={isSplit && splitDirection === 'horizontal' ? 'Close Split' : 'Split Horizontal'}
-                description="Stack terminals top and bottom"
+                label={isSplit && splitDirection === 'horizontal' ? t('panel.closeSplit') : t('panel.splitHorizontal')}
+                description={t('panel.splitHorizontalDescription')}
                 shortcut="⌘⇧D"
               >
                 <button
@@ -434,7 +437,7 @@ export function TerminalPanel({
               <div className="w-px h-4 bg-surface-border mx-0.5" />
 
               {/* Snapshot panel toggle */}
-              <HelpTip label="Snapshots" description="Capture terminal output to compare later" shortcut="⌘⇧S">
+              <HelpTip label={t('snapshots.title')} description={t('panel.snapshotsDescription')} shortcut="⌘⇧S">
                 <button
                   onClick={() => setSnapshotPanelOpen(!snapshotPanelOpen)}
                   className={`p-1.5 transition-colors relative ${
@@ -454,8 +457,8 @@ export function TerminalPanel({
             </>
           )}
           <HelpTip
-            label="Hide Terminal"
-            description="Collapse the terminal panel"
+            label={t('panel.hideTerminal')}
+            description={t('panel.hideTerminalDescription')}
             shortcut={navigator.platform.toLowerCase().includes('mac') ? '⌘/' : 'Ctrl+/'}
           >
             <button
@@ -559,7 +562,7 @@ export function TerminalPanel({
 
         {projectSessions.length === 0 && (
           <div className="h-full flex items-center justify-center text-gray-600 text-sm">
-            No terminal sessions. Click + or execute a command.
+            {t('panel.noSessions')}
           </div>
         )}
 
@@ -691,7 +694,7 @@ type PendingPasteTarget = 'editor' | 'terminal-direct' | 'terminal-queue'
 interface PendingPaste {
   text: string
   preview: string
-  reasons: string[]
+  reasons: TerminalPasteReason[]
   lineCount: number
   target: PendingPasteTarget
   selectionStart?: number
@@ -765,6 +768,7 @@ function XTermInstance({
   projectWorkingDirectory: string | null
   sessionMode?: string
 }) {
+  const { t } = useTranslation('terminal')
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
@@ -774,6 +778,7 @@ function XTermInstance({
   const [searchOpen, setSearchOpen] = useState(false)
 
   const activeTheme = useSettingsStore((s) => s.settings.theme)
+  const localeSettings = useSettingsStore((s) => s.settings)
   const terminalInputMode = useSettingsStore((s) => s.settings.terminalInputMode)
   const setTerminalInputMode = useSettingsStore((s) => s.setTerminalInputMode)
   const activeAIProvider = useSettingsStore((s) => s.settings.activeAIProvider)
@@ -845,7 +850,7 @@ function XTermInstance({
   const [activeCommandBlock, setActiveCommandBlock] = useState<TerminalCommandBlock | null>(null)
   const [lastCompletedCommandBlock, setLastCompletedCommandBlock] = useState<TerminalCommandBlock | null>(null)
   const [secureInputActive, setSecureInputActive] = useState(false)
-  const [securePromptLabel, setSecurePromptLabel] = useState<string | null>(null)
+  const [securePromptLabel, setSecurePromptLabel] = useState<SensitivePromptKind | null>(null)
   const [pendingPaste, setPendingPaste] = useState<PendingPaste | null>(null)
   const [bracketedPasteMode, setBracketedPasteMode] = useState(false)
   const [editorSelection, setEditorSelectionState] = useState({ start: 0, end: 0 })
@@ -980,8 +985,8 @@ function XTermInstance({
     if (!transcript) {
       setAIError(
         scope === 'last-command'
-          ? 'Run a command first so there is a completed command block to review.'
-          : 'Run a command first so there is terminal output to review.'
+          ? t('aiReview.noLastCommand')
+          : t('aiReview.noTerminalOutput')
       )
       setAIReview(null)
       setAIReviewMeta(null)
@@ -1034,7 +1039,8 @@ function XTermInstance({
     lastCompletedCommandBlock,
     projectName,
     projectWorkingDirectory,
-    sessionId
+    sessionId,
+    t
   ])
 
   const runAIReviewSelection = useCallback(async () => {
@@ -1042,7 +1048,7 @@ function XTermInstance({
     if (!terminal) return
     const selectedText = terminal.getSelection()?.trim()
     if (!selectedText) {
-      setAIError('Select some text in the terminal first.')
+      setAIError(t('aiReview.selectTextFirst'))
       setAIReview(null)
       setAIReviewMeta(null)
       setAIReviewScope(null)
@@ -1056,14 +1062,14 @@ function XTermInstance({
     setAIFollowUpInput('')
     aiReviewTranscriptRef.current = selectedText
     setAIReviewScope('selection')
-    setAIReviewTargetLabel('Selected text')
+    setAIReviewTargetLabel(t('aiReview.selectedText'))
     try {
       const sessionInfo = await window.electronAPI.getSessionInfo(sessionId)
       const response = await window.electronAPI.runAIAction({
         action: 'output-review',
         source: 'terminal',
         focus: 'command-block',
-        title: 'Selected terminal text',
+        title: t('aiReview.selectedTerminalTextTitle'),
         transcript: selectedText,
         cwd: sessionInfo?.cwd ?? projectWorkingDirectory ?? undefined
       })
@@ -1081,7 +1087,7 @@ function XTermInstance({
     } finally {
       setAILoading(false)
     }
-  }, [projectWorkingDirectory, sessionId])
+  }, [projectWorkingDirectory, sessionId, t])
 
   const sendAIFollowUp = useCallback(async () => {
     const question = aiFollowUpInput.trim()
@@ -1128,7 +1134,7 @@ function XTermInstance({
   ): Promise<void> => {
     const commandString = lastCompletedCommandBlock?.command?.trim()
     if (!commandString) {
-      setPromoteError('Run a command first so there is something to promote.')
+      setPromoteError(t('promote.errors.noCommand'))
       return
     }
 
@@ -1187,7 +1193,7 @@ function XTermInstance({
       } else {
         const executable = extractPrimaryExecutable(commandString)
         if (!executable) {
-          throw new Error('Could not determine the executable for this command.')
+          throw new Error(t('promote.errors.noExecutable'))
         }
 
         let nextCommand = existingPromotedCommand
@@ -1227,6 +1233,7 @@ function XTermInstance({
     setActiveCommand,
     setActiveScript,
     setActiveSnippet,
+    t,
     updateProjectInStore,
     updateScriptInStore
   ])
@@ -1285,7 +1292,7 @@ function XTermInstance({
     setPendingPaste(nextPaste)
   }, [])
 
-  const setSecureInputState = useCallback((active: boolean, label: string | null = null) => {
+  const setSecureInputState = useCallback((active: boolean, label: SensitivePromptKind | null = null) => {
     secureInputActiveRef.current = active
     setSecureInputActive(active)
     setSecurePromptLabel(active ? label : null)
@@ -2110,18 +2117,19 @@ function XTermInstance({
     const lines = clean.split('\n')
     const lineCount = lines.length
 
+    const capturedAt = new Date()
     const snap: OutputSnapshot = {
       id: `snap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       sessionId,
-      label: `Snapshot ${new Date().toLocaleTimeString()}`,
+      label: t('snapshots.label', { time: formatTime(capturedAt, localeSettings) }),
       content: clean,
       lineCount,
-      capturedAt: new Date().toISOString(),
+      capturedAt: capturedAt.toISOString(),
       projectId: activeProject?.id ?? null
     }
 
     useSnapshotStore.getState().addSnapshot(snap)
-  }, [sessionId, activeProject?.id])
+  }, [sessionId, activeProject?.id, localeSettings, t])
 
   return (
     <div
@@ -2132,23 +2140,28 @@ function XTermInstance({
       {notFoundCmd && (
         <div className="flex items-center gap-3 px-3 py-2 bg-caution/10 border-b border-caution/20 shrink-0">
           <HelpTip
-            label="Command Not Found"
-            description={`Your shell could not find "${notFoundCmd}" in any directory listed in your PATH environment variable. This usually means it is not installed, or its install location is not in your PATH.`}
+            label={t('pathFix.commandNotFound')}
+            description={t('pathFix.commandNotFoundDescription', { command: notFoundCmd })}
           >
             <span className="text-xs text-caution cursor-default">
-              <span className="font-mono font-bold">{notFoundCmd}</span> not found in PATH
+              <Trans
+                i18nKey="pathFix.notFoundInPath"
+                ns="terminal"
+                values={{ command: notFoundCmd }}
+                components={{ command: <span className="font-mono font-bold" /> }}
+              />
             </span>
           </HelpTip>
 
           {fixResult === 'success' ? (
             <span className="inline-flex items-center gap-1 text-xs text-safe">
               <Check size={12} />
-              Added to PATH — open a new tab to apply
+              {t('pathFix.added')}
             </span>
           ) : fixResult === 'not-found' ? (
             <span className="inline-flex items-center gap-1 text-xs text-destructive">
               <XCircle size={12} />
-              Could not locate {notFoundCmd} on this system
+              {t('pathFix.couldNotLocate', { command: notFoundCmd })}
             </span>
           ) : (
             <button
@@ -2159,12 +2172,12 @@ function XTermInstance({
               {fixing ? (
                 <>
                   <Loader2 size={11} className="animate-spin" />
-                  Finding...
+                  {t('pathFix.finding')}
                 </>
               ) : (
                 <>
                   <Wrench size={11} />
-                  Fix PATH
+                  {t('pathFix.fixPath')}
                 </>
               )}
             </button>
@@ -2183,7 +2196,7 @@ function XTermInstance({
       {usageHint && !notFoundCmd && (
         <div className="flex items-center gap-3 px-3 py-2 bg-blue-500/10 border-b border-blue-500/20 shrink-0">
           <span className="text-xs text-blue-400 truncate">
-            <span className="font-medium">Usage:</span>{' '}
+            <span className="font-medium">{t('usage.label')}</span>{' '}
             <span className="font-mono">{usageHint}</span>
           </span>
 
@@ -2193,14 +2206,14 @@ function XTermInstance({
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-medium hover:bg-blue-500/20 transition-colors"
             >
               <Search size={11} />
-              Search Web
+              {t('usage.searchWeb')}
             </button>
             <button
               onClick={() => handleAskAI(usageHint)}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors"
             >
               <MessageCircle size={11} />
-              Ask ChatGPT
+              {t('usage.askChatGpt')}
             </button>
           </div>
 
@@ -2248,7 +2261,7 @@ function XTermInstance({
               className="absolute bottom-3 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/90 text-white text-xs font-medium shadow-lg hover:bg-accent transition-all backdrop-blur-sm z-10"
             >
               <ArrowDown size={12} />
-              Latest output
+              {t('panel.latestOutput')}
             </button>
           )}
 
@@ -2273,7 +2286,7 @@ function XTermInstance({
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-200 hover:bg-surface-lighter transition-colors disabled:opacity-50"
                 >
                   <Sparkles size={14} className="text-accent-light" />
-                  AI Review Selection
+                  {t('aiReview.reviewSelection')}
                 </button>
                 <button
                   onClick={async () => {
@@ -2285,7 +2298,7 @@ function XTermInstance({
                 >
                   <X size={14} className="text-gray-400" style={{ display: 'none' }} />
                   <span className="w-[14px] text-center text-gray-400 text-xs">⌘C</span>
-                  Copy
+                  {t('aiReview.copy')}
                 </button>
               </div>
             </>,
@@ -2302,7 +2315,11 @@ function XTermInstance({
                     <Sparkles size={18} className={aiError ? 'text-destructive' : 'text-accent-light'} />
                     <div className="min-w-0">
                       <h3 className="text-lg font-semibold text-gray-200">
-                        {aiReviewScope === 'last-command' ? 'AI Review · Last Command' : aiReviewScope === 'selection' ? 'AI Review · Selection' : 'AI Review · Session'}
+                        {aiReviewScope === 'last-command'
+                          ? t('aiReview.titleLastCommand')
+                          : aiReviewScope === 'selection'
+                            ? t('aiReview.titleSelection')
+                            : t('aiReview.titleSession')}
                       </h3>
                       {aiReviewTargetLabel && (
                         <p className="text-xs text-gray-500 mt-0.5 truncate">{aiReviewTargetLabel}</p>
@@ -2331,7 +2348,7 @@ function XTermInstance({
                   {aiLoading && (
                     <div className="flex items-center gap-2 text-sm text-gray-400 py-8 justify-center">
                       <Loader2 size={16} className="animate-spin" />
-                      Reviewing terminal output...
+                      {t('aiReview.reviewing')}
                     </div>
                   )}
                   {aiError && (
@@ -2357,7 +2374,7 @@ function XTermInstance({
                   {aiFollowUpLoading && (
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                       <Loader2 size={14} className="animate-spin" />
-                      Thinking...
+                      {t('aiReview.thinking')}
                     </div>
                   )}
                 </div>
@@ -2374,7 +2391,7 @@ function XTermInstance({
                             void sendAIFollowUp()
                           }
                         }}
-                        placeholder="Ask a follow-up question..."
+                        placeholder={t('aiReview.followUpPlaceholder')}
                         disabled={aiFollowUpLoading}
                         className="flex-1 bg-surface rounded-lg border border-surface-border px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-accent/40 disabled:opacity-50"
                       />
@@ -2409,7 +2426,7 @@ function XTermInstance({
                       disabled={aiLoading || aiFollowUpLoading}
                       className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
                     >
-                      Close
+                      {t('aiReview.close')}
                     </button>
                   </div>
                 </div>
@@ -2424,11 +2441,11 @@ function XTermInstance({
                 <ShieldAlert size={14} className="text-caution shrink-0" />
                 <div className="min-w-0">
                   <div className="text-xs font-semibold uppercase tracking-wider text-caution">
-                    Secure Input Active
+                    {t('secureInput.title')}
                   </div>
                   <div className="text-sm text-gray-200">
-                    {securePromptLabel ?? 'Sensitive prompt detected'}.
-                    {' '}Keystrokes are sent directly to the shell and are not previewed or queued.
+                    {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}.
+                    {' '}{t('secureInput.description')}
                   </div>
                 </div>
               </div>
@@ -2440,24 +2457,32 @@ function XTermInstance({
               <div className="flex items-center gap-2">
                 <ShieldAlert size={14} className="text-caution shrink-0" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-caution">
-                  Confirm Paste
+                  {t('safePaste.title')}
                 </span>
                 <span className="text-[11px] text-gray-500 ml-auto">
                   {pendingPaste.target === 'editor'
-                    ? 'Editor draft'
+                    ? t('safePaste.editorDraft')
                     : pendingPaste.target === 'terminal-queue'
-                      ? 'Queued for later'
-                      : 'Send to shell'}
+                      ? t('safePaste.queuedForLater')
+                      : t('safePaste.sendToShell')}
                 </span>
               </div>
               <div className="mt-2 text-sm text-gray-300">
-                This paste was flagged because it includes {pendingPaste.reasons.join(', ')}.
+                {t('safePaste.flagged', {
+                  reasons: pendingPaste.reasons
+                    .map((reason) =>
+                      reason === 'multiLine'
+                        ? t('safePaste.reasons.multiLine', { count: pendingPaste.lineCount })
+                        : t(`safePaste.reasons.${reason}`)
+                    )
+                    .join(', ')
+                })}
               </div>
               {pendingPaste.target !== 'editor' && pendingPaste.lineCount > 1 && (
                 <div className="mt-1 text-[11px] text-gray-500">
                   {bracketedPasteMode && !secureInputActive
-                    ? 'This shell has bracketed paste enabled, so the confirmed paste will be wrapped safely.'
-                    : 'This shell is not advertising bracketed paste, so the confirmed content will be sent as plain input.'}
+                    ? t('safePaste.bracketed')
+                    : t('safePaste.plain')}
                 </div>
               )}
               <div className="mt-2 rounded-lg bg-surface px-3 py-2 font-mono text-xs text-gray-300 whitespace-pre-wrap break-words max-h-48 overflow-auto">
@@ -2466,27 +2491,27 @@ function XTermInstance({
               <div className="mt-3 flex items-center justify-between gap-3">
                 <span className="text-[11px] text-gray-500">
                   {pendingPaste.lineCount > 1
-                    ? `${pendingPaste.lineCount} lines will be pasted.`
-                    : 'Review the content before sending it to the shell.'}
+                    ? t('safePaste.lines', { count: pendingPaste.lineCount })
+                    : t('safePaste.review')}
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={cancelPendingPaste}
                     className="rounded-md bg-surface px-2.5 py-1 text-xs text-gray-400 hover:text-gray-200 transition-colors"
                   >
-                    Cancel
+                    {t('safePaste.cancel')}
                   </button>
                   <button
                     onClick={confirmPendingPaste}
                     className="rounded-md bg-caution/10 px-2.5 py-1 text-xs font-medium text-caution hover:bg-caution/20 transition-colors"
                   >
-                    Paste Anyway
+                    {t('safePaste.pasteAnyway')}
                   </button>
                   <button
                     onClick={() => void disableSafePasteAndConfirm()}
                     className="rounded-md bg-surface px-2.5 py-1 text-xs text-gray-400 hover:text-gray-200 transition-colors"
                   >
-                    Paste Anyway and Don’t Show Again
+                    {t('safePaste.pasteAndDisable')}
                   </button>
                 </div>
               </div>
@@ -2496,19 +2521,19 @@ function XTermInstance({
           {terminalInputMode === 'editor' && shellState === 'idle' && !(workflowRun && !isTerminalRunStatus(workflowRun.status)) && (
             <div className="rounded-lg bg-surface-light px-3 py-2 shadow-xl">
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider mb-1.5">
-                <span className="text-accent-light font-semibold">Editor Prompt</span>
+                <span className="text-accent-light font-semibold">{t('editorPrompt.title')}</span>
                 <HelpTip
-                  label="Editor Prompt"
+                  label={t('editorPrompt.title')}
                   description={
                     commandHistory.length > 0
-                      ? 'Enter runs. Tab accepts the selected suggestion. Shift+Tab or Alt+Up/Down cycles suggestions. Up/down cycles command history. Ctrl+N / Ctrl+P also cycle suggestions.'
-                      : 'Enter runs. Tab accepts the selected suggestion. Shift+Tab or Alt+Up/Down cycles suggestions. History appears after your first run.'
+                      ? t('editorPrompt.helpWithHistory')
+                      : t('editorPrompt.helpNoHistory')
                   }
                 >
                   <button
                     type="button"
                     className="text-gray-500 hover:text-accent-light transition-colors normal-case tracking-normal"
-                    aria-label="Editor prompt help"
+                    aria-label={t('editorPrompt.helpLabel')}
                   >
                     <CircleHelp size={13} />
                   </button>
@@ -2538,7 +2563,7 @@ function XTermInstance({
                     onSelect={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
                     onPaste={handleEditorPaste}
                     onKeyDown={handleEditorKeyDown}
-                    placeholder="Type a command and press Enter"
+                    placeholder={t('editorPrompt.placeholder')}
                     spellCheck={false}
                     autoCapitalize="off"
                     autoCorrect="off"
@@ -2549,12 +2574,12 @@ function XTermInstance({
                   onClick={submitEditorCommand}
                   className="shrink-0 rounded-md bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent-light hover:bg-accent/20 transition-colors"
                 >
-                  Run
+                  {t('editorPrompt.run')}
                 </button>
               </div>
 
               <div className="mt-1.5 min-h-[2rem] flex items-center gap-2 text-[11px]">
-                <span className="text-gray-500 shrink-0">Suggestion:</span>
+                <span className="text-gray-500 shrink-0">{t('editorPrompt.suggestion')}</span>
                 <div className="min-w-0 flex-1 overflow-hidden">
                   {editorSuggestions.length > 0 ? (
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
@@ -2579,7 +2604,7 @@ function XTermInstance({
                             }`}
                           >
                             <span className="mr-1.5 rounded px-1 py-0.5 text-[10px] uppercase tracking-wide bg-surface/60 text-gray-500">
-                              {getTerminalCompletionSourceLabel(suggestion.source)}
+                              {t(`editorPrompt.sources.${suggestion.source}`)}
                             </span>
                             {useInlineSuffix ? (
                               <>
@@ -2595,11 +2620,11 @@ function XTermInstance({
                     </div>
                   ) : (
                     <div className="flex items-center h-full text-gray-600">
-                      Start typing to generate suggestions.
+                      {t('editorPrompt.emptySuggestions')}
                     </div>
                   )}
                 </div>
-                <span className="text-gray-600 shrink-0">Tab accepts the selected suggestion.</span>
+                <span className="text-gray-600 shrink-0">{t('editorPrompt.tabAccepts')}</span>
               </div>
             </div>
           )}
@@ -2608,11 +2633,11 @@ function XTermInstance({
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <HelpTip
-                  label="Review Session"
+                  label={t('toolbar.reviewSession')}
                   description={
                     activeAIProvider
-                      ? 'Ask your active AI provider to review the full terminal session transcript.'
-                      : 'Select an active AI provider in Settings to review terminal output.'
+                      ? t('toolbar.reviewSessionEnabled')
+                      : t('toolbar.reviewSessionDisabled')
                   }
                 >
                   <button
@@ -2623,7 +2648,7 @@ function XTermInstance({
                     {aiLoading && aiReviewScope !== 'last-command'
                       ? <Loader2 size={12} className="animate-spin" />
                       : <Sparkles size={12} />}
-                    {aiReviewScope === 'session' && aiReview ? 'Refresh Session' : 'Review Session'}
+                    {aiReviewScope === 'session' && aiReview ? t('toolbar.refreshSession') : t('toolbar.reviewSession')}
                   </button>
                 </HelpTip>
 
@@ -2632,47 +2657,47 @@ function XTermInstance({
               <div className="min-w-0 flex-1 text-[11px] text-gray-400">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span className="truncate">
-                    Prompt: <span className="font-mono text-gray-300">{shellCwd || 'Waiting for shell...'}</span>
+                    {t('toolbar.prompt')} <span className="font-mono text-gray-300">{shellCwd || t('toolbar.waitingForShell')}</span>
                   </span>
                   {activeCommandBlock && !isSSHSessionCommand(activeCommandBlock.command) ? (
                     <span className="truncate">
-                      Running: <span className="font-mono text-accent-light">{formatCommandForDisplay(activeCommandBlock.command)}</span>
+                      {t('toolbar.running')} <span className="font-mono text-accent-light">{formatCommandForDisplay(activeCommandBlock.command)}</span>
                     </span>
                   ) : activeCommandBlock && isSSHSessionCommand(activeCommandBlock.command) ? (
                     <span className="truncate text-gray-500">
-                      Connected: <span className="font-mono text-gray-400">{getSSHHost(activeCommandBlock.command) ?? 'remote'}</span>
+                      {t('toolbar.connected')} <span className="font-mono text-gray-400">{getSSHHost(activeCommandBlock.command) ?? t('toolbar.remote')}</span>
                     </span>
                   ) : lastCompletedCommandBlock && !isSSHSessionCommand(lastCompletedCommandBlock.command) ? (
                     <span className="truncate">
-                      Last: <span className="font-mono text-gray-300">{formatCommandForDisplay(lastCompletedCommandBlock.command)}</span>
+                      {t('toolbar.last')} <span className="font-mono text-gray-300">{formatCommandForDisplay(lastCompletedCommandBlock.command)}</span>
                     </span>
                   ) : null}
                   {promptCount > 0 && (
                     <span className="shrink-0 text-gray-500">
-                      {promptCount} prompt{promptCount === 1 ? '' : 's'}
+                      {t('toolbar.promptCount', { count: promptCount })}
                     </span>
                   )}
                   <HelpTip
-                    label={bracketedPasteMode ? 'Bracketed Paste' : 'Plain Paste'}
+                    label={bracketedPasteMode ? t('toolbar.bracketedPaste') : t('toolbar.plainPaste')}
                     description={
                       bracketedPasteMode
-                        ? 'Shell supports bracketed paste — pasted text is wrapped in escape sequences so it is not executed line-by-line. This is safer for multi-line pastes.'
-                        : 'Shell is using plain paste — pasted text is sent as if typed directly, which may execute commands immediately on newlines.'
+                        ? t('toolbar.bracketedPasteDescription')
+                        : t('toolbar.plainPasteDescription')
                     }
                   >
                     <span className={`shrink-0 cursor-default ${bracketedPasteMode ? 'text-accent-light' : 'text-gray-500'}`}>
-                      Paste: {bracketedPasteMode ? 'bracketed' : 'plain'}
+                      {t('toolbar.paste')} {bracketedPasteMode ? t('toolbar.bracketed') : t('toolbar.plain')}
                     </span>
                   </HelpTip>
                 </div>
               </div>
               <div className="ml-auto flex items-center gap-1.5 text-[11px]">
                 {(sessionMode === 'ssh-interactive' || sessionMode === 'vnc') ? null : <HelpTip
-                  label="Editor Prompt"
+                  label={t('editorPrompt.title')}
                   description={
                     terminalInputMode === 'editor'
-                      ? 'Editor mode is ON — type commands in a dedicated input bar with suggestions and history. Toggle to switch back to classic shell input.'
-                      : 'Editor mode is OFF — you are typing directly into the live shell. Toggle to use an editor-style command bar with suggestions.'
+                      ? t('editorPrompt.modeOnDescription')
+                      : t('editorPrompt.modeOffDescription')
                   }
                   shortcut="⌘E"
                 >
@@ -2681,7 +2706,7 @@ function XTermInstance({
                   onClick={() => void handleTerminalInputModeChange(terminalInputMode === 'editor' ? 'classic' : 'editor')}
                   className="inline-flex shrink-0 items-center gap-2.5 rounded-full pl-1 pr-1 py-0.5 text-gray-200 transition-colors hover:bg-surface-light/40"
                 >
-                  <span className="text-[11px] text-gray-400">Editor Prompt</span>
+                  <span className="text-[11px] text-gray-400">{t('editorPrompt.title')}</span>
                   <span
                     role="switch"
                     aria-checked={terminalInputMode === 'editor'}
@@ -2702,8 +2727,8 @@ function XTermInstance({
                       )}
                     />
                     <span className="relative z-10 flex w-full items-center justify-between px-2 text-[9px] font-semibold uppercase tracking-[0.18em]">
-                      <span className={terminalInputMode === 'editor' ? 'text-gray-500' : 'text-white'}>Off</span>
-                      <span className={terminalInputMode === 'editor' ? 'text-slate-950' : 'text-gray-500'}>On</span>
+                      <span className={terminalInputMode === 'editor' ? 'text-gray-500' : 'text-white'}>{t('editorPrompt.off')}</span>
+                      <span className={terminalInputMode === 'editor' ? 'text-slate-950' : 'text-gray-500'}>{t('editorPrompt.on')}</span>
                     </span>
                   </span>
                 </button>
@@ -2717,21 +2742,21 @@ function XTermInstance({
               <div className="flex items-center gap-2 mb-1.5">
                 <Loader2 size={11} className="animate-spin text-accent" />
                 <span className="text-[11px] text-gray-400">
-                  Shell busy — commands will run when ready
+                  {t('busy.title')}
                 </span>
                 {queuedCommands.length > 0 && (
                   <button
                     onClick={clearQueue}
                     className="ml-auto text-[11px] text-gray-500 hover:text-destructive transition-colors"
                   >
-                    Clear queue
+                    {t('busy.clearQueue')}
                   </button>
                 )}
               </div>
 
               {activeCommandBlock && (
                 <div className="flex items-center gap-2 mb-2 px-2 py-1 bg-surface rounded">
-                  <span className="text-[11px] text-gray-500 shrink-0">Running</span>
+                  <span className="text-[11px] text-gray-500 shrink-0">{t('busy.running')}</span>
                   <span className="text-xs text-gray-300 font-mono flex-1 truncate">
                     {formatCommandForDisplay(activeCommandBlock.command)}
                   </span>

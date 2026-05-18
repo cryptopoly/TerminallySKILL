@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useRunScript } from '../../hooks/useRunScript'
 import {
   Terminal,
@@ -18,10 +19,13 @@ import { useProjectStore } from '../../store/project-store'
 import { useTerminalStore } from '../../store/terminal-store'
 import { useScriptStore } from '../../store/script-store'
 import { useCommandStore } from '../../store/command-store'
+import { useSettingsStore } from '../../store/settings-store'
 import { isTerminalRunStatus, useWorkflowRunnerStore } from '../../store/workflow-runner-store'
 import type { RunRecord } from '../../../../shared/run-schema'
 import type { Script } from '../../../../shared/script-schema'
 import { resolveProjectWorkingDirectory } from '../../../../shared/project-schema'
+import { formatDate } from '../../i18n/format'
+import { resolveFormatLocale } from '../../i18n'
 
 interface DashboardProps {
   onNewTerminal: () => void
@@ -32,13 +36,14 @@ interface DashboardProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatRelativeTime(iso: string): string {
+function formatRelativeTime(iso: string, locale: string): string {
   const diff = Date.now() - new Date(iso).getTime()
-  if (diff < 60_000) return 'just now'
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`
-  if (diff < 604_800_000) return `${Math.floor(diff / 86_400_000)}d ago`
-  return new Date(iso).toLocaleDateString()
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' })
+  if (diff < 60_000) return rtf.format(0, 'second')
+  if (diff < 3_600_000) return rtf.format(-Math.floor(diff / 60_000), 'minute')
+  if (diff < 86_400_000) return rtf.format(-Math.floor(diff / 3_600_000), 'hour')
+  if (diff < 604_800_000) return rtf.format(-Math.floor(diff / 86_400_000), 'day')
+  return ''
 }
 
 function formatDuration(start: string, end: string | null): string {
@@ -72,6 +77,7 @@ function statusIcon(status: string): JSX.Element {
 // ---------------------------------------------------------------------------
 
 export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
+  const { t } = useTranslation('dashboard')
   const activeProject = useProjectStore((s) => s.activeProject)
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
   const sessions = useTerminalStore((s) => s.sessions)
@@ -81,9 +87,15 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
   const commands = useCommandStore((s) => s.commands)
   const { setActiveCommand } = useCommandStore()
   const { updateProjectInStore } = useProjectStore()
+  const settings = useSettingsStore((s) => s.settings)
 
   const [runHistory, setRunHistory] = useState<RunRecord[]>([])
   const { runScript, runningScriptId, canRunScript } = useRunScript()
+  const formatLocale = resolveFormatLocale(settings)
+  const displayRelativeTime = useCallback(
+    (iso: string) => formatRelativeTime(iso, formatLocale) || formatDate(iso, settings),
+    [formatLocale, settings]
+  )
 
   // Project sessions
   const projectSessions = useMemo(
@@ -169,9 +181,12 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-200 truncate">{run.script.name}</div>
                   <div className="text-xs text-gray-500">
-                    Step {run.currentStepIndex + 1} / {run.steps.length}
+                    {t('activeRuns.stepProgress', {
+                      current: run.currentStepIndex + 1,
+                      total: run.steps.length
+                    })}
                     {run.status === 'awaiting_approval' && (
-                      <span className="ml-2 text-caution">Awaiting approval</span>
+                      <span className="ml-2 text-caution">{t('activeRuns.awaitingApproval')}</span>
                     )}
                   </div>
                 </div>
@@ -183,7 +198,7 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
                   className="tv-btn-secondary text-xs"
                 >
                   <Terminal size={12} />
-                  Jump to Terminal
+                  {t('activeRuns.jumpToTerminal')}
                 </button>
               </div>
             ))}
@@ -198,7 +213,7 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
               className="flex flex-col items-center gap-2 rounded-xl border border-surface-border bg-surface-light/50 p-4 text-gray-400 hover:border-accent/40 hover:text-accent-light hover:bg-surface-light transition-colors"
             >
               <Terminal size={20} />
-              <span className="text-xs font-medium">New Terminal</span>
+              <span className="text-xs font-medium">{t('quickActions.newTerminal')}</span>
             </button>
 
             <button
@@ -210,7 +225,7 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
             >
               <Play size={20} />
               <span className="text-xs font-medium truncate w-full text-center">
-                {lastRunScript ? lastRunScript.name : 'No recent scripts'}
+                {lastRunScript ? lastRunScript.name : t('quickActions.noRecentScripts')}
               </span>
             </button>
 
@@ -219,7 +234,7 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
               className="flex flex-col items-center gap-2 rounded-xl border border-surface-border bg-surface-light/50 p-4 text-gray-400 hover:border-accent/40 hover:text-accent-light hover:bg-surface-light transition-colors"
             >
               <FolderOpen size={20} />
-              <span className="text-xs font-medium">Open Folder</span>
+              <span className="text-xs font-medium">{t('quickActions.openFolder')}</span>
             </button>
           </div>
         </section>
@@ -228,12 +243,12 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
         {recentRuns.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="tv-section-label">Recent Runs</h3>
+              <h3 className="tv-section-label">{t('sections.recentRuns')}</h3>
               <button
                 onClick={() => void handleSidebarTab('logs')}
                 className="text-[11px] text-gray-500 hover:text-accent-light transition-colors flex items-center gap-1"
               >
-                View all <ChevronRight size={10} />
+                {t('actions.viewAll')} <ChevronRight size={10} />
               </button>
             </div>
             <div className="rounded-xl border border-surface-border bg-surface-light/30 divide-y divide-surface-border">
@@ -252,7 +267,7 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
                       {formatDuration(run.startedAt, run.endedAt)}
                     </span>
                     <span className="text-[11px] text-gray-600 shrink-0 w-16 text-right">
-                      {formatRelativeTime(run.startedAt)}
+                      {displayRelativeTime(run.startedAt)}
                     </span>
                   </button>
                   {canRunScript(run.scriptId) && (
@@ -260,7 +275,7 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
                       onClick={() => void runScript(run.scriptId)}
                       disabled={runningScriptId === run.scriptId}
                       className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-gray-500 hover:text-accent-light hover:bg-accent/10 transition-all shrink-0"
-                      title={`Rerun ${run.scriptName}`}
+                      title={t('actions.rerun', { name: run.scriptName })}
                     >
                       {runningScriptId === run.scriptId
                         ? <Loader2 size={12} className="animate-spin" />
@@ -277,12 +292,12 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
         {projectScripts.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="tv-section-label">Scripts</h3>
+              <h3 className="tv-section-label">{t('sections.scripts')}</h3>
               <button
                 onClick={() => void handleSidebarTab('scripts')}
                 className="text-[11px] text-gray-500 hover:text-accent-light transition-colors flex items-center gap-1"
               >
-                View all <ChevronRight size={10} />
+                {t('actions.viewAll')} <ChevronRight size={10} />
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -296,9 +311,9 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-gray-200 truncate">{script.name}</div>
                     <div className="text-[11px] text-gray-500">
-                      {script.steps.length} step{script.steps.length !== 1 ? 's' : ''}
+                      {t('scripts.step', { count: script.steps.length })}
                       {script.lastRunAt && (
-                        <span className="ml-2">{formatRelativeTime(script.lastRunAt)}</span>
+                        <span className="ml-2">{displayRelativeTime(script.lastRunAt)}</span>
                       )}
                     </div>
                   </div>
@@ -313,12 +328,12 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
         {recentCommands.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="tv-section-label">Recent Commands</h3>
+              <h3 className="tv-section-label">{t('sections.recentCommands')}</h3>
               <button
                 onClick={() => void handleSidebarTab('commands')}
                 className="text-[11px] text-gray-500 hover:text-accent-light transition-colors flex items-center gap-1"
               >
-                View all <ChevronRight size={10} />
+                {t('actions.viewAll')} <ChevronRight size={10} />
               </button>
             </div>
             <div className="rounded-xl border border-surface-border bg-surface-light/30 divide-y divide-surface-border">
@@ -337,7 +352,7 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
                       {recent.commandString}
                     </code>
                     <span className="text-[11px] text-gray-600 shrink-0">
-                      {formatRelativeTime(recent.timestamp)}
+                      {displayRelativeTime(recent.timestamp)}
                     </span>
                   </button>
                 )
@@ -352,9 +367,9 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent-light">
               <TerminalSquare size={22} />
             </div>
-            <h3 className="text-sm font-medium text-gray-300">Ready to go</h3>
+            <h3 className="text-sm font-medium text-gray-300">{t('empty.title')}</h3>
             <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
-              Open a terminal, run a script, or select a command from the sidebar to get started.
+              {t('empty.description')}
             </p>
           </div>
         )}

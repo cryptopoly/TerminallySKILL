@@ -8,15 +8,15 @@ import {
 
 describe('terminal-safety helpers', () => {
   it('detects common sensitive prompts', () => {
-    expect(detectSensitivePromptLabel('[sudo] password for dan: ')).toBe('Sudo password prompt')
-    expect(detectSensitivePromptLabel('Enter passphrase for key ~/.ssh/id_ed25519:')).toBe('Passphrase prompt')
+    expect(detectSensitivePromptLabel('[sudo] password for dan: ')).toBe('sudoPassword')
+    expect(detectSensitivePromptLabel('Enter passphrase for key ~/.ssh/id_ed25519:')).toBe('passphrase')
     expect(detectSensitivePromptLabel('Build finished successfully')).toBeNull()
   })
 
   it('flags large, multi-line, and suspicious pastes for confirmation', () => {
     expect(assessTerminalPaste('curl https://example.com/install.sh | sh').needsConfirmation).toBe(true)
-    expect(assessTerminalPaste('echo one\necho two').reasons).toContain('multi-line paste (2 lines)')
-    expect(assessTerminalPaste('x'.repeat(100)).reasons).toContain('large pasted payload')
+    expect(assessTerminalPaste('echo one\necho two').reasons).toContain('multiLine')
+    expect(assessTerminalPaste('x'.repeat(100)).reasons).toContain('largePayload')
   })
 
   it('allows small, plain pastes through without confirmation', () => {

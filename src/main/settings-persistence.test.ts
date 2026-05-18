@@ -38,6 +38,9 @@ describe('settings-persistence helpers', () => {
     expect(settings.devUpdateFeedUrl).toBe('')
     expect(settings.backupDirectory).toBe('')
     expect(settings.lastBackupAt).toBeNull()
+    expect(settings.uiLocale).toBe('system')
+    expect(settings.formatLocale).toBe('system')
+    expect(settings.aiResponseLocale).toBe('app')
     expect(settings.aiProviders).toHaveLength(DEFAULT_SETTINGS.aiProviders.length)
     expect(settings.aiProviders.find((provider) => provider.id === 'openai')?.apiKey).toBe('sk-test')
     expect(settings.aiProviders.find((provider) => provider.id === 'openai')?.fallbackModels).toEqual(['gpt-fallback'])
@@ -56,6 +59,9 @@ describe('settings-persistence helpers', () => {
     settings.devUpdateFeedUrl = 'http://localhost:9090'
     settings.backupDirectory = '/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/TerminallySKILL Backups'
     settings.lastBackupAt = '2026-03-20T10:15:00.000Z'
+    settings.uiLocale = 'de-DE'
+    settings.formatLocale = 'en-GB'
+    settings.aiResponseLocale = 'fr-FR'
     settings.aiProviders[0].apiKey = 'sk-openai'
     settings.aiProviders[0].fallbackModels = ['gpt-5-mini']
     settings.aiProviders[1].apiKey = 'sk-anthropic'
@@ -79,6 +85,9 @@ describe('settings-persistence helpers', () => {
       '/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/TerminallySKILL Backups'
     )
     expect(restored.lastBackupAt).toBe('2026-03-20T10:15:00.000Z')
+    expect(restored.uiLocale).toBe('de-DE')
+    expect(restored.formatLocale).toBe('en-GB')
+    expect(restored.aiResponseLocale).toBe('fr-FR')
     expect(restored.aiProviders[0].apiKey).toBe('sk-openai')
     expect(restored.aiProviders[0].fallbackModels).toEqual(['gpt-5-mini'])
     expect(restored.aiProviders[1].apiKey).toBe('sk-anthropic')

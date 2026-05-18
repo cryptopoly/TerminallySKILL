@@ -3,9 +3,12 @@ import {
   type WorkflowActiveRun
 } from '../store/workflow-runner-store'
 
+type TerminalCloseTranslator = (key: string, options?: Record<string, unknown>) => string
+
 export async function confirmTerminalClose(
   sessionId: string,
-  runsBySession: Record<string, WorkflowActiveRun>
+  runsBySession: Record<string, WorkflowActiveRun>,
+  translate: TerminalCloseTranslator
 ): Promise<boolean> {
   const run = runsBySession[sessionId] ?? null
   const hasActiveWorkflowRun = Boolean(run && !isTerminalRunStatus(run.status))
@@ -18,13 +21,13 @@ export async function confirmTerminalClose(
 
   const reasons: string[] = []
   if (hasActiveWorkflowRun) {
-    reasons.push(`Workflow "${run?.script.name ?? 'Unknown Script'}" is still running.`)
+    reasons.push(translate('close.workflowRunning', { name: run?.script.name ?? translate('close.unknownScript') }))
   }
   if (shellIsExecuting) {
-    reasons.push('This terminal is still executing a command.')
+    reasons.push(translate('close.shellExecuting'))
   }
 
   return window.confirm(
-    `Close this terminal anyway?\n\n${reasons.join('\n')}`
+    translate('close.confirm', { reasons: reasons.join('\n') })
   )
 }

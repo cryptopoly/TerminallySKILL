@@ -1,4 +1,5 @@
 import { FolderOpen } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { CommandOption } from '../../../../../shared/command-schema'
 import { OptionInfoIcon } from '../../ui/OptionInfoIcon'
 
@@ -9,6 +10,7 @@ interface FilePathInputProps {
 }
 
 export function FilePathInput({ option, value, onChange }: FilePathInputProps): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const flag = option.short || option.long || ''
   const isDir = option.type === 'directory-path'
 
@@ -37,7 +39,7 @@ export function FilePathInput({ option, value, onChange }: FilePathInputProps): 
         <button
           onClick={browse}
           className="p-2 rounded-lg bg-surface border border-surface-border hover:border-accent/30 text-gray-400 hover:text-accent-light transition-colors"
-          title={isDir ? 'Browse directory' : 'Browse file'}
+          title={isDir ? t('fields.browseDirectory') : t('fields.browseFile')}
         >
           <FolderOpen size={16} />
         </button>

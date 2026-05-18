@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, Check, Square, CheckSquare, Radar, Search } from 'lucide-react'
 import type { DiscoveredCommand } from '../../../../shared/command-schema'
 
@@ -21,12 +22,14 @@ export function ScanResultsDialog({
   discovered,
   existingExecutables = [],
   visibleExecutables = existingExecutables,
-  title = 'Scan Results',
+  title,
   onSave,
   onClose
 }: ScanResultsDialogProps): JSX.Element {
+  const { t } = useTranslation('commands')
   const [selected, setSelected] = useState<Set<string>>(new Set(visibleExecutables))
   const [filter, setFilter] = useState('')
+  const displayTitle = title ?? t('scanDialog.title')
 
   const items = useMemo<ScanResultsItem[]>(() => {
     const discoveredByExecutable = new Map(discovered.map((item) => [item.executable, item]))
@@ -92,9 +95,9 @@ export function ScanResultsDialog({
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
           <div className="flex items-center gap-2">
             <Radar size={16} className="text-accent-light" />
-            <h2 className="text-lg font-semibold text-gray-200">{title}</h2>
+            <h2 className="text-lg font-semibold text-gray-200">{displayTitle}</h2>
             <span className="text-xs text-gray-500 ml-2">
-              {items.length} command trees
+              {t('scanDialog.commandTree', { count: items.length })}
             </span>
           </div>
           <button
@@ -113,7 +116,7 @@ export function ScanResultsDialog({
               type="text"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Filter commands..."
+              placeholder={t('scanDialog.filterPlaceholder')}
               className="w-full bg-surface border border-surface-border rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
             />
           </div>
@@ -125,17 +128,17 @@ export function ScanResultsDialog({
             onClick={selectAll}
             className="text-xs text-accent-light hover:text-accent transition-colors"
           >
-            Select All
+            {t('scanDialog.selectAll')}
           </button>
           <span className="text-gray-700">|</span>
           <button
             onClick={deselectAll}
             className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
           >
-            Deselect All
+            {t('scanDialog.deselectAll')}
           </button>
           <span className="ml-auto text-xs text-gray-600">
-            {selected.size} selected
+            {t('scanDialog.selected', { count: selected.size })}
           </span>
         </div>
 
@@ -143,7 +146,7 @@ export function ScanResultsDialog({
         <div className="px-4 py-2 max-h-80 overflow-y-auto space-y-0.5">
           {filtered.length === 0 ? (
             <div className="text-center text-gray-500 text-sm py-6">
-              {filter ? 'No commands match your filter' : 'No new commands found'}
+              {filter ? t('scanDialog.noFilterMatches') : t('scanDialog.noNewCommands')}
             </div>
           ) : (
             filtered.map((cmd) => {
@@ -168,13 +171,13 @@ export function ScanResultsDialog({
                       </span>
                       {cmd.alreadyAdded && (
                         <span className="shrink-0 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent-light">
-                          Added
+                          {t('scanDialog.added')}
                         </span>
                       )}
                     </div>
                   </div>
                   <span className="text-xs text-gray-600 truncate max-w-[240px]">
-                    {cmd.path ?? 'Already added to TerminallySKILL'}
+                    {cmd.path ?? t('scanDialog.alreadyAdded')}
                   </span>
                 </button>
               )
@@ -188,7 +191,7 @@ export function ScanResultsDialog({
             onClick={onClose}
             className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors"
           >
-            Cancel
+            {t('common:actions.cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -196,7 +199,7 @@ export function ScanResultsDialog({
             className="flex items-center gap-2 px-5 py-2 rounded-lg bg-accent hover:bg-accent-light text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Check size={14} />
-            Apply {selected.size} Command{selected.size !== 1 ? 's' : ''}
+            {t('scanDialog.apply', { count: selected.size })}
           </button>
         </div>
       </div>

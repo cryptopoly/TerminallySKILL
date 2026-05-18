@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   HelpCircle,
   KeyRound,
+  Languages,
   Loader2,
   Palette,
   Plus,
@@ -22,6 +23,7 @@ import {
   XCircle,
   Zap
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 import { useCommandStore } from '../../store/command-store'
 import { useSettingsStore } from '../../store/settings-store'
@@ -34,6 +36,15 @@ import type {
   Theme
 } from '../../../../shared/settings-schema'
 import type { AppUpdateCheckResult } from '../../../../shared/update-schema'
+import {
+  LOCALE_METADATA,
+  SUPPORTED_LOCALES,
+  type AIResponseLocalePreference,
+  type LocalePreference,
+  type SupportedLocale
+} from '../../../../shared/locale-schema'
+import { syncI18nWithSettings } from '../../i18n'
+import { formatDateTime } from '../../i18n/format'
 
 const THEMES: { id: Theme; label: string; dot: string; desc: string; family: 'dark' | 'light' }[] = [
   { id: 'void', label: 'Void', dot: '#06b6d4', desc: 'Dark · Teal', family: 'dark' },
@@ -215,11 +226,6 @@ const PROVIDER_CATALOG: Record<AIProvider['id'], ProviderCatalogEntry> = {
   }
 }
 
-const CONNECTION_LABELS: Record<AIProviderConnectionType, string> = {
-  'api-key': 'API Key',
-  local: 'Local'
-}
-
 type ProviderConnectionDraft = {
   providerId: AIProvider['id']
   connectionType: AIProviderConnectionType
@@ -250,7 +256,8 @@ function isProviderConfigured(provider: AIProvider): boolean {
 function getProviderStatusMeta(
   provider: AIProvider,
   activeProviderId: string | null,
-  testResults: Record<string, { success: boolean; error?: string } | undefined>
+  testResults: Record<string, { success: boolean; error?: string } | undefined>,
+  translate: (key: string, options?: Record<string, unknown>) => string
 ): {
   tone: ProviderStatusTone
   label: string
@@ -262,8 +269,8 @@ function getProviderStatusMeta(
   if (!provider.enabled) {
     return {
       tone: 'idle',
-      label: 'Not connected',
-      detail: 'Available to add',
+      label: translate('ai.status.notConnected'),
+      detail: translate('ai.status.available'),
       dotClassName: 'bg-gray-600'
     }
   }
@@ -271,8 +278,8 @@ function getProviderStatusMeta(
   if (latest && !latest.success) {
     return {
       tone: 'issue',
-      label: 'Needs attention',
-      detail: latest.error || 'Last connection test failed',
+      label: translate('ai.status.needsAttention'),
+      detail: latest.error || translate('ai.status.testFailed'),
       dotClassName: 'bg-destructive'
     }
   }
@@ -280,8 +287,8 @@ function getProviderStatusMeta(
   if (!isProviderConfigured(provider)) {
     return {
       tone: 'issue',
-      label: 'Missing details',
-      detail: 'Complete the connection fields',
+      label: translate('ai.status.missingDetails'),
+      detail: translate('ai.status.completeFields'),
       dotClassName: 'bg-caution'
     }
   }
@@ -289,28 +296,32 @@ function getProviderStatusMeta(
   if (activeProviderId === provider.id) {
     return {
       tone: 'active',
-      label: 'Active',
-      detail: 'Used for AI reviews and drafts',
+      label: translate('ai.status.active'),
+      detail: translate('ai.status.activeDetail'),
       dotClassName: 'bg-safe'
     }
   }
 
   return {
     tone: 'ready',
-    label: 'Connected',
-    detail: 'Ready as backup or alternate provider',
+    label: translate('ai.status.connected'),
+    detail: translate('ai.status.backupReady'),
     dotClassName: 'bg-emerald-400'
   }
 }
 
-function getProviderConnectionHelp(provider: AIProvider): string {
+function getProviderConnectionHelp(
+  provider: AIProvider,
+  translate: (key: string, options?: Record<string, unknown>) => string
+): string {
   if (provider.connectionType === 'local') {
-    return 'Local runtime on your machine'
+    return translate('ai.connectionHelp.local')
   }
-  return 'API key connection'
+  return translate('ai.connectionHelp.apiKey')
 }
 
 export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }): JSX.Element {
+  const { t } = useTranslation(['settings', 'common'])
   const setCommands = useCommandStore((s) => s.setCommands)
   const setActiveCommand = useCommandStore((s) => s.setActiveCommand)
   const {
@@ -325,7 +336,10 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
     setSaveTerminalLogs,
     setLogDirectory,
     setCheckForUpdatesOnStartup,
-    setDevUpdateFeedUrl
+    setDevUpdateFeedUrl,
+    setUiLocale,
+    setFormatLocale,
+    setAIResponseLocale
   } = useSettingsStore()
   const [activeTab, setActiveTab] = useState<SettingsTabId>('general')
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({})
@@ -359,7 +373,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
   const handleResetCommandTrees = async (): Promise<void> => {
     const confirmed = window.confirm(
-      'Reset all discovered/manual command trees and generated help data?\n\nThis keeps your scripts, snippets, projects, settings, and logs.'
+      t('general.resetCommandTrees.confirm', { ns: 'settings' })
     )
     if (!confirmed) return
 
@@ -380,6 +394,15 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
       enabledProviders[0] ??
       null,
     [enabledProviders, selectedProviderId, settings.aiProviders]
+  )
+
+  const localeOptions = useMemo(
+    () =>
+      SUPPORTED_LOCALES.map((code) => ({
+        code,
+        meta: LOCALE_METADATA[code]
+      })),
+    []
   )
 
   useEffect(() => {
@@ -438,9 +461,8 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
   }
 
   const formatSavedTimestamp = (timestamp: string | null): string => {
-    if (!timestamp) return 'No backup created yet'
-    const parsed = new Date(timestamp)
-    return Number.isNaN(parsed.getTime()) ? timestamp : parsed.toLocaleString()
+    if (!timestamp) return t('data.noBackup', { ns: 'settings' })
+    return formatDateTime(timestamp, settings)
   }
 
   const handleUseICloudBackup = async (): Promise<void> => {
@@ -449,12 +471,12 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
     const suggestion = await window.electronAPI.getDefaultICloudBackupDirectory()
     if (!suggestion.available || !suggestion.path) {
-      setBackupError(suggestion.reason ?? 'iCloud Drive is not available right now.')
+      setBackupError(suggestion.reason ?? t('data.iCloudUnavailable', { ns: 'settings' }))
       return
     }
 
     await persistSettings({ backupDirectory: suggestion.path })
-    setBackupMessage('iCloud Drive backup folder is ready.')
+    setBackupMessage(t('data.iCloudReadyMessage', { ns: 'settings' }))
   }
 
   const handleChooseBackupDirectory = async (): Promise<void> => {
@@ -465,7 +487,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
     if (!dir) return
 
     await persistSettings({ backupDirectory: dir })
-    setBackupMessage('Backup folder updated.')
+    setBackupMessage(t('data.backupFolderUpdated', { ns: 'settings' }))
   }
 
   const handleRunBackup = async (): Promise<void> => {
@@ -474,7 +496,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
     const targetDir = settings.backupDirectory.trim()
     if (!targetDir) {
-      setBackupError('Choose a backup folder first.')
+      setBackupError(t('data.chooseBackupFolder', { ns: 'settings' }))
       return
     }
 
@@ -482,7 +504,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
     try {
       const result = await window.electronAPI.createAppDataBackup(targetDir)
       if (!result.success) {
-        setBackupError(result.error ?? 'Backup failed.')
+        setBackupError(result.error ?? t('data.backupFailed', { ns: 'settings' }))
         return
       }
 
@@ -493,8 +515,8 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
       setBackupMessage(
         result.backupPath
-          ? `Backup saved to ${result.backupPath}`
-          : result.message ?? 'Backup created successfully.'
+          ? t('data.backupSaved', { ns: 'settings', path: result.backupPath })
+          : result.message ?? t('data.backupCreated', { ns: 'settings' })
       )
     } finally {
       setBackingUp(false)
@@ -548,13 +570,13 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
   const updateActionLabel =
     updateCheck?.delivery === 'electron-updater'
-      ? 'Download & Install Update'
-      : 'Download & Open Update'
+      ? t('about.downloadInstall', { ns: 'settings' })
+      : t('about.downloadOpen', { ns: 'settings' })
 
   const installingActionLabel =
     updateCheck?.delivery === 'electron-updater'
-      ? 'Installing Update'
-      : 'Opening Update'
+      ? t('about.installing', { ns: 'settings' })
+      : t('about.opening', { ns: 'settings' })
 
   const loadModels = async (providerId: string, force = false): Promise<void> => {
     const existing = modelResults[providerId]
@@ -595,6 +617,28 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
   const handleTerminalInputModeChange = async (mode: TerminalInputMode): Promise<void> => {
     setTerminalInputMode(mode)
     await window.electronAPI.updateSettings({ terminalInputMode: mode })
+  }
+
+  const handleUiLocaleChange = async (uiLocale: LocalePreference): Promise<void> => {
+    setUiLocale(uiLocale)
+    await syncI18nWithSettings({ uiLocale })
+    const result = await window.electronAPI.updateSettings({ uiLocale })
+    setSettings(result)
+    await syncI18nWithSettings(result)
+  }
+
+  const handleFormatLocaleChange = async (formatLocale: LocalePreference): Promise<void> => {
+    setFormatLocale(formatLocale)
+    const result = await window.electronAPI.updateSettings({ formatLocale })
+    setSettings(result)
+  }
+
+  const handleAIResponseLocaleChange = async (
+    aiResponseLocale: AIResponseLocalePreference
+  ): Promise<void> => {
+    setAIResponseLocale(aiResponseLocale)
+    const result = await window.electronAPI.updateSettings({ aiResponseLocale })
+    setSettings(result)
   }
 
   const handleTest = async (providerId: string): Promise<void> => {
@@ -752,13 +796,90 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
   const getProviderDisplayName = (providerId: AIProvider['id']): string =>
     settings.aiProviders.find((provider) => provider.id === providerId)?.label ?? providerId
 
+  const renderLocaleOption = (code: SupportedLocale): JSX.Element => {
+    const meta = LOCALE_METADATA[code]
+    return (
+      <option key={code} value={code}>
+        {meta.nativeName} ({meta.englishName}) [{code}]
+      </option>
+    )
+  }
+
   const renderGeneralTab = (): JSX.Element => (
     <div className="space-y-4">
-      <SectionHeader icon={<HelpCircle size={12} />} title="General" />
+      <SectionHeader icon={<HelpCircle size={12} />} title={t('general.title', { ns: 'settings' })} />
       <div className="space-y-3">
+        <div className="rounded-xl border border-surface-border bg-surface-light p-4">
+          <div className="mb-3 flex items-start gap-2">
+            <Languages size={15} className="mt-0.5 text-accent-light" />
+            <div>
+              <div className="text-sm font-medium text-gray-200">
+                {t('locale.title', { ns: 'settings' })}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {t('locale.description', { ns: 'settings' })}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <label className="space-y-1">
+              <span className="text-[11px] uppercase tracking-[0.16em] text-gray-600">
+                {t('locale.uiLanguage', { ns: 'settings' })}
+              </span>
+              <select
+                value={settings.uiLocale}
+                onChange={(event) => void handleUiLocaleChange(event.target.value as LocalePreference)}
+                className="tv-input-compact"
+              >
+                <option value="system">{t('states.system', { ns: 'common' })}</option>
+                {localeOptions.map((entry) => renderLocaleOption(entry.code))}
+              </select>
+              <span className="block text-[11px] leading-4 text-gray-600">
+                {t('locale.systemDescription', { ns: 'settings' })}
+              </span>
+            </label>
+
+            <label className="space-y-1">
+              <span className="text-[11px] uppercase tracking-[0.16em] text-gray-600">
+                {t('locale.formatLocale', { ns: 'settings' })}
+              </span>
+              <select
+                value={settings.formatLocale}
+                onChange={(event) => void handleFormatLocaleChange(event.target.value as LocalePreference)}
+                className="tv-input-compact"
+              >
+                <option value="system">{t('states.system', { ns: 'common' })}</option>
+                {localeOptions.map((entry) => renderLocaleOption(entry.code))}
+              </select>
+              <span className="block text-[11px] leading-4 text-gray-600">
+                {t('locale.formatDescription', { ns: 'settings' })}
+              </span>
+            </label>
+
+            <label className="space-y-1">
+              <span className="text-[11px] uppercase tracking-[0.16em] text-gray-600">
+                {t('locale.aiLanguage', { ns: 'settings' })}
+              </span>
+              <select
+                value={settings.aiResponseLocale}
+                onChange={(event) =>
+                  void handleAIResponseLocaleChange(event.target.value as AIResponseLocalePreference)
+                }
+                className="tv-input-compact"
+              >
+                <option value="app">{t('locale.appLanguage', { ns: 'settings' })}</option>
+                {localeOptions.map((entry) => renderLocaleOption(entry.code))}
+              </select>
+              <span className="block text-[11px] leading-4 text-gray-600">
+                {t('locale.aiDescription', { ns: 'settings' })}
+              </span>
+            </label>
+          </div>
+        </div>
+
         <SettingToggleCard
-          title="Help Tooltips"
-          description="Show richer descriptions when hovering over controls"
+          title={t('general.helpTooltips.title', { ns: 'settings' })}
+          description={t('general.helpTooltips.description', { ns: 'settings' })}
           enabled={settings.showHelpTooltips}
           onToggle={async () => {
             const next = !settings.showHelpTooltips
@@ -769,15 +890,25 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
           <div className="mb-3">
-            <div className="text-sm font-medium text-gray-200">Startup Behavior</div>
+            <div className="text-sm font-medium text-gray-200">
+              {t('general.startupBehavior.title', { ns: 'settings' })}
+            </div>
             <div className="text-xs text-gray-500 mt-1">
-              Choose what to show when TerminallySKILL launches.
+              {t('general.startupBehavior.description', { ns: 'settings' })}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { id: 'dashboard', label: 'Show Dashboard', desc: 'Open with the project dashboard showing recent runs and quick actions' },
-              { id: 'last-project', label: 'Resume Last Project', desc: 'Auto-open your last used project and restore the previous sidebar tab' }
+              {
+                id: 'dashboard',
+                label: t('general.startupBehavior.options.dashboard.label', { ns: 'settings' }),
+                desc: t('general.startupBehavior.options.dashboard.description', { ns: 'settings' })
+              },
+              {
+                id: 'last-project',
+                label: t('general.startupBehavior.options.lastProject.label', { ns: 'settings' }),
+                desc: t('general.startupBehavior.options.lastProject.description', { ns: 'settings' })
+              }
             ] as const).map((opt) => (
               <button
                 key={opt.id}
@@ -801,9 +932,11 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
           <div className="mb-3">
-            <div className="text-sm font-medium text-gray-200">Terminal Input</div>
+            <div className="text-sm font-medium text-gray-200">
+              {t('general.terminalInput.title', { ns: 'settings' })}
+            </div>
             <div className="text-xs text-gray-500 mt-1">
-              Choose between direct shell input and the editor-style command bar.
+              {t('general.terminalInput.description', { ns: 'settings' })}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -818,16 +951,20 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                     : 'border-surface-border bg-surface text-gray-500 hover:text-gray-300 hover:border-gray-500'
                 )}
               >
-                <span className="block text-sm font-medium">{mode.label}</span>
-                <span className="mt-1 block text-xs text-gray-600 leading-5">{mode.desc}</span>
+                <span className="block text-sm font-medium">
+                  {t(`general.terminalInput.modes.${mode.id}.label`, { ns: 'settings', defaultValue: mode.label })}
+                </span>
+                <span className="mt-1 block text-xs text-gray-600 leading-5">
+                  {t(`general.terminalInput.modes.${mode.id}.description`, { ns: 'settings', defaultValue: mode.desc })}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
         <SettingToggleCard
-          title="Safe Paste Mode"
-          description="Warn before sending suspicious or multi-line pastes into the shell"
+          title={t('general.safePaste.title', { ns: 'settings' })}
+          description={t('general.safePaste.description', { ns: 'settings' })}
           enabled={settings.safePasteMode}
           onToggle={async () => {
             const next = !settings.safePasteMode
@@ -839,20 +976,22 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-gray-200">Reset Command Trees</div>
+              <div className="text-sm font-medium text-gray-200">
+                {t('general.resetCommandTrees.title', { ns: 'settings' })}
+              </div>
               <div className="text-xs text-gray-500 mt-1 leading-5">
-                Clear discovered/manual commands and generated help-enriched command trees so you can test from a clean command catalog.
+                {t('general.resetCommandTrees.description', { ns: 'settings' })}
               </div>
             </div>
             <button
               onClick={() => void handleResetCommandTrees()}
               className="shrink-0 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
             >
-              Reset
+              {t('actions.reset', { ns: 'common' })}
             </button>
           </div>
           <div className="mt-3 text-[11px] text-gray-600 leading-5">
-            Scripts, snippets, projects, settings, and logs are not affected.
+            {t('general.resetCommandTrees.unaffected', { ns: 'settings' })}
           </div>
         </div>
       </div>
@@ -861,11 +1000,11 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
   const renderLogsTab = (): JSX.Element => (
     <div className="space-y-4">
-      <SectionHeader icon={<FolderOpen size={12} />} title="Logs" />
+      <SectionHeader icon={<FolderOpen size={12} />} title={t('logs.title', { ns: 'settings' })} />
       <div className="space-y-3">
         <SettingToggleCard
-          title="Save Terminal Logs"
-          description="Auto-save terminal sessions when they close, unless a project overrides this"
+          title={t('logs.saveTerminalLogs', { ns: 'settings' })}
+          description={t('logs.saveTerminalLogsDescription', { ns: 'settings' })}
           enabled={settings.saveTerminalLogs}
           onToggle={async () => {
             const next = !settings.saveTerminalLogs
@@ -876,10 +1015,10 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
         <div className="flex items-center justify-between rounded-xl border border-surface-border bg-surface-light p-4 gap-3">
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-gray-200">Log Storage Folder</div>
-            <div className="text-xs text-gray-500 mt-1">Base folder for project-named terminal logs</div>
+            <div className="text-sm font-medium text-gray-200">{t('logs.storageFolder', { ns: 'settings' })}</div>
+            <div className="text-xs text-gray-500 mt-1">{t('logs.storageFolderDescription', { ns: 'settings' })}</div>
             <div className="text-[11px] font-mono text-gray-600 mt-2 truncate">
-              {settings.logDirectory?.trim() || 'Default (app data folder)'}
+              {settings.logDirectory?.trim() || t('logs.defaultFolder', { ns: 'settings' })}
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -891,7 +1030,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                 }}
                 className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:text-gray-300 hover:bg-surface transition-colors"
               >
-                Reset
+                {t('logs.reset', { ns: 'settings' })}
               </button>
             )}
             <button
@@ -905,7 +1044,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface-border text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
             >
               <FolderOpen size={12} />
-              Browse
+              {t('logs.browse', { ns: 'settings' })}
             </button>
           </div>
         </div>
@@ -915,11 +1054,11 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
   const renderAppearanceTab = (): JSX.Element => (
     <div className="space-y-4">
-      <SectionHeader icon={<Palette size={12} />} title="Theme" />
+      <SectionHeader icon={<Palette size={12} />} title={t('appearance.title', { ns: 'settings' })} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {([
-          { id: 'dark', label: 'Dark Themes', description: 'Low-glare palettes for longer terminal sessions.' },
-          { id: 'light', label: 'Light Themes', description: 'Brighter palettes with softer contrast and paper-like surfaces.' }
+          { id: 'dark', label: t('appearance.darkThemes', { ns: 'settings' }), description: t('appearance.darkThemesDescription', { ns: 'settings' }) },
+          { id: 'light', label: t('appearance.lightThemes', { ns: 'settings' }), description: t('appearance.lightThemesDescription', { ns: 'settings' }) }
         ] as const).map((group) => (
           <div key={group.id} className="rounded-xl border border-surface-border bg-surface-light/70 p-3">
             <div className="mb-3">
@@ -944,8 +1083,12 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                       style={{ background: theme.dot }}
                     />
                     <div>
-                      <div className="text-sm font-medium">{theme.label}</div>
-                      <div className="text-xs text-gray-600 mt-1">{theme.desc}</div>
+                      <div className="text-sm font-medium">
+                        {t(`appearance.themes.${theme.id}.label`, { ns: 'settings', defaultValue: theme.label })}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {t(`appearance.themes.${theme.id}.description`, { ns: 'settings', defaultValue: theme.desc })}
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -959,14 +1102,14 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
   const renderDataTab = (): JSX.Element => (
     <div className="space-y-4">
-      <SectionHeader icon={<HardDrive size={12} />} title="Data" />
+      <SectionHeader icon={<HardDrive size={12} />} title={t('data.title', { ns: 'settings' })} />
       <div className="space-y-3">
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-gray-200">Data Storage</div>
+              <div className="text-sm font-medium text-gray-200">{t('data.storageTitle', { ns: 'settings' })}</div>
               <div className="text-xs text-gray-500 mt-1 leading-5">
-                Move your TerminallySKILL data to a custom folder — useful for Dropbox, Google Drive, or an external drive.
+                {t('data.storageDescription', { ns: 'settings' })}
               </div>
             </div>
             <div className="shrink-0">
@@ -975,19 +1118,19 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
           </div>
 
           <div className="mt-4 rounded-xl border border-surface-border bg-surface p-3">
-            <div className="text-xs uppercase tracking-[0.24em] text-gray-600">Data Folder</div>
+            <div className="text-xs uppercase tracking-[0.24em] text-gray-600">{t('data.folderLabel', { ns: 'settings' })}</div>
             <div className="mt-2 text-sm text-gray-300 break-all">
-              {dataDirInfo?.currentPath ?? 'Loading...'}
+              {dataDirInfo?.currentPath ?? t('data.loading', { ns: 'settings' })}
             </div>
             {dataDirInfo?.isCustom && (
-              <div className="mt-2 text-[11px] text-accent-light">Custom location active</div>
+              <div className="mt-2 text-[11px] text-accent-light">{t('data.customLocationActive', { ns: 'settings' })}</div>
             )}
           </div>
 
           <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 flex items-start gap-2">
             <AlertTriangle size={12} className="text-amber-400 shrink-0 mt-0.5" />
             <span className="text-[11px] text-amber-300/80 leading-4">
-              Do not run TerminallySKILL on multiple machines pointing at the same folder simultaneously — this can corrupt your data. Use backups for safe cross-machine sync.
+              {t('data.syncWarning', { ns: 'settings' })}
             </span>
           </div>
 
@@ -997,7 +1140,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                 const dir = await window.electronAPI.openDirectoryDialog()
                 if (!dir) return
                 const confirmed = window.confirm(
-                  `Move all TerminallySKILL data to:\n${dir}\n\nYour projects, scripts, snippets, settings, and logs will be copied. The app should be restarted after moving.`
+                  t('data.moveConfirm', { ns: 'settings', dir })
                 )
                 if (!confirmed) return
                 setDataDirMoving(true)
@@ -1007,9 +1150,9 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                   await window.electronAPI.moveDataDirectory(dir)
                   const info = await window.electronAPI.getDataDirectoryInfo()
                   setDataDirInfo(info)
-                  setDataDirMessage(`Data moved to ${dir}. Restart the app to complete the switch.`)
+                  setDataDirMessage(t('data.movedMessage', { ns: 'settings', dir }))
                 } catch (err) {
-                  setDataDirError(err instanceof Error ? err.message : 'Failed to move data directory')
+                  setDataDirError(err instanceof Error ? err.message : t('data.moveFailed', { ns: 'settings' }))
                 } finally {
                   setDataDirMoving(false)
                 }
@@ -1018,7 +1161,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               className="flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors disabled:opacity-50"
             >
               {dataDirMoving ? <Loader2 size={12} className="animate-spin" /> : <FolderOpen size={12} />}
-              {dataDirMoving ? 'Moving...' : 'Move Data Folder'}
+              {dataDirMoving ? t('data.moving', { ns: 'settings' }) : t('data.moveFolder', { ns: 'settings' })}
             </button>
 
             {dataDirInfo?.isCustom && (
@@ -1028,13 +1171,13 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                   className="flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
                 >
                   <ExternalLink size={12} />
-                  Open Folder
+                  {t('data.openFolder', { ns: 'settings' })}
                 </button>
 
                 <button
                   onClick={async () => {
                     const confirmed = window.confirm(
-                      'Move data back to the default location?\n\nAll data will be copied back. The app should be restarted after resetting.'
+                      t('data.resetConfirm', { ns: 'settings' })
                     )
                     if (!confirmed) return
                     setDataDirMoving(true)
@@ -1044,9 +1187,9 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                       await window.electronAPI.resetDataDirectory()
                       const info = await window.electronAPI.getDataDirectoryInfo()
                       setDataDirInfo(info)
-                      setDataDirMessage('Data moved back to default location. Restart the app to complete.')
+                      setDataDirMessage(t('data.resetMessage', { ns: 'settings' }))
                     } catch (err) {
-                      setDataDirError(err instanceof Error ? err.message : 'Failed to reset data directory')
+                      setDataDirError(err instanceof Error ? err.message : t('data.resetFailed', { ns: 'settings' }))
                     } finally {
                       setDataDirMoving(false)
                     }
@@ -1055,7 +1198,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                   className="flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors disabled:opacity-50"
                 >
                   <RefreshCw size={12} />
-                  Reset to Default
+                  {t('data.resetToDefault', { ns: 'settings' })}
                 </button>
               </>
             )}
@@ -1077,23 +1220,23 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-gray-200">Backups</div>
+              <div className="text-sm font-medium text-gray-200">{t('data.backupsTitle', { ns: 'settings' })}</div>
               <div className="text-xs text-gray-500 mt-1 leading-5">
-                Save snapshot backups of your TerminallySKILL data folder to iCloud Drive or another folder. API secrets are intentionally excluded.
+                {t('data.backupsDescription', { ns: 'settings' })}
               </div>
             </div>
             <div className="shrink-0 rounded-full border border-surface-border bg-surface px-2.5 py-1 text-[11px] text-gray-400">
-              {isMac ? 'iCloud-ready' : 'Manual snapshots'}
+              {isMac ? t('data.iCloudReady', { ns: 'settings' }) : t('data.manualSnapshots', { ns: 'settings' })}
             </div>
           </div>
 
           <div className="mt-4 rounded-xl border border-surface-border bg-surface p-3">
-            <div className="text-xs uppercase tracking-[0.24em] text-gray-600">Backup Folder</div>
+            <div className="text-xs uppercase tracking-[0.24em] text-gray-600">{t('data.backupFolder', { ns: 'settings' })}</div>
             <div className="mt-2 text-sm text-gray-300 break-all">
-              {settings.backupDirectory?.trim() || 'Not configured yet'}
+              {settings.backupDirectory?.trim() || t('data.notConfigured', { ns: 'settings' })}
             </div>
             <div className="mt-3 text-[11px] text-gray-500">
-              Last backup: {formatSavedTimestamp(settings.lastBackupAt)}
+              {t('data.lastBackup', { ns: 'settings', timestamp: formatSavedTimestamp(settings.lastBackupAt) })}
             </div>
           </div>
 
@@ -1104,7 +1247,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                 className="flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
               >
                 <Cloud size={12} />
-                Use iCloud Drive
+                {t('data.useICloud', { ns: 'settings' })}
               </button>
             )}
 
@@ -1113,7 +1256,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               className="flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
             >
               <FolderOpen size={12} />
-              Browse
+              {t('logs.browse', { ns: 'settings' })}
             </button>
 
             {settings.backupDirectory?.trim() && (
@@ -1122,7 +1265,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                 className="flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
               >
                 <ExternalLink size={12} />
-                Open Folder
+                {t('data.openFolder', { ns: 'settings' })}
               </button>
             )}
 
@@ -1137,7 +1280,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               )}
             >
               {backingUp ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
-              {backingUp ? 'Backing Up' : 'Back Up Now'}
+              {backingUp ? t('data.backingUp', { ns: 'settings' }) : t('data.backUpNow', { ns: 'settings' })}
             </button>
           </div>
 
@@ -1159,29 +1302,29 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
   const renderAboutTab = (): JSX.Element => (
     <div className="space-y-4">
-      <SectionHeader icon={<Sparkles size={12} />} title="About" />
+      <SectionHeader icon={<Sparkles size={12} />} title={t('about.title', { ns: 'settings' })} />
       <div className="space-y-3">
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
           <div className="text-sm font-medium text-gray-200">TerminallySKILL</div>
-          <div className="text-xs text-gray-500 mt-1">Prompt-aware terminal workspace, workflows, logs, and AI helpers.</div>
+          <div className="text-xs text-gray-500 mt-1">{t('about.description', { ns: 'settings' })}</div>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
             <span className="rounded-full border border-surface-border bg-surface px-2.5 py-1 font-mono text-gray-300">
-              Version {appVersion}
+              {t('about.version', { ns: 'settings', version: appVersion })}
             </span>
           </div>
         </div>
 
         <div className="rounded-xl border border-surface-border bg-surface-light p-4 space-y-4">
           <div>
-            <div className="text-sm font-medium text-gray-200">App Updates</div>
+            <div className="text-sm font-medium text-gray-200">{t('about.updatesTitle', { ns: 'settings' })}</div>
             <div className="text-xs text-gray-500 mt-1">
-              Check a release feed for newer builds, then download and open the matching installer in one click.
+              {t('about.updatesDescription', { ns: 'settings' })}
             </div>
           </div>
 
           <SettingToggleCard
-            title="Check for Updates on Startup"
-            description="Automatically check the configured release feed when TerminallySKILL launches"
+            title={t('about.checkOnStartup', { ns: 'settings' })}
+            description={t('about.checkOnStartupDescription', { ns: 'settings' })}
             enabled={settings.checkForUpdatesOnStartup}
             onToggle={async () => {
               const next = !settings.checkForUpdatesOnStartup
@@ -1199,12 +1342,12 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               {checkingUpdates ? (
                 <>
                   <Loader2 size={12} className="animate-spin" />
-                  Checking
+                  {t('about.checking', { ns: 'settings' })}
                 </>
               ) : (
                 <>
                   <RefreshCw size={12} />
-                  Check for Updates
+                  {t('about.checkForUpdates', { ns: 'settings' })}
                 </>
               )}
             </button>
@@ -1251,18 +1394,18 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">Current</div>
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">{t('about.current', { ns: 'settings' })}</div>
                       <div className="mt-1 text-sm font-mono text-gray-200">{updateCheck.currentVersion}</div>
                     </div>
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">Latest</div>
-                      <div className="mt-1 text-sm font-mono text-gray-200">{updateCheck.latestVersion ?? 'No release found'}</div>
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">{t('about.latest', { ns: 'settings' })}</div>
+                      <div className="mt-1 text-sm font-mono text-gray-200">{updateCheck.latestVersion ?? t('about.noReleaseFound', { ns: 'settings' })}</div>
                     </div>
                   </div>
 
                   {updateCheck.feedUrl && (
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">Resolved Feed</div>
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">{t('about.resolvedFeed', { ns: 'settings' })}</div>
                       <div className="mt-1 truncate text-xs font-mono text-gray-400">{updateCheck.feedUrl}</div>
                     </div>
                   )}
@@ -1270,15 +1413,15 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                   {(updateCheck.assetLabel || updateCheck.fileName || updateCheck.publishedAt) && (
                     <div className="grid gap-3 md:grid-cols-2">
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">Asset</div>
-                        <div className="mt-1 text-xs text-gray-300">{updateCheck.assetLabel ?? updateCheck.fileName ?? 'Auto-selected platform build'}</div>
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">{t('about.asset', { ns: 'settings' })}</div>
+                        <div className="mt-1 text-xs text-gray-300">{updateCheck.assetLabel ?? updateCheck.fileName ?? t('about.autoSelectedBuild', { ns: 'settings' })}</div>
                       </div>
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">Published</div>
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">{t('about.published', { ns: 'settings' })}</div>
                         <div className="mt-1 text-xs text-gray-300">
-                          {updateCheck.publishedAt
-                            ? new Date(updateCheck.publishedAt).toLocaleString()
-                            : new Date(updateCheck.checkedAt).toLocaleString()}
+	                          {updateCheck.publishedAt
+	                            ? formatDateTime(updateCheck.publishedAt, settings)
+	                            : formatDateTime(updateCheck.checkedAt, settings)}
                         </div>
                       </div>
                     </div>
@@ -1286,10 +1429,10 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
                   {updateCheck.notes && (
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">Release Notes</div>
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-gray-600">{t('about.releaseNotes', { ns: 'settings' })}</div>
                       <UpdateReleaseNotes
                         notes={updateCheck.notes}
-                        hint="Expand to view highlights and the full change log."
+                        hint={t('about.releaseNotesHint', { ns: 'settings' })}
                         className="mt-2"
                       />
                     </div>
@@ -1307,9 +1450,9 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
         </div>
 
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
-          <div className="text-sm font-medium text-gray-200">Support</div>
+          <div className="text-sm font-medium text-gray-200">{t('about.support', { ns: 'settings' })}</div>
           <div className="text-xs text-gray-500 mt-1 leading-5">
-            TerminallySKILL is a solo indie project. If it&apos;s useful to you, tips help keep it going.
+            {t('about.supportDescription', { ns: 'settings' })}
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
@@ -1317,7 +1460,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors"
             >
               <ExternalLink size={12} />
-              Buy me a coffee
+              {t('about.buyCoffee', { ns: 'settings' })}
             </button>
             <button
               onClick={() => void window.electronAPI.openExternal('https://www.paypal.com/donate/?hosted_button_id=5VJ5KLNBQ9LRN')}
@@ -1338,10 +1481,10 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
         <div>
           <div className="flex items-center gap-2">
             <Zap size={13} className="text-accent-light" />
-            <h3 className="text-sm font-semibold text-gray-200">AI Providers</h3>
+            <h3 className="text-sm font-semibold text-gray-200">{t('ai.title', { ns: 'settings' })}</h3>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Configure the providers this app can use for reviews, drafts, and fixes.
+            {t('ai.description', { ns: 'settings' })}
           </p>
         </div>
         <button
@@ -1349,7 +1492,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent text-slate-950 text-sm font-medium hover:bg-cyan-300 transition-colors shrink-0"
         >
           <Plus size={14} />
-          Add Provider
+          {t('ai.addProvider', { ns: 'settings' })}
         </button>
       </div>
 
@@ -1358,31 +1501,31 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-accent-light">
             <Bot size={20} />
           </div>
-          <div className="mt-4 text-sm font-medium text-gray-200">No providers connected yet</div>
+          <div className="mt-4 text-sm font-medium text-gray-200">{t('ai.emptyTitle', { ns: 'settings' })}</div>
           <div className="mt-1 text-xs text-gray-500">
-            Add OpenAI, Anthropic, or Ollama and pick which one should handle AI actions.
+            {t('ai.emptyDescription', { ns: 'settings' })}
           </div>
           <button
             onClick={() => setProviderPickerOpen(true)}
             className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-accent/30 text-sm text-accent-light hover:border-accent hover:bg-accent/10 transition-colors"
           >
             <Plus size={14} />
-            Add Provider
+            {t('ai.addProvider', { ns: 'settings' })}
           </button>
         </div>
       ) : (
         <>
           <div className="rounded-2xl border border-surface-border bg-surface-light p-4 space-y-4">
             <div>
-              <div className="text-sm font-semibold text-gray-200">AI Routing</div>
+              <div className="text-sm font-semibold text-gray-200">{t('ai.routingTitle', { ns: 'settings' })}</div>
               <div className="mt-1 text-xs text-gray-500">
-                Pick one primary provider/model pair, then stack cross-provider fallbacks in order.
+                {t('ai.routingDescription', { ns: 'settings' })}
               </div>
             </div>
 
             <div className="grid grid-cols-[180px_minmax(0,1fr)] gap-3 items-end">
               <div>
-                <label className="block text-xs text-gray-500 mb-1.5">Primary Provider</label>
+                <label className="block text-xs text-gray-500 mb-1.5">{t('ai.primaryProvider', { ns: 'settings' })}</label>
                 <select
                   value={settings.aiRouting.primary?.providerId ?? ''}
                   onChange={async (event) => {
@@ -1403,7 +1546,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                   }}
                   className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-accent/40"
                 >
-                  <option value="">Select provider</option>
+                  <option value="">{t('ai.selectProvider', { ns: 'settings' })}</option>
                   {enabledProviders.map((provider) => (
                     <option key={provider.id} value={provider.id}>
                       {provider.label}
@@ -1412,7 +1555,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1.5">Primary Model</label>
+                <label className="block text-xs text-gray-500 mb-1.5">{t('ai.primaryModel', { ns: 'settings' })}</label>
                 <input
                   type="text"
                   list={`routing-primary-models-${settings.aiRouting.primary?.providerId ?? 'none'}`}
@@ -1427,7 +1570,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                       settings.aiRouting.fallbacks
                     )
                   }}
-                  placeholder="Primary model id"
+                  placeholder={t('ai.primaryModelPlaceholder', { ns: 'settings' })}
                   className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-xs font-mono text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-accent/40"
                 />
                 <datalist id={`routing-primary-models-${settings.aiRouting.primary?.providerId ?? 'none'}`}>
@@ -1439,11 +1582,11 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
             </div>
 
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Fallback Chain</label>
+              <label className="block text-xs text-gray-500 mb-1.5">{t('ai.fallbackChain', { ns: 'settings' })}</label>
               <div className="rounded-xl border border-surface-border bg-surface p-3">
                 <div className="flex flex-wrap gap-2">
                   {settings.aiRouting.fallbacks.length === 0 && (
-                    <span className="text-xs text-gray-600">No cross-provider fallbacks yet</span>
+                    <span className="text-xs text-gray-600">{t('ai.noFallbacks', { ns: 'settings' })}</span>
                   )}
                   {settings.aiRouting.fallbacks.map((target, index) => (
                     <span
@@ -1470,7 +1613,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                     }
                     className="rounded-lg border border-surface-border bg-surface-light px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-accent/40"
                   >
-                    <option value="">Fallback provider</option>
+                    <option value="">{t('ai.fallbackProvider', { ns: 'settings' })}</option>
                     {enabledProviders.map((provider) => (
                       <option key={provider.id} value={provider.id}>
                         {provider.label}
@@ -1490,14 +1633,14 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                         void addRoutingFallback()
                       }
                     }}
-                    placeholder="Fallback model id"
+                    placeholder={t('ai.fallbackModelPlaceholder', { ns: 'settings' })}
                     className="rounded-lg border border-surface-border bg-surface-light px-3 py-2 text-xs font-mono text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-accent/40"
                   />
                   <button
                     onClick={() => void addRoutingFallback()}
                     className="px-3 py-2 rounded-lg border border-surface-border text-xs text-gray-300 hover:text-gray-200 hover:border-gray-500 transition-colors"
                   >
-                    Add
+                    {t('ai.add', { ns: 'settings' })}
                   </button>
                   <datalist id={`routing-fallback-models-${fallbackDraft.providerId || 'none'}`}>
                     {((fallbackDraft.providerId ? modelResults[fallbackDraft.providerId]?.models : []) ?? []).map((model) => (
@@ -1513,7 +1656,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
             {enabledProviders.map((provider) => {
               const catalog = getProviderConfig(provider.id)
               const activeProviderId = settings.aiRouting.primary?.providerId ?? settings.activeAIProvider
-              const status = getProviderStatusMeta(provider, activeProviderId, testResults)
+              const status = getProviderStatusMeta(provider, activeProviderId, testResults, t)
               const discoveredModels = modelResults[provider.id]?.models.length ?? 0
               const configuredModels = provider.model.trim().length > 0 ? 1 : 0
               return (
@@ -1534,16 +1677,15 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                         <span className="truncate text-sm font-medium text-gray-200">{provider.label}</span>
                         {(settings.aiRouting.primary?.providerId ?? settings.activeAIProvider) === provider.id && (
                           <span className="rounded-full bg-safe/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-safe">
-                            Active
+                            {t('ai.active', { ns: 'settings' })}
                           </span>
                         )}
                       </div>
                       <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                        <span>{CONNECTION_LABELS[provider.connectionType]}</span>
+                        <span>{t(`ai.connection.${provider.connectionType === 'api-key' ? 'apiKey' : 'local'}`, { ns: 'settings' })}</span>
                         <span>·</span>
                         <span>
-                          {discoveredModels > 0 ? discoveredModels : configuredModels} model
-                          {(discoveredModels > 1 || configuredModels > 1) ? 's' : ''}
+                          {t('ai.model', { ns: 'settings', count: discoveredModels > 0 ? discoveredModels : configuredModels })}
                         </span>
                       </div>
                     </div>
@@ -1566,14 +1708,15 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-semibold text-gray-200">{selectedProvider.label}</h4>
                       <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-gray-500">
-                        {getProviderConnectionHelp(selectedProvider)}
+                        {getProviderConnectionHelp(selectedProvider, t)}
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
                       {getProviderStatusMeta(
                         selectedProvider,
                         settings.aiRouting.primary?.providerId ?? settings.activeAIProvider,
-                        testResults
+                        testResults,
+                        t
                       ).detail}
                     </div>
                   </div>
@@ -1587,12 +1730,12 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                     {modelResults[selectedProvider.id]?.loading ? (
                       <span className="inline-flex items-center gap-1.5">
                         <Loader2 size={11} className="animate-spin" />
-                        Loading Models
+                        {t('ai.loadingModels', { ns: 'settings' })}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5">
                         <RefreshCw size={11} />
-                        Refresh Models
+                        {t('ai.refreshModels', { ns: 'settings' })}
                       </span>
                     )}
                   </button>
@@ -1604,17 +1747,17 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                     {testing === selectedProvider.id ? (
                       <span className="inline-flex items-center gap-1.5">
                         <Loader2 size={11} className="animate-spin" />
-                        Testing
+                        {t('ai.testing', { ns: 'settings' })}
                       </span>
                     ) : (
-                      'Test'
+                      t('ai.test', { ns: 'settings' })
                     )}
                   </button>
                   <button
                     onClick={() => void handleDisconnectProvider(selectedProvider)}
                     className="px-3 py-1.5 rounded-lg border border-destructive/30 text-xs text-destructive hover:bg-destructive/10 transition-colors"
                   >
-                    Disconnect
+                    {t('ai.disconnect', { ns: 'settings' })}
                   </button>
                 </div>
               </div>
@@ -1631,12 +1774,12 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                   {testResults[selectedProvider.id]?.success ? (
                     <>
                       <CheckCircle2 size={13} />
-                      Connection test passed
+                      {t('ai.connectionPassed', { ns: 'settings' })}
                     </>
                   ) : (
                     <>
                       <XCircle size={13} />
-                      {testResults[selectedProvider.id]?.error || 'Connection failed'}
+                      {testResults[selectedProvider.id]?.error || t('ai.connectionFailed', { ns: 'settings' })}
                     </>
                   )}
                 </div>
@@ -1645,7 +1788,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1.5">Connection Type</label>
+                    <label className="block text-xs text-gray-500 mb-1.5">{t('ai.connectionType', { ns: 'settings' })}</label>
                     <div className="flex flex-wrap gap-2">
                       {getProviderConfig(selectedProvider.id).connectionTypes.map((type) => (
                         <button
@@ -1658,7 +1801,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                               : 'border-surface-border bg-surface text-gray-400 hover:text-gray-200 hover:border-gray-500'
                           )}
                         >
-                          {CONNECTION_LABELS[type]}
+                          {t(`ai.connection.${type === 'api-key' ? 'apiKey' : 'local'}`, { ns: 'settings' })}
                         </button>
                       ))}
                     </div>
@@ -1666,7 +1809,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
 
                   {selectedProvider.connectionType === 'api-key' && (
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1.5">API Key</label>
+                      <label className="block text-xs text-gray-500 mb-1.5">{t('ai.apiKey', { ns: 'settings' })}</label>
                       <div className="flex items-center gap-2">
                         <input
                           type={showKeys[selectedProvider.id] ? 'text' : 'password'}
@@ -1675,7 +1818,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                           onBlur={async (event) => {
                             await persistProvider(selectedProvider.id, { apiKey: event.target.value })
                           }}
-                          placeholder={`Paste ${selectedProvider.label} key`}
+                          placeholder={t('ai.pasteKey', { ns: 'settings', provider: selectedProvider.label })}
                           className="flex-1 rounded-lg border border-surface-border bg-surface px-3 py-2 text-xs font-mono text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-accent/40"
                         />
                         <button
@@ -1689,7 +1832,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                   )}
 
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1.5">Base URL</label>
+                    <label className="block text-xs text-gray-500 mb-1.5">{t('ai.baseUrl', { ns: 'settings' })}</label>
                     <input
                       type="text"
                       value={selectedProvider.baseUrl}
@@ -1706,29 +1849,33 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                   <div className="rounded-xl border border-surface-border bg-surface p-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <div className="text-xs font-medium text-gray-200">Available Models</div>
+                        <div className="text-xs font-medium text-gray-200">{t('ai.availableModels', { ns: 'settings' })}</div>
                         <div className="mt-1 text-[11px] text-gray-500">
                           {modelResults[selectedProvider.id]?.error
                             ? modelResults[selectedProvider.id]?.error
                             : modelResults[selectedProvider.id]?.models.length
-                              ? `${modelResults[selectedProvider.id]?.models.length} models discovered from ${selectedProvider.label}`
+                              ? t('ai.modelsDiscovered', {
+                                ns: 'settings',
+                                count: modelResults[selectedProvider.id]?.models.length ?? 0,
+                                provider: selectedProvider.label
+                              })
                               : isProviderConfigured(selectedProvider)
-                                ? 'Load provider models to get searchable pickers.'
-                                : 'Connect this provider to discover models.'}
+                                ? t('ai.loadModels', { ns: 'settings' })
+                                : t('ai.connectToDiscover', { ns: 'settings' })}
                         </div>
                       </div>
                       {modelResults[selectedProvider.id]?.models.length ? (
                         <span className="rounded-full bg-safe/10 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-safe">
-                          Synced
+                          {t('ai.synced', { ns: 'settings' })}
                         </span>
                       ) : null}
                     </div>
                   </div>
 
                   <div className="rounded-xl border border-surface-border bg-surface p-3">
-                    <div className="text-xs font-medium text-gray-200">Provider Default Model</div>
+                    <div className="text-xs font-medium text-gray-200">{t('ai.providerDefaultModel', { ns: 'settings' })}</div>
                     <div className="mt-1 text-[11px] text-gray-500">
-                      Used as the suggested model when you choose this provider for primary routing.
+                      {t('ai.providerDefaultDescription', { ns: 'settings' })}
                     </div>
                     <input
                       type="text"
@@ -1738,7 +1885,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                       onBlur={async (event) => {
                         await persistProvider(selectedProvider.id, { model: event.target.value })
                       }}
-                      placeholder="Default model id"
+                      placeholder={t('ai.defaultModelPlaceholder', { ns: 'settings' })}
                       className="mt-3 w-full rounded-lg border border-surface-border bg-surface-light px-3 py-2 text-xs font-mono text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-accent/40"
                     />
                   </div>
@@ -1761,7 +1908,9 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
     <div className="h-full flex flex-col overflow-hidden">
       {!hideHeader && (
         <div className="p-3 border-b border-surface-border">
-          <h2 className="text-sm font-semibold text-gray-200">Settings</h2>
+          <h2 className="text-sm font-semibold text-gray-200">
+            {t('title', { ns: 'settings' })}
+          </h2>
         </div>
       )}
 
@@ -1779,7 +1928,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               )}
             >
               {tab.icon}
-              {tab.label}
+              {t(`tabs.${tab.id}`, { ns: 'settings', defaultValue: tab.label })}
             </button>
           ))}
         </div>
@@ -1799,8 +1948,8 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
           <div className="w-[760px] max-w-[calc(100vw-2rem)] rounded-2xl border border-surface-border bg-surface shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-surface-border">
               <div>
-                <div className="text-base font-semibold text-gray-200">Add AI Provider</div>
-                <div className="text-xs text-gray-500 mt-1">Pick a provider and then choose how this app should connect to it.</div>
+                <div className="text-base font-semibold text-gray-200">{t('ai.pickerTitle', { ns: 'settings' })}</div>
+                <div className="text-xs text-gray-500 mt-1">{t('ai.pickerDescription', { ns: 'settings' })}</div>
               </div>
               <button
                 onClick={() => setProviderPickerOpen(false)}
@@ -1811,7 +1960,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
             </div>
             <div className="grid grid-cols-3 gap-3 p-5">
               {settings.aiProviders.map((provider) => {
-                const status = getProviderStatusMeta(provider, settings.activeAIProvider, testResults)
+                const status = getProviderStatusMeta(provider, settings.activeAIProvider, testResults, t)
                 return (
                   <button
                     key={provider.id}
@@ -1828,7 +1977,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                     </div>
                     <div className="mt-3 flex items-center justify-between text-[11px] text-gray-500">
                       <span>{status.label}</span>
-                      <span>{provider.enabled ? 'Configure' : 'Connect'}</span>
+                      <span>{provider.enabled ? t('ai.configure', { ns: 'settings' }) : t('ai.connect', { ns: 'settings' })}</span>
                     </div>
                   </button>
                 )
@@ -1870,6 +2019,7 @@ function ProviderConnectDialog({
   onChange: (draft: ProviderConnectionDraft) => void
   onConnect: () => void
 }): JSX.Element {
+  const { t } = useTranslation(['settings', 'common'])
   const catalog = getProviderConfig(provider.id)
   const selectedType = draft.connectionType
   const needsApiKey = selectedType === 'api-key'
@@ -1887,8 +2037,10 @@ function ProviderConnectDialog({
           <div className="flex items-center gap-3">
             <ProviderGlyph providerId={provider.id} />
             <div>
-              <div className="text-lg font-semibold text-gray-200">Connect {provider.label}</div>
-              <div className="text-xs text-gray-500 mt-1">Choose how TerminallySKILL should talk to this provider.</div>
+              <div className="text-lg font-semibold text-gray-200">
+                {t('ai.connectTitle', { ns: 'settings', provider: provider.label })}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">{t('ai.connectDescription', { ns: 'settings' })}</div>
             </div>
           </div>
           <button
@@ -1914,12 +2066,12 @@ function ProviderConnectDialog({
               >
                 <div className="flex items-center gap-2 text-sm font-medium text-gray-200">
                   {type === 'api-key' ? <KeyRound size={14} /> : <Server size={14} />}
-                  {CONNECTION_LABELS[type]}
+                  {t(`ai.connection.${type === 'api-key' ? 'apiKey' : 'local'}`, { ns: 'settings' })}
                 </div>
                 <div className="mt-2 text-xs text-gray-500 leading-5">
                   {type === 'api-key'
-                    ? 'Paste a key and keep full app access local.'
-                    : 'Connect to a local runtime on your machine.'}
+                    ? t('ai.apiKeyConnectionDescription', { ns: 'settings' })
+                    : t('ai.localConnectionDescription', { ns: 'settings' })}
                 </div>
               </button>
             ))}
@@ -1929,14 +2081,14 @@ function ProviderConnectDialog({
             {needsApiKey && (
               <div>
                 <div className="flex items-center justify-between gap-3 mb-1.5">
-                  <label className="text-xs text-gray-500">API Key</label>
+                  <label className="text-xs text-gray-500">{t('ai.apiKey', { ns: 'settings' })}</label>
                   {catalog.apiKeyUrl && (
                     <button
                       onClick={() => void window.electronAPI.openExternal(catalog.apiKeyUrl!)}
                       className="inline-flex items-center gap-1 text-[11px] text-accent-light hover:text-accent transition-colors"
                     >
                       <ExternalLink size={11} />
-                      Get API key
+                      {t('ai.getApiKey', { ns: 'settings' })}
                     </button>
                   )}
                 </div>
@@ -1968,7 +2120,9 @@ function ProviderConnectDialog({
 
             <div>
               <label className="block text-xs text-gray-500 mb-1.5">
-                {selectedType === 'local' ? 'Local Base URL' : 'Base URL'}
+                {selectedType === 'local'
+                  ? t('ai.localBaseUrl', { ns: 'settings' })
+                  : t('ai.baseUrl', { ns: 'settings' })}
               </label>
               <input
                 type="text"
@@ -1982,21 +2136,21 @@ function ProviderConnectDialog({
 
         <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-surface-border bg-surface-light/30">
           <div className="text-xs text-gray-500">
-            API keys stay local and use system-protected storage when available.
+            {t('ai.keysStayLocal', { ns: 'settings' })}
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
               className="px-3 py-1.5 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors"
             >
-              Cancel
+              {t('actions.cancel', { ns: 'common' })}
             </button>
             <button
               onClick={onConnect}
               disabled={!canConnect}
               className="px-4 py-1.5 rounded-xl bg-accent text-slate-950 text-sm font-medium hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Connect {provider.label}
+              {t('ai.connectProvider', { ns: 'settings', provider: provider.label })}
             </button>
           </div>
         </div>
@@ -2026,6 +2180,8 @@ function SectionHeader({
   icon: JSX.Element
   title: string
 }): JSX.Element {
+  const { t } = useTranslation('settings')
+
   return (
     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
       {icon}
@@ -2045,6 +2201,8 @@ function SettingToggleCard({
   enabled: boolean
   onToggle: () => void | Promise<void>
 }): JSX.Element {
+  const { t } = useTranslation('settings')
+
   return (
     <button
       type="button"
@@ -2075,8 +2233,8 @@ function SettingToggleCard({
           )}
         />
         <span className="relative z-10 flex w-full items-center justify-between px-3 text-[11px] font-semibold uppercase tracking-[0.22em]">
-          <span className={enabled ? 'text-gray-500' : 'text-white'}>Off</span>
-          <span className={enabled ? 'text-slate-950' : 'text-gray-500'}>On</span>
+          <span className={enabled ? 'text-gray-500' : 'text-white'}>{t('toggle.off')}</span>
+          <span className={enabled ? 'text-slate-950' : 'text-gray-500'}>{t('toggle.on')}</span>
         </span>
       </span>
     </button>

@@ -1,6 +1,9 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, ArrowLeftRight } from 'lucide-react'
 import { useSnapshotStore, type OutputSnapshot } from '../../store/snapshot-store'
+import { useSettingsStore } from '../../store/settings-store'
+import { formatTime } from '../../i18n/format'
 
 /** Simple line-by-line diff — marks added, removed, and unchanged lines */
 function computeDiff(a: string, b: string): DiffLine[] {
@@ -38,6 +41,8 @@ interface DiffLine {
 }
 
 export function DiffViewer(): JSX.Element | null {
+  const { t } = useTranslation('terminal')
+  const settings = useSettingsStore((s) => s.settings)
   const { diffOpen, diffSelection, closeDiff, snapshots } = useSnapshotStore()
 
   const snapshotA = useMemo(
@@ -73,13 +78,13 @@ export function DiffViewer(): JSX.Element | null {
         <div className="flex items-center justify-between px-4 py-3 border-b border-surface-border shrink-0">
           <div className="flex items-center gap-3">
             <ArrowLeftRight size={16} className="text-accent" />
-            <span className="text-sm font-semibold text-gray-200">Output Diff</span>
+            <span className="text-sm font-semibold text-gray-200">{t('diff.title')}</span>
             <span className="text-xs text-gray-500">
               <span className="text-safe">+{stats.added}</span>
               {' / '}
               <span className="text-destructive">-{stats.removed}</span>
               {' / '}
-              <span className="text-gray-400">{stats.same} unchanged</span>
+              <span className="text-gray-400">{t('diff.unchanged', { count: stats.same })}</span>
             </span>
           </div>
           <button
@@ -95,13 +100,13 @@ export function DiffViewer(): JSX.Element | null {
           <div className="flex-1 px-4 py-2 border-r border-surface-border">
             <div className="text-xs font-medium text-destructive truncate">{snapshotA.label}</div>
             <div className="text-[10px] text-gray-600">
-              {new Date(snapshotA.capturedAt).toLocaleTimeString()} · {snapshotA.lineCount} lines
+              {formatTime(snapshotA.capturedAt, settings)} · {t('snapshots.line', { count: snapshotA.lineCount })}
             </div>
           </div>
           <div className="flex-1 px-4 py-2">
             <div className="text-xs font-medium text-safe truncate">{snapshotB.label}</div>
             <div className="text-[10px] text-gray-600">
-              {new Date(snapshotB.capturedAt).toLocaleTimeString()} · {snapshotB.lineCount} lines
+              {formatTime(snapshotB.capturedAt, settings)} · {t('snapshots.line', { count: snapshotB.lineCount })}
             </div>
           </div>
         </div>
@@ -110,7 +115,7 @@ export function DiffViewer(): JSX.Element | null {
         <div className="flex-1 overflow-y-auto font-mono text-xs">
           {diffLines.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-              Outputs are identical
+              {t('diff.identical')}
             </div>
           ) : (
             <table className="w-full border-collapse">

@@ -1,4 +1,5 @@
 import { FolderOpen, Info, Plus, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useBuilderStore } from '../../store/builder-store'
 import { useCommandStore } from '../../store/command-store'
 import { Tooltip } from '../ui/Tooltip'
@@ -12,6 +13,7 @@ interface PositionalArgsProps {
 }
 
 export function PositionalArgs({ args, values }: PositionalArgsProps): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const setValue = useBuilderStore((s) => s.setValue)
   const activeCommand = useCommandStore((s) => s.activeCommand)
   const sorted = [...args].sort((a, b) => a.position - b.position)
@@ -19,7 +21,7 @@ export function PositionalArgs({ args, values }: PositionalArgsProps): JSX.Eleme
   return (
     <div>
       <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-        Arguments
+        {t('referenceHelp.arguments')}
       </h3>
       <div className="space-y-3">
         {sorted.map((arg) => (
@@ -47,6 +49,7 @@ function PositionalArgInput({
   value: string | string[]
   onChange: (value: string | string[]) => void
 }): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const isFilePath = arg.type === 'file-path' || arg.type === 'directory-path'
   const explainRequest = activeCommand ? buildArgumentExplainRequest(activeCommand, arg) : null
 
@@ -63,7 +66,7 @@ function PositionalArgInput({
       <div className="py-1">
         <div className="flex items-center gap-2 mb-1.5">
           <label className="text-sm text-gray-200">{arg.label}</label>
-          {arg.required && <span className="text-xs text-accent">required</span>}
+          {arg.required && <span className="text-xs text-accent">{t('fields.required')}</span>}
           {arg.description && (
             <Tooltip content={<p className="text-gray-300">{arg.description}</p>}>
               <button
@@ -82,7 +85,7 @@ function PositionalArgInput({
           onChange={(e) => onChange(e.target.value)}
           className="bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors cursor-pointer max-w-md"
         >
-          <option value="">Select...</option>
+          <option value="">{t('fields.selectPlaceholder')}</option>
           {arg.choices.map((choice) => (
             <option key={choice.value} value={choice.value}>
               {choice.label}
@@ -120,7 +123,7 @@ function PositionalArgInput({
       <div className="py-1">
         <div className="flex items-center gap-2 mb-1.5">
           <label className="text-sm text-gray-200">{arg.label}</label>
-          {arg.required && <span className="text-xs text-accent">required</span>}
+          {arg.required && <span className="text-xs text-accent">{t('fields.required')}</span>}
           {arg.description && (
             <Tooltip content={<p className="text-gray-300">{arg.description}</p>}>
               <button
@@ -168,7 +171,7 @@ function PositionalArgInput({
             className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-accent-light transition-colors px-2 py-1.5"
           >
             <Plus size={12} />
-            Add value
+            {t('fields.addValue')}
           </button>
         </div>
         {arg.description && <p className="text-xs text-gray-500 mt-1">{arg.description}</p>}
@@ -180,7 +183,7 @@ function PositionalArgInput({
     <div className="py-1">
       <div className="flex items-center gap-2 mb-1.5">
         <label className="text-sm text-gray-200">{arg.label}</label>
-        {arg.required && <span className="text-xs text-accent">required</span>}
+        {arg.required && <span className="text-xs text-accent">{t('fields.required')}</span>}
         {arg.description && (
           <Tooltip content={<p className="text-gray-300">{arg.description}</p>}>
             <button

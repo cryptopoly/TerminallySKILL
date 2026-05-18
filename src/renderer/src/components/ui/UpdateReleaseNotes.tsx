@@ -1,6 +1,7 @@
 import type { MouseEvent } from 'react'
 import clsx from 'clsx'
 import { ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { formatUpdateReleaseNotes } from '../../lib/update-release-notes'
 
 type UpdateReleaseNotesProps = {
@@ -13,13 +14,16 @@ type UpdateReleaseNotesProps = {
 
 export function UpdateReleaseNotes({
   notes,
-  title = 'Release Notes',
-  hint = 'Expand to view highlights and the full change log.',
+  title,
+  hint,
   className,
   defaultOpen = false
 }: UpdateReleaseNotesProps): JSX.Element | null {
+  const { t } = useTranslation('settings')
   const formattedNotes = formatUpdateReleaseNotes(notes)
   if (!formattedNotes) return null
+  const resolvedTitle = title ?? t('about.releaseNotes')
+  const resolvedHint = hint ?? t('about.releaseNotesHint')
 
   const handleNotesClick = (event: MouseEvent<HTMLDivElement>): void => {
     const target = event.target
@@ -46,8 +50,8 @@ export function UpdateReleaseNotes({
       <summary className="cursor-pointer list-none px-3 py-2.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-xs font-medium text-gray-200">{title}</div>
-            <div className="mt-0.5 text-[11px] leading-5 text-gray-500">{hint}</div>
+            <div className="text-xs font-medium text-gray-200">{resolvedTitle}</div>
+            <div className="mt-0.5 text-[11px] leading-5 text-gray-500">{resolvedHint}</div>
           </div>
           <ChevronDown
             size={14}

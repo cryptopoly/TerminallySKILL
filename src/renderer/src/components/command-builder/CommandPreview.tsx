@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { Copy, Play, Check, Terminal, Sparkles, Loader2, X, RotateCcw, Plus, ShieldCheck, Wand2, SendHorizontal } from 'lucide-react'
 import { useBuilderStore } from '../../store/builder-store'
@@ -23,6 +24,7 @@ interface CommandPreviewProps {
 }
 
 export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const values = useBuilderStore((s) => s.values)
   const setValues = useBuilderStore((s) => s.setValues)
   const allCommands = useCommandStore((s) => s.commands)
@@ -156,7 +158,7 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
 
   const handleAIGenerate = useCallback(async (): Promise<void> => {
     if (!aiPrompt.trim()) {
-      setAIDraftError('Describe the command you want before asking AI to generate it.')
+      setAIDraftError(t('preview.errors.aiPromptRequired'))
       setAIDraft(null)
       setAIDraftMeta(null)
       return
@@ -189,7 +191,7 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
     } finally {
       setAIDraftLoading(false)
     }
-  }, [aiPrompt, command, values, activeProject?.workingDirectory])
+  }, [aiPrompt, command, values, activeProject?.workingDirectory, t])
 
   const handleAddCommand = useCallback(async (): Promise<void> => {
     if (!canAddCommand) return
@@ -318,21 +320,21 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
     setExecuteError(null)
     void executeInSession(false).catch((error) => {
       console.error('Failed to execute command:', error)
-      setExecuteError(error instanceof Error ? error.message : 'Could not execute this command in the terminal.')
+      setExecuteError(error instanceof Error ? error.message : t('preview.errors.executeFailed'))
     })
-  }, [executeDisabledReason, executeInSession])
+  }, [executeDisabledReason, executeInSession, t])
 
   return (
     <div className="sticky bottom-0 bg-surface border-t border-surface-border px-4 py-2 shadow-lg shadow-black/20">
       <div className="pb-1">
         <div className="flex items-center gap-2 pr-1">
-        <HelpTip label="Command Preview" description="The command that will be executed. Click to edit manually.">
+        <HelpTip label={t('preview.title')} description={t('preview.description')}>
           <span className="flex items-center justify-center shrink-0 text-gray-500">
             <Terminal size={22} />
           </span>
         </HelpTip>
         {manualCommandString !== null && (
-          <HelpTip label="Reset to Builder" description="Discard manual edits and restore the builder-generated command.">
+          <HelpTip label={t('preview.resetToBuilder')} description={t('preview.resetDescription')}>
             <button
               onClick={() => setManualCommandString(null)}
               className="flex h-[42px] w-[42px] items-center justify-center rounded-lg bg-surface-lighter border border-surface-border text-gray-400 hover:text-gray-200 hover:border-gray-500 transition-colors shrink-0"
@@ -366,13 +368,13 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
               spellCheck={false}
               autoComplete="off"
               className="w-full h-full rounded-lg bg-transparent px-4 font-mono text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-              placeholder="Build or edit a command"
+              placeholder={t('preview.editPlaceholder')}
             />
           ) : (
             <div
               onClick={beginPreviewEdit}
               className="h-full flex items-center cursor-text overflow-x-auto px-4 font-mono text-sm text-gray-200"
-              title="Click to edit"
+              title={t('preview.clickToEdit')}
             >
               <div className="whitespace-nowrap">
                 <CommandHighlight command={commandString} />
@@ -380,7 +382,7 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
             </div>
           )}
         </div>
-        <HelpTip label={copied ? 'Copied' : 'Copy'} description="Copy command to clipboard">
+        <HelpTip label={copied ? t('preview.copied') : t('preview.copy')} description={t('preview.copyDescription')}>
           <button
             onClick={handleCopy}
             className="flex h-[42px] w-[42px] items-center justify-center rounded-lg bg-surface-lighter border border-surface-border text-gray-300 hover:text-gray-200 hover:border-gray-500 transition-colors shrink-0"
@@ -389,11 +391,11 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
           </button>
         </HelpTip>
         <HelpTip
-          label="Add Command"
+          label={t('preview.addCommand')}
           description={
             manualCommandString !== null
-              ? 'Reset preview to builder first, then save this as a reusable command preset.'
-              : 'Add the current builder state as a reusable command under this CLI tree.'
+              ? t('preview.addManualFirst')
+              : t('preview.addCurrent')
           }
         >
           <button
@@ -416,11 +418,11 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
           commandName={command.name}
         />
         <HelpTip
-          label="AI Review"
+          label={t('preview.aiReview')}
           description={
             activeAIProvider
-              ? 'Ask your active AI provider to explain risks and suggest a safer variant.'
-              : 'Select an active AI provider in Settings to enable command reviews.'
+              ? t('preview.aiReviewEnabled')
+              : t('preview.aiReviewDisabled')
           }
         >
           <button
@@ -435,11 +437,11 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
           </button>
         </HelpTip>
         <HelpTip
-          label="AI Draft"
+          label={t('preview.aiDraft')}
           description={
             activeAIProvider
-              ? 'Describe the command you want and review an AI-generated builder suggestion before applying it.'
-              : 'Select an active AI provider in Settings to generate command drafts.'
+              ? t('preview.aiDraftEnabled')
+              : t('preview.aiDraftDisabled')
           }
         >
           <button
@@ -453,8 +455,8 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
           </button>
         </HelpTip>
         <HelpTip
-          label="Execute"
-          description={executeDisabledReason ?? 'Run command in terminal'}
+          label={t('preview.execute')}
+          description={executeDisabledReason ?? t('preview.runInTerminal')}
           shortcut="Enter"
         >
           <button
@@ -531,6 +533,7 @@ function AIReviewDialog(props: {
   onRerun: () => void
   onClose: () => void
 }): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const { loading, error, review, meta, commandString, onRerun, onClose } = props
   const [followUps, setFollowUps] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const [followUpInput, setFollowUpInput] = useState('')
@@ -589,9 +592,9 @@ function AIReviewDialog(props: {
           <div className="flex items-center gap-3">
             <ShieldCheck size={18} className="text-accent-light" />
             <div>
-              <h3 className="text-lg font-semibold text-gray-200">AI Review</h3>
+              <h3 className="text-lg font-semibold text-gray-200">{t('aiReview.title')}</h3>
               <p className="text-xs text-gray-500 mt-0.5">
-                Risk analysis and safer alternatives for your command.
+                {t('aiReview.description')}
               </p>
             </div>
           </div>
@@ -614,7 +617,7 @@ function AIReviewDialog(props: {
           {loading && (
             <div className="flex items-center gap-2 text-sm text-gray-400 py-8 justify-center">
               <Loader2 size={16} className="animate-spin" />
-              Reviewing command...
+              {t('aiReview.reviewing')}
             </div>
           )}
           {error && (
@@ -642,7 +645,7 @@ function AIReviewDialog(props: {
           {followUpLoading && (
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <Loader2 size={14} className="animate-spin" />
-              Thinking...
+              {t('aiReview.thinking')}
             </div>
           )}
         </div>
@@ -660,7 +663,7 @@ function AIReviewDialog(props: {
                     void sendFollowUp()
                   }
                 }}
-                placeholder="Ask a follow-up question..."
+                placeholder={t('aiReview.followUpPlaceholder')}
                 disabled={followUpLoading}
                 className="flex-1 bg-surface rounded-lg border border-surface-border px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-accent/40 disabled:opacity-50"
               />
@@ -687,7 +690,7 @@ function AIReviewDialog(props: {
                 disabled={loading || followUpLoading}
                 className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
               >
-                Close
+                {t('common:actions.close')}
               </button>
               <button
                 onClick={onRerun}
@@ -695,7 +698,7 @@ function AIReviewDialog(props: {
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent hover:bg-accent-light text-white text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-                {review ? 'Re-run Review' : 'Review'}
+                {review ? t('aiReview.rerun') : t('aiReview.review')}
               </button>
             </div>
           </div>
@@ -718,6 +721,7 @@ function AICommandDraftDialog(props: {
   suggestionMeta: { providerLabel: string; model: string } | null
   suggestionCommand: string
 }): JSX.Element {
+  const { t } = useTranslation('commandBuilder')
   const {
     prompt,
     onPromptChange,
@@ -740,27 +744,27 @@ function AICommandDraftDialog(props: {
       <div className="mt-8 mb-8 w-full max-w-5xl rounded-2xl border border-surface-border bg-surface-light shadow-2xl shadow-black/50 overflow-hidden">
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-surface-border">
           <div>
-            <h3 className="text-lg font-semibold text-gray-200">AI Command Draft</h3>
+            <h3 className="text-lg font-semibold text-gray-200">{t('aiDraft.title')}</h3>
             <p className="text-xs text-gray-500 mt-1">
-              Describe the command you want. Review the suggested command line and form values before applying them.
+              {t('aiDraft.description')}
             </p>
           </div>
           <button
             onClick={onClose}
             className="px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-gray-200 hover:bg-surface border border-surface-border transition-colors"
           >
-            Close
+            {t('common:actions.close')}
           </button>
         </div>
 
         <div className="px-6 py-5 space-y-5 max-h-[calc(100vh-10rem)] overflow-y-auto">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-200">What should this command do?</label>
+            <label className="text-sm font-medium text-gray-200">{t('aiDraft.promptLabel')}</label>
             <textarea
               value={prompt}
               onChange={(e) => onPromptChange(e.target.value)}
               rows={4}
-              placeholder="Example: Generate a safe dry-run deploy of the web service to staging with verbose logging."
+              placeholder={t('aiDraft.promptPlaceholder')}
               className="w-full rounded-xl border border-surface-border bg-surface px-4 py-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
             />
           </div>
@@ -776,7 +780,7 @@ function AICommandDraftDialog(props: {
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles size={14} className={error ? 'text-destructive' : 'text-accent-light'} />
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  AI Suggestion
+                  {t('aiDraft.suggestion')}
                 </span>
                 {suggestionMeta && (
                   <span className="text-[11px] text-gray-500 ml-auto">
@@ -788,7 +792,7 @@ function AICommandDraftDialog(props: {
               {loading && (
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   <Loader2 size={14} className="animate-spin" />
-                  Generating command draft...
+                  {t('aiDraft.generating')}
                 </div>
               )}
 
@@ -798,7 +802,7 @@ function AICommandDraftDialog(props: {
                 <div className="space-y-4">
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-                      Summary
+                      {t('aiDraft.summary')}
                     </div>
                     <div className="text-sm text-gray-200 whitespace-pre-wrap leading-6">
                       {suggestion.summary}
@@ -808,7 +812,7 @@ function AICommandDraftDialog(props: {
                   {suggestion.warnings.length > 0 && (
                     <div>
                       <div className="text-xs font-semibold uppercase tracking-wider text-caution mb-1">
-                        Warnings
+                        {t('aiDraft.warnings')}
                       </div>
                       <div className="space-y-1">
                         {suggestion.warnings.map((warning, index) => (
@@ -822,16 +826,16 @@ function AICommandDraftDialog(props: {
 
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-                      Generated Command
+                      {t('aiDraft.generatedCommand')}
                     </div>
                     <div className="rounded-lg border border-surface-border bg-surface px-3 py-3 font-mono text-sm text-gray-200 whitespace-pre-wrap break-all">
-                      {suggestionCommand || '[No command values generated]'}
+                      {suggestionCommand || t('aiDraft.noCommandValues')}
                     </div>
                   </div>
 
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-                      Form Values
+                      {t('aiDraft.formValues')}
                     </div>
                     <pre className="rounded-lg border border-surface-border bg-surface px-3 py-3 text-xs text-gray-300 whitespace-pre-wrap break-all overflow-x-auto">
                       {JSON.stringify(suggestion.values, null, 2)}
@@ -845,14 +849,14 @@ function AICommandDraftDialog(props: {
 
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-surface-border">
           <div className="text-xs text-gray-500">
-            Apply To Preview replaces only the editable command line. Apply To Form fills the checkboxes, inputs, and arguments above. Neither action executes the command.
+            {t('aiDraft.footer')}
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors"
             >
-              Cancel
+              {t('common:actions.cancel')}
             </button>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1 min-w-[36rem]">
               <button
@@ -861,21 +865,21 @@ function AICommandDraftDialog(props: {
                 className="flex h-full min-h-[64px] items-center justify-center gap-2 px-4 py-2 rounded-lg border border-surface-border text-sm text-gray-200 hover:text-gray-200 hover:border-gray-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                {suggestion ? 'Refresh Draft' : 'Generate Draft'}
+                {suggestion ? t('aiDraft.refreshDraft') : t('aiDraft.generateDraft')}
               </button>
               <button
                 onClick={onApplyToPreview}
                 disabled={!hasPreviewSuggestion}
                 className="flex h-full min-h-[64px] items-center justify-center gap-2 px-4 py-2 rounded-lg border border-surface-border text-sm text-gray-200 hover:text-gray-200 hover:border-gray-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Apply To Preview
+                {t('aiDraft.applyToPreview')}
               </button>
               <button
                 onClick={onApply}
                 disabled={!hasApplicableSuggestion}
                 className="flex h-full min-h-[64px] items-center justify-center gap-2 px-4 py-2 rounded-lg bg-accent hover:bg-accent-light text-white text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Apply To Form
+                {t('aiDraft.applyToForm')}
               </button>
             </div>
           </div>

@@ -1,6 +1,8 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { CommandCard } from './CommandCard'
 import { useCommandStore } from '../../store/command-store'
+import { useSettingsStore } from '../../store/settings-store'
+import { compareLocalized } from '../../i18n/format'
 import type { CommandDefinition } from '../../../../shared/command-schema'
 
 interface CategoryListProps {
@@ -23,8 +25,11 @@ export function CategoryList({
   onToggleCollapsed
 }: CategoryListProps): JSX.Element {
   const activeCommand = useCommandStore((s) => s.activeCommand)
+  const settings = useSettingsStore((s) => s.settings)
 
-  const sortedCategories = Object.keys(groups).sort((left, right) => left.localeCompare(right))
+  const sortedCategories = Object.keys(groups).sort((left, right) =>
+    compareLocalized(left, right, settings)
+  )
 
   return (
     <div className="space-y-1">

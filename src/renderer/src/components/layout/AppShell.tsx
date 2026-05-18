@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { PanelGroup, Panel, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
+import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 import { Sidebar } from './Sidebar'
 import { CommandBuilder } from '../command-builder/CommandBuilder'
@@ -53,6 +54,11 @@ function isPathWithinRoot(pathValue: string, rootPath: string): boolean {
 }
 
 export function AppShell(): JSX.Element {
+  const { t } = useTranslation('layout')
+  const terminalT = useCallback(
+    (key: string, options?: Record<string, unknown>) => t(key, { ns: 'terminal', ...options }),
+    [t]
+  )
   const isMac = navigator.platform.toLowerCase().includes('mac')
   const terminalVisible = useTerminalStore((s) => s.terminalVisible)
   const splitDirection = useTerminalStore((s) => s.splitDirection)
@@ -89,6 +95,7 @@ export function AppShell(): JSX.Element {
   const layoutHydratedProjectIdRef = useRef<string | null>(null)
   const layoutSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sessionVisitedProjectIds = useRef<Set<string>>(new Set())
+  const autoOpenedTerminalProjectIdRef = useRef<string | null>(null)
   const startupUpdateCheckedRef = useRef(false)
   const terminalDockPanelRef = useRef<ImperativePanelHandle | null>(null)
   const activeProjectId = activeProject?.id ?? null
@@ -178,12 +185,12 @@ export function AppShell(): JSX.Element {
   }, [activeProject, addSession, setTerminalVisible])
 
   const handleCloseCollapsedSession = useCallback(async (sessionId: string): Promise<void> => {
-    const shouldClose = await confirmTerminalClose(sessionId, runsBySession)
+    const shouldClose = await confirmTerminalClose(sessionId, runsBySession, terminalT)
     if (!shouldClose) return
 
     window.electronAPI.killTerminal(sessionId)
     removeSession(sessionId)
-  }, [removeSession, runsBySession])
+  }, [removeSession, runsBySession, terminalT])
 
   const cycleTerminalTabs = useCallback((direction: 1 | -1): void => {
     const state = useTerminalStore.getState()
@@ -225,12 +232,12 @@ export function AppShell(): JSX.Element {
 
     if (!targetSessionId) return
 
-    const shouldClose = await confirmTerminalClose(targetSessionId, runsBySession)
+    const shouldClose = await confirmTerminalClose(targetSessionId, runsBySession, terminalT)
     if (!shouldClose) return
 
     window.electronAPI.killTerminal(targetSessionId)
     state.removeSession(targetSessionId)
-  }, [activeProject?.id, runsBySession])
+  }, [activeProject?.id, runsBySession, terminalT])
 
   const isEditableShortcutTarget = useCallback((target: EventTarget | null): boolean => {
     if (!(target instanceof HTMLElement)) return false
@@ -381,6 +388,7 @@ export function AppShell(): JSX.Element {
   useEffect(() => {
     if (!activeProject) {
       layoutHydratedProjectIdRef.current = null
+      autoOpenedTerminalProjectIdRef.current = null
       clearFiles()
       return
     }
@@ -466,6 +474,27 @@ export function AppShell(): JSX.Element {
       cancelled = true
     }
   }, [activeProject?.id, clearFiles, hydrateFiles, setSplitDirection, setTerminalVisible])
+
+  useEffect(() => {
+    if (!activeProject) return
+
+    const projectId = activeProject.id
+    if (autoOpenedTerminalProjectIdRef.current === projectId) return
+
+    autoOpenedTerminalProjectIdRef.current = projectId
+
+    if (activeProjectSessionId) {
+      setTerminalVisible(true)
+      return
+    }
+
+    void handleNewTerminal().catch((error) => {
+      if (autoOpenedTerminalProjectIdRef.current === projectId) {
+        autoOpenedTerminalProjectIdRef.current = null
+      }
+      console.error(`Failed to auto-open terminal for project ${activeProject.name}:`, error)
+    })
+  }, [activeProject, activeProjectSessionId, handleNewTerminal, setTerminalVisible])
 
   useEffect(() => {
     const resolvedActiveScript = resolveProjectScopedActiveScript(
@@ -601,13 +630,13 @@ export function AppShell(): JSX.Element {
 
   const startupUpdateActionLabel =
     startupUpdateCheck?.delivery === 'electron-updater'
-      ? 'Download & Install Update'
-      : 'Download & Open Update'
+      ? t('updates.downloadInstall')
+      : t('updates.downloadOpen')
 
   const startupInstallingActionLabel =
     startupUpdateCheck?.delivery === 'electron-updater'
-      ? 'Installing Update'
-      : 'Opening Update'
+      ? t('updates.installing')
+      : t('updates.opening')
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
@@ -638,7 +667,7 @@ export function AppShell(): JSX.Element {
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
           {activeProject?.workspaceTarget.type === 'ssh' && (
-            <HelpTip label="SSH Shell" description="Open a new interactive SSH shell for this workspace">
+            <HelpTip label={t('topbar.sshShell')} description={t('topbar.sshShellDescription')}>
               <button
                 onClick={handleOpenInteractiveSSH}
                 className="tv-btn-icon"
@@ -648,7 +677,7 @@ export function AppShell(): JSX.Element {
             </HelpTip>
           )}
           {activeProject?.workspaceTarget.type === 'ssh' && (
-            <HelpTip label="VNC Viewer" description="Open a remote desktop session via encrypted SSH tunnel">
+            <HelpTip label={t('topbar.vncViewer')} description={t('topbar.vncViewerDescription')}>
               <button
                 onClick={() => void handleOpenVnc()}
                 className="tv-btn-icon"
@@ -657,7 +686,7 @@ export function AppShell(): JSX.Element {
               </button>
             </HelpTip>
           )}
-          <HelpTip label="New Terminal" description="Open a shell tab" shortcut={`${isMac ? '⌘' : 'Ctrl+'}T`}>
+          <HelpTip label={t('topbar.newTerminal')} description={t('topbar.newTerminalDescription')} shortcut={`${isMac ? '⌘' : 'Ctrl+'}T`}>
             <button
               onClick={handleNewTerminal}
               className="tv-btn-icon"
@@ -665,7 +694,7 @@ export function AppShell(): JSX.Element {
               <TerminalSquare size={15} />
             </button>
           </HelpTip>
-          <HelpTip label="Help Guide" description="How to use TerminallySKILL" shortcut={`${isMac ? '⌘' : 'Ctrl+'}I`}>
+          <HelpTip label={t('topbar.helpGuide')} description={t('topbar.helpGuideDescription')} shortcut={`${isMac ? '⌘' : 'Ctrl+'}I`}>
             <button
               onClick={() => setInfoOpen(true)}
               className="tv-btn-icon"
@@ -673,15 +702,7 @@ export function AppShell(): JSX.Element {
               <Info size={15} />
             </button>
           </HelpTip>
-          <HelpTip label="Settings" description="Theme, AI providers, and preferences" shortcut={`${isMac ? '⌘' : 'Ctrl+'}S`}>
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="tv-btn-icon"
-            >
-              <Settings size={15} />
-            </button>
-          </HelpTip>
-          <HelpTip label="GitHub" description="View source and report issues">
+          <HelpTip label={t('topbar.github')} description={t('topbar.githubDescription')}>
             <button
               onClick={() => window.electronAPI.openExternal('https://github.com/cryptopoly/TerminallySKILL')}
               className="tv-btn-icon"
@@ -689,12 +710,20 @@ export function AppShell(): JSX.Element {
               <Github size={15} />
             </button>
           </HelpTip>
-          <HelpTip label="Website" description="terminallyskill.com">
+          <HelpTip label={t('topbar.website')} description={t('topbar.websiteDescription')}>
             <button
               onClick={() => window.electronAPI.openExternal('https://terminallyskill.com')}
               className="tv-btn-icon"
             >
               <Globe size={15} />
+            </button>
+          </HelpTip>
+          <HelpTip label={t('topbar.settings')} description={t('topbar.settingsDescription')} shortcut={`${isMac ? '⌘' : 'Ctrl+'}S`}>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="tv-btn-icon"
+            >
+              <Settings size={15} />
             </button>
           </HelpTip>
           {activeProject && (
@@ -711,7 +740,7 @@ export function AppShell(): JSX.Element {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-200">
                 <span className="inline-flex h-2 w-2 rounded-full bg-accent" />
-                Update {startupUpdateCheck.latestVersion} is available
+                {t('updates.available', { version: startupUpdateCheck.latestVersion })}
               </div>
               <div className="mt-1 text-xs leading-5 text-gray-400">
                 {startupUpdateCheck.message}
@@ -719,8 +748,8 @@ export function AppShell(): JSX.Element {
               {startupUpdateCheck.notes && (
                 <UpdateReleaseNotes
                   notes={startupUpdateCheck.notes}
-                  title="What's New"
-                  hint="Expand to view highlights and the full change log."
+                  title={t('updates.whatsNew')}
+                  hint={t('updates.releaseNotesHint')}
                   className="mt-2"
                 />
               )}
@@ -752,7 +781,7 @@ export function AppShell(): JSX.Element {
               <button
                 onClick={() => setDismissedStartupUpdateVersion(startupUpdateCheck.latestVersion ?? null)}
                 className="tv-btn-icon-sm h-8 w-8 text-gray-500 hover:text-gray-200"
-                aria-label="Dismiss update banner"
+                aria-label={t('updates.dismissBanner')}
               >
                 <X size={14} />
               </button>
@@ -777,6 +806,7 @@ export function AppShell(): JSX.Element {
         <Panel
           defaultSize={showDockedTerminal ? 100 - (activeProject?.workspaceLayout.terminalSize ?? 35) : 100}
           minSize={30}
+          className="min-h-0"
         >
           <PanelGroup
             key={`workspace-horizontal-${activeProject?.id ?? 'global'}`}
@@ -795,7 +825,7 @@ export function AppShell(): JSX.Element {
               defaultSize={activeProject?.workspaceLayout.sidebarSize ?? 25}
               minSize={22}
               maxSize={40}
-              className="min-w-[430px]"
+              className="min-w-[430px] min-h-0"
             >
               <Sidebar />
             </Panel>
@@ -861,8 +891,8 @@ export function AppShell(): JSX.Element {
 
             <div className="ml-auto flex items-center gap-1.5 pl-2 shrink-0">
               <HelpTip
-                label="Expand Terminal"
-                description="Restore the docked terminal panel"
+                label={t('terminal.expand')}
+                description={t('terminal.expandDescription')}
                 shortcut={isMac ? '⌘/' : 'Ctrl+/'}
               >
                 <button
@@ -870,7 +900,7 @@ export function AppShell(): JSX.Element {
                   className="tv-btn-secondary"
                 >
                   <ChevronUp size={13} />
-                  Expand Terminal
+                  {t('terminal.expand')}
                 </button>
               </HelpTip>
             </div>
@@ -893,7 +923,7 @@ export function AppShell(): JSX.Element {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-surface-border shrink-0">
-              <span className="text-sm font-semibold text-gray-200">Settings</span>
+              <span className="text-sm font-semibold text-gray-200">{t('settings.title')}</span>
               <button
                 onClick={() => setSettingsOpen(false)}
                 className="tv-btn-icon"
@@ -962,13 +992,14 @@ function EmptyState({
   onCreateProject: () => void
   onShowInfo: (section?: string) => void
 }): JSX.Element {
+  const { t } = useTranslation('layout')
   return (
     <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-4">
       <TVLogo size={48} />
       <div className="text-center">
-        <h2 className="text-lg font-medium text-gray-400">Get started</h2>
+        <h2 className="text-lg font-medium text-gray-400">{t('empty.title')}</h2>
         <p className="text-sm mt-1 max-w-xs">
-          Create a project to set your workspace target and pin favourite commands
+          {t('empty.description')}
         </p>
         <div className="mt-4 flex items-center justify-center gap-2">
           <button
@@ -976,14 +1007,14 @@ function EmptyState({
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent hover:bg-accent-light text-white text-sm font-medium transition-colors"
           >
             <FolderOpen size={14} />
-            Create Project
+            {t('empty.createProject')}
           </button>
           <button
             onClick={() => onShowInfo()}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-surface-border text-gray-400 hover:text-accent-light hover:border-accent/40 text-sm transition-colors"
           >
             <Info size={14} />
-            How it works
+            {t('empty.howItWorks')}
           </button>
         </div>
       </div>

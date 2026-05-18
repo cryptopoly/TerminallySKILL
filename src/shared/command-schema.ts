@@ -1,3 +1,5 @@
+import type { SupportedLocale } from './locale-schema'
+
 export interface CommandDefinition {
   id: string
   name: string
@@ -26,6 +28,7 @@ export interface CommandReferenceHelp {
   generatedAt: string
   providerLabel?: string
   model?: string
+  locale?: SupportedLocale
   format?: 'legacy-text' | 'structured-v1'
   sections?: CommandReferenceHelpSections
 }

@@ -1,9 +1,11 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Play, Pencil, Braces, Copy, Clock } from 'lucide-react'
 import clsx from 'clsx'
 import { useSnippetStore } from '../../store/snippet-store'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
 import { useProjectStore } from '../../store/project-store'
+import { useSettingsStore } from '../../store/settings-store'
 import { parseTemplateVariables, resolveTemplate } from '../../../../shared/snippet-schema'
 import type { SnippetVariable } from '../../../../shared/snippet-schema'
 import {
@@ -11,12 +13,15 @@ import {
   createProjectTerminalSession,
   ensureProjectExecutionSession
 } from '../../lib/workspace-session'
+import { formatDate } from '../../i18n/format'
 
 export function SnippetEditor(): JSX.Element {
+  const { t } = useTranslation('snippets')
   const activeSnippet = useSnippetStore((s) => s.activeSnippet)
   const { updateSnippetInStore } = useSnippetStore()
   const { activeSessionId, splitSessionId, sessions, setTerminalVisible, addToHistory } = useTerminalStore()
   const activeProject = useProjectStore((s) => s.activeProject)
+  const settings = useSettingsStore((s) => s.settings)
   const [editingName, setEditingName] = useState(false)
   const [editingDesc, setEditingDesc] = useState(false)
   const [name, setName] = useState('')
@@ -49,8 +54,8 @@ export function SnippetEditor(): JSX.Element {
       <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-4">
         <Braces size={48} className="text-surface-lighter" />
         <div className="text-center">
-          <h2 className="text-lg font-medium text-gray-400">No snippet selected</h2>
-          <p className="text-sm mt-1">Select a snippet from the sidebar or create a new one</p>
+          <h2 className="text-lg font-medium text-gray-400">{t('editor.noSelectionTitle')}</h2>
+          <p className="text-sm mt-1">{t('editor.noSelectionDescription')}</p>
         </div>
       </div>
     )
@@ -183,7 +188,7 @@ export function SnippetEditor(): JSX.Element {
                     setEditingDesc(false)
                   }
                 }}
-                placeholder="Add a description..."
+                placeholder={t('editor.addDescriptionPlaceholder')}
                 className="mt-2 text-sm text-gray-400 bg-transparent border-b border-surface-border focus:outline-none focus:border-accent w-full max-w-lg"
                 autoFocus
               />
@@ -195,19 +200,19 @@ export function SnippetEditor(): JSX.Element {
                   setEditingDesc(true)
                 }}
               >
-                {activeSnippet.description || 'Click to add description...'}
+                {activeSnippet.description || t('editor.clickToAddDescription')}
               </p>
             )}
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs text-gray-500">
-              {liveVars.length} variable{liveVars.length !== 1 ? 's' : ''}
+              {t('meta.variable', { count: liveVars.length })}
             </span>
             {activeSnippet.lastRunAt && (
               <span className="text-xs text-gray-600 flex items-center gap-1">
                 <Clock size={10} />
-                {new Date(activeSnippet.lastRunAt).toLocaleDateString()}
+                {formatDate(activeSnippet.lastRunAt, settings)}
               </span>
             )}
           </div>
@@ -219,7 +224,7 @@ export function SnippetEditor(): JSX.Element {
         {/* Template section */}
         <section>
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 block">
-            Template
+            {t('editor.template')}
           </label>
           <div className="relative">
             <textarea
@@ -236,7 +241,7 @@ export function SnippetEditor(): JSX.Element {
               }}
               spellCheck={false}
               rows={Math.min(Math.max(template.split('\n').length, 2), 8)}
-              placeholder="e.g. ssh {{user}}@{{host}} -p {{port:22}}"
+              placeholder={t('editor.templatePlaceholder', { open: '{{', close: '}}' })}
               className="w-full bg-surface border border-surface-border rounded-xl px-4 py-3 text-sm font-mono text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none leading-6"
             />
             {templateDirty && (
@@ -244,12 +249,12 @@ export function SnippetEditor(): JSX.Element {
                 onClick={handleSaveTemplate}
                 className="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-accent hover:bg-accent-light text-white text-xs font-medium transition-colors"
               >
-                Save ⌘S
+                {t('editor.saveShortcut')}
               </button>
             )}
           </div>
           <p className="text-xs text-gray-600 mt-1.5">
-            Use {'{{name}}'} for required variables, {'{{name:default}}'} for optional with defaults
+            {t('editor.templateHelp', { open: '{{', close: '}}' })}
           </p>
         </section>
 
@@ -257,7 +262,7 @@ export function SnippetEditor(): JSX.Element {
         {liveVars.length > 0 && (
           <section>
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3 block">
-              Variables
+              {t('editor.variables')}
             </label>
             <div className="space-y-3">
               {liveVars.map((v) => (
@@ -275,7 +280,7 @@ export function SnippetEditor(): JSX.Element {
         {/* Preview + Run */}
         <section>
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 block">
-            Preview
+            {t('editor.preview')}
           </label>
           <div className="bg-surface border border-surface-border rounded-xl p-4">
             <code
@@ -284,7 +289,7 @@ export function SnippetEditor(): JSX.Element {
                 allFilled || liveVars.length === 0 ? 'text-gray-200' : 'text-gray-500'
               )}
             >
-              {resolvedCommand || <span className="text-gray-600 italic">Enter a template above...</span>}
+              {resolvedCommand || <span className="text-gray-600 italic">{t('editor.emptyTemplatePreview')}</span>}
             </code>
           </div>
         </section>
@@ -295,27 +300,30 @@ export function SnippetEditor(): JSX.Element {
         <div className="flex items-center gap-3">
           <div className="flex-1 text-xs text-gray-400">
             {liveVars.length === 0
-              ? 'No variables — runs as-is'
+              ? t('editor.noVariablesStatus')
               : allFilled
-                ? 'All variables filled'
-                : `${liveVars.filter((v) => values[v.name]?.trim()).length} of ${liveVars.length} filled`}
+                ? t('editor.allVariablesFilled')
+                : t('editor.filledStatus', {
+                  filled: liveVars.filter((v) => values[v.name]?.trim()).length,
+                  total: liveVars.length
+                })}
           </div>
           <button
             onClick={handleCopy}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-lighter border border-surface-border text-xs text-gray-300 hover:text-gray-200 hover:border-gray-500 transition-colors"
-            title="Copy resolved command"
+            title={t('editor.copyResolvedCommand')}
           >
             <Copy size={13} />
-            {copied ? 'Copied!' : 'Copy'}
+            {copied ? t('editor.copied') : t('editor.copy')}
           </button>
           <button
             onClick={handleRun}
             disabled={!allFilled && liveVars.length > 0}
             className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors"
-            title="Run in terminal"
+            title={t('editor.runInTerminal')}
           >
             <Play size={13} />
-            Run
+            {t('editor.run')}
           </button>
         </div>
       </div>
@@ -333,6 +341,8 @@ function VariableInput({
   value: string
   onChange: (val: string) => void
 }): JSX.Element {
+  const { t } = useTranslation('snippets')
+
   return (
     <div className="flex items-center gap-3 bg-surface border border-surface-border rounded-xl px-4 py-3">
       <div className="w-28 shrink-0">
@@ -343,11 +353,11 @@ function VariableInput({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={variable.defaultValue || `Enter ${variable.label.toLowerCase()}...`}
+        placeholder={variable.defaultValue || t('editor.enterValuePlaceholder', { label: variable.label.toLowerCase() })}
         className="flex-1 bg-surface-light border border-surface-border rounded-lg px-3 py-1.5 text-sm font-mono text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
       />
       {variable.defaultValue && (
-        <span className="text-xs text-gray-600 shrink-0" title="Default value">
+        <span className="text-xs text-gray-600 shrink-0" title={t('editor.defaultValue')}>
           = {variable.defaultValue}
         </span>
       )}

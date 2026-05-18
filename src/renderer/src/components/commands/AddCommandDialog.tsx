@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, Plus, Terminal, Loader2, Search, MapPin, Wrench, Download, CheckCircle2 } from 'lucide-react'
 import type { InstallableCommandMatch } from '../../../../shared/cli-install-catalog'
 
@@ -14,6 +15,7 @@ function formatAliases(match: InstallableCommandMatch): string | null {
 }
 
 export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddCommandDialogProps): JSX.Element {
+  const { t } = useTranslation('commands')
   const [executable, setExecutable] = useState('')
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +49,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
     try {
       await onAdd(executable.trim())
     } catch (err) {
-      setError('Failed to add command. Please try again.')
+      setError(t('addDialog.errors.addFailed'))
       console.error('Failed to add command:', err)
     } finally {
       setAdding(false)
@@ -101,9 +103,9 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
     setInfo(null)
     try {
       await onAdd(match.executable)
-      setInfo(`Added ${match.executable}. You can generate its command tree once you're ready.`)
+      setInfo(t('addDialog.info.added', { executable: match.executable }))
     } catch (err) {
-      setError(`Failed to add ${match.executable}.`)
+      setError(t('addDialog.errors.addExecutableFailed', { executable: match.executable }))
       console.error('Failed to add install match:', err)
     } finally {
       setAdding(false)
@@ -119,9 +121,9 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
     setInfo(null)
     try {
       await onInstallCommand(recipe.command)
-      setInfo(`Opened a terminal and queued ${recipe.label} install for ${match.executable}. Add or scan it once installation finishes.`)
+      setInfo(t('addDialog.info.installQueued', { label: recipe.label, executable: match.executable }))
     } catch (err) {
-      setError(`Failed to open an install terminal for ${match.executable}.`)
+      setError(t('addDialog.errors.installTerminalFailed', { executable: match.executable }))
       console.error('Failed to queue install command:', err)
     } finally {
       setInstallingCommand(null)
@@ -135,7 +137,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
           <div className="flex items-center gap-2">
             <Terminal size={16} className="text-accent-light" />
-            <h2 className="text-lg font-semibold text-gray-200">Add Command</h2>
+            <h2 className="text-lg font-semibold text-gray-200">{t('addDialog.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -149,7 +151,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
         <div className="px-6 py-4 space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">
-              Command name or tool to search for
+              {t('addDialog.commandLabel')}
             </label>
             <div className="flex gap-2">
               <input
@@ -168,7 +170,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
                   if (e.key === 'Enter') void handleSearch()
                   if (e.key === 'Escape') onClose()
                 }}
-                placeholder="e.g. openclaw, terraform, docker, uv..."
+                placeholder={t('addDialog.commandPlaceholder')}
                 className="flex-1 bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent font-mono"
                 autoFocus
               />
@@ -176,7 +178,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
                 onClick={handleSearch}
                 disabled={!executable.trim() || searching}
                 className="px-3 py-2 rounded-lg border border-surface-border text-gray-400 hover:text-accent-light hover:border-accent/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                title="Search system for this command"
+                title={t('addDialog.searchSystem')}
               >
                 {searching ? (
                   <Loader2 size={14} className="animate-spin" />
@@ -193,7 +195,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
               <div className="flex items-start gap-2">
                 <MapPin size={14} className="text-safe shrink-0 mt-0.5" />
                 <div className="text-xs">
-                  <p className="text-safe font-medium">Found on your system</p>
+                  <p className="text-safe font-medium">{t('addDialog.found')}</p>
                   <p className="text-gray-400 font-mono mt-0.5 break-all">{foundPath}</p>
                 </div>
               </div>
@@ -206,25 +208,24 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
                   {fixing ? (
                     <>
                       <Loader2 size={12} className="animate-spin" />
-                      Fixing PATH...
+                      {t('addDialog.fixingPath')}
                     </>
                   ) : (
                     <>
                       <Wrench size={12} />
-                      Add to PATH (fix &quot;command not found&quot;)
+                      {t('addDialog.fixPath')}
                     </>
                   )}
                 </button>
               )}
               {fixResult?.success && (
                 <div className="text-xs text-safe">
-                  ✓ Added to <span className="font-mono">{fixResult.configFile}</span>.
-                  Restart your terminal for the fix to take effect.
+                  {t('addDialog.fixPathSuccess', { configFile: fixResult.configFile })}
                 </div>
               )}
               {fixResult && !fixResult.success && (
                 <div className="text-xs text-destructive">
-                  Could not update shell config. You may need to manually add the directory to your PATH.
+                  {t('addDialog.fixPathFailure')}
                 </div>
               )}
             </div>
@@ -233,7 +234,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
           {notFound && (
             <div className="rounded-lg border border-caution/20 bg-caution/5 p-3">
               <p className="text-xs text-caution">
-                Command not found on your system yet. If it shows up below, you can install it in a terminal or still add a manual placeholder.
+                {t('addDialog.notFound')}
               </p>
             </div>
           )}
@@ -242,10 +243,10 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium uppercase tracking-[0.24em] text-gray-500">
-                  Installable Matches
+                  {t('addDialog.installableMatches')}
                 </p>
                 <p className="text-xs text-gray-600">
-                  Search results from TerminallySKILL&apos;s install catalog
+                  {t('addDialog.installCatalogSource')}
                 </p>
               </div>
 
@@ -267,7 +268,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
                             {match.installed ? (
                               <span className="inline-flex items-center gap-1 rounded-full border border-safe/30 bg-safe/10 px-2 py-0.5 text-[11px] font-medium text-safe">
                                 <CheckCircle2 size={11} />
-                                Installed
+                                {t('addDialog.installed')}
                               </span>
                             ) : primaryRecipe ? (
                               <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent-light">
@@ -279,7 +280,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
                           <p className="text-sm text-gray-400">{match.description}</p>
                           {aliasLabel && (
                             <p className="text-xs text-gray-600">
-                              Also known as: <span className="font-mono">{aliasLabel}</span>
+                              {t('addDialog.alsoKnownAs', { aliases: aliasLabel })}
                             </p>
                           )}
                           {match.resolvedPath && (
@@ -295,7 +296,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
                               className="inline-flex items-center gap-2 rounded-lg border border-safe/20 bg-safe/10 px-3 py-2 text-xs font-medium text-safe hover:bg-safe/15 transition-colors disabled:opacity-50"
                             >
                               {adding ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
-                              Add Command
+                              {t('addDialog.addCommand')}
                             </button>
                           ) : primaryRecipe ? (
                             <button
@@ -308,7 +309,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
                               ) : (
                                 <Terminal size={12} />
                               )}
-                              Install in Terminal
+                              {t('addDialog.installInTerminal')}
                             </button>
                           ) : null}
                         </div>
@@ -317,7 +318,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
                       {primaryRecipe && (
                         <div className="rounded-lg border border-surface-border bg-surface-light/70 px-3 py-2">
                           <p className="text-[11px] uppercase tracking-[0.2em] text-gray-600 mb-1">
-                            Suggested install command
+                            {t('addDialog.suggestedInstallCommand')}
                           </p>
                           <p className="font-mono text-xs text-gray-300 break-all">{primaryRecipe.command}</p>
                         </div>
@@ -330,7 +331,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
           )}
 
           <p className="text-xs text-gray-600">
-            After adding a command, use &quot;Generate Command Tree from --help&quot; to auto-populate options. Install actions open in a visible local terminal so you can review what will run.
+            {t('addDialog.footer')}
           </p>
 
           {info && <p className="text-xs text-safe">{info}</p>}
@@ -343,7 +344,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
             onClick={onClose}
             className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors"
           >
-            Cancel
+            {t('common:actions.cancel')}
           </button>
           <button
             onClick={handleSubmit}
@@ -351,8 +352,8 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
             className="flex items-center gap-2 px-5 py-2 rounded-lg bg-accent hover:bg-accent-light text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             title={
               exactInstallMatch?.installed
-                ? `Add ${exactInstallMatch.executable}`
-                : 'Add a manual placeholder command'
+                ? t('addDialog.addSpecific', { executable: exactInstallMatch.executable })
+                : t('addDialog.addManualPlaceholder')
             }
           >
             {adding ? (
@@ -360,7 +361,7 @@ export function AddCommandDialog({ onAdd, onInstallCommand, onClose }: AddComman
             ) : (
               <Plus size={14} />
             )}
-            Add Command
+            {t('addDialog.addCommand')}
           </button>
         </div>
       </div>
