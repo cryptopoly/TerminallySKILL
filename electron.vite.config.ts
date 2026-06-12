@@ -60,7 +60,7 @@ export default defineConfig({
       postcss: './postcss.config.js'
     },
     build: {
-      target: 'chrome130'
+      target: 'chrome148'
     },
     optimizeDeps: {
       include: ['@novnc/novnc/lib/rfb.js'],

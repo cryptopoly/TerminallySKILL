@@ -4,8 +4,6 @@ const defaultProductName = 'TerminallySKILL'
 const productSlug = 'TerminallySKILL'
 const linuxExecutableName = 'terminallyskill'
 const productName = process.env.TERMINALLY_SKILL_PRODUCT_NAME?.trim() || defaultProductName
-const linuxDesktopName =
-  process.env.TERMINALLY_SKILL_LINUX_DESKTOP_NAME?.trim() || defaultProductName
 const updateFeedUrl = process.env.TERMINALLY_SKILL_UPDATE_URL?.trim() || ''
 const appleId = process.env.APPLE_ID?.trim() || ''
 const appleAppSpecificPassword = process.env.APPLE_APP_SPECIFIC_PASSWORD?.trim() || ''
@@ -76,11 +74,8 @@ const config = {
     description: 'TerminallySKILL is a prompt-aware terminal workspace for command trees, scripts, snippets, logs and AI-assisted terminal workflows.',
     executableName: linuxExecutableName,
     executableArgs: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--ozone-platform=x11'],
-    artifactName: `${productSlug}-\${version}-\${arch}.\${ext}`,
-    desktop: {
-      Name: linuxDesktopName,
-      StartupWMClass: linuxExecutableName
-    }
+    syncDesktopName: true,
+    artifactName: `${productSlug}-\${version}-\${arch}.\${ext}`
   },
   deb: {
     packageName: 'terminallyskill'

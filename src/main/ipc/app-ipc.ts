@@ -1,8 +1,10 @@
-import { ipcMain, shell } from 'electron'
+import { ipcMain } from 'electron'
 import { IPC_CHANNELS } from '../../shared/ipc-channels'
 import { createAppDataBackup, getDefaultICloudBackupDirectory } from '../backup-manager'
 import { checkForAppUpdate, downloadAndOpenAppUpdate, getAppVersion } from '../update-manager'
 import { getUserDataDir, getCustomDataDir, setCustomDataDir } from '../user-data-path'
+import { openSafeExternalUrl } from '../external-url'
+import { requireString } from './validation'
 
 export function registerAppIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.APP_GET_VERSION, async () => {
@@ -115,8 +117,6 @@ export function registerAppIpcHandlers(): void {
   })
 
   ipcMain.handle(IPC_CHANNELS.SHELL_OPEN_EXTERNAL, async (_event, url: string) => {
-    if (url.startsWith('https://')) {
-      await shell.openExternal(url)
-    }
+    return openSafeExternalUrl(requireString(url, 'url'))
   })
 }

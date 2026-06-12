@@ -157,7 +157,7 @@ Eight built-in themes:
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) >= 18.17.0 (LTS recommended)
+- [Node.js](https://nodejs.org/) >= 22.12.0
 - npm (included with Node.js)
 - **macOS:** Xcode Command Line Tools (`xcode-select --install`)
 - **Linux:** `build-essential`, `python3`, `libsecret-1-dev`
@@ -217,6 +217,21 @@ Output is written to `dist/`.
 npm test
 ```
 
+### Automated QA
+
+```bash
+npm run test:ci            # i18n check + unit/integration tests + production build
+npm run test:runtime-baseline # static runtime/dependency baseline check
+npm run test:e2e           # build + Playwright Electron E2E smoke tests
+npm run test:e2e:ssh-docker # Docker-backed real OpenSSH handshake E2E
+npm run test:package:mac:arm64 # build + launch packaged macOS arm64 app smoke
+npm run test:audit:runtime # runtime dependency audit
+npm run test:audit:all     # full dependency audit, including dev/build tooling
+npm run test:ssh-fixture:create # create a fake ssh binary for future E2E runs
+```
+
+The broader automation roadmap is documented in [`docs/TESTING_PLAN.md`](docs/TESTING_PLAN.md).
+
 ---
 
 ## 🐛 Troubleshooting
@@ -241,7 +256,7 @@ Click **More info → Run anyway**.
 
 | Layer | Technology |
 |-------|------------|
-| Desktop shell | Electron 33 |
+| Desktop shell | Electron 42 |
 | UI framework | React 18 |
 | Language | TypeScript (end-to-end) |
 | Styling | Tailwind CSS 3 + CSS custom properties |

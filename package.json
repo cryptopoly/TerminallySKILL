@@ -2,13 +2,14 @@
   "name": "terminallyskill",
   "version": "0.9.102",
   "description": "TerminallySKILL prompt-aware command builder and workspace",
+  "desktopName": "terminallyskill.desktop",
   "author": {
     "name": "TerminallySKILL",
     "email": "info@terminallyskill.com"
   },
   "main": "./out/main/index.js",
   "engines": {
-    "node": ">=18.17.0"
+    "node": ">=22.12.0"
   },
   "scripts": {
     "dev": "electron-vite dev",
@@ -32,6 +33,15 @@
     "postinstall": "electron-builder install-app-deps",
     "i18n:check": "node scripts/check-i18n.mjs",
     "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:runtime-baseline": "node scripts/check-runtime-baseline.mjs",
+    "test:ci": "npm run test:runtime-baseline && npm run i18n:check && npm test && npm run build",
+    "test:e2e": "npm run build && playwright test",
+    "test:e2e:ssh-docker": "npm run build && RUN_DOCKER_E2E=1 playwright test tests/e2e/ssh-docker.spec.mjs",
+    "test:package:mac:arm64": "npm run package:mac:arm64 && RUN_PACKAGED_E2E=1 TERMINALLYSKILL_PACKAGED_EXECUTABLE=dist/mac-arm64/TerminallySKILL.app/Contents/MacOS/TerminallySKILL playwright test tests/e2e/packaged-mac.spec.mjs",
+    "test:audit:runtime": "npm audit --omit=dev --audit-level=moderate",
+    "test:audit:all": "npm audit --audit-level=moderate",
+    "test:ssh-fixture:create": "node scripts/create-fake-ssh-fixture.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -53,23 +63,25 @@
     "react-dom": "^18.3.1",
     "react-i18next": "^17.0.7",
     "react-resizable-panels": "^2.1.7",
-    "ws": "^8.20.0",
+    "ws": "^8.21.0",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@swc/core": "^1.15.41",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/ws": "^8.18.1",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.4.20",
-    "electron": "^33.2.1",
-    "electron-builder": "^25.1.8",
-    "electron-vite": "^2.3.0",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.2",
+    "electron-vite": "^5.0.0",
     "postcss": "^8.4.49",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.16",
     "typescript": "^5.7.2",
-    "vite": "^5.4.11",
-    "vitest": "^2.1.8"
+    "vite": "^7.3.5",
+    "vitest": "^4.1.8"
   }
 }

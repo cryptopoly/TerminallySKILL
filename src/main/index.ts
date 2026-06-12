@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, shell, Menu } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron'
 import { join, resolve } from 'path'
 import { readFileSync, existsSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -7,6 +7,7 @@ import { initTerminalPath, killSessionsForWindow, killAllTerminals, getActiveSes
 import { stopVncSessionsForWindow, stopAllVncSessions } from './vnc-manager'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
 import { getUserDataDir, setCustomDataDir } from './user-data-path'
+import { openSafeExternalUrl } from './external-url'
 
 console.log('[terminallyskill] Main process loaded (v2 — shell integration + log save)')
 
@@ -31,6 +32,24 @@ if (process.platform === 'linux') {
 }
 
 const windows = new Set<BrowserWindow>()
+
+function isAllowedRendererNavigation(navigationUrl: string): boolean {
+  try {
+    const parsedNavigationUrl = new URL(navigationUrl)
+
+    if (!is.dev) {
+      return parsedNavigationUrl.protocol === 'file:'
+    }
+
+    const rendererUrl = process.env['ELECTRON_RENDERER_URL']
+    if (!rendererUrl) return false
+
+    const parsedRendererUrl = new URL(rendererUrl)
+    return parsedNavigationUrl.origin === parsedRendererUrl.origin
+  } catch {
+    return false
+  }
+}
 
 function createWindow(projectId?: string): void {
   const win = new BrowserWindow({
@@ -87,8 +106,15 @@ function createWindow(projectId?: string): void {
     windows.delete(win)
   })
 
-  win.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+  win.webContents.on('will-navigate', (event, navigationUrl) => {
+    if (isAllowedRendererNavigation(navigationUrl)) return
+
+    event.preventDefault()
+    void openSafeExternalUrl(navigationUrl)
+  })
+
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    void openSafeExternalUrl(url)
     return { action: 'deny' }
   })
 
