@@ -61,10 +61,6 @@ const config = {
     gatekeeperAssess: false,
     artifactName: `${productSlug}-\${version}-\${arch}.\${ext}`,
     notarize: canNotarize
-      ? {
-          teamId: appleTeamId
-        }
-      : false
   },
   linux: {
     target: ['AppImage', 'deb'],
