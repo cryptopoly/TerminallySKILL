@@ -33,6 +33,11 @@ async function fileEntryFor(fileName, arch) {
   }
 }
 
+function normalizeLinuxArch(arch) {
+  if (arch === 'amd64' || arch === 'x86_64') return 'x64'
+  return arch
+}
+
 function renderYamlValue(value) {
   if (typeof value === 'number') return String(value)
   if (typeof value !== 'string') return "''"
@@ -112,10 +117,10 @@ const linuxArtifacts = await Promise.all(
   allFiles
     .map((fileName) => {
       const match = fileName.match(
-        new RegExp(`^TerminallySKILL-${version}-(arm64|x64)\\.(AppImage|deb)$`)
+        new RegExp(`^TerminallySKILL-${version}-(arm64|x64|amd64|x86_64)\\.(AppImage|deb)$`)
       )
       if (!match) return null
-      return fileEntryFor(fileName, match[1])
+      return fileEntryFor(fileName, normalizeLinuxArch(match[1]))
     })
     .filter(Boolean)
 )
