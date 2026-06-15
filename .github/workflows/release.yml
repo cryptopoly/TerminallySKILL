@@ -138,3 +138,8 @@ jobs:
           files: dist/*
           fail_on_unmatched_files: true
           overwrite_files: true
+
+      - name: Refresh draft release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "v${{ inputs.version }}" --repo "${{ github.repository }}" --title "v${{ inputs.version }}" --notes-file "docs/releases/v${{ inputs.version }}.md" --draft
