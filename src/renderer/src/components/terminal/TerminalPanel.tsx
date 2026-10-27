@@ -685,6 +685,8 @@ interface TerminalCommandBlock {
   completedAt: string | null
   startLine: number | null
   endLine: number | null
+  /** Exit status reported by the shell when the block finished; null while running or unknown */
+  exitCode: number | null
 }
 
 type AIReviewScope = 'session' | 'last-command' | 'selection'
@@ -813,6 +815,7 @@ function XTermInstance({
   const autoScrollRef = useRef(true)
   const [showScrollDown, setShowScrollDown] = useState(false)
   const [aiReview, setAIReview] = useState<string | null>(null)
+  const [aiSuggestedCommands, setAISuggestedCommands] = useState<string[]>([])
   const [aiReviewMeta, setAIReviewMeta] = useState<{ providerLabel: string; model: string } | null>(null)
   const [aiReviewScope, setAIReviewScope] = useState<AIReviewScope | null>(null)
   const [aiReviewTargetLabel, setAIReviewTargetLabel] = useState<string | null>(null)
@@ -997,6 +1000,7 @@ function XTermInstance({
 
     setAILoading(true)
     setAIError(null)
+    setAISuggestedCommands([])
     setAIFollowUps([])
     setAIFollowUpInput('')
     aiReviewTranscriptRef.current = transcript
@@ -1018,9 +1022,12 @@ function XTermInstance({
             ? `Session ${sessionId} (${projectName})`
             : `Session ${sessionId}`,
         transcript,
-        cwd: sessionInfo?.cwd ?? projectWorkingDirectory ?? undefined
+        cwd: sessionInfo?.cwd ?? projectWorkingDirectory ?? undefined,
+        shell: sessionInfo?.shell,
+        exitCode: scope === 'last-command' ? lastCompletedCommandBlock?.exitCode : undefined
       })
       setAIReview(response.content)
+      setAISuggestedCommands('suggestedCommands' in response ? response.suggestedCommands ?? [] : [])
       setAIReviewMeta({
         providerLabel: response.providerLabel,
         model: response.model
@@ -1050,6 +1057,7 @@ function XTermInstance({
     if (!selectedText) {
       setAIError(t('aiReview.selectTextFirst'))
       setAIReview(null)
+      setAISuggestedCommands([])
       setAIReviewMeta(null)
       setAIReviewScope(null)
       setAIReviewTargetLabel(null)
@@ -1247,7 +1255,8 @@ function XTermInstance({
   const completeActiveCommandBlock = useCallback((
     completedAt: string,
     cwd: string | null,
-    endLine: number | null
+    endLine: number | null,
+    exitCode: number | null
   ) => {
     setActiveCommandBlock((current) => {
       if (!current) return null
@@ -1255,7 +1264,8 @@ function XTermInstance({
         ...current,
         completedAt,
         cwd: cwd ?? current.cwd,
-        endLine
+        endLine,
+        exitCode
       })
       return null
     })
@@ -1400,6 +1410,27 @@ function XTermInstance({
   useEffect(() => {
     setSelectedEditorSuggestionIndex(0)
   }, [editorSuggestions])
+
+  /** Put an AI-suggested fix at the prompt without running it, so the user can review and press Enter */
+  const insertSuggestedCommand = useCallback((command: string) => {
+    setAIReview(null)
+    setAIReviewMeta(null)
+    setAIReviewScope(null)
+    setAIReviewTargetLabel(null)
+    setAISuggestedCommands([])
+    setAIFollowUps([])
+    setAIFollowUpInput('')
+
+    if (terminalInputMode === 'editor' && shellStateRef.current === 'idle') {
+      const end = command.length
+      handleEditorCommandChange(command, { start: end, end })
+      pendingEditorSelectionRef.current = { start: end, end }
+      window.setTimeout(() => editorInputRef.current?.focus(), 0)
+    } else {
+      sendTerminalInputDirectRef.current(command)
+      termRef.current?.focus()
+    }
+  }, [handleEditorCommandChange, terminalInputMode])
 
   const cycleEditorSuggestion = useCallback((direction: 'previous' | 'next') => {
     if (editorSuggestions.length <= 1) return
@@ -1654,7 +1685,8 @@ function XTermInstance({
         startedAt: event.receivedAt,
         completedAt: null,
         startLine,
-        endLine: null
+        endLine: null,
+        exitCode: null
       }
 
       setActiveCommandBlock((current) => {
@@ -1682,7 +1714,7 @@ function XTermInstance({
     shellCwdRef.current = nextCwd
     setShellCwd(nextCwd)
     setPromptCount((count) => count + 1)
-    completeActiveCommandBlock(event.receivedAt, nextCwd, promptLine)
+    completeActiveCommandBlock(event.receivedAt, nextCwd, promptLine, event.exitCode)
     shellStateRef.current = 'idle'
     setShellState('idle')
     setTimeout(() => processQueue(), 50)
@@ -2380,6 +2412,30 @@ function XTermInstance({
                     </div>
                   )}
                   {aiReview && <div className="text-sm text-gray-200 whitespace-pre-wrap leading-6">{aiReview}</div>}
+                  {aiReview && aiSuggestedCommands.length > 0 && (
+                    <div className="rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 space-y-2">
+                      <div className="text-xs font-semibold text-accent-light">{t('aiReview.suggestedCommands')}</div>
+                      {aiSuggestedCommands.map((command) => (
+                        <div key={command} className="flex items-center gap-2">
+                          <code className="flex-1 min-w-0 truncate rounded-md bg-surface px-2.5 py-1.5 text-xs font-mono text-gray-200" title={command}>
+                            {command}
+                          </code>
+                          <button
+                            onClick={() => insertSuggestedCommand(command)}
+                            className="shrink-0 rounded-md px-2.5 py-1.5 text-xs text-accent-light hover:bg-surface transition-colors"
+                          >
+                            {t('aiReview.insertCommand')}
+                          </button>
+                          <button
+                            onClick={() => void window.electronAPI.writeClipboard(command)}
+                            className="shrink-0 rounded-md px-2.5 py-1.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-surface transition-colors"
+                          >
+                            {t('aiReview.copyCommand')}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {aiFollowUps.map((msg, i) =>
                     msg.role === 'user' ? (
                       <div key={i} className="flex items-start gap-3 justify-end">
@@ -2693,6 +2749,22 @@ function XTermInstance({
                   ) : lastCompletedCommandBlock && !isSSHSessionCommand(lastCompletedCommandBlock.command) ? (
                     <span className="truncate">
                       {t('toolbar.last')} <span className="font-mono text-gray-300">{formatCommandForDisplay(lastCompletedCommandBlock.command)}</span>
+                      {lastCompletedCommandBlock.exitCode !== null && lastCompletedCommandBlock.exitCode !== 0 && (
+                        <>
+                          {' '}
+                          <span className="font-mono text-destructive">{t('toolbar.exitCode', { code: lastCompletedCommandBlock.exitCode })}</span>
+                          {activeAIProvider && (
+                            <button
+                              onClick={() => void runAIReview('last-command')}
+                              disabled={aiLoading || secureInputActive}
+                              className="ml-2 inline-flex items-center gap-1 rounded-md bg-accent/15 px-2 py-0.5 text-[11px] text-accent-light hover:bg-accent/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                              <Sparkles size={10} />
+                              {t('toolbar.explainFix')}
+                            </button>
+                          )}
+                        </>
+                      )}
                     </span>
                   ) : null}
                   {promptCount > 0 && (

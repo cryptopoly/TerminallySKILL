@@ -12,6 +12,7 @@ import {
   buildCommandReviewPrompt,
   buildCommandTreeGenerationPrompt,
   buildOutputReviewPrompt,
+  extractSuggestedCommands,
   coerceGeneratedCommandValues,
   extractAnthropicText,
   extractOllamaText,
@@ -485,3 +486,48 @@ describe('ai-manager helpers', () => {
     })
   })
 })
+
+describe('failed command fixes', () => {
+  const failed = {
+    action: 'output-review' as const,
+    source: 'terminal' as const,
+    focus: 'command-block' as const,
+    title: 'Last command: git pusg',
+    transcript: 'git: \'pusg\' is not a git command.',
+    exitCode: 1
+  }
+
+  it('asks for fenced single-line fixes only when the command failed', () => {
+    expect(buildOutputReviewPrompt(failed).instructions).toContain('fenced code block')
+    expect(buildOutputReviewPrompt({ ...failed, exitCode: 0 }).instructions).not.toContain('fenced code block')
+    expect(buildOutputReviewPrompt({ ...failed, focus: 'session' }).instructions).not.toContain('fenced code block')
+  })
+
+  it('extracts only single-line commands from fenced blocks', () => {
+    const content = [
+      'Next Steps',
+      '```bash',
+      '$ git push origin main',
+      '```',
+      '```sh',
+      'cat <<EOF',
+      'multi line',
+      'EOF',
+      '```',
+      '```',
+      'git push origin main',
+      '```',
+      '```',
+      'git status',
+      '```'
+    ].join('\n')
+
+    expect(extractSuggestedCommands(content)).toEqual(['git push origin main', 'git status'])
+  })
+
+  it('limits the number of suggestions', () => {
+    const content = ['a', 'b', 'c', 'd'].map((c) => '```\n' + c + '\n```').join('\n')
+    expect(extractSuggestedCommands(content)).toEqual(['a', 'b', 'c'])
+  })
+})
+

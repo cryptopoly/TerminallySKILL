@@ -92,6 +92,8 @@ interface AIActionResponseBase {
 export interface AINarrativeActionResponse extends AIActionResponseBase {
   action: Exclude<AIActionRequest['action'], 'command-generation' | 'command-tree-generation' | 'command-help'>
   content: string
+  /** Output reviews of a failed command: single-line fixes extracted from the answer, never auto-run */
+  suggestedCommands?: string[]
 }
 
 export interface AICommandGenerationSuggestion {

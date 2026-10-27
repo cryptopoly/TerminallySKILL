@@ -232,6 +232,25 @@ function truncateTextTail(content: string): { content: string; truncated: boolea
   }
 }
 
+const FAILED_COMMAND_FIX_INSTRUCTIONS =
+  ' The command failed. In Next Steps, give up to three corrected or diagnostic commands, each as a single-line command in its own fenced code block, most likely fix first. Only include a command if you are confident it is safe to run; never suggest destructive commands such as rm -rf or force pushes.'
+
+export function isFailedCommandReview(request: AIOutputReviewRequest): boolean {
+  return request.focus === 'command-block' && typeof request.exitCode === 'number' && request.exitCode !== 0
+}
+
+/** Single-line commands from fenced code blocks, for one-click insert (never executed automatically) */
+export function extractSuggestedCommands(content: string, limit = 3): string[] {
+  const commands: string[] = []
+  for (const match of content.matchAll(/```[^\n`]*\n([\s\S]*?)```/g)) {
+    const command = match[1].trim().replace(/^\$\s+/, '')
+    if (!command || command.includes('\n') || command.length > 400) continue
+    if (!commands.includes(command)) commands.push(command)
+    if (commands.length >= limit) break
+  }
+  return commands
+}
+
 export function buildOutputReviewPrompt(request: AIOutputReviewRequest): {
   instructions: string
   input: string
@@ -240,7 +259,8 @@ export function buildOutputReviewPrompt(request: AIOutputReviewRequest): {
 
   return {
     instructions:
-      'You are reviewing terminal output for a developer. Explain what happened, identify the most likely cause of any failure or warning, and suggest concrete next checks or commands. Respond in plain text using four short sections titled Summary, Likely Cause, Next Steps, and Cautions. Do not include chain-of-thought, hidden reasoning, thinking tags, or preambles such as "Thinking".',
+      'You are reviewing terminal output for a developer. Explain what happened, identify the most likely cause of any failure or warning, and suggest concrete next checks or commands. Respond in plain text using four short sections titled Summary, Likely Cause, Next Steps, and Cautions. Do not include chain-of-thought, hidden reasoning, thinking tags, or preambles such as "Thinking".' +
+      (isFailedCommandReview(request) ? FAILED_COMMAND_FIX_INSTRUCTIONS : ''),
     input: [
       `Source: ${request.source === 'terminal' ? 'Live terminal session' : 'Saved terminal log'}`,
       request.focus === 'command-block'
@@ -1267,6 +1287,11 @@ export async function runAIAction(request: AIActionRequest): Promise<AIActionRes
     throw lastError ?? new Error('AI provider returned an empty response')
   }
 
+  const suggestedCommands =
+    request.action === 'output-review' && isFailedCommandReview(request)
+      ? extractSuggestedCommands(content)
+      : undefined
+
   content = sanitizeAIText(content)
 
   if (request.action === 'command-generation') {
@@ -1324,6 +1349,7 @@ export async function runAIAction(request: AIActionRequest): Promise<AIActionRes
     providerId: resolvedProvider.id,
     providerLabel: resolvedProvider.label,
     model: resolvedModel,
-    content
+    content,
+    ...(suggestedCommands && suggestedCommands.length > 0 ? { suggestedCommands } : {})
   }
 }
