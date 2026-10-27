@@ -73,12 +73,21 @@ const SHELL_PATH_END_MARKER = '__TV_PATH_END__'
 
 let cachedShellPath: string | null = null
 let cachedScanDirs: string[] | null = null
+// In-flight probes are shared so concurrent callers do not each spawn a login shell
+let shellPathProbe: Promise<string> | null = null
+let scanDirsProbe: Promise<string[]> | null = null
 const commandLookupCache = new Map<string, string | null>()
+let lastCacheResetAt = 0
+/** A miss re-probes PATH once in case it changed, but not on every miss */
+const CACHE_RESET_MIN_INTERVAL_MS = 30_000
 
 function clearCommandDetectorCaches(): void {
   cachedShellPath = null
   cachedScanDirs = null
+  shellPathProbe = null
+  scanDirsProbe = null
   commandLookupCache.clear()
+  lastCacheResetAt = Date.now()
 }
 
 export function getShellPathProbeArgs(shell: string): string[] {
@@ -128,9 +137,13 @@ export function extractShellPath(output: string): string | null {
  * A login shell (-l) without -i still sources .profile/.zprofile where
  * PATH additions belong, covering both terminal and .deb/.desktop launches.
  */
-export async function getShellPath(): Promise<string> {
-  if (cachedShellPath !== null) return cachedShellPath
+export function getShellPath(): Promise<string> {
+  if (cachedShellPath !== null) return Promise.resolve(cachedShellPath)
+  shellPathProbe ??= probeShellPath()
+  return shellPathProbe
+}
 
+function probeShellPath(): Promise<string> {
   const shell = process.env.SHELL || '/bin/zsh'
 
   return new Promise((resolve) => {
@@ -153,9 +166,13 @@ export async function getShellPath(): Promise<string> {
  * Get all directories to scan for executables.
  * Combines the user's shell PATH + common extra directories.
  */
-export async function getAllScanDirs(): Promise<string[]> {
-  if (cachedScanDirs !== null) return cachedScanDirs
+export function getAllScanDirs(): Promise<string[]> {
+  if (cachedScanDirs !== null) return Promise.resolve(cachedScanDirs)
+  scanDirsProbe ??= collectScanDirs()
+  return scanDirsProbe
+}
 
+async function collectScanDirs(): Promise<string[]> {
   const shellPath = await getShellPath()
   const separator = process.platform === 'win32' ? ';' : ':'
   const pathDirs = shellPath
@@ -345,7 +362,9 @@ export async function findCommand(executable: string): Promise<string | null> {
     return resolvedPath
   }
 
-  // Retry once with a fresh PATH snapshot in case the first lookup used stale caches.
+  // Retry with a fresh PATH snapshot in case the first lookup used stale caches, but at most
+  // once per interval: checking many uninstalled commands must not re-run the shell probe each time.
+  if (Date.now() - lastCacheResetAt < CACHE_RESET_MIN_INTERVAL_MS) return null
   clearCommandDetectorCaches()
   resolvedPath = await locate()
   if (resolvedPath) {

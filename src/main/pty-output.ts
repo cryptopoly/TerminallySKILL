@@ -26,17 +26,20 @@ export function appendOutputChunk(
   outputBufferSize: number,
   chunk: string
 ): { outputBuffer: string[]; outputBufferSize: number } {
-  const nextBuffer = [...outputBuffer, chunk]
+  // Mutates in place: copying the whole array per chunk made output cost grow with buffer length
+  outputBuffer.push(chunk)
   let nextSize = outputBufferSize + chunk.length
 
   if (nextSize > MAX_OUTPUT_BUFFER_BYTES) {
-    while (nextSize > TARGET_OUTPUT_BUFFER_BYTES && nextBuffer.length > 1) {
-      const dropped = nextBuffer.shift()!
-      nextSize -= dropped.length
+    let dropCount = 0
+    while (nextSize > TARGET_OUTPUT_BUFFER_BYTES && dropCount < outputBuffer.length - 1) {
+      nextSize -= outputBuffer[dropCount].length
+      dropCount += 1
     }
+    if (dropCount > 0) outputBuffer.splice(0, dropCount)
   }
 
-  return { outputBuffer: nextBuffer, outputBufferSize: nextSize }
+  return { outputBuffer, outputBufferSize: nextSize }
 }
 
 function decodeShellPayload(payload: string | undefined): string | null {
