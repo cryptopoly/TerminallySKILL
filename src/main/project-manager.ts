@@ -1,7 +1,7 @@
-import { readFile, writeFile, mkdir } from 'fs/promises'
+import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
-import { writeJsonAtomic } from './atomic-write'
+import { readJsonFile, writeJsonAtomic } from './atomic-write'
 import type { Project, ProjectsData } from '../shared/project-schema'
 import {
   createLocalWorkspaceTarget,
@@ -31,14 +31,12 @@ async function ensureDataDir(): Promise<void> {
 
 async function load(): Promise<ProjectsData> {
   if (cached) return cached
-  try {
-    const raw = await readFile(getProjectsFile(), 'utf-8')
-    cached = backfillProjectsData(JSON.parse(raw) as Partial<ProjectsData>)
-    return cached
-  } catch {
-    cached = { projects: [], activeProjectId: null }
-    return cached
-  }
+  cached = await readJsonFile(
+    getProjectsFile(),
+    (value) => backfillProjectsData(value as Partial<ProjectsData>),
+    () => ({ projects: [], activeProjectId: null })
+  )
+  return cached
 }
 
 async function save(data: ProjectsData): Promise<void> {

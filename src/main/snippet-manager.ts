@@ -1,7 +1,7 @@
-import { readFile, mkdir } from 'fs/promises'
+import { mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
-import { writeJsonAtomic } from './atomic-write'
+import { readJsonFile, writeJsonAtomic } from './atomic-write'
 import type { Snippet, SnippetsData } from '../shared/snippet-schema'
 import type { StarterSnippetTemplate } from '../shared/starter-pack-schema'
 import { applySnippetUpdates, createSnippetRecord, duplicateSnippetRecord } from './snippet-persistence'
@@ -19,14 +19,12 @@ async function ensureDataDir(): Promise<void> {
 
 async function load(): Promise<SnippetsData> {
   if (cached) return cached
-  try {
-    const raw = await readFile(getSnippetsFile(), 'utf-8')
-    cached = JSON.parse(raw) as SnippetsData
-    return cached
-  } catch {
-    cached = { snippets: [] }
-    return cached
-  }
+  cached = await readJsonFile(
+    getSnippetsFile(),
+    (value) => value as SnippetsData,
+    () => ({ snippets: [] })
+  )
+  return cached
 }
 
 async function save(data: SnippetsData): Promise<void> {

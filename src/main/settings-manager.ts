@@ -1,6 +1,6 @@
-import { readFile, mkdir } from 'fs/promises'
+import { mkdir } from 'fs/promises'
 import { join } from 'path'
-import { writeJsonAtomic } from './atomic-write'
+import { readJsonFile, writeJsonAtomic } from './atomic-write'
 import type { AppSettings, AIProvider } from '../shared/settings-schema'
 import { DEFAULT_SETTINGS } from '../shared/settings-schema'
 import { getStoredProviderApiKeys, setStoredProviderApiKeys } from './secret-manager'
@@ -37,22 +37,18 @@ async function ensureDataDir(): Promise<void> {
 async function load(): Promise<AppSettings> {
   if (cached) return cached
   let migratedPersistedKeys = false
-  let data = structuredClone(DEFAULT_SETTINGS)
-  let mergedApiKeys: Record<string, string> = {}
+  const data = await readJsonFile(
+    getSettingsFile(),
+    (value) => backfillSettings(value as Partial<AppSettings>),
+    () => structuredClone(DEFAULT_SETTINGS)
+  )
+  const storedApiKeys = await getStoredProviderApiKeys()
+  const legacyApiKeys = extractProviderApiKeys(data)
+  const mergedApiKeys = { ...storedApiKeys, ...legacyApiKeys }
 
-  try {
-    const raw = await readFile(getSettingsFile(), 'utf-8')
-    data = backfillSettings(JSON.parse(raw) as Partial<AppSettings>)
-    const storedApiKeys = await getStoredProviderApiKeys()
-    const legacyApiKeys = extractProviderApiKeys(data)
-    mergedApiKeys = { ...storedApiKeys, ...legacyApiKeys }
-
-    if (Object.keys(legacyApiKeys).length > 0) {
-      await setStoredProviderApiKeys(mergedApiKeys)
-      migratedPersistedKeys = true
-    }
-  } catch {
-    mergedApiKeys = await getStoredProviderApiKeys()
+  if (Object.keys(legacyApiKeys).length > 0) {
+    await setStoredProviderApiKeys(mergedApiKeys)
+    migratedPersistedKeys = true
   }
 
   cached = applyProviderApiKeys(stripProviderApiKeys(data), mergedApiKeys)

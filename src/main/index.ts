@@ -19,6 +19,22 @@ if (USER_DATA_DIR_OVERRIDE) {
   app.setPath('userData', resolve(USER_DATA_DIR_OVERRIDE))
 }
 
+// Two instances sharing one data dir race on the JSON stores, so a second launch
+// hands over to the first. Dev builds are exempt so `npm run dev` can run beside an installed app.
+if (!is.dev && !app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    const [existing] = BrowserWindow.getAllWindows()
+    if (!existing) {
+      if (app.isReady()) createWindow()
+      return
+    }
+    if (existing.isMinimized()) existing.restore()
+    existing.focus()
+  })
+}
+
 if (process.platform === 'linux') {
   app.disableHardwareAcceleration()
   app.commandLine.appendSwitch('disable-gpu')

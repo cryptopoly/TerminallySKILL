@@ -1,7 +1,7 @@
-import { readFile, mkdir } from 'fs/promises'
+import { mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
-import { writeJsonAtomic } from './atomic-write'
+import { readJsonFile, writeJsonAtomic } from './atomic-write'
 import type { Script, ScriptsData } from '../shared/script-schema'
 import type { StarterScriptTemplate } from '../shared/starter-pack-schema'
 import type { TVFlowFile } from '../shared/tvflow-schema'
@@ -29,14 +29,12 @@ async function ensureDataDir(): Promise<void> {
 
 async function load(): Promise<ScriptsData> {
   if (cached) return cached
-  try {
-    const raw = await readFile(getScriptsFile(), 'utf-8')
-    cached = backfillScriptsData(JSON.parse(raw) as Partial<ScriptsData>)
-    return cached
-  } catch {
-    cached = { scripts: [] }
-    return cached
-  }
+  cached = await readJsonFile(
+    getScriptsFile(),
+    (value) => backfillScriptsData(value as Partial<ScriptsData>),
+    () => ({ scripts: [] })
+  )
+  return cached
 }
 
 async function save(data: ScriptsData): Promise<void> {

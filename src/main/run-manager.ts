@@ -1,6 +1,6 @@
-import { readFile, mkdir } from 'fs/promises'
+import { mkdir } from 'fs/promises'
 import { join } from 'path'
-import { writeJsonAtomic } from './atomic-write'
+import { readJsonFile, writeJsonAtomic } from './atomic-write'
 import type { RunRecord, RunStepRecord, RunsData } from '../shared/run-schema'
 import { filterRuns, type RunStatusFilter } from '../shared/run-history'
 import { hasTerminalSession } from './terminal-session-registry'
@@ -141,27 +141,24 @@ async function ensureDataDir(): Promise<void> {
 async function load(): Promise<RunsData> {
   if (cached) return cached
   let changed = false
-  try {
-    const raw = await readFile(getRunsFile(), 'utf-8')
-    const data = JSON.parse(raw) as Partial<RunsData>
-    const runs = Array.isArray(data.runs)
-      ? data.runs.map((run, index) => {
-          const backfilled = backfillRunRecord(run, index)
-          const recovered = recoverStaleRun(backfilled)
-          if (JSON.stringify(backfilled) !== JSON.stringify(recovered)) {
-            changed = true
-          }
-          return recovered
-        })
-      : []
-
-    cached = {
-      runs
-    }
-  } catch {
-    cached = { runs: [] }
-    return cached
-  }
+  cached = await readJsonFile(
+    getRunsFile(),
+    (value) => {
+      const data = value as Partial<RunsData>
+      const runs = Array.isArray(data.runs)
+        ? data.runs.map((run, index) => {
+            const backfilled = backfillRunRecord(run, index)
+            const recovered = recoverStaleRun(backfilled)
+            if (JSON.stringify(backfilled) !== JSON.stringify(recovered)) {
+              changed = true
+            }
+            return recovered
+          })
+        : []
+      return { runs }
+    },
+    () => ({ runs: [] })
+  )
 
   if (changed) {
     try {

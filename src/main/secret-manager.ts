@@ -1,7 +1,7 @@
-import { readFile, mkdir } from 'fs/promises'
+import { mkdir } from 'fs/promises'
 import { join } from 'path'
 import { safeStorage } from 'electron'
-import { writeJsonAtomic } from './atomic-write'
+import { readJsonFile, writeJsonAtomic } from './atomic-write'
 import { getDataDir } from './user-data-path'
 
 export interface SecretEnvelope {
@@ -50,15 +50,11 @@ async function ensureDataDir(): Promise<void> {
 }
 
 async function loadStore(): Promise<SecretStore> {
-  try {
-    const raw = await readFile(getSecretsFile(), 'utf-8')
-    const parsed = JSON.parse(raw) as Partial<SecretStore>
-    return {
-      aiProviderKeys: parsed.aiProviderKeys ?? {}
-    }
-  } catch {
-    return structuredClone(EMPTY_STORE)
-  }
+  return readJsonFile(
+    getSecretsFile(),
+    (value) => ({ aiProviderKeys: (value as Partial<SecretStore>).aiProviderKeys ?? {} }),
+    () => structuredClone(EMPTY_STORE)
+  )
 }
 
 async function saveStore(store: SecretStore): Promise<void> {
@@ -83,13 +79,34 @@ export async function getStoredProviderApiKeys(): Promise<Record<string, string>
   return apiKeys
 }
 
+function tryDecode(envelope: SecretEnvelope): string | null {
+  try {
+    return decodeSecretValue(envelope)
+  } catch {
+    return null
+  }
+}
+
 export async function setStoredProviderApiKeys(apiKeys: Record<string, string>): Promise<void> {
+  const existing = (await loadStore()).aiProviderKeys
   const store: SecretStore = { aiProviderKeys: {} }
 
   for (const [providerId, apiKey] of Object.entries(apiKeys)) {
     if (!apiKey.trim()) continue
-    store.aiProviderKeys[providerId] = encodeSecretValue(apiKey)
+    const current = existing[providerId]
+    // Keep the stored envelope when the value is unchanged so a settings save does not
+    // re-encrypt (and rewrite) every key.
+    store.aiProviderKeys[providerId] =
+      current && tryDecode(current) === apiKey ? current : encodeSecretValue(apiKey)
   }
 
+  // A key we cannot decrypt right now (keyring locked or unavailable) never reaches the
+  // caller, so its absence from `apiKeys` does not mean the user removed it. Keep it.
+  for (const [providerId, envelope] of Object.entries(existing)) {
+    if (providerId in apiKeys || providerId in store.aiProviderKeys) continue
+    if (!tryDecode(envelope)) store.aiProviderKeys[providerId] = envelope
+  }
+
+  if (JSON.stringify(store) === JSON.stringify({ aiProviderKeys: existing })) return
   await saveStore(store)
 }
