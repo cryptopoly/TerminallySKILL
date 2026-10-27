@@ -76,12 +76,13 @@ export function ScriptSelector({
     setAttachModes((prev) => ({ ...prev, [scriptId]: mode }))
   }
 
+  // Save only applies changes to the selection; creating a script is its own action
+  const initialSelected = useMemo(() => new Set(enabledScriptIds), [enabledScriptIds])
+  const selectionChanged =
+    selected.size !== initialSelected.size || [...selected].some((id) => !initialSelected.has(id))
+
   const handleSave = (): void => {
-    if (canCreateNew && selected.size === 0) {
-      // No existing scripts selected: create new with the search text as name.
-      onCreateNew(filter.trim())
-      return
-    }
+    if (!selectionChanged) return
 
     onSave(
       Array.from(selected).map((scriptId) => {
@@ -119,12 +120,34 @@ export function ScriptSelector({
               type="text"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && canCreateNew) {
+                  e.preventDefault()
+                  onCreateNew(filter.trim())
+                }
+              }}
               placeholder={t('selector.searchPlaceholder')}
               className="w-full bg-surface border border-surface-border rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               autoFocus
             />
           </div>
         </div>
+
+        {/* Create new: pinned above the list so it is visible without scrolling */}
+        {canCreateNew && (
+          <div className="px-4 pt-2">
+            <button
+              onClick={() => onCreateNew(filter.trim())}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 transition-colors text-left text-accent-light"
+            >
+              <ScrollText size={16} className="shrink-0" />
+              <span className="text-sm flex-1 min-w-0 truncate">
+                {t('selector.createNew', { name: filter.trim() })}
+              </span>
+              <kbd className="text-[10px] text-accent-light/70 border border-accent/30 rounded px-1.5 py-0.5">Enter</kbd>
+            </button>
+          </div>
+        )}
 
         {/* Script list */}
         <div className="px-4 py-3 max-h-72 overflow-y-auto space-y-0.5">
@@ -219,19 +242,6 @@ export function ScriptSelector({
                 )
               })}
 
-              {canCreateNew && (
-                <div className="border-t border-surface-border mt-2 pt-2">
-                  <button
-                    onClick={() => onCreateNew(filter.trim())}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-lighter transition-colors text-left text-accent-light"
-                  >
-                    <ScrollText size={16} className="shrink-0" />
-                    <span className="text-sm">
-                      {t('selector.createNew', { name: filter.trim() })}
-                    </span>
-                  </button>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -246,7 +256,7 @@ export function ScriptSelector({
           </button>
           <button
             onClick={handleSave}
-            disabled={selected.size === 0 && !canCreateNew}
+            disabled={!selectionChanged}
             className="flex items-center gap-2 px-5 py-2 rounded-lg bg-accent hover:bg-accent-light text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Check size={14} />
