@@ -1,5 +1,9 @@
+import { spawnSync } from 'node:child_process'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { buildBashShellIntegrationInit, buildZshShellIntegrationInit } from './shell-integration-init'
+import { buildBashShellIntegrationInit, buildZshEnvForward, buildZshShellIntegrationInit } from './shell-integration-init'
 
 describe('shell integration init scripts', () => {
   it('builds zsh hooks for prompt-ready and command-start events', () => {
@@ -19,5 +23,42 @@ describe('shell integration init scripts', () => {
     expect(init).toContain('__tv_prompt_state=1')
     expect(init).toContain('__tv_run_original_prompt_command()')
     expect(init).toContain('__tv_original_prompt_command_array=("${PROMPT_COMMAND[@]}")')
+  })
+})
+
+describe('shell integration against real shells', () => {
+  const run = (shell: string, args: string[], env: Record<string, string>): string => {
+    const result = spawnSync(shell, args, { env: { PATH: process.env.PATH ?? '', ...env }, encoding: 'utf8' })
+    return result.stdout
+  }
+  const hasShell = (shell: string): boolean => spawnSync('which', [shell]).status === 0
+
+  it.runIf(hasShell('zsh'))('zsh: keeps integration when the user .zshenv moves ZDOTDIR', () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), 'tv-home-'))
+    const tmp = mkdtempSync(path.join(os.tmpdir(), 'tv-zsh-'))
+    mkdirSync(path.join(home, '.config/zsh'), { recursive: true })
+    writeFileSync(path.join(home, '.zshenv'), 'export ZDOTDIR="$HOME/.config/zsh"\n')
+    writeFileSync(path.join(home, '.config/zsh/.zshrc'), 'USER_RC_LOADED=yes\n')
+    writeFileSync(path.join(tmp, '.zshenv'), buildZshEnvForward(tmp))
+    writeFileSync(path.join(tmp, '.zshrc'), buildZshShellIntegrationInit())
+
+    const out = run('zsh', ['-i', '-c', 'print -r -- "rc=$USER_RC_LOADED hooks=${precmd_functions[*]}"'], {
+      HOME: home,
+      ZDOTDIR: tmp
+    })
+
+    expect(out).toContain('rc=yes')
+    expect(out).toContain('__tv_prompt_ready')
+  })
+
+  it.runIf(hasShell('bash'))('bash: chains a DEBUG trap installed by the user rc', () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'tv-bash-'))
+    const rc = path.join(dir, 'rc.sh')
+    writeFileSync(path.join(dir, '.bashrc'), "PREV_TRAP_HITS=0\ntrap 'PREV_TRAP_HITS=$((PREV_TRAP_HITS+1))' DEBUG\n")
+    writeFileSync(rc, buildBashShellIntegrationInit())
+
+    const out = run('bash', ['--rcfile', rc, '-i', '-c', 'true; true; echo hits=$PREV_TRAP_HITS'], { HOME: dir })
+
+    expect(out).toMatch(/hits=[1-9]/)
   })
 })

@@ -9,7 +9,7 @@ import { getAllScanDirs } from './command-detector'
 import { saveSessionLog, shouldSaveSessionLog } from './log-manager'
 import { attachLogToRuns } from './run-manager'
 import { registerTerminalSession, unregisterTerminalSession } from './terminal-session-registry'
-import { buildBashShellIntegrationInit, buildZshShellIntegrationInit } from './shell-integration-init'
+import { buildBashShellIntegrationInit, buildZshEnvForward, buildZshShellIntegrationInit } from './shell-integration-init'
 import {
   appendOutputChunk,
   extractShellIntegrationEvents,
@@ -83,6 +83,9 @@ async function getPtyRuntime(): Promise<typeof import('node-pty')> {
 
   return ptyRuntimePromise
 }
+
+const STARTUP_FLUSH_TIMEOUT_MS = 3000
+const MAX_STARTUP_BUFFER_CHARS = 256 * 1024
 
 function stripStartupShellNoise(text: string): string {
   return text
@@ -263,10 +266,7 @@ function setupShellIntegration(
     tempPaths.push(tmpDir)
 
     // .zshenv: forward to user's actual .zshenv
-    fs.writeFileSync(
-      path.join(tmpDir, '.zshenv'),
-      '[ -f "$HOME/.zshenv" ] && source "$HOME/.zshenv"\n'
-    )
+    fs.writeFileSync(path.join(tmpDir, '.zshenv'), buildZshEnvForward(tmpDir))
 
     // .zshrc: source user's config, THEN add our invisible prompt hooks.
     fs.writeFileSync(
@@ -274,6 +274,7 @@ function setupShellIntegration(
       buildZshShellIntegrationInit()
     )
 
+    if (env.ZDOTDIR) env.TV_USER_ZDOTDIR = env.ZDOTDIR
     env.ZDOTDIR = tmpDir
     hasIntegration = true
     console.log(`[pty] Shell integration (zsh): ZDOTDIR=${tmpDir}`)
@@ -399,6 +400,33 @@ export async function createTerminal(
   sessions.set(sessionId, session)
   registerTerminalSession(sessionId)
 
+  // Output is held back until the first prompt-ready marker so shell startup noise can be
+  // stripped. If the integration hooks never load (user rc redirects ZDOTDIR, `exec tmux`,
+  // ...) that marker never comes, so flush on a timeout or size cap instead of staying blank.
+  const emitFlushedData = (data: string): void => {
+    if (!data) return
+    const buffered = appendOutputChunk(session.outputBuffer, session.outputBufferSize, data)
+    session.outputBuffer = buffered.outputBuffer
+    session.outputBufferSize = buffered.outputBufferSize
+    if (!window.isDestroyed()) {
+      window.webContents.send(IPC_CHANNELS.PTY_DATA, sessionId, data)
+    }
+  }
+  const flushStartupWithoutMarker = (reason: string): void => {
+    if (session.startupFlushed) return
+    console.warn(`[pty] Shell integration inactive for ${sessionId} (${reason}); flushing startup output`)
+    const data = stripStartupShellNoise(session.startupBuffer)
+    session.startupBuffer = ''
+    session.startupFlushed = true
+    emitFlushedData(data)
+    if (!window.isDestroyed()) {
+      window.webContents.send(IPC_CHANNELS.SHELL_READY, sessionId)
+    }
+  }
+  const startupWatchdog = hasIntegration
+    ? setTimeout(() => flushStartupWithoutMarker('no prompt-ready marker'), STARTUP_FLUSH_TIMEOUT_MS)
+    : null
+
   let markerSeen = false
   // For shells without integration (e.g. PowerShell), we emit SHELL_READY
   // on the first data chunk so the renderer knows the shell is alive.
@@ -455,12 +483,18 @@ export async function createTerminal(
     if (!session.startupFlushed) {
       session.startupBuffer += data
 
-      if (!promptReadyEvent) return
+      if (!promptReadyEvent) {
+        if (session.startupBuffer.length > MAX_STARTUP_BUFFER_CHARS) {
+          flushStartupWithoutMarker('startup buffer limit reached')
+        }
+        return
+      }
 
       data = stripStartupShellNoise(session.startupBuffer)
       session.startupBuffer = ''
       session.startupFlushed = true
     }
+    if (startupWatchdog) clearTimeout(startupWatchdog)
 
     if (!data) return // nothing left after stripping markers/startup noise
 
@@ -487,6 +521,7 @@ export async function createTerminal(
   })
 
   ptyProcess.onExit(({ exitCode }) => {
+    if (startupWatchdog) clearTimeout(startupWatchdog)
     const sess = sessions.get(sessionId)
     if (sess) {
       // Auto-save log from buffered output
