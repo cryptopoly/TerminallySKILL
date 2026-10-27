@@ -4,6 +4,7 @@ import type { CommandDefinition, DiscoveredCommand, ParsedHelpResult } from '../
 import type {
   Project,
   ProjectsData,
+  ProjectWorkspaceLayout,
   ProjectWorkspaceTarget,
   SSHProjectWorkspaceTarget,
   WorkspaceTargetConnectionResult
@@ -21,6 +22,10 @@ import type { ShellIntegrationEvent } from '../shared/shell-integration'
 import type { AppUpdateCheckResult, AppUpdateInstallResult } from '../shared/update-schema'
 import type { InstallableCommandMatch } from '../shared/cli-install-catalog'
 import type { BackupLocationSuggestion, BackupRunResult } from '../shared/backup-schema'
+
+type ProjectUpdates = Partial<Omit<Project, 'workspaceLayout'>> & {
+  workspaceLayout?: Partial<ProjectWorkspaceLayout>
+}
 
 export const electronAPI = {
   getAppVersion: (): Promise<string> =>
@@ -151,7 +156,7 @@ export const electronAPI = {
       skipStarterPack
     ),
 
-  updateProject: (id: string, updates: Partial<Project>): Promise<Project | null> =>
+  updateProject: (id: string, updates: ProjectUpdates): Promise<Project | null> =>
     ipcRenderer.invoke(IPC_CHANNELS.PROJECTS_UPDATE, id, updates),
 
   testWorkspaceTarget: (

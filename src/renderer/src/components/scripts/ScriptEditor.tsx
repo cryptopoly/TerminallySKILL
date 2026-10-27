@@ -131,7 +131,7 @@ export function ScriptEditor(): JSX.Element {
       : [...activeProject.enabledScriptIds, clone.id]
 
     const updatedProject = await window.electronAPI.updateProject(activeProject.id, {
-      enabledScriptIds: [...new Set(nextEnabledScriptIds)]
+      enabledScriptIds: Array.from(new Set<string>(nextEnabledScriptIds))
     })
     if (updatedProject) {
       updateProjectInStore(updatedProject)
@@ -347,7 +347,8 @@ export function ScriptEditor(): JSX.Element {
 
   const handleCopyAll = async (): Promise<void> => {
     const allCommands = activeScript.steps
-      .filter((s) => s.enabled && s.type === 'command')
+      .filter(isScriptCommandStep)
+      .filter((s) => s.enabled)
       .map((s) => s.commandString)
       .join('\n')
     await window.electronAPI.writeClipboard(allCommands)
@@ -735,7 +736,6 @@ function StepCard({
   disableRunActions: boolean
   onRunStep?: () => void
   onRunFromHere: () => void
-  onChangeType?: (newType: 'command' | 'approval' | 'note') => void
   onChangeType?: (newType: 'command' | 'approval' | 'note') => void
   onDragStart: () => void
   onDragOver: () => void

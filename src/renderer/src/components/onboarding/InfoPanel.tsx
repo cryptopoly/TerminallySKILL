@@ -168,7 +168,7 @@ export function InfoPanel({ onClose, initialSection }: { onClose: () => void; in
       id: section.id,
       icon: section.icon,
       color: section.color,
-      keywords: section.keywords,
+      keywords: [...section.keywords],
       title: t(`sections.${section.id}.title`),
       steps: section.steps.map((step) => ({
         label: t(`sections.${section.id}.steps.${step}.label`),

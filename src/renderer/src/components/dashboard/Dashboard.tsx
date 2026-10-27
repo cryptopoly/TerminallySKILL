@@ -81,7 +81,7 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
   const activeProject = useProjectStore((s) => s.activeProject)
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
   const sessions = useTerminalStore((s) => s.sessions)
-  const { setActiveSessionId, setTerminalVisible } = useTerminalStore()
+  const { setActiveSession, setTerminalVisible } = useTerminalStore()
   const scripts = useScriptStore((s) => s.scripts)
   const { setActiveScript } = useScriptStore()
   const commands = useCommandStore((s) => s.commands)
@@ -192,7 +192,7 @@ export function Dashboard({ onNewTerminal }: DashboardProps): JSX.Element {
                 </div>
                 <button
                   onClick={() => {
-                    setActiveSessionId(run.sessionId)
+                    setActiveSession(run.sessionId)
                     setTerminalVisible(true)
                   }}
                   className="tv-btn-secondary text-xs"

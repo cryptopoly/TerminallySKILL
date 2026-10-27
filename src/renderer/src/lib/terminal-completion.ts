@@ -1,4 +1,4 @@
-import type { CommandDefinition } from '../../../../shared/command-schema'
+import type { CommandDefinition } from '../../../shared/command-schema'
 
 export interface TerminalCompletionSuggestion {
   value: string

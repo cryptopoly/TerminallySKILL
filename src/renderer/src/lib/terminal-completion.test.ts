@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildTerminalCompletionSuggestions, getTerminalCompletionSuffix } from './terminal-completion'
-import type { CommandDefinition } from '../../../../shared/command-schema'
+import type { CommandDefinition } from '../../../shared/command-schema'
 
 const commands: CommandDefinition[] = [
   {

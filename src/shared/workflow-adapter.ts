@@ -11,6 +11,7 @@ import type {
   WorkflowCommandStepDefinition,
   WorkflowDefinition,
   WorkflowNoteStepDefinition,
+  WorkflowStep,
   WorkflowStepDefinition
 } from './workflow-schema'
 
@@ -66,17 +67,13 @@ export function scriptToWorkflow(script: Script): Workflow {
     projectId: script.projectId,
     tags: [...script.tags],
     inputs: [...script.inputs],
-    steps: script.steps.map((step) =>
-      step.type === 'command'
-        ? {
-            id: step.id,
-            commandId: step.commandId,
-            ...scriptStepToWorkflowStepDefinition(step)
-          }
-        : {
-            id: step.id,
-            ...scriptStepToWorkflowStepDefinition(step)
-          }
+    steps: script.steps.map(
+      (step) =>
+        ({
+          id: step.id,
+          ...(step.type === 'command' ? { commandId: step.commandId } : {}),
+          ...scriptStepToWorkflowStepDefinition(step)
+        }) as WorkflowStep
     ),
     createdAt: script.createdAt,
     updatedAt: script.updatedAt,

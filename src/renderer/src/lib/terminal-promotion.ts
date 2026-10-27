@@ -1,4 +1,4 @@
-import type { CommandDefinition } from '../../../../shared/command-schema'
+import type { CommandDefinition } from '../../../shared/command-schema'
 
 export type TerminalPromotionTarget = 'script' | 'snippet' | 'command'
 

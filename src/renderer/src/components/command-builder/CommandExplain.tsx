@@ -121,10 +121,10 @@ function parseSegments(
     if (!val) continue
     if (posArg.variadic && Array.isArray(val)) {
       for (const v of val as string[]) {
-        if (v) segments.push({ text: v, kind: 'positional', label: posArg.name, description: posArg.description })
+        if (v) segments.push({ text: v, kind: 'positional', label: posArg.label, description: posArg.description })
       }
     } else if (typeof val === 'string' && val) {
-      segments.push({ text: val, kind: 'positional', label: posArg.name, description: posArg.description })
+      segments.push({ text: val, kind: 'positional', label: posArg.label, description: posArg.description })
     }
   }
 

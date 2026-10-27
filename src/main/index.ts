@@ -191,7 +191,8 @@ app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.terminallyskill.app')
 
   if (process.platform === 'linux') {
-    app.setDesktopName(LINUX_DESKTOP_FILE)
+    // setDesktopName is Linux-only and missing from Electron's type definitions
+    ;(app as typeof app & { setDesktopName: (name: string) => void }).setDesktopName(LINUX_DESKTOP_FILE)
   }
 
   app.on('browser-window-created', (_, window) => {

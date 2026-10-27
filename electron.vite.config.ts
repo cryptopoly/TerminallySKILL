@@ -3,6 +3,7 @@ import { readFileSync } from 'fs'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import type { Plugin } from 'vite'
+import type { Plugin as EsbuildPlugin } from 'esbuild'
 
 const NOVNC_AWAIT_PATTERN = /exports\.supportsWebCodecsH264Decode\s*=\s*supportsWebCodecsH264Decode\s*=\s*await\s+_checkWebCodecsH264DecodeSupport\(\)/
 
@@ -15,16 +16,16 @@ const NOVNC_AWAIT_PATTERN = /exports\.supportsWebCodecsH264Decode\s*=\s*supports
  *  1. esbuild plugin  → runs during optimizeDeps pre-bundling
  *  2. Vite transform  → runs during normal module serving
  */
-const novncEsbuildPlugin = {
+const novncEsbuildPlugin: EsbuildPlugin = {
   name: 'novnc-browser-patch',
-  setup(build: { onLoad: (opts: object, cb: (args: { path: string }) => { contents: string; loader: string } | undefined) => void }) {
+  setup(build) {
     build.onLoad({ filter: /browser\.js$/ }, (args) => {
       if (!args.path.includes('@novnc')) return undefined
       const contents = readFileSync(args.path, 'utf-8').replace(
         NOVNC_AWAIT_PATTERN,
         'exports.supportsWebCodecsH264Decode = supportsWebCodecsH264Decode = false'
       )
-      return { contents, loader: 'js' }
+      return { contents, loader: 'js' as const }
     })
   }
 }

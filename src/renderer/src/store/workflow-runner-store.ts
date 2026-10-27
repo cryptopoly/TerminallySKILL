@@ -17,7 +17,9 @@ export type WorkflowRunStatus =
 
 export type WorkflowRunStepStatus = 'pending' | 'running' | 'completed' | 'failed'
 
-export interface WorkflowActiveRunStep extends Omit<ScriptRunStep, 'id'> {
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
+
+export type WorkflowActiveRunStep = DistributiveOmit<ScriptRunStep, 'id'> & {
   stepId: string
   status: WorkflowRunStepStatus
   attempts: number
@@ -184,7 +186,7 @@ export const useWorkflowRunnerStore = create<WorkflowRunnerStore>((set, get) => 
         ? state.sessionStates
         : {
             ...state.sessionStates,
-            [sessionId]: 'closed'
+            [sessionId]: 'closed' as const
           }
 
       const run = state.runsBySession[sessionId]

@@ -11,7 +11,23 @@ import type { WorkflowInputDefinition } from '../shared/workflow-schema'
 
 type PartialScript = Partial<Script> & Pick<Script, 'id' | 'name' | 'projectId'>
 
-function backfillWorkflowInput(raw: Partial<WorkflowInputDefinition>, index: number): WorkflowInputDefinition {
+// Raw persisted input: any variant's fields may be present, none are trusted
+interface RawWorkflowInput {
+  id?: string
+  label?: string
+  description?: string
+  type?: WorkflowInputDefinition['type']
+  required?: boolean
+  defaultValue?: unknown
+  placeholder?: string
+  min?: number
+  max?: number
+  step?: number
+  options?: unknown
+  allowCustomValue?: boolean
+}
+
+function backfillWorkflowInput(raw: RawWorkflowInput, index: number): WorkflowInputDefinition {
   const type = raw.type ?? 'string'
 
   if (type === 'number') {

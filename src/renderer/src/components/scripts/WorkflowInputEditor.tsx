@@ -151,7 +151,7 @@ export function WorkflowInputEditor({
         commandString: `${t('inputs.userDescription')}: ${aiDraftPrompt}\n\n${t('inputs.workflowSteps')}:\n${stepsDescription}\n\n${t('inputs.existingInputs')}:\n${existingInputs}`,
         commandDescription: t('inputs.aiCommandDescription', { open: '{{', close: '}}' })
       })
-      setAIDraftResult(response.text)
+      setAIDraftResult('content' in response ? response.content : '')
       if (response.providerLabel && response.model) {
         setAIDraftMeta({ providerLabel: response.providerLabel, model: response.model })
       }

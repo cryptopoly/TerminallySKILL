@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { Script } from '../../../../shared/script-schema'
+import type { Script } from '../../../shared/script-schema'
 import { useWorkflowRunnerStore } from './workflow-runner-store'
 
 const baseScript: Script = {
