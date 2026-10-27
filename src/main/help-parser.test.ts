@@ -94,7 +94,7 @@ Options:
         label: 'timeout',
         description: 'Timeout value',
         type: 'string',
-        separator: 'space'
+        separator: 'equals'
       },
       {
         id: 'no_color',
@@ -256,4 +256,75 @@ usage: chmod [-R [-H | -L | -P]] mode file ...
 
     expect(looksLikeReferenceHelpOutput(output, 'chmod')).toBe(true)
   })
+
+  describe('parseOptions layouts from real CLIs', () => {
+    const byLong = (text: string) => Object.fromEntries(parseOptions(text).map((o) => [o.long ?? o.short, o]))
+
+    it('reads Cobra-style bare type words as values (gh --title string)', () => {
+      const options = byLong(`
+Flags:
+  -t, --title string   Title for the pull request
+  -d, --draft          Mark pull request as a draft
+  -a, --assignee login  Assign people
+`)
+      expect(options['--title']).toMatchObject({ type: 'string', separator: 'space', short: '-t' })
+      expect(options['--draft']).toMatchObject({ type: 'boolean' })
+      expect(options['--assignee']).toMatchObject({ type: 'string' })
+    })
+
+    it('reads flags whose description is on the following lines (ripgrep, node, clap)', () => {
+      const options = byLong(`
+    --pre=COMMAND
+        For each input PATH, this flag causes ripgrep to search the output.
+
+    -A, --after-context=NUM
+        Show NUM lines after each match.
+
+  --abort-on-uncaught-exception
+                              aborting instead of exiting causes a
+                              core file to be generated
+
+  -q, --quiet...
+          Use quiet output
+`)
+      expect(options['--pre']).toMatchObject({
+        type: 'string',
+        separator: 'equals',
+        description: 'For each input PATH, this flag causes ripgrep to search the output.'
+      })
+      expect(options['--after-context']).toMatchObject({ short: '-A', separator: 'equals' })
+      expect(options['--abort-on-uncaught-exception']).toMatchObject({
+        type: 'boolean',
+        description: 'aborting instead of exiting causes a'
+      })
+      expect(options['--quiet']).toMatchObject({ short: '-q', type: 'boolean' })
+    })
+
+    it('handles a double space after the short flag and single-space indents', () => {
+      const options = byLong(`
+  -b,  --background                go to background after startup
+ -E, --cert <certificate[:password]>  Client certificate file and password
+`)
+      expect(options['--background']).toMatchObject({ short: '-b', type: 'boolean' })
+      expect(options['--cert']).toMatchObject({ short: '-E', type: 'string' })
+    })
+
+    it('keeps -v when it is a verbose short for a long flag', () => {
+      expect(byLong(`
+  -v, --verbose        Be chatty
+  -V, --version        Print version
+`)['--verbose']).toMatchObject({ short: '-v' })
+    })
+
+    it('does not treat dash-led lines inside a wrapped description as flags', () => {
+      const options = parseOptions(`
+  --python-version <v>        The Python interpreter version to use for wheel
+                              compatibility, specified like
+                              --implementation, --platform, and --abi together.
+  --abi <abi>                 Use ABI
+`)
+      expect(options.map((o) => o.long)).toEqual(['--python-version', '--abi'])
+    })
+  })
 })
+

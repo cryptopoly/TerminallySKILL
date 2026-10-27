@@ -554,87 +554,113 @@ export function parsePositionalArgs(
   )
 }
 
+/** Flag lines look like "-f, --force", "  --opt=VAL" or " -a, --all  Description" */
+const OPTION_LINE_RE = /^(\s+)(-{1,2}[A-Za-z0-9][^\s]*.*)$/
+const FLAG_TOKEN_RE = /(?<![\w-])(-{1,2}[A-Za-z0-9][\w-]*)/g
+
 /**
- * Parse option flags from help text using a robust two-phase approach:
+ * Split an option line (indent already removed) into its flag part and inline description.
+ * The gap before the description is 2+ spaces, but a gap right after a comma belongs to the
+ * flag list ("-b,  --background  go to background").
+ */
+function splitOptionLine(rest: string): { flagText: string; description: string; descriptionColumn: number } {
+  const gap = /\s{2,}|\t/g
+  let match: RegExpExecArray | null
+  while ((match = gap.exec(rest)) !== null) {
+    const before = rest.slice(0, match.index).trimEnd()
+    if (before.endsWith(',')) continue
+    return {
+      flagText: before,
+      description: rest.slice(match.index + match[0].length).trim(),
+      descriptionColumn: match.index + match[0].length
+    }
+  }
+  return { flagText: rest.trim(), description: '', descriptionColumn: -1 }
+}
+
+function indentWidth(line: string): number {
+  return line.length - line.trimStart().length
+}
+
+/**
+ * Parse option flags from help text.
  *
- * Phase 1: Find lines that start with whitespace + dash (option lines)
- * Phase 2: Split each into flag-part and description-part by 2+ consecutive spaces
- * Phase 3: Parse the flag part for short/long flags and value indicators
- *
- * Handles all common formats:
- *   -f, --force              Force the operation
- *   --verbose                Enable verbose output
- *   --verbose <on|off>       Set verbosity level
- *   -m, --message <text>     Message body
- *   --agent <id>             Agent identifier
- *   -n NUM, --count=NUM      Number of iterations
- *   --timeout <seconds>      Timeout value
- *   --no-color               Disable ANSI colors
+ * Handles the layouts found in real CLIs:
+ *   -f, --force              Force the operation          (aligned table, any indent)
+ *   -b,  --background        Flag list with a double space after the comma
+ *   -t, --title string       Cobra/Go style bare type word marks a value
+ *   --pre=COMMAND            Equals-attached value (also: "--color[=WHEN]")
+ *   -q, --quiet...           Repeatable flag
+ *   --flag                   Description on the following, deeper-indented lines
+ *       Long description...
+ * Lines inside a wrapped description that happen to start with a dash are not flags.
  */
 export function parseOptions(helpText: string): CommandOption[] {
   const options: CommandOption[] = []
   const seen = new Set<string>()
-
   const lines = helpText.split('\n')
 
-  for (const line of lines) {
-    // Must start with 2+ spaces followed by a dash
-    if (!/^\s{2,}-/.test(line)) continue
+  // Lines indented at least this far belong to the previous option's wrapped description
+  let continuationIndent = Infinity
 
-    // Split into flag-part and description by finding 2+ consecutive spaces
-    // after the flag portion. The flag portion starts with '-' and may contain
-    // single spaces (e.g., "-m, --message <text>"), but the gap before the
-    // description always has 2+ spaces.
-    const splitMatch = line.match(/^(\s{2,}-[^\s].*?)\s{2,}(.+)$/)
-    if (!splitMatch) continue
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]
+    const lineMatch = line.match(OPTION_LINE_RE)
+    if (!lineMatch) continue
 
-    const flagPart = splitMatch[1].trim()
-    const description = splitMatch[2].trim()
+    const indent = lineMatch[1].length
+    if (indent >= continuationIndent) continue
 
-    // Extract short flag (-x)
-    const shortMatch = flagPart.match(/^(-\w)\b/)
-    const short = shortMatch ? shortMatch[1] : undefined
+    const split = splitOptionLine(lineMatch[2])
+    let description = split.description
 
-    // Extract long flag (--word-word)
-    const longMatch = flagPart.match(/(--[\w][\w-]*)/)
-    const long = longMatch ? longMatch[1] : undefined
+    if (split.descriptionColumn >= 0) {
+      continuationIndent = indent + split.descriptionColumn
+    } else {
+      continuationIndent = Infinity
+    }
 
+    if (!description) {
+      // Description starts on the next non-empty line, indented deeper than the flag
+      let next = index + 1
+      while (next < lines.length && lines[next].trim() === '') next += 1
+      if (next < lines.length && indentWidth(lines[next]) > indent && !OPTION_LINE_RE.test(lines[next])) {
+        description = lines[next].trim()
+        continuationIndent = indentWidth(lines[next])
+      } else if (next < lines.length && indentWidth(lines[next]) > indent) {
+        continuationIndent = indentWidth(lines[next])
+      }
+    }
+
+    const flagText = split.flagText.replace(/\.\.\.$/, '')
+    const flags = [...flagText.matchAll(FLAG_TOKEN_RE)].map((m) => m[1])
+    const short = flags.find((flag) => /^-[A-Za-z0-9]$/.test(flag))
+    const long = flags.find((flag) => flag.startsWith('--'))
     if (!short && !long) continue
 
     const flagName = long || short!
-
-    // Skip universal flags
     if (SKIP_OPTIONS.has(flagName)) continue
-    if (short && SKIP_OPTIONS.has(short)) continue
-
     if (seen.has(flagName)) continue
     seen.add(flagName)
 
-    // Determine if this option takes a value by checking for value indicators
-    // after the flag names: <value>, [value], =VALUE, UPPERCASE_WORD
-    const afterFlags = flagPart
-      .replace(/^-\w\b/, '')       // remove short flag
-      .replace(/,\s*/, '')          // remove comma
-      .replace(/--[\w][\w-]*/, '')  // remove long flag
+    // Whatever remains once flag names, commas and "or" are removed is the value placeholder
+    const valuePart = flagText
+      .replace(FLAG_TOKEN_RE, '')
+      .replace(/,|\bor\b|\|/g, ' ')
       .trim()
+    const hasValue = valuePart.length > 0 && !valuePart.startsWith('(')
+    const equalsAttached = new RegExp(`${(long ?? short!).replace(/[-]/g, '\\-')}\\[?=`).test(flagText)
 
-    const hasValue = afterFlags.length > 0 && (
-      /<[^>]+>/.test(afterFlags) ||      // <value>
-      /\[[^\]]+\]/.test(afterFlags) ||   // [value]
-      /^=/.test(afterFlags) ||           // =VALUE
-      /^[A-Z][\w-]*$/.test(afterFlags)   // UPPERCASE
-    )
-
-    const id = (long || short!).replace(/^-+/, '').replace(/-/g, '_')
+    const id = flagName.replace(/^-+/, '').replace(/-/g, '_')
 
     options.push({
       id,
       short: short || undefined,
       long: long || undefined,
-      label: (long || short!).replace(/^-+/, '').replace(/-/g, ' '),
+      label: flagName.replace(/^-+/, '').replace(/-/g, ' '),
       description,
       type: hasValue ? 'string' : 'boolean',
-      separator: hasValue ? 'space' : undefined
+      separator: hasValue ? (equalsAttached ? 'equals' : 'space') : undefined
     })
   }
 
