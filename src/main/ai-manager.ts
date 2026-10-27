@@ -1,3 +1,4 @@
+import { AI_REQUEST_TIMEOUT_MS, LOCAL_AI_REQUEST_TIMEOUT_MS, fetchWithTimeout } from './ai-fetch'
 import { getSettings } from './settings-manager'
 import type { AIProvider, AIRoutingTarget, AppSettings } from '../shared/settings-schema'
 import {
@@ -47,10 +48,15 @@ function getHostLocaleCandidates(): string[] {
   return resolved ? [resolved] : []
 }
 
-function withLocaleInstruction(
-  prompt: { instructions: string; input: string },
-  settings: AppSettings
-): { instructions: string; input: string } {
+interface AIPrompt {
+  instructions: string
+  input: string
+  /** Output token ceiling, sent only to Anthropic (required there). Reasoning models on other
+   *  providers count thinking tokens against such a cap, which can leave no room for the answer. */
+  maxTokens?: number
+}
+
+function withLocaleInstruction(prompt: AIPrompt, settings: AppSettings): AIPrompt {
   const appLocale = resolveLocalePreference(settings.uiLocale, getHostLocaleCandidates())
   const responseLocale = resolveAIResponseLocale(settings.aiResponseLocale, appLocale)
   const languageName = LOCALE_METADATA[responseLocale].englishName
@@ -1011,15 +1017,37 @@ async function parseJsonResponse(response: Response): Promise<unknown> {
   }
 }
 
+const DEFAULT_MAX_OUTPUT_TOKENS = 1500
+
+/** Structured actions return whole command definitions as JSON; a short cap truncates them mid-object. */
+function getMaxOutputTokens(action: AIActionRequest['action']): number {
+  switch (action) {
+    case 'command-tree-generation':
+      return 8000
+    case 'command-generation':
+    case 'command-help':
+      return 4000
+    default:
+      return DEFAULT_MAX_OUTPUT_TOKENS
+  }
+}
+
+function getRequestTimeoutMs(provider: AIProvider): number {
+  return provider.id === 'ollama' || provider.id === 'lmstudio'
+    ? LOCAL_AI_REQUEST_TIMEOUT_MS
+    : AI_REQUEST_TIMEOUT_MS
+}
+
 async function runOpenAIAction(
   provider: AIProvider,
   model: string,
-  prompt: { instructions: string; input: string }
+  prompt: AIPrompt
 ): Promise<string> {
   if (!provider.apiKey) throw new Error('Active OpenAI provider is missing an API key')
 
-  const response = await fetch(`${provider.baseUrl}/responses`, {
+  const response = await fetchWithTimeout(`${provider.baseUrl}/responses`, {
     method: 'POST',
+    signal: AbortSignal.timeout(getRequestTimeoutMs(provider)),
     headers: {
       Authorization: `Bearer ${provider.apiKey}`,
       'content-type': 'application/json'
@@ -1037,12 +1065,13 @@ async function runOpenAIAction(
 async function runAnthropicAction(
   provider: AIProvider,
   model: string,
-  prompt: { instructions: string; input: string }
+  prompt: AIPrompt
 ): Promise<string> {
   if (!provider.apiKey) throw new Error('Active Anthropic provider is missing an API key')
 
-  const response = await fetch(`${provider.baseUrl}/v1/messages`, {
+  const response = await fetchWithTimeout(`${provider.baseUrl}/v1/messages`, {
     method: 'POST',
+    signal: AbortSignal.timeout(getRequestTimeoutMs(provider)),
         headers: {
           'x-api-key': provider.apiKey,
           'anthropic-version': '2023-06-01',
@@ -1050,7 +1079,7 @@ async function runAnthropicAction(
         },
         body: JSON.stringify({
       model,
-      max_tokens: 600,
+      max_tokens: prompt.maxTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
       system: prompt.instructions,
       messages: [{ role: 'user', content: prompt.input }]
     })
@@ -1062,10 +1091,11 @@ async function runAnthropicAction(
 async function runOllamaAction(
   provider: AIProvider,
   model: string,
-  prompt: { instructions: string; input: string }
+  prompt: AIPrompt
 ): Promise<string> {
-  const response = await fetch(`${provider.baseUrl}/api/chat`, {
+  const response = await fetchWithTimeout(`${provider.baseUrl}/api/chat`, {
     method: 'POST',
+    signal: AbortSignal.timeout(getRequestTimeoutMs(provider)),
     headers: {
       'content-type': 'application/json'
     },
@@ -1085,14 +1115,15 @@ async function runOllamaAction(
 async function runGeminiAction(
   provider: AIProvider,
   model: string,
-  prompt: { instructions: string; input: string }
+  prompt: AIPrompt
 ): Promise<string> {
   if (!provider.apiKey) throw new Error('Active Gemini provider is missing an API key')
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${provider.baseUrl}/models/${encodeURIComponent(model)}:generateContent`,
     {
       method: 'POST',
+    signal: AbortSignal.timeout(getRequestTimeoutMs(provider)),
       headers: {
         'content-type': 'application/json',
         'x-goog-api-key': provider.apiKey
@@ -1117,7 +1148,7 @@ async function runGeminiAction(
 async function runOpenAICompatibleAction(
   provider: AIProvider,
   model: string,
-  prompt: { instructions: string; input: string }
+  prompt: AIPrompt
 ): Promise<string> {
   const headers: Record<string, string> = {
     'content-type': 'application/json'
@@ -1126,8 +1157,9 @@ async function runOpenAICompatibleAction(
     headers.Authorization = `Bearer ${provider.apiKey}`
   }
 
-  const response = await fetch(`${provider.baseUrl}/chat/completions`, {
+  const response = await fetchWithTimeout(`${provider.baseUrl}/chat/completions`, {
     method: 'POST',
+    signal: AbortSignal.timeout(getRequestTimeoutMs(provider)),
     headers,
     body: JSON.stringify({
       model,
@@ -1200,7 +1232,7 @@ export async function runAIAction(request: AIActionRequest): Promise<AIActionRes
     throw new Error('Connect an AI provider and choose a primary model in Settings before using AI actions')
   }
 
-  let prompt: { instructions: string; input: string }
+  let prompt: AIPrompt
 
   switch (request.action) {
     case 'command-generation':
@@ -1231,7 +1263,7 @@ export async function runAIAction(request: AIActionRequest): Promise<AIActionRes
       throw new Error(`Unsupported AI action: ${(request as { action?: string }).action ?? 'unknown'}`)
   }
 
-  prompt = withLocaleInstruction(prompt, settings)
+  prompt = { ...withLocaleInstruction(prompt, settings), maxTokens: getMaxOutputTokens(request.action) }
 
   let content: string | null = null
   let resolvedModel = routingCandidates[0].model

@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from './ai-fetch'
 import { mkdir } from 'fs/promises'
 import { join } from 'path'
 import { readJsonFile, writeJsonAtomic } from './atomic-write'
@@ -101,14 +102,14 @@ export async function testAIConnection(
 
   try {
     if (provider.id === 'ollama') {
-      const res = await fetch(`${provider.baseUrl}/api/tags`)
+      const res = await fetchWithTimeout(`${provider.baseUrl}/api/tags`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return { success: true }
     }
 
     if (provider.id === 'openai') {
       if (!provider.apiKey) return { success: false, error: 'API key required' }
-      const res = await fetch(`${provider.baseUrl}/models`, {
+      const res = await fetchWithTimeout(`${provider.baseUrl}/models`, {
         headers: { Authorization: `Bearer ${provider.apiKey}` }
       })
       if (!res.ok) {
@@ -120,7 +121,7 @@ export async function testAIConnection(
 
     if (provider.id === 'anthropic') {
       if (!provider.apiKey) return { success: false, error: 'API key required' }
-      const res = await fetch(`${provider.baseUrl}/v1/messages`, {
+      const res = await fetchWithTimeout(`${provider.baseUrl}/v1/messages`, {
         method: 'POST',
         headers: {
           'x-api-key': provider.apiKey,
@@ -142,7 +143,7 @@ export async function testAIConnection(
 
     if (provider.id === 'gemini') {
       if (!provider.apiKey) return { success: false, error: 'API key required' }
-      const res = await fetch(`${provider.baseUrl}/models`, {
+      const res = await fetchWithTimeout(`${provider.baseUrl}/models`, {
         headers: {
           'x-goog-api-key': provider.apiKey
         }
@@ -163,7 +164,7 @@ export async function testAIConnection(
         headers.Authorization = `Bearer ${provider.apiKey}`
       }
 
-      const res = await fetch(`${provider.baseUrl}/models`, { headers })
+      const res = await fetchWithTimeout(`${provider.baseUrl}/models`, { headers })
       if (!res.ok) {
         const body = await res.text()
         throw new Error(`HTTP ${res.status}: ${body.slice(0, 200)}`)
@@ -193,7 +194,7 @@ export async function listAIModels(
 
   try {
     if (provider.id === 'ollama') {
-      const res = await fetch(`${provider.baseUrl}/api/tags`)
+      const res = await fetchWithTimeout(`${provider.baseUrl}/api/tags`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const body = (await res.json()) as { models?: Array<{ name?: string }> }
       return {
@@ -207,7 +208,7 @@ export async function listAIModels(
     }
 
     if (provider.id === 'openai') {
-      const res = await fetch(`${provider.baseUrl}/models`, {
+      const res = await fetchWithTimeout(`${provider.baseUrl}/models`, {
         headers: { Authorization: `Bearer ${provider.apiKey}` }
       })
       if (!res.ok) {
@@ -222,7 +223,7 @@ export async function listAIModels(
     }
 
     if (provider.id === 'anthropic') {
-      const res = await fetch(`${provider.baseUrl}/v1/models`, {
+      const res = await fetchWithTimeout(`${provider.baseUrl}/v1/models`, {
         headers: {
           'x-api-key': provider.apiKey,
           'anthropic-version': '2023-06-01'
@@ -240,7 +241,7 @@ export async function listAIModels(
     }
 
     if (provider.id === 'gemini') {
-      const res = await fetch(`${provider.baseUrl}/models`, {
+      const res = await fetchWithTimeout(`${provider.baseUrl}/models`, {
         headers: {
           'x-goog-api-key': provider.apiKey
         }
@@ -268,7 +269,7 @@ export async function listAIModels(
         headers.Authorization = `Bearer ${provider.apiKey}`
       }
 
-      const res = await fetch(`${provider.baseUrl}/models`, { headers })
+      const res = await fetchWithTimeout(`${provider.baseUrl}/models`, { headers })
       if (!res.ok) {
         const body = await res.text()
         throw new Error(`HTTP ${res.status}: ${body.slice(0, 200)}`)
