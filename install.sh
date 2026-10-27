@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # TerminallySKILL Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/cryptopoly/TerminallySkill/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/cryptopoly/TerminallySkill/staging/install.sh | bash
 
 REPO="cryptopoly/TerminallySkill"
 APP_NAME="TerminallySKILL"
