@@ -19,6 +19,7 @@ import { buildEnvOverrides } from '../../../../shared/project-schema'
 import type { RunRecord, RunStepRecord, TerminalSessionInfo } from '../../../../shared/run-schema'
 import { buildProjectWorkspaceCommandString } from '../../../../shared/workspace-target'
 import { formatWorkflowRunError } from '../../lib/workflow-run-errors'
+import { buildWorkflowStepMarkerCommand, shellSupportsWorkflowStepMarkers } from '../../../../shared/workflow-shell'
 
 type ScriptTranslator = (key: string, options?: Record<string, unknown>) => string
 
@@ -63,6 +64,9 @@ export function WorkflowRunnerEngine(): JSX.Element {
 
       const run = useWorkflowRunnerStore.getState().runsBySession[sessionId]
       if (!run || isTerminalRunStatus(run.status) || run.status !== 'running_command') return
+      // Tagged step markers carry the result when the shell supports them; the next
+      // prompt's exit code can belong to any command and is only a fallback.
+      if (run.stepMarkers) return
 
       const currentStep = run.steps[run.currentStepIndex]
       if (!currentStep || currentStep.type !== 'command') return
@@ -74,10 +78,15 @@ export function WorkflowRunnerEngine(): JSX.Element {
       })
     })
 
+    const unsubStepResult = window.electronAPI.onWorkflowStepResult((sessionId, result) => {
+      handleStepResult(sessionId, result)
+    })
+
     return () => {
       unsubReady()
       unsubExit()
       unsubShellEvent()
+      unsubStepResult()
     }
   }, [handleStepResult, markSessionClosed, markSessionReady])
 
@@ -106,6 +115,7 @@ function WorkflowRunController({
 }): null {
   const projects = useProjectStore((s) => s.projects)
   const {
+    setStepMarkers,
     markWaitingForShell,
     markWaitingForDelay,
     markCurrentCommandRunning,
@@ -116,6 +126,9 @@ function WorkflowRunController({
   } = useWorkflowRunnerStore()
   const completedRunIdRef = useRef<string | null>(null)
   const [sessionInfo, setSessionInfo] = useState<TerminalSessionInfo | null>(null)
+  // Dispatching before the session's project is known would run the first step unwrapped,
+  // i.e. on the local machine, for a global script started in an SSH project terminal.
+  const [sessionInfoLoaded, setSessionInfoLoaded] = useState(false)
 
   const currentStep = activeRun.steps[activeRun.currentStepIndex] ?? null
   const runProject = useMemo(
@@ -128,16 +141,21 @@ function WorkflowRunController({
 
   useEffect(() => {
     let cancelled = false
-    void window.electronAPI.getSessionInfo(activeRun.sessionId).then((info) => {
-      if (!cancelled) {
+    setSessionInfoLoaded(false)
+    void window.electronAPI
+      .getSessionInfo(activeRun.sessionId)
+      .catch(() => null)
+      .then((info) => {
+        if (cancelled) return
         setSessionInfo(info)
-      }
-    })
+        setStepMarkers(activeRun.sessionId, info ? shellSupportsWorkflowStepMarkers(info.shell) : false)
+        setSessionInfoLoaded(true)
+      })
 
     return () => {
       cancelled = true
     }
-  }, [activeRun.runId, activeRun.sessionId])
+  }, [activeRun.runId, activeRun.sessionId, setStepMarkers])
 
   useEffect(() => {
     void window.electronAPI.upsertRunRecord(buildRunRecord(activeRun, sessionInfo))
@@ -177,8 +195,15 @@ function WorkflowRunController({
 
     const envOverrides = runProject ? buildEnvOverrides(runProject.envVars) : undefined
     const command = buildProjectWorkspaceCommandString(runProject, currentStep.commandString, envOverrides)
-    window.electronAPI.writeToTerminal(activeRun.sessionId, command + '\n')
-  }, [activeRun.runId, activeRun.sessionId, currentStep, markCurrentCommandRunning, markSessionExecuting, runProject])
+    const marker = activeRun.stepMarkers
+      ? buildWorkflowStepMarkerCommand(activeRun.runId, currentStep.stepId)
+      : null
+    // The marker goes on its own line so a trailing comment or `&` in the step cannot swallow it
+    window.electronAPI.writeToTerminal(
+      activeRun.sessionId,
+      marker ? `${command}\n${marker}\n` : command + '\n'
+    )
+  }, [activeRun.runId, activeRun.sessionId, activeRun.stepMarkers, currentStep, markCurrentCommandRunning, markSessionExecuting, runProject])
 
   useEffect(() => {
     if (isTerminalRunStatus(activeRun.status) || activeRun.status === 'awaiting_approval') {
@@ -212,6 +237,8 @@ function WorkflowRunController({
       return
     }
 
+    if (!sessionInfoLoaded) return
+
     if (sessionState !== 'idle') {
       markWaitingForShell(activeRun.sessionId)
       return
@@ -241,6 +268,7 @@ function WorkflowRunController({
     dispatchCurrentCommand,
     markWaitingForDelay,
     markWaitingForShell,
+    sessionInfoLoaded,
     sessionState
   ])
 

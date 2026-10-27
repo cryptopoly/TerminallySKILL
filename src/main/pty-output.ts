@@ -113,6 +113,36 @@ export function extractShellIntegrationEvents(data: string): {
   }
 }
 
+const MARKER_PREFIX = '\x1b]7337;'
+const MAX_MARKER_LENGTH = 1024
+
+/**
+ * PTY reads can end in the middle of a marker. Hold a trailing unterminated marker back so the
+ * next chunk can complete it; otherwise a split marker leaks into the terminal and is lost.
+ */
+export function splitIncompleteMarker(data: string): { complete: string; tail: string } {
+  const start = data.lastIndexOf(MARKER_PREFIX)
+  if (start === -1) {
+    // A bare ESC (or a prefix of it) at the very end may be the start of a marker
+    for (let keep = Math.min(MARKER_PREFIX.length - 1, data.length); keep > 0; keep--) {
+      if (data.endsWith(MARKER_PREFIX.slice(0, keep))) {
+        return { complete: data.slice(0, -keep), tail: data.slice(-keep) }
+      }
+    }
+    return { complete: data, tail: '' }
+  }
+  if (data.indexOf('\x07', start) !== -1 || data.length - start > MAX_MARKER_LENGTH) {
+    return { complete: data, tail: '' }
+  }
+  return { complete: data.slice(0, start), tail: data.slice(start) }
+}
+
+/** Remove the terminal's echo of the step-marker command line ("printf '\\033]7337;workflow-step;...") */
+export function stripWorkflowMarkerEcho(data: string): string {
+  if (!data.includes('workflow-step;')) return data
+  return data.replace(/[^\r\n]*printf '\\033\]7337;workflow-step;[^\r\n]*(\r?\n)?/g, '')
+}
+
 export function extractWorkflowStepResults(data: string): {
   data: string
   results: Array<{

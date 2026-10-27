@@ -41,6 +41,8 @@ export interface WorkflowActiveRun {
   status: WorkflowRunStatus
   error: string | null
   steps: WorkflowActiveRunStep[]
+  /** Step results arrive as tagged markers (true) or via the prompt-ready exit code (false) */
+  stepMarkers: boolean
 }
 
 interface WorkflowRunnerStore {
@@ -56,6 +58,7 @@ interface WorkflowRunnerStore {
   markSessionReady: (sessionId: string) => void
   markSessionExecuting: (sessionId: string) => void
   markSessionClosed: (sessionId: string) => void
+  setStepMarkers: (sessionId: string, enabled: boolean) => void
   markWaitingForShell: (sessionId: string) => void
   markWaitingForDelay: (sessionId: string) => void
   markCurrentCommandRunning: (sessionId: string) => void
@@ -147,7 +150,8 @@ export const useWorkflowRunnerStore = create<WorkflowRunnerStore>((set, get) => 
       currentStepIndex: 0,
       status: 'running',
       error: null,
-      steps
+      steps,
+      stepMarkers: false
     }
 
     set((state) => ({
@@ -221,6 +225,13 @@ export const useWorkflowRunnerStore = create<WorkflowRunnerStore>((set, get) => 
         }
       }
     }),
+
+  setStepMarkers: (sessionId, enabled) =>
+    set((state) =>
+      updateRunForSession(state, sessionId, (run) =>
+        run.stepMarkers === enabled ? run : { ...run, stepMarkers: enabled }
+      )
+    ),
 
   markWaitingForShell: (sessionId) =>
     set((state) =>

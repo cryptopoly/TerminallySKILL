@@ -7,7 +7,9 @@ import {
   extractShellIntegrationEvents,
   extractWorkflowStepResults,
   prepareLogContent,
+  splitIncompleteMarker,
   stripAnsi,
+  stripWorkflowMarkerEcho,
 } from './pty-output'
 
 describe('pty-output', () => {
@@ -113,5 +115,24 @@ describe('pty-output', () => {
   it('returns null for empty log content after stripping control sequences', () => {
     expect(prepareLogContent(['\u001b[31m\u001b[0m', '\r', SHELL_READY_MARKER])).toBeNull()
     expect(prepareLogContent(['ok\r\n'])).toBe('ok\n')
+  })
+
+  it('holds back a marker that is split across PTY chunks', () => {
+    const first = splitIncompleteMarker('output\x1b]7337;workflow-step;wf-1;step-1;')
+    expect(first).toEqual({ complete: 'output', tail: '\x1b]7337;workflow-step;wf-1;step-1;' })
+
+    const joined = first.tail + '0\x07done'
+    expect(splitIncompleteMarker(joined)).toEqual({ complete: joined, tail: '' })
+    expect(extractWorkflowStepResults(joined).results).toEqual([{ runId: 'wf-1', stepId: 'step-1', exitCode: 0 }])
+  })
+
+  it('holds back a chunk that ends inside the marker prefix', () => {
+    expect(splitIncompleteMarker('text\x1b]73')).toEqual({ complete: 'text', tail: '\x1b]73' })
+    expect(splitIncompleteMarker('plain output')).toEqual({ complete: 'plain output', tail: '' })
+  })
+
+  it('removes the echoed workflow step marker command line', () => {
+    const echoed = "npm test\r\nprintf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-1' 'step-1' $?\r\nok\r\n"
+    expect(stripWorkflowMarkerEcho(echoed)).toBe('npm test\r\nok\r\n')
   })
 })

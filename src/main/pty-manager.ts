@@ -14,7 +14,9 @@ import {
   appendOutputChunk,
   extractShellIntegrationEvents,
   extractWorkflowStepResults,
-  prepareLogContent
+  prepareLogContent,
+  splitIncompleteMarker,
+  stripWorkflowMarkerEcho
 } from './pty-output'
 import type { TerminalSessionInfo } from '../shared/run-schema'
 
@@ -38,6 +40,8 @@ interface PtySession {
   saved: boolean
   /** Hold early shell startup text so we can strip launcher-specific noise before display. */
   startupBuffer: string
+  /** Trailing unterminated shell-integration marker held back until the next PTY chunk */
+  markerCarry: string
   startupFlushed: boolean
   /** Timestamp (ms) until which SSH command echo lines should be stripped from output. */
   sshEchoFilterUntil: number
@@ -392,6 +396,7 @@ export async function createTerminal(
     outputBufferSize: 0,
     saved: false,
     startupBuffer: '',
+    markerCarry: '',
     // Shells without integration (e.g. PowerShell on Windows) never emit a
     // prompt-ready event, so we skip startup buffering entirely for them.
     startupFlushed: !hasIntegration,
@@ -433,7 +438,12 @@ export async function createTerminal(
   // This unblocks the editor prompt, script execution, and shell state tracking.
   let syntheticReadySent = false
 
-  ptyProcess.onData((data) => {
+  ptyProcess.onData((rawData) => {
+    const split = splitIncompleteMarker(session.markerCarry + rawData)
+    session.markerCarry = split.tail
+    let data = split.complete
+    if (!data) return
+
     const shellIntegration = extractShellIntegrationEvents(data)
     if (!markerSeen && (shellIntegration.sawMarker || shellIntegration.events.length > 0)) {
       console.log(`[pty] Shell integration active for ${sessionId} — first shell marker received`)
@@ -479,7 +489,7 @@ export async function createTerminal(
         window.webContents.send(IPC_CHANNELS.WORKFLOW_STEP_RESULT, sessionId, result)
       }
     }
-    data = extracted.data
+    data = stripWorkflowMarkerEcho(extracted.data)
     if (!session.startupFlushed) {
       session.startupBuffer += data
 
