@@ -1693,6 +1693,8 @@ function XTermInstance({
     projectWorkingDirectory
   ])
 
+  const activeCommandBlockRef = useRef(activeCommandBlock)
+  const sessionModeRef = useRef(sessionMode)
   const safePasteModeRef = useRef(safePasteMode)
   const sendTerminalInputDirectRef = useRef(sendTerminalInputDirect)
   const queueBufferedInputRef = useRef(queueBufferedInput)
@@ -1703,6 +1705,14 @@ function XTermInstance({
   useEffect(() => {
     safePasteModeRef.current = safePasteMode
   }, [safePasteMode])
+
+  useEffect(() => {
+    activeCommandBlockRef.current = activeCommandBlock
+  }, [activeCommandBlock])
+
+  useEffect(() => {
+    sessionModeRef.current = sessionMode
+  }, [sessionMode])
 
   useEffect(() => {
     sendTerminalInputDirectRef.current = sendTerminalInputDirect
@@ -1949,6 +1959,19 @@ function XTermInstance({
         // running process so interactive prompts (e.g. npx "Ok to proceed?") work.
         // Command queuing only applies in 'editor' mode.
         if (useSettingsStore.getState().settings.terminalInputMode !== 'editor') {
+          sendTerminalInputDirectRef.current(data)
+          return
+        }
+
+        // Type-ahead queueing is only safe while the program is not itself waiting
+        // for input. Anything that looks interactive gets the keystrokes directly.
+        const buffer = term.buffer.active
+        const programWantsInput =
+          sessionModeRef.current === 'ssh-interactive' ||
+          buffer.type === 'alternate' ||
+          buffer.cursorX > 0 ||
+          (activeCommandBlockRef.current !== null && isSSHSessionCommand(activeCommandBlockRef.current.command))
+        if (programWantsInput) {
           sendTerminalInputDirectRef.current(data)
           return
         }
