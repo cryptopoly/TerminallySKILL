@@ -9,6 +9,7 @@ import {
   testAIConnection,
   listAIModels
 } from '../settings-manager'
+import { notifyUiLocaleChanged } from '../native-i18n'
 import { requireAIActionRequest, requirePlainObject, requireString } from './validation'
 
 export function registerSettingsIpcHandlers(): void {
@@ -17,7 +18,10 @@ export function registerSettingsIpcHandlers(): void {
   })
 
   ipcMain.handle(IPC_CHANNELS.SETTINGS_UPDATE, async (_event, updates: object) => {
-    return updateSettings(requirePlainObject(updates, 'updates'))
+    const plainUpdates = requirePlainObject(updates, 'updates')
+    const result = await updateSettings(plainUpdates)
+    if ('uiLocale' in plainUpdates) notifyUiLocaleChanged()
+    return result
   })
 
   ipcMain.handle(

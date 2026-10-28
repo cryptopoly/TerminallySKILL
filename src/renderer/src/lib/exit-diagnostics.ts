@@ -1,3 +1,6 @@
+import { i18n } from '../i18n'
+import { resources } from '../i18n/resources'
+
 export interface ExitDiagnosticInput {
   title?: string | null
   commandString?: string | null
@@ -12,6 +15,24 @@ export interface ExitDiagnostics {
   nextChecks: string[]
 }
 
+type Options = Record<string, string | number>
+
+function lookupEnglish(key: string): string {
+  let node: unknown = (resources.en as unknown as Record<string, unknown>).logs
+  for (const part of key.split('.')) {
+    node = (node as Record<string, unknown> | undefined)?.[part]
+  }
+  return typeof node === 'string' ? node : key
+}
+
+// Falls back to the English resources when i18n has not been initialized (e.g. in unit tests).
+function tr(key: string, options: Options = {}): string {
+  if (i18n.isInitialized) return i18n.t(`diagnostics.${key}`, { ns: 'logs', ...options })
+  return lookupEnglish(`diagnostics.${key}`).replace(/\{\{(\w+)\}\}/g, (_, name: string) =>
+    String(options[name] ?? '')
+  )
+}
+
 function unique(items: string[]): string[] {
   return [...new Set(items.filter(Boolean))]
 }
@@ -19,55 +40,35 @@ function unique(items: string[]): string[] {
 function buildGenericSuspicions(exitCode: number): string[] {
   switch (exitCode) {
     case 1:
-      return [
-        'The command ran but hit a generic failure, so the real cause is usually in the command output just above this error.',
-        'A preceding build, packaging, or validation step may have failed before the wrapper command exited.'
-      ]
+      return [tr('suspect.exit1a'), tr('suspect.exit1b')]
     case 126:
-      return [
-        'The target file or command exists, but it is not executable or the shell does not have permission to run it.',
-        'This can also happen when a script has the wrong interpreter or line endings.'
-      ]
+      return [tr('suspect.exit126a'), tr('suspect.exit126b')]
     case 127:
-      return [
-        'The shell could not find the command in PATH.',
-        'A required tool may not be installed in this environment or the executable name may be wrong.'
-      ]
+      return [tr('suspect.exit127a'), tr('suspect.exit127b')]
     case 130:
-      return [
-        'The process was interrupted, usually by Ctrl+C or a cancelled terminal session.'
-      ]
+      return [tr('suspect.exit130')]
     case 137:
-      return [
-        'The process was killed abruptly, often because it ran out of memory or received SIGKILL.'
-      ]
+      return [tr('suspect.exit137')]
     case 143:
-      return [
-        'The process was terminated by SIGTERM, often because another process or supervisor stopped it.'
-      ]
+      return [tr('suspect.exit143')]
     default:
-      return [
-        'The exit code indicates the command failed, but the exact cause depends on the command output and environment.'
-      ]
+      return [tr('suspect.exitDefault')]
   }
 }
 
 function buildGenericChecks(exitCode: number, shell?: string | null): string[] {
-  const checks = [
-    'Open the linked log or full command output and look for the first error line above the exit code.',
-    'Re-run the failing command by itself to separate wrapper failures from the real underlying issue.'
-  ]
+  const checks = [tr('check.openLog'), tr('check.rerun')]
 
   if (exitCode === 127) {
-    checks.push('Check PATH and verify the missing executable is installed in this shell environment.')
+    checks.push(tr('check.path'))
   }
 
   if (exitCode === 126) {
-    checks.push('Check file permissions, shebang, and whether the script needs chmod +x.')
+    checks.push(tr('check.permissions'))
   }
 
   if (shell) {
-    checks.push(`Confirm the command behaves the same in ${shell}.`)
+    checks.push(tr('check.shell', { shell }))
   }
 
   return unique(checks)
@@ -79,45 +80,31 @@ function buildCommandSpecificSuspicions(command: string, error?: string | null):
   const issues: string[] = []
 
   if (normalized.includes('npm run package:mac') || normalized.includes('electron-builder --mac')) {
-    issues.push(
-      'mac packaging commonly fails because of code-signing, notarization, or missing Apple certificate setup.',
-      'The Electron build may be missing an app icon, bundle metadata, or another required electron-builder config value.',
-      'A normal build step may have failed earlier, and the packaging wrapper is only surfacing the final exit code.'
-    )
+    issues.push(tr('suspect.macPackaging1'), tr('suspect.macPackaging2'), tr('suspect.macPackaging3'))
   }
 
   if (normalized.includes('npm run build') || normalized.includes('vite build') || normalized.includes('tsc')) {
-    issues.push(
-      'Compile-time failures such as TypeScript errors, unresolved imports, or environment-variable assumptions are common here.',
-      'A config file change may have broken the bundler, transpiler, or output path.'
-    )
+    issues.push(tr('suspect.build1'), tr('suspect.build2'))
   }
 
   if (normalized.startsWith('npm ') || normalized.includes(' npm ')) {
-    issues.push(
-      'The npm script may be failing inside package.json, so the root issue is often in the script it launches rather than npm itself.',
-      'Node version mismatches, missing dependencies, or stale lockfile state can also surface as a plain exit code 1.'
-    )
+    issues.push(tr('suspect.npm1'), tr('suspect.npm2'))
   }
 
   if (normalized.includes('.sh') || normalized.startsWith('bash ') || normalized.startsWith('sh ')) {
-    issues.push(
-      'Shell scripts often fail because of missing execute permissions, bad relative paths, or an unexpected current working directory.'
-    )
+    issues.push(tr('suspect.shell'))
   }
 
   if (normalized.startsWith('python') || normalized.includes(' python')) {
-    issues.push(
-      'Python command failures are often missing modules, the wrong virtual environment, or interpreter mismatches.'
-    )
+    issues.push(tr('suspect.python'))
   }
 
   if (normalizedError.includes('codesign') || normalizedError.includes('notar')) {
-    issues.unshift('The error message already points at Apple signing/notarization as the likely cause.')
+    issues.unshift(tr('suspect.signing'))
   }
 
   if (normalizedError.includes('command not found')) {
-    issues.unshift('The shell output suggests a missing executable in PATH.')
+    issues.unshift(tr('suspect.notFound'))
   }
 
   return unique(issues)
@@ -128,17 +115,11 @@ function buildCommandSpecificChecks(command: string): string[] {
   const checks: string[] = []
 
   if (normalized.includes('package:mac') || normalized.includes('electron-builder --mac')) {
-    checks.push(
-      'Check electron-builder config, app icons, signing settings, and whether the packaging step expects Apple credentials.',
-      'Look for the first packaging-related error line in the build output, not just the final npm failure.'
-    )
+    checks.push(tr('check.macPackaging1'), tr('check.macPackaging2'))
   }
 
   if (normalized.startsWith('npm ') || normalized.includes(' npm ')) {
-    checks.push(
-      'Open package.json and inspect the exact script behind this npm command.',
-      'Try the underlying build or packaging command directly without npm to get a cleaner error.'
-    )
+    checks.push(tr('check.npm1'), tr('check.npm2'))
   }
 
   return unique(checks)
@@ -149,10 +130,10 @@ export function buildExitDiagnostics(input: ExitDiagnosticInput): ExitDiagnostic
 
   const summary =
     input.exitCode === 0
-      ? 'The command exited successfully.'
+      ? tr('summary.success')
       : input.commandString
-        ? `${input.commandString} exited with code ${input.exitCode}.`
-        : `${input.title ?? 'This command'} exited with code ${input.exitCode}.`
+        ? tr('summary.command', { command: input.commandString, code: input.exitCode })
+        : tr('summary.title', { title: input.title ?? tr('summary.fallbackTitle'), code: input.exitCode })
 
   const suspectedIssues = unique([
     ...buildGenericSuspicions(input.exitCode),

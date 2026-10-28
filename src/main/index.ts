@@ -8,6 +8,7 @@ import { stopVncSessionsForWindow, stopAllVncSessions } from './vnc-manager'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
 import { getUserDataDir, setCustomDataDir } from './user-data-path'
 import { openSafeExternalUrl } from './external-url'
+import { getNativeTranslator, onUiLocaleChange } from './native-i18n'
 
 console.log('[terminallyskill] Main process loaded (v2 — shell integration + log save)')
 
@@ -95,17 +96,22 @@ function createWindow(projectId?: string): void {
     const totalCount = getSessionCountForWindow(win)
     if (activeCount > 0) {
       e.preventDefault()
-      const message = activeCount === 1
-        ? 'There is a process still running in this window.'
-        : `There are ${activeCount} processes still running in this window.`
-      dialog
-        .showMessageBox(win, {
-          type: 'warning',
-          buttons: ['Close Anyway', 'Cancel'],
-          defaultId: 1,
-          cancelId: 1,
-          title: 'Active Processes',
-          message: `${message}\n\nClosing will terminate ${totalCount === 1 ? 'the terminal session' : `all ${totalCount} terminal sessions'`}.`
+      void getNativeTranslator()
+        .then((tr) => {
+          const message = activeCount === 1
+            ? tr('closeDialog.processOne')
+            : tr('closeDialog.processMany', { count: activeCount })
+          const terminate = totalCount === 1
+            ? tr('closeDialog.terminateOne')
+            : tr('closeDialog.terminateMany', { count: totalCount })
+          return dialog.showMessageBox(win, {
+            type: 'warning',
+            buttons: [tr('closeDialog.closeAnyway'), tr('closeDialog.cancel')],
+            defaultId: 1,
+            cancelId: 1,
+            title: tr('closeDialog.title'),
+            message: `${message}\n\n${terminate}`
+          })
         })
         .then(({ response }) => {
           if (response === 0) {
@@ -145,7 +151,8 @@ function createWindow(projectId?: string): void {
   }
 }
 
-function buildMenu(): void {
+async function buildMenu(): Promise<void> {
+  const tr = await getNativeTranslator()
   const template: Electron.MenuItemConstructorOptions[] = [
     ...(process.platform === 'darwin'
       ? [
@@ -164,10 +171,10 @@ function buildMenu(): void {
         ]
       : []),
     {
-      label: 'File',
+      label: tr('menu.file'),
       submenu: [
         {
-          label: 'New Window',
+          label: tr('menu.newWindow'),
           accelerator: 'CmdOrCtrl+N',
           click: (): void => createWindow()
         },
@@ -176,7 +183,7 @@ function buildMenu(): void {
       ]
     },
     {
-      label: 'Edit',
+      label: tr('menu.edit'),
       submenu: [
         { role: 'undo' },
         { role: 'redo' },
@@ -188,7 +195,7 @@ function buildMenu(): void {
       ]
     },
     {
-      label: 'Window',
+      label: tr('menu.window'),
       submenu: [
         { role: 'minimize' },
         { role: 'zoom' },
@@ -253,7 +260,8 @@ app.whenReady().then(() => {
     createWindow(projectId)
   })
 
-  buildMenu()
+  void buildMenu()
+  onUiLocaleChange(() => void buildMenu())
   createWindow()
 
   app.on('activate', () => {

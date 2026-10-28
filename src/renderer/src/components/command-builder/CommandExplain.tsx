@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { CommandDefinition } from '../../../../shared/command-schema'
 
 interface CommandExplainProps {
@@ -14,7 +15,11 @@ interface Segment {
 }
 
 export function CommandExplain({ command, values, commandString }: CommandExplainProps): JSX.Element {
-  const segments = parseSegments(command, values, commandString)
+  const { t } = useTranslation('commandBuilder')
+  const segments = parseSegments(command, values, commandString, {
+    command: t('explainSegments.command'),
+    subcommand: t('explainSegments.subcommand')
+  })
 
   return (
     <div className="mb-3 p-3 rounded-lg bg-surface-light border border-surface-border">
@@ -65,7 +70,8 @@ function segmentClass(kind: Segment['kind']): string {
 function parseSegments(
   command: CommandDefinition,
   values: Record<string, unknown>,
-  commandString: string
+  commandString: string,
+  labels: { command: string; subcommand: string }
 ): Segment[] {
   const segments: Segment[] = []
 
@@ -73,14 +79,14 @@ function parseSegments(
   segments.push({
     text: command.executable,
     kind: 'executable',
-    label: 'command',
+    label: labels.command,
     description: command.description || undefined
   })
 
   // Subcommands
   if (command.subcommands) {
     for (const sub of command.subcommands) {
-      segments.push({ text: sub, kind: 'subcommand', label: 'subcommand' })
+      segments.push({ text: sub, kind: 'subcommand', label: labels.subcommand })
     }
   }
 

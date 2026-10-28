@@ -1971,7 +1971,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                       <ProviderGlyph providerId={provider.id} />
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-gray-200 truncate">{provider.label}</div>
-                        <div className="mt-1 text-xs text-gray-500">{getProviderConfig(provider.id).description}</div>
+                        <div className="mt-1 text-xs text-gray-500">{t(`ai.providerDescriptions.${provider.id}`, { ns: 'settings', defaultValue: getProviderConfig(provider.id).description })}</div>
                       </div>
                       <span className={clsx('h-2.5 w-2.5 rounded-full shrink-0', status.dotClassName)} />
                     </div>

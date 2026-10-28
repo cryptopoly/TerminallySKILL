@@ -1,4 +1,5 @@
 import type { CommandDefinition } from '../../../shared/command-schema'
+import { i18n } from '../i18n'
 
 export type TerminalPromotionTarget = 'script' | 'snippet' | 'command'
 
@@ -77,7 +78,7 @@ export function buildPromotionDefaultName(
 ): string {
   const normalized = normalizeCommandString(commandString)
   if (!normalized) {
-    return target === 'command' ? 'Terminal Command' : 'Terminal Workflow'
+    return target === 'command' ? i18n.t('promotion.defaultCommandName', { ns: 'terminal' }) : i18n.t('promotion.defaultWorkflowName', { ns: 'terminal' })
   }
 
   const title = normalized
@@ -88,7 +89,7 @@ export function buildPromotionDefaultName(
     .join(' ')
 
   if (target === 'command') {
-    return extractPrimaryExecutable(commandString) ?? title ?? 'Terminal Command'
+    return extractPrimaryExecutable(commandString) ?? title ?? i18n.t('promotion.defaultCommandName', { ns: 'terminal' })
   }
 
   return title || normalized.slice(0, 32)

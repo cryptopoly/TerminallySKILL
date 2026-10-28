@@ -2,21 +2,31 @@ import { readFileSync } from 'node:fs'
 import { Script, createContext } from 'node:vm'
 import ts from 'typescript'
 
-function loadTypeScriptModule(relativePath) {
-  const sourcePath = new URL(relativePath, import.meta.url)
+function loadTypeScriptModule(relativePath, baseUrl = import.meta.url) {
+  const sourcePath = new URL(relativePath, baseUrl)
   const source = readFileSync(sourcePath, 'utf8')
+
+  if (sourcePath.pathname.endsWith('.json')) {
+    return JSON.parse(source)
+  }
+
   const transpiled = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true
     }
   }).outputText
 
   const sandbox = {
     exports: {},
     module: { exports: {} },
-    require() {
-      throw new Error(`${relativePath} must not require runtime dependencies`)
+    // Only sibling data files (JSON locale bundles) may be required; no runtime dependencies
+    require(specifier) {
+      if (!specifier.startsWith('.') || !specifier.endsWith('.json')) {
+        throw new Error(`${relativePath} must not require runtime dependencies (${specifier})`)
+      }
+      return loadTypeScriptModule(specifier, sourcePath)
     }
   }
   sandbox.exports = sandbox.module.exports
