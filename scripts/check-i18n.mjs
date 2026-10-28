@@ -162,7 +162,11 @@ for (const locale of Object.keys(resources).sort()) {
 
       const englishPlaceholders = placeholders(englishValue)
       const localizedPlaceholders = placeholders(localizedValue)
-      if (!sameList(englishPlaceholders, localizedPlaceholders)) {
+      // Singular/dual/zero plural forms may drop {{count}}-style placeholders ("one file"),
+      // so only require that they add none and that other forms match exactly.
+      const isSpecialPluralForm = /_(zero|one|two)$/.test(key)
+      const isSubset = localizedPlaceholders.every((name) => englishPlaceholders.includes(name))
+      if (isSpecialPluralForm ? !isSubset : !sameList(englishPlaceholders, localizedPlaceholders)) {
         failures.push(
           `${locale}:${namespace}.${key}: placeholder mismatch ` +
             `[${localizedPlaceholders.join(', ')}] != [${englishPlaceholders.join(', ')}]`

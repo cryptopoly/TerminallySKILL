@@ -83,7 +83,7 @@ describe('renderer i18n', () => {
     expect(i18n.t('layout:sidebar.tabs.commands')).toBe('Befehle')
     expect(i18n.t('projects:selector.none')).toBe('Kein Projekt')
     expect(i18n.t('scripts:empty.globalTitle')).toBe('Noch keine Skripte')
-    expect(i18n.t('terminal:panel.noSessions')).toBe('Keine Terminal-Sitzungen. Klicke auf + oder fuhre einen Befehl aus.')
+    expect(i18n.t('terminal:panel.noSessions')).toBe('Keine Terminal-Sitzungen. Klicke auf + oder führe einen Befehl aus.')
     expect(i18n.t('layout:empty.title')).not.toBe('Get started')
   })
 

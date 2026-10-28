@@ -1,1 +1,109 @@
-{}
+{
+  "settings": {
+    "tabs.ai": "AI",
+    "ai.providerDescriptions.openai": "OpenAI API",
+    "ai.providerDescriptions.anthropic": "Claude 模型和本地安全的审查流程",
+    "ai.providerDescriptions.gemini": "Gemini API",
+    "ai.providerDescriptions.openrouter": "通过一个 API 密钥路由到多个提供商",
+    "ai.providerDescriptions.groq": "快速的 OpenAI 兼容推理",
+    "ai.providerDescriptions.mistral": "Mistral 托管模型",
+    "ai.providerDescriptions.together": "托管的开源模型",
+    "ai.providerDescriptions.fireworks": "高性能托管推理",
+    "ai.providerDescriptions.xai": "Grok API 端点",
+    "ai.providerDescriptions.deepseek": "DeepSeek 托管的聊天模型",
+    "ai.providerDescriptions.openai-compatible": "任何提供 /models 和 /chat/completions 的 API",
+    "ai.providerDescriptions.ollama": "在本机运行的本地模型",
+    "ai.providerDescriptions.lmstudio": "OpenAI 兼容的本地运行时"
+  },
+  "commandBuilder": {
+    "referenceHelp.aiProviderFallback": "AI",
+    "explainSegments.command": "命令",
+    "explainSegments.subcommand": "子命令"
+  },
+  "layout": {
+    "topbar.github": "GitHub",
+    "topbar.websiteDescription": "terminallyskill.com"
+  },
+  "projects": {
+    "dialog.workingDirectoryPlaceholder": "/path/to/your/project",
+    "env.keyPlaceholder": "KEY",
+    "env.valuePlaceholder": "值"
+  },
+  "scripts": {
+    "inputs.keyPlaceholder": "placeholder_key"
+  },
+  "logs": {
+    "labels.shell": "Shell",
+    "diagnostics.suspect.exit1a": "命令已运行但出现一般性失败，真正的原因通常就在此错误上方的命令输出中。",
+    "diagnostics.suspect.exit1b": "在包装命令退出之前，前面的构建、打包或验证步骤可能已经失败。",
+    "diagnostics.suspect.exit126a": "目标文件或命令存在，但不可执行，或 shell 没有运行它的权限。",
+    "diagnostics.suspect.exit126b": "脚本的解释器或换行符不正确时也可能出现这种情况。",
+    "diagnostics.suspect.exit127a": "shell 在 PATH 中找不到该命令。",
+    "diagnostics.suspect.exit127b": "此环境中可能未安装所需工具，或可执行文件名称有误。",
+    "diagnostics.suspect.exit130": "进程被中断，通常是由于按下 Ctrl+C 或终端会话被取消。",
+    "diagnostics.suspect.exit137": "进程被强制终止，通常是因为内存不足或收到了 SIGKILL。",
+    "diagnostics.suspect.exit143": "进程被 SIGTERM 终止，通常是其他进程或守护程序将其停止。",
+    "diagnostics.suspect.exitDefault": "退出代码表明命令失败，但具体原因取决于命令输出和环境。",
+    "diagnostics.suspect.macPackaging1": "mac 打包失败通常是由于代码签名、公证或缺少 Apple 证书配置。",
+    "diagnostics.suspect.macPackaging2": "Electron 构建可能缺少应用图标、bundle 元数据或其他必需的 electron-builder 配置项。",
+    "diagnostics.suspect.macPackaging3": "之前可能有普通构建步骤已失败，打包包装命令只是显示了最终的退出代码。",
+    "diagnostics.suspect.build1": "这里常见的是编译期失败，例如 TypeScript 错误、无法解析的导入或对环境变量的错误假设。",
+    "diagnostics.suspect.build2": "配置文件的更改可能破坏了打包器、转译器或输出路径。",
+    "diagnostics.suspect.npm1": "npm 脚本可能在 package.json 内部失败，所以根本问题往往出在它启动的脚本，而不是 npm 本身。",
+    "diagnostics.suspect.npm2": "Node 版本不匹配、缺少依赖或锁文件状态过期，也可能只表现为普通的退出代码 1。",
+    "diagnostics.suspect.shell": "Shell 脚本失败常见原因包括缺少执行权限、相对路径错误或当前工作目录不符合预期。",
+    "diagnostics.suspect.python": "Python 命令失败通常是缺少模块、虚拟环境错误或解释器不匹配。",
+    "diagnostics.suspect.signing": "错误信息已指向 Apple 签名/公证，很可能是原因所在。",
+    "diagnostics.suspect.notFound": "shell 输出表明 PATH 中缺少可执行文件。",
+    "diagnostics.check.openLog": "打开关联的日志或完整命令输出，查找退出代码上方的第一条错误行。",
+    "diagnostics.check.rerun": "单独重新运行失败的命令，以区分包装命令的失败和真正的根本问题。",
+    "diagnostics.check.path": "检查 PATH，并确认缺少的可执行文件已安装在此 shell 环境中。",
+    "diagnostics.check.permissions": "检查文件权限、shebang，以及脚本是否需要 chmod +x。",
+    "diagnostics.check.shell": "确认该命令在 {{shell}} 中的行为相同。",
+    "diagnostics.check.macPackaging1": "检查 electron-builder 配置、应用图标、签名设置，以及打包步骤是否需要 Apple 凭据。",
+    "diagnostics.check.macPackaging2": "在构建输出中查找第一条与打包相关的错误行，而不只是最后的 npm 失败。",
+    "diagnostics.check.npm1": "打开 package.json，查看此 npm 命令背后的具体脚本。",
+    "diagnostics.check.npm2": "尝试不经过 npm，直接运行底层的构建或打包命令，以获得更清晰的错误。",
+    "diagnostics.summary.success": "命令已成功退出。",
+    "diagnostics.summary.command": "{{command}} 已退出，退出代码为 {{code}}。",
+    "diagnostics.summary.title": "{{title}} 已退出，退出代码为 {{code}}。",
+    "diagnostics.summary.fallbackTitle": "此命令"
+  },
+  "terminal": {
+    "aiReview.suggestedCommands": "建议命令",
+    "aiReview.insertCommand": "插入",
+    "toolbar.exitCode": "退出 {{code}}",
+    "toolbar.explainFix": "解释并修复",
+    "toolbar.bracketedPaste": "Bracketed Paste",
+    "toolbar.bracketed": "bracketed",
+    "promotion.defaultCommandName": "终端命令",
+    "promotion.defaultWorkflowName": "终端工作流"
+  },
+  "native": {
+    "menu.file": "文件",
+    "menu.newWindow": "新建窗口",
+    "menu.edit": "编辑",
+    "menu.window": "窗口",
+    "closeDialog.title": "活动进程",
+    "closeDialog.closeAnyway": "仍然关闭",
+    "closeDialog.processOne": "此窗口中仍有一个进程正在运行。",
+    "closeDialog.processMany": "此窗口中仍有 {{count}} 个进程正在运行。",
+    "closeDialog.terminateOne": "关闭将终止该终端会话。",
+    "closeDialog.terminateMany": "关闭将终止全部 {{count}} 个终端会话。"
+  },
+  "onboarding": {
+    "sections.keyboard.steps.terminal.label": "Command+/",
+    "sections.keyboard.steps.palette.label": "Command+K",
+    "sections.keyboard.steps.projectSwitcher.label": "Command+P",
+    "sections.keyboard.steps.splitVertical.label": "Command+D",
+    "sections.keyboard.steps.splitHorizontal.label": "Command+Shift+D",
+    "sections.keyboard.steps.focusPane.label": "Command+] / Command+[",
+    "sections.keyboard.steps.terminalSearch.label": "Command+F",
+    "sections.keyboard.steps.findFiles.label": "Command+Shift+F",
+    "sections.keyboard.steps.closeFile.label": "Command+W",
+    "sections.keyboard.steps.snapshot.label": "Command+Shift+S",
+    "sections.keyboard.steps.help.label": "Command+I",
+    "sections.keyboard.steps.newTerminal.label": "Command+T",
+    "sections.settings.steps.themes.desc": "从标题栏齿轮图标打开设置。可在 8 个主题中选择：虚空、余烬、黄昏、森林、粉笔、拿铁、鼠尾草或薄雾。"
+  }
+}
