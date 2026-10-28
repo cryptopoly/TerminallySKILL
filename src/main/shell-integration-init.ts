@@ -8,6 +8,8 @@ export function buildZshEnvForward(tmpDir: string): string {
   return [
     '__tv_zdotdir=' + quoted,
     'ZDOTDIR="${TV_USER_ZDOTDIR:-$HOME}"',
+    // A stale TV_USER_ZDOTDIR can point back at this temp dir; never source ourselves
+    '[ "$ZDOTDIR" = "$__tv_zdotdir" ] && ZDOTDIR="$HOME"',
     '[ -f "$ZDOTDIR/.zshenv" ] && source "$ZDOTDIR/.zshenv"',
     'TV_USER_ZDOTDIR="${ZDOTDIR:-$HOME}"',
     'export TV_USER_ZDOTDIR',
@@ -18,11 +20,14 @@ export function buildZshEnvForward(tmpDir: string): string {
 
 export function buildZshShellIntegrationInit(): string {
   return [
+    '__tv_zdotdir="$ZDOTDIR"',
     'ZDOTDIR="${TV_USER_ZDOTDIR:-$HOME}"',
+    '[ "$ZDOTDIR" = "$__tv_zdotdir" ] && ZDOTDIR="$HOME"',
     '[ -f "$ZDOTDIR/.zshrc" ] && source "$ZDOTDIR/.zshrc"',
     "__tv_b64() { printf '%s' \"$1\" | base64 | tr -d '\\n'; }",
     "__tv_prompt_ready() { printf '\\033]7337;shell;prompt-ready;%s;%s\\007' \"$?\" \"$(__tv_b64 \"$PWD\")\"; }",
     "__tv_command_start() { printf '\\033]7337;shell;command-start;%s\\007' \"$(__tv_b64 \"$1\")\"; }",
+    'unset __tv_zdotdir',
     'precmd_functions+=(__tv_prompt_ready)',
     'preexec_functions+=(__tv_command_start)'
   ].join('\n') + '\n'

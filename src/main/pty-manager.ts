@@ -278,7 +278,13 @@ function setupShellIntegration(
       buildZshShellIntegrationInit()
     )
 
-    if (env.ZDOTDIR) env.TV_USER_ZDOTDIR = env.ZDOTDIR
+    // An inherited ZDOTDIR is the user's only if it is not another terminal's temp dir
+    // (e.g. the app was started from a TerminallySKILL terminal).
+    if (env.ZDOTDIR && !path.basename(env.ZDOTDIR).startsWith('tv-zsh-')) {
+      env.TV_USER_ZDOTDIR = env.ZDOTDIR
+    } else {
+      delete env.TV_USER_ZDOTDIR
+    }
     env.ZDOTDIR = tmpDir
     hasIntegration = true
     console.log(`[pty] Shell integration (zsh): ZDOTDIR=${tmpDir}`)

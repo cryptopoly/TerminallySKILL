@@ -51,6 +51,23 @@ describe('shell integration against real shells', () => {
     expect(out).toContain('__tv_prompt_ready')
   })
 
+  it.runIf(hasShell('zsh'))('zsh: survives a stale TV_USER_ZDOTDIR pointing at its own temp dir', () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), 'tv-home-'))
+    const tmp = mkdtempSync(path.join(os.tmpdir(), 'tv-zsh-'))
+    writeFileSync(path.join(home, '.zshrc'), 'USER_RC_LOADED=yes\n')
+    writeFileSync(path.join(tmp, '.zshenv'), buildZshEnvForward(tmp))
+    writeFileSync(path.join(tmp, '.zshrc'), buildZshShellIntegrationInit())
+
+    const result = spawnSync('zsh', ['-i', '-c', 'print -r -- "rc=$USER_RC_LOADED"'], {
+      env: { PATH: process.env.PATH ?? '', HOME: home, ZDOTDIR: tmp, TV_USER_ZDOTDIR: tmp },
+      encoding: 'utf8',
+      timeout: 5000
+    })
+
+    expect(result.stderr).not.toContain('recursion')
+    expect(result.stdout).toContain('rc=yes')
+  })
+
   it.runIf(hasShell('bash'))('bash: chains a DEBUG trap installed by the user rc', () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), 'tv-bash-'))
     const rc = path.join(dir, 'rc.sh')
