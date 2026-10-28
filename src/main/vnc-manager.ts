@@ -6,6 +6,7 @@ import { WebSocketServer, WebSocket } from 'ws'
 import type { BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
 import type { SSHProjectWorkspaceTarget } from '../shared/project-schema'
+import { translateNativeSync } from './native-i18n'
 
 interface VncSession {
   sessionId: string
@@ -43,7 +44,7 @@ async function waitForPort(port: number, maxAttempts = 25): Promise<void> {
       await new Promise((r) => setTimeout(r, 200))
     }
   }
-  throw new Error(`SSH tunnel port ${port} not ready after ${maxAttempts} attempts`)
+  throw new Error(translateNativeSync('errors.sshTunnelPortNotReady', { port, attempts: maxAttempts }))
 }
 
 export async function startVncSession(
@@ -93,7 +94,7 @@ export async function startVncSession(
     await waitForPort(localTcpPort)
   } catch (err) {
     tunnelProcess.kill('SIGTERM')
-    throw new Error(`Could not establish SSH tunnel: ${err instanceof Error ? err.message : String(err)}`)
+    throw new Error(translateNativeSync('errors.sshTunnelFailed', { detail: err instanceof Error ? err.message : String(err) }))
   }
 
   const wsServer = new WebSocketServer({ host: '127.0.0.1', port: wsPort })

@@ -29,6 +29,7 @@ import type {
   AIOutputReviewRequest,
   AIChatFollowUpRequest
 } from '../shared/ai-schema'
+import { translateNativeSync } from './native-i18n'
 
 const OUTPUT_REVIEW_MAX_CHARS = 12_000
 const OPENAI_COMPATIBLE_PROVIDER_IDS = new Set<AIProvider['id']>([
@@ -341,7 +342,7 @@ export function buildArtifactImprovementPrompt(request: AIArtifactImprovementReq
 function extractJsonText(content: string): string {
   const trimmed = content.trim()
   if (!trimmed) {
-    throw new Error('AI provider returned an empty response')
+    throw new Error(translateNativeSync('errors.aiEmptyResponse'))
   }
 
   const codeFenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
@@ -967,7 +968,7 @@ export function extractOpenAIText(payload: unknown): string {
     .find(Boolean)
 
   if (text) return text
-  throw new Error('OpenAI response did not include any text output')
+  throw new Error(translateNativeSync('errors.aiNoTextOutput', { provider: 'OpenAI' }))
 }
 
 export function extractAnthropicText(payload: unknown): string {
@@ -978,19 +979,19 @@ export function extractAnthropicText(payload: unknown): string {
     .find(Boolean)
 
   if (text) return text
-  throw new Error('Anthropic response did not include any text output')
+  throw new Error(translateNativeSync('errors.aiNoTextOutput', { provider: 'Anthropic' }))
 }
 
 export function extractOllamaText(payload: unknown): string {
   const text = (payload as { message?: { content?: string } })?.message?.content?.trim()
   if (text) return text
-  throw new Error('Ollama response did not include any text output')
+  throw new Error(translateNativeSync('errors.aiNoTextOutput', { provider: 'Ollama' }))
 }
 
 export function extractChatCompletionsText(payload: unknown): string {
   const text = (payload as { choices?: Array<{ message?: { content?: string } }> })?.choices?.[0]?.message?.content?.trim()
   if (text) return text
-  throw new Error('Provider response did not include any text output')
+  throw new Error(translateNativeSync('errors.aiProviderNoTextOutput'))
 }
 
 export function extractGeminiText(payload: unknown): string {
@@ -1001,7 +1002,7 @@ export function extractGeminiText(payload: unknown): string {
     .find(Boolean)
 
   if (text) return text
-  throw new Error('Gemini response did not include any text output')
+  throw new Error(translateNativeSync('errors.aiNoTextOutput', { provider: 'Gemini' }))
 }
 
 async function parseJsonResponse(response: Response): Promise<unknown> {
@@ -1013,7 +1014,7 @@ async function parseJsonResponse(response: Response): Promise<unknown> {
   try {
     return JSON.parse(body)
   } catch {
-    throw new Error('AI provider returned invalid JSON')
+    throw new Error(translateNativeSync('errors.aiInvalidJson'))
   }
 }
 
@@ -1043,7 +1044,7 @@ async function runOpenAIAction(
   model: string,
   prompt: AIPrompt
 ): Promise<string> {
-  if (!provider.apiKey) throw new Error('Active OpenAI provider is missing an API key')
+  if (!provider.apiKey) throw new Error(translateNativeSync('errors.aiMissingApiKey', { provider: 'OpenAI' }))
 
   const response = await fetchWithTimeout(`${provider.baseUrl}/responses`, {
     method: 'POST',
@@ -1067,7 +1068,7 @@ async function runAnthropicAction(
   model: string,
   prompt: AIPrompt
 ): Promise<string> {
-  if (!provider.apiKey) throw new Error('Active Anthropic provider is missing an API key')
+  if (!provider.apiKey) throw new Error(translateNativeSync('errors.aiMissingApiKey', { provider: 'Anthropic' }))
 
   const response = await fetchWithTimeout(`${provider.baseUrl}/v1/messages`, {
     method: 'POST',
@@ -1117,7 +1118,7 @@ async function runGeminiAction(
   model: string,
   prompt: AIPrompt
 ): Promise<string> {
-  if (!provider.apiKey) throw new Error('Active Gemini provider is missing an API key')
+  if (!provider.apiKey) throw new Error(translateNativeSync('errors.aiMissingApiKey', { provider: 'Gemini' }))
 
   const response = await fetchWithTimeout(
     `${provider.baseUrl}/models/${encodeURIComponent(model)}:generateContent`,
@@ -1229,7 +1230,7 @@ export async function runAIAction(request: AIActionRequest): Promise<AIActionRes
   const routingCandidates = getRoutingCandidates(settings)
 
   if (routingCandidates.length === 0) {
-    throw new Error('Connect an AI provider and choose a primary model in Settings before using AI actions')
+    throw new Error(translateNativeSync('errors.aiNotConfigured'))
   }
 
   let prompt: AIPrompt
@@ -1316,7 +1317,7 @@ export async function runAIAction(request: AIActionRequest): Promise<AIActionRes
   }
 
   if (!content) {
-    throw lastError ?? new Error('AI provider returned an empty response')
+    throw lastError ?? new Error(translateNativeSync('errors.aiEmptyResponse'))
   }
 
   const suggestedCommands =

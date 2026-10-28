@@ -1,5 +1,6 @@
 import { ipcMain, BrowserWindow, dialog } from 'electron'
 import { IPC_CHANNELS } from '../../shared/ipc-channels'
+import { translateNativeSync } from '../native-i18n'
 import { getTVFlowName, isTVFlowFile, type TVFlowFile } from '../../shared/tvflow-schema'
 import {
   getAllScripts,
@@ -126,7 +127,7 @@ export function registerScriptIpcHandlers(): void {
       const raw = await readFile(filePaths[0], 'utf-8')
       const data = JSON.parse(raw) as unknown
       if (!isTVFlowFile(data)) {
-        throw new Error('Invalid .tvflow file format')
+        throw new Error(translateNativeSync('errors.invalidTvflow'))
       }
       return importScript(data as TVFlowFile, projectId)
     }

@@ -5,6 +5,7 @@ import os from 'os'
 import { isAbsolute, join, relative, resolve } from 'path'
 import type { BackupLocationSuggestion, BackupRunResult } from '../shared/backup-schema'
 import { getDataDir, getLogsDir, getUserDataDir } from './user-data-path'
+import { translateNativeSync } from './native-i18n'
 
 const ICLOUD_BACKUP_FOLDER_NAME = 'TerminallySKILL Backups'
 const EXCLUDED_DATA_FILES = new Set(['secrets.json'])
@@ -87,7 +88,7 @@ export async function createAppDataBackup(targetDirectory: string): Promise<Back
   if (!trimmedTarget) {
     return {
       success: false,
-      error: 'Choose a backup folder first.'
+      error: translateNativeSync('errors.backupChooseFolder')
     }
   }
 
@@ -97,7 +98,7 @@ export async function createAppDataBackup(targetDirectory: string): Promise<Back
   if (isPathInside(userDataDir, normalizedTarget)) {
     return {
       success: false,
-      error: 'Choose a backup folder outside the TerminallySKILL app-data directory.'
+      error: translateNativeSync('errors.backupFolderInsideAppData')
     }
   }
 

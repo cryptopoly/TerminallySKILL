@@ -1,3 +1,5 @@
+import { translateNativeSync } from './native-i18n'
+
 /** Time allowed for an AI request before it is aborted. Local models load and generate slowly. */
 export const AI_REQUEST_TIMEOUT_MS = 90_000
 export const LOCAL_AI_REQUEST_TIMEOUT_MS = 300_000
@@ -17,7 +19,7 @@ export async function fetchWithTimeout(
     return await fetch(input, { ...init, signal: init.signal ?? AbortSignal.timeout(timeoutMs) })
   } catch (error) {
     if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
-      throw new Error(`AI provider did not respond within ${Math.round(timeoutMs / 1000)} seconds`)
+      throw new Error(translateNativeSync('errors.aiTimeout', { seconds: Math.round(timeoutMs / 1000) }))
     }
     throw error
   }

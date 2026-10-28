@@ -1,5 +1,6 @@
 import { readdir, readFile } from 'fs/promises'
 import { join } from 'path'
+import { resources } from '../renderer/src/i18n/resources'
 import {
   EMPTY_STARTER_PACK_PREVIEW,
   type StarterPackPreview,
@@ -18,6 +19,21 @@ const PYTHON_PROJECT_FILES = ['pyproject.toml', 'requirements.txt', 'setup.py', 
 const PYTHON_ENTRYPOINT_FILES = ['manage.py', 'app.py', 'main.py']
 const RUST_PROJECT_FILES = ['Cargo.toml']
 const GO_PROJECT_FILES = ['go.mod']
+
+export type Translate = (key: string, values?: Record<string, string | number>) => string
+
+function lookupEnglish(key: string): string | undefined {
+  let node: unknown = resources.en?.native
+  for (const part of key.split('.')) {
+    if (typeof node !== 'object' || node === null) return undefined
+    node = (node as Record<string, unknown>)[part]
+  }
+  return typeof node === 'string' ? node : undefined
+}
+
+/** English translator used when the caller does not supply one (tests, non-UI callers) */
+const englishTranslate: Translate = (key, values = {}) =>
+  (lookupEnglish(key) ?? key).replace(/\{\{\s*(\w+)\s*\}\}/g, (_m, name: string) => String(values[name] ?? ''))
 
 type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun'
 type PythonManager = 'uv' | 'poetry' | 'pip'
@@ -146,6 +162,7 @@ function getInterestingPackageScripts(packageScripts: Record<string, string>): s
 }
 
 function buildNodeScripts(
+  t: Translate,
   packageManager: PackageManager,
   packageScripts: Record<string, string>
 ): StarterScriptTemplate[] {
@@ -157,14 +174,14 @@ function buildNodeScripts(
     result.push({
       name:
         runTarget === 'dev'
-          ? 'Start dev server'
+          ? t('starterPack.startDevServer')
           : runTarget === 'preview'
-            ? 'Preview app'
-            : 'Start app',
-      description: `Install dependencies and run the "${runTarget}" package script.`,
+            ? t('starterPack.previewApp')
+            : t('starterPack.startApp'),
+      description: t('starterPack.installAndRunScriptDescription', { script: runTarget }),
       steps: [
-        { label: 'Install dependencies', commandString: buildInstallCommand(packageManager) },
-        { label: `Run ${runTarget}`, commandString: buildRunCommand(packageManager, runTarget) }
+        { label: t('starterPack.installDependencies'), commandString: buildInstallCommand(packageManager) },
+        { label: t('starterPack.run', { target: runTarget }), commandString: buildRunCommand(packageManager, runTarget) }
       ]
     })
   }
@@ -172,10 +189,10 @@ function buildNodeScripts(
   const verificationScripts = VERIFICATION_SCRIPT_NAMES.filter((name) => packageScripts[name])
   if (verificationScripts.length > 0) {
     result.push({
-      name: 'Verify project',
-      description: 'Run the common quality checks exposed by package.json.',
+      name: t('starterPack.verifyProject'),
+      description: t('starterPack.verifyProjectDescription'),
       steps: verificationScripts.map((name) => ({
-        label: `Run ${name}`,
+        label: t('starterPack.run', { target: name }),
         commandString: buildRunCommand(packageManager, name)
       }))
     })
@@ -183,11 +200,11 @@ function buildNodeScripts(
 
   if (packageScripts.build && packageScripts.preview && runTarget !== 'preview') {
     result.push({
-      name: 'Preview production build',
-      description: 'Build the project and open the preview target detected in package.json.',
+      name: t('starterPack.previewProductionBuild'),
+      description: t('starterPack.previewProductionBuildDescription'),
       steps: [
-        { label: 'Run build', commandString: buildRunCommand(packageManager, 'build') },
-        { label: 'Run preview', commandString: buildRunCommand(packageManager, 'preview') }
+        { label: t('starterPack.run', { target: 'build' }), commandString: buildRunCommand(packageManager, 'build') },
+        { label: t('starterPack.run', { target: 'preview' }), commandString: buildRunCommand(packageManager, 'preview') }
       ]
     })
   }
@@ -195,9 +212,9 @@ function buildNodeScripts(
   const packagingTarget = pickFirstMatch(PACKAGING_SCRIPT_NAMES, scriptNames)
   if (packagingTarget) {
     result.push({
-      name: 'Package app',
-      description: `Run the "${packagingTarget}" packaging script detected in package.json.`,
-      steps: [{ label: `Run ${packagingTarget}`, commandString: buildRunCommand(packageManager, packagingTarget) }]
+      name: t('starterPack.packageApp'),
+      description: t('starterPack.packageAppDescription', { script: packagingTarget }),
+      steps: [{ label: t('starterPack.run', { target: packagingTarget }), commandString: buildRunCommand(packageManager, packagingTarget) }]
     })
   }
 
@@ -205,14 +222,15 @@ function buildNodeScripts(
 }
 
 function buildNodeSnippets(
+  t: Translate,
   packageManager: PackageManager,
   packageScripts: Record<string, string>
 ): StarterSnippetTemplate[] {
   const defaultScript = getInterestingPackageScripts(packageScripts)[0] ?? 'dev'
   return [
     {
-      name: 'Run package script',
-      description: 'Execute one of the package.json scripts detected in this repo.',
+      name: t('starterPack.runPackageScript'),
+      description: t('starterPack.runPackageScriptDescription'),
       template: buildRunCommand(packageManager, `{{script:${defaultScript}}}`)
     }
   ]
@@ -336,24 +354,24 @@ function buildPythonScriptRunCommand(manager: PythonManager, scriptName: string)
   }
 }
 
-function buildPythonScripts(info: PythonProjectInfo): StarterScriptTemplate[] {
+function buildPythonScripts(t: Translate, info: PythonProjectInfo): StarterScriptTemplate[] {
   const scripts: StarterScriptTemplate[] = [
     {
       name:
         info.manager === 'uv'
-          ? 'Sync Python environment'
+          ? t('starterPack.syncPythonEnvironment')
           : info.manager === 'poetry'
-            ? 'Install Poetry environment'
-            : 'Install Python dependencies',
+            ? t('starterPack.installPoetryEnvironment')
+            : t('starterPack.installPythonDependencies'),
       description:
         info.manager === 'pip' && info.requirementsFile === 'requirements.txt'
-          ? 'Install the dependencies listed in requirements.txt.'
-          : 'Set up the Python environment for this repo.',
+          ? t('starterPack.installRequirementsDescription')
+          : t('starterPack.setUpPythonEnvironmentDescription'),
       steps: [
         {
           label: info.manager === 'pip' && info.requirementsFile === 'requirements.txt'
-            ? 'Install requirements'
-            : 'Install environment',
+            ? t('starterPack.installRequirements')
+            : t('starterPack.installEnvironment'),
           commandString: buildPythonInstallCommand(info.manager, info.requirementsFile)
         }
       ]
@@ -362,42 +380,42 @@ function buildPythonScripts(info: PythonProjectInfo): StarterScriptTemplate[] {
 
   if (info.hasTests) {
     scripts.push({
-      name: 'Run Python tests',
-      description: 'Run the Python test suite detected in this repo.',
-      steps: [{ label: 'Run tests', commandString: buildPythonTestCommand(info.manager) }]
+      name: t('starterPack.runPythonTests'),
+      description: t('starterPack.runPythonTestsDescription'),
+      steps: [{ label: t('starterPack.runTests'), commandString: buildPythonTestCommand(info.manager) }]
     })
   }
 
   if (info.entrypoint) {
     if (info.entrypoint.kind === 'django') {
       scripts.push({
-        name: 'Start Django dev server',
-        description: 'Run the Django development server from manage.py.',
+        name: t('starterPack.startDjangoDevServer'),
+        description: t('starterPack.startDjangoDevServerDescription'),
         steps: [
           {
-            label: 'Run dev server',
+            label: t('starterPack.runDevServer'),
             commandString: buildPythonFileRunCommand(info.manager, 'manage.py', ['runserver'])
           }
         ]
       })
     } else if (info.entrypoint.kind === 'script') {
       scripts.push({
-        name: `Run ${info.entrypoint.value}`,
-        description: `Run the "${info.entrypoint.value}" Python project command detected in pyproject.toml.`,
+        name: t('starterPack.run', { target: info.entrypoint.value }),
+        description: t('starterPack.projectCommandDescription', { name: info.entrypoint.value }),
         steps: [
           {
-            label: `Run ${info.entrypoint.value}`,
+            label: t('starterPack.run', { target: info.entrypoint.value }),
             commandString: buildPythonScriptRunCommand(info.manager, info.entrypoint.value)
           }
         ]
       })
     } else if (info.entrypoint.kind === 'file') {
       scripts.push({
-        name: `Run ${info.entrypoint.value}`,
-        description: `Run the "${info.entrypoint.value}" entrypoint detected in the repo root.`,
+        name: t('starterPack.run', { target: info.entrypoint.value }),
+        description: t('starterPack.entrypointDescription', { name: info.entrypoint.value }),
         steps: [
           {
-            label: `Run ${info.entrypoint.value}`,
+            label: t('starterPack.run', { target: info.entrypoint.value }),
             commandString: buildPythonFileRunCommand(info.manager, info.entrypoint.value)
           }
         ]
@@ -408,19 +426,19 @@ function buildPythonScripts(info: PythonProjectInfo): StarterScriptTemplate[] {
   return scripts
 }
 
-function buildPythonSnippets(info: PythonProjectInfo): StarterSnippetTemplate[] {
+function buildPythonSnippets(t: Translate, info: PythonProjectInfo): StarterSnippetTemplate[] {
   const snippets: StarterSnippetTemplate[] = []
 
   if (info.manager === 'pip') {
     snippets.push({
-      name: 'Run Python module',
-      description: 'Execute a Python module through the active interpreter.',
+      name: t('starterPack.runPythonModule'),
+      description: t('starterPack.runPythonModuleDescription'),
       template: 'python -m {{module:pytest}}'
     })
   } else {
     snippets.push({
-      name: 'Run Python command',
-      description: 'Execute a Python command inside the managed project environment.',
+      name: t('starterPack.runPythonCommand'),
+      description: t('starterPack.runPythonCommandDescription'),
       template:
         info.manager === 'uv'
           ? 'uv run {{command:pytest}}'
@@ -430,8 +448,8 @@ function buildPythonSnippets(info: PythonProjectInfo): StarterSnippetTemplate[] 
 
   if (info.requirementsFile === 'requirements.txt') {
     snippets.push({
-      name: 'Install requirements file',
-      description: 'Install dependencies from a requirements file.',
+      name: t('starterPack.installRequirementsFile'),
+      description: t('starterPack.installRequirementsFileDescription'),
       template: 'python -m pip install -r {{requirements:requirements.txt}}'
     })
   }
@@ -472,24 +490,24 @@ async function loadRustProjectInfo(
   }
 }
 
-function buildRustScripts(info: RustProjectInfo): StarterScriptTemplate[] {
+function buildRustScripts(t: Translate, info: RustProjectInfo): StarterScriptTemplate[] {
   const scripts: StarterScriptTemplate[] = [
     {
-      name: 'Build Rust project',
-      description: 'Compile the current Rust crate or workspace with Cargo.',
+      name: t('starterPack.buildRustProject'),
+      description: t('starterPack.buildRustProjectDescription'),
       steps: [{ label: 'cargo build', commandString: 'cargo build' }]
     },
     {
-      name: 'Run Rust tests',
-      description: 'Run unit, integration, and documentation tests with Cargo.',
+      name: t('starterPack.runRustTests'),
+      description: t('starterPack.runRustTestsDescription'),
       steps: [{ label: 'cargo test', commandString: 'cargo test' }]
     }
   ]
 
   if (info.hasBinaryTarget) {
     scripts.push({
-      name: 'Run Rust app',
-      description: 'Build and run the current Rust binary target.',
+      name: t('starterPack.runRustApp'),
+      description: t('starterPack.runRustAppDescription'),
       steps: [{ label: 'cargo run', commandString: 'cargo run' }]
     })
   }
@@ -497,16 +515,16 @@ function buildRustScripts(info: RustProjectInfo): StarterScriptTemplate[] {
   return scripts
 }
 
-function buildRustSnippets(info: RustProjectInfo): StarterSnippetTemplate[] {
+function buildRustSnippets(t: Translate, info: RustProjectInfo): StarterSnippetTemplate[] {
   return [
     {
-      name: 'cargo run target',
-      description: 'Run a specific Rust binary target with Cargo.',
+      name: t('starterPack.cargoRunTarget'),
+      description: t('starterPack.cargoRunTargetDescription'),
       template: `cargo run --bin {{binary:${info.packageName ?? 'app'}}}`
     },
     {
-      name: 'cargo test filter',
-      description: 'Run Rust tests matching a specific filter.',
+      name: t('starterPack.cargoTestFilter'),
+      description: t('starterPack.cargoTestFilterDescription'),
       template: 'cargo test {{filter:config}}'
     }
   ]
@@ -537,24 +555,24 @@ async function loadGoProjectInfo(
   }
 }
 
-function buildGoScripts(info: GoProjectInfo): StarterScriptTemplate[] {
+function buildGoScripts(t: Translate, info: GoProjectInfo): StarterScriptTemplate[] {
   const scripts: StarterScriptTemplate[] = [
     {
-      name: 'Build Go module',
-      description: 'Compile the current Go module across packages.',
+      name: t('starterPack.buildGoModule'),
+      description: t('starterPack.buildGoModuleDescription'),
       steps: [{ label: 'go build ./...', commandString: 'go build ./...' }]
     },
     {
-      name: 'Run Go tests',
-      description: 'Run Go tests across the current module.',
+      name: t('starterPack.runGoTests'),
+      description: t('starterPack.runGoTestsDescription'),
       steps: [{ label: 'go test ./...', commandString: 'go test ./...' }]
     }
   ]
 
   if (info.hasRunnableTarget) {
     scripts.push({
-      name: 'Run Go app',
-      description: 'Compile and run the current Go application target.',
+      name: t('starterPack.runGoApp'),
+      description: t('starterPack.runGoAppDescription'),
       steps: [{ label: 'go run .', commandString: 'go run .' }]
     })
   }
@@ -562,39 +580,39 @@ function buildGoScripts(info: GoProjectInfo): StarterScriptTemplate[] {
   return scripts
 }
 
-function buildGoSnippets(_info: GoProjectInfo): StarterSnippetTemplate[] {
+function buildGoSnippets(t: Translate, _info: GoProjectInfo): StarterSnippetTemplate[] {
   return [
     {
-      name: 'go run target',
-      description: 'Run a Go package, module, or file directly.',
+      name: t('starterPack.goRunTarget'),
+      description: t('starterPack.goRunTargetDescription'),
       template: 'go run {{target:.}}'
     },
     {
-      name: 'go test packages',
-      description: 'Run Go tests for one or more packages.',
+      name: t('starterPack.goTestPackages'),
+      description: t('starterPack.goTestPackagesDescription'),
       template: 'go test {{packages:./...}}'
     }
   ]
 }
 
-function buildGitScripts(): StarterScriptTemplate[] {
+function buildGitScripts(t: Translate): StarterScriptTemplate[] {
   return [
     {
-      name: 'Git quick check',
-      description: 'Review repo state before making or shipping changes.',
+      name: t('starterPack.gitQuickCheck'),
+      description: t('starterPack.gitQuickCheckDescription'),
       steps: [
-        { label: 'Check status', commandString: 'git status' },
-        { label: 'Recent commits', commandString: 'git log --oneline -5' }
+        { label: t('starterPack.checkStatus'), commandString: 'git status' },
+        { label: t('starterPack.recentCommits'), commandString: 'git log --oneline -5' }
       ]
     }
   ]
 }
 
-function buildGitSnippets(): StarterSnippetTemplate[] {
+function buildGitSnippets(t: Translate): StarterSnippetTemplate[] {
   return [
     {
-      name: 'git checkout branch',
-      description: 'Jump to a branch quickly with a reusable template.',
+      name: t('starterPack.gitCheckoutBranch'),
+      description: t('starterPack.gitCheckoutBranchDescription'),
       template: 'git checkout {{branch:main}}'
     }
   ]
@@ -651,23 +669,23 @@ async function loadComposeServices(
   }
 }
 
-function buildDockerScripts(hasComposeFile: boolean, composeServices: string[]): StarterScriptTemplate[] {
+function buildDockerScripts(t: Translate, hasComposeFile: boolean, composeServices: string[]): StarterScriptTemplate[] {
   const result: StarterScriptTemplate[] = []
 
   if (hasComposeFile) {
     result.push({
-      name: 'Start containers',
-      description: 'Bring up the local Docker Compose stack with a rebuild.',
-      steps: [{ label: 'Compose up', commandString: 'docker compose up --build' }]
+      name: t('starterPack.startContainers'),
+      description: t('starterPack.startContainersDescription'),
+      steps: [{ label: t('starterPack.composeUp'), commandString: 'docker compose up --build' }]
     })
   }
 
   if (composeServices.length > 0) {
     const firstService = composeServices[0]
     result.push({
-      name: `Tail ${firstService} logs`,
-      description: `Follow logs for the "${firstService}" service detected in Compose.`,
-      steps: [{ label: `Logs for ${firstService}`, commandString: `docker compose logs -f ${firstService}` }]
+      name: t('starterPack.tailServiceLogs', { service: firstService }),
+      description: t('starterPack.tailServiceLogsDescription', { service: firstService }),
+      steps: [{ label: t('starterPack.logsForService', { service: firstService }), commandString: `docker compose logs -f ${firstService}` }]
     })
   }
 
@@ -675,6 +693,7 @@ function buildDockerScripts(hasComposeFile: boolean, composeServices: string[]):
 }
 
 function buildDockerSnippets(
+  t: Translate,
   hasDockerfile: boolean,
   hasComposeFile: boolean,
   composeServices: string[]
@@ -683,8 +702,8 @@ function buildDockerSnippets(
 
   if (hasDockerfile) {
     result.push({
-      name: 'Build local image',
-      description: 'Build the repo image locally with a configurable tag.',
+      name: t('starterPack.buildLocalImage'),
+      description: t('starterPack.buildLocalImageDescription'),
       template: 'docker build -t {{imageName:app-local}} .'
     })
   }
@@ -692,13 +711,13 @@ function buildDockerSnippets(
   if (hasComposeFile) {
     const defaultService = composeServices[0] ?? 'app'
     result.push({
-      name: 'Compose service',
-      description: 'Start a specific Compose service without editing the command each time.',
+      name: t('starterPack.composeService'),
+      description: t('starterPack.composeServiceDescription'),
       template: `docker compose up {{service:${defaultService}}}`
     })
     result.push({
-      name: 'Compose logs',
-      description: 'Tail logs for a Compose service detected in this repo.',
+      name: t('starterPack.composeLogs'),
+      description: t('starterPack.composeLogsDescription'),
       template: `docker compose logs -f {{service:${defaultService}}}`
     })
   }
@@ -740,23 +759,23 @@ async function loadMakeTargets(
   }
 }
 
-function buildMakeScripts(targets: string[]): StarterScriptTemplate[] {
+function buildMakeScripts(t: Translate, targets: string[]): StarterScriptTemplate[] {
   const result: StarterScriptTemplate[] = []
   const runTarget = pickFirstMatch(MAKE_RUN_TARGETS, targets)
   const verifyTargets = MAKE_VERIFY_TARGETS.filter((target) => targets.includes(target))
 
   if (runTarget) {
     result.push({
-      name: 'Start via make',
-      description: `Run the "${runTarget}" Makefile target detected in this repo.`,
+      name: t('starterPack.startViaMake'),
+      description: t('starterPack.startViaMakeDescription', { target: runTarget }),
       steps: [{ label: `make ${runTarget}`, commandString: `make ${runTarget}` }]
     })
   }
 
   if (verifyTargets.length > 0) {
     result.push({
-      name: 'Verify via make',
-      description: 'Run the quality and build targets exposed by the Makefile.',
+      name: t('starterPack.verifyViaMake'),
+      description: t('starterPack.verifyViaMakeDescription'),
       steps: verifyTargets.map((target) => ({
         label: `make ${target}`,
         commandString: `make ${target}`
@@ -767,20 +786,24 @@ function buildMakeScripts(targets: string[]): StarterScriptTemplate[] {
   return result
 }
 
-function buildMakeSnippets(targets: string[]): StarterSnippetTemplate[] {
+function buildMakeSnippets(t: Translate, targets: string[]): StarterSnippetTemplate[] {
   if (targets.length === 0) return []
 
   const defaultTarget = pickFirstMatch([...MAKE_RUN_TARGETS, ...MAKE_VERIFY_TARGETS], targets) ?? targets[0]
   return [
     {
-      name: 'Run make target',
-      description: 'Execute a detected Makefile target with a reusable template.',
+      name: t('starterPack.runMakeTarget'),
+      description: t('starterPack.runMakeTargetDescription'),
       template: `make {{target:${defaultTarget}}}`
     }
   ]
 }
 
-export async function detectStarterPack(workingDirectory: string): Promise<StarterPackPreview> {
+export async function detectStarterPack(
+  workingDirectory: string,
+  translate: Translate = englishTranslate
+): Promise<StarterPackPreview> {
+  const t = translate
   if (!workingDirectory.trim()) return EMPTY_STARTER_PACK_PREVIEW
 
   try {
@@ -795,8 +818,8 @@ export async function detectStarterPack(workingDirectory: string): Promise<Start
     if (hasGitDir) {
       detections.push('Git repository')
       categories.add('git')
-      scripts.push(...buildGitScripts())
-      snippets.push(...buildGitSnippets())
+      scripts.push(...buildGitScripts(t))
+      snippets.push(...buildGitSnippets(t))
     }
 
     const packageManifest = entryNames.has('package.json')
@@ -809,8 +832,8 @@ export async function detectStarterPack(workingDirectory: string): Promise<Start
           : `Node package (${packageManifest.packageManager})`
       )
       categories.add('package-managers')
-      scripts.push(...buildNodeScripts(packageManifest.packageManager, packageManifest.scripts))
-      snippets.push(...buildNodeSnippets(packageManifest.packageManager, packageManifest.scripts))
+      scripts.push(...buildNodeScripts(t, packageManifest.packageManager, packageManifest.scripts))
+      snippets.push(...buildNodeSnippets(t, packageManifest.packageManager, packageManifest.scripts))
     }
 
     const pythonProject = await loadPythonProjectInfo(workingDirectory, entries, entryNames)
@@ -821,24 +844,24 @@ export async function detectStarterPack(workingDirectory: string): Promise<Start
           : `Python project (${pythonProject.manager})`
       )
       categories.add('python')
-      scripts.push(...buildPythonScripts(pythonProject))
-      snippets.push(...buildPythonSnippets(pythonProject))
+      scripts.push(...buildPythonScripts(t, pythonProject))
+      snippets.push(...buildPythonSnippets(t, pythonProject))
     }
 
     const rustProject = await loadRustProjectInfo(workingDirectory, entryNames)
     if (rustProject) {
       detections.push('Rust crate')
       categories.add('rust')
-      scripts.push(...buildRustScripts(rustProject))
-      snippets.push(...buildRustSnippets(rustProject))
+      scripts.push(...buildRustScripts(t, rustProject))
+      snippets.push(...buildRustSnippets(t, rustProject))
     }
 
     const goProject = await loadGoProjectInfo(workingDirectory, entries, entryNames)
     if (goProject) {
       detections.push('Go module')
       categories.add('go')
-      scripts.push(...buildGoScripts(goProject))
-      snippets.push(...buildGoSnippets(goProject))
+      scripts.push(...buildGoScripts(t, goProject))
+      snippets.push(...buildGoSnippets(t, goProject))
     }
 
     const hasDockerfile = entryNames.has('Dockerfile')
@@ -853,15 +876,15 @@ export async function detectStarterPack(workingDirectory: string): Promise<Start
           : 'Dockerfile'
       )
       categories.add('docker')
-      scripts.push(...buildDockerScripts(hasComposeFile, composeServices))
-      snippets.push(...buildDockerSnippets(hasDockerfile, hasComposeFile, composeServices))
+      scripts.push(...buildDockerScripts(t, hasComposeFile, composeServices))
+      snippets.push(...buildDockerSnippets(t, hasDockerfile, hasComposeFile, composeServices))
     }
 
     const makeTargets = await loadMakeTargets(workingDirectory, entryNames)
     if (makeTargets.length > 0) {
       detections.push(`Makefile (${makeTargets.length} target${makeTargets.length === 1 ? '' : 's'})`)
-      scripts.push(...buildMakeScripts(makeTargets))
-      snippets.push(...buildMakeSnippets(makeTargets))
+      scripts.push(...buildMakeScripts(t, makeTargets))
+      snippets.push(...buildMakeSnippets(t, makeTargets))
     }
 
     return {

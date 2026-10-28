@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from './ai-fetch'
+import { translateNativeSync } from './native-i18n'
 import { mkdir } from 'fs/promises'
 import { join } from 'path'
 import { readJsonFile, writeJsonAtomic } from './atomic-write'
@@ -98,7 +99,7 @@ export async function testAIConnection(
 ): Promise<{ success: boolean; error?: string }> {
   const settings = await load()
   const provider = settings.aiProviders.find((p) => p.id === providerId)
-  if (!provider) return { success: false, error: 'Provider not found' }
+  if (!provider) return { success: false, error: translateNativeSync('errors.providerNotFound') }
 
   try {
     if (provider.id === 'ollama') {
@@ -108,7 +109,7 @@ export async function testAIConnection(
     }
 
     if (provider.id === 'openai') {
-      if (!provider.apiKey) return { success: false, error: 'API key required' }
+      if (!provider.apiKey) return { success: false, error: translateNativeSync('errors.apiKeyRequired') }
       const res = await fetchWithTimeout(`${provider.baseUrl}/models`, {
         headers: { Authorization: `Bearer ${provider.apiKey}` }
       })
@@ -120,7 +121,7 @@ export async function testAIConnection(
     }
 
     if (provider.id === 'anthropic') {
-      if (!provider.apiKey) return { success: false, error: 'API key required' }
+      if (!provider.apiKey) return { success: false, error: translateNativeSync('errors.apiKeyRequired') }
       const res = await fetchWithTimeout(`${provider.baseUrl}/v1/messages`, {
         method: 'POST',
         headers: {
@@ -142,7 +143,7 @@ export async function testAIConnection(
     }
 
     if (provider.id === 'gemini') {
-      if (!provider.apiKey) return { success: false, error: 'API key required' }
+      if (!provider.apiKey) return { success: false, error: translateNativeSync('errors.apiKeyRequired') }
       const res = await fetchWithTimeout(`${provider.baseUrl}/models`, {
         headers: {
           'x-goog-api-key': provider.apiKey
@@ -158,7 +159,7 @@ export async function testAIConnection(
     if (OPENAI_COMPATIBLE_PROVIDER_IDS.has(provider.id)) {
       const headers: Record<string, string> = {}
       if (provider.connectionType !== 'local') {
-        if (!provider.apiKey) return { success: false, error: 'API key required' }
+        if (!provider.apiKey) return { success: false, error: translateNativeSync('errors.apiKeyRequired') }
         headers.Authorization = `Bearer ${provider.apiKey}`
       } else if (provider.apiKey.trim()) {
         headers.Authorization = `Bearer ${provider.apiKey}`
@@ -172,7 +173,7 @@ export async function testAIConnection(
       return { success: true }
     }
 
-    return { success: false, error: 'Unknown provider' }
+    return { success: false, error: translateNativeSync('errors.unknownProvider') }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : String(err) }
   }
@@ -189,8 +190,8 @@ export async function listAIModels(
 ): Promise<{ success: boolean; models: string[]; error?: string }> {
   const settings = await load()
   const provider = settings.aiProviders.find((p) => p.id === providerId)
-  if (!provider) return { success: false, models: [], error: 'Provider not found' }
-  if (!provider.enabled) return { success: false, models: [], error: 'Connect the provider first' }
+  if (!provider) return { success: false, models: [], error: translateNativeSync('errors.providerNotFound') }
+  if (!provider.enabled) return { success: false, models: [], error: translateNativeSync('errors.connectProviderFirst') }
 
   try {
     if (provider.id === 'ollama') {
@@ -204,7 +205,7 @@ export async function listAIModels(
     }
 
     if (provider.connectionType !== 'local' && !provider.apiKey.trim()) {
-      return { success: false, models: [], error: 'API key required' }
+      return { success: false, models: [], error: translateNativeSync('errors.apiKeyRequired') }
     }
 
     if (provider.id === 'openai') {
@@ -281,7 +282,7 @@ export async function listAIModels(
       }
     }
 
-    return { success: false, models: [], error: 'Unknown provider' }
+    return { success: false, models: [], error: translateNativeSync('errors.unknownProvider') }
   } catch (err) {
     return { success: false, models: [], error: err instanceof Error ? err.message : String(err) }
   }

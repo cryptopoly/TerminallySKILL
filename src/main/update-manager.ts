@@ -12,6 +12,7 @@ import type {
   AppUpdateManifest
 } from '../shared/update-schema'
 import { getSettings } from './settings-manager'
+import { translateNativeSync } from './native-i18n'
 import {
   compareVersions,
   pickBestInstallerAsset,
@@ -180,12 +181,12 @@ function parseElectronBuilderManifest(
 ): AppUpdateManifest {
   const parsed = parseYaml(text)
   if (!isRecord(parsed)) {
-    throw new Error('Update feed did not return a valid YAML manifest')
+    throw new Error(translateNativeSync('errors.updateInvalidManifest'))
   }
 
   const version = typeof parsed.version === 'string' ? parsed.version.trim() : ''
   if (!version) {
-    throw new Error('Update feed did not return a valid version string')
+    throw new Error(translateNativeSync('errors.updateInvalidVersion'))
   }
 
   const placement = inferPlacementFromManifestUrl(manifestUrl)
@@ -239,7 +240,7 @@ function parseUpdateManifest(
   if (shouldParseAsJson) {
     const manifest = JSON.parse(text) as AppUpdateManifest
     if (!manifest || typeof manifest.version !== 'string' || !manifest.version.trim()) {
-      throw new Error('Update feed did not return a valid version string')
+      throw new Error(translateNativeSync('errors.updateInvalidVersion'))
     }
     return manifest
   }
@@ -609,7 +610,7 @@ async function downloadAndOpenCustomAppUpdate(
     }
 
     if (!response) {
-      throw new Error(lastDownloadError ?? 'Download failed')
+      throw new Error(lastDownloadError ?? translateNativeSync('errors.downloadFailed'))
     }
 
     const buffer = Buffer.from(await response.arrayBuffer())

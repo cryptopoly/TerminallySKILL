@@ -5,6 +5,7 @@ import { checkForAppUpdate, downloadAndOpenAppUpdate, getAppVersion } from '../u
 import { getUserDataDir, getCustomDataDir, setCustomDataDir } from '../user-data-path'
 import { openSafeExternalUrl } from '../external-url'
 import { requireString } from './validation'
+import { translateNativeSync } from '../native-i18n'
 
 export function registerAppIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.APP_GET_VERSION, async () => {
@@ -42,7 +43,7 @@ export function registerAppIpcHandlers(): void {
     const { existsSync, mkdirSync, cpSync, writeFileSync, readFileSync } = await import('fs')
 
     if (!existsSync(targetDirectory)) {
-      throw new Error(`Target directory does not exist: ${targetDirectory}`)
+      throw new Error(translateNativeSync('errors.targetDirectoryMissing', { path: targetDirectory }))
     }
 
     const defaultDir = getUserDataDir()

@@ -13,6 +13,7 @@ import {
 } from '../shared/project-schema'
 import { EMPTY_STARTER_PACK_PREVIEW, type StarterPackPreview } from '../shared/starter-pack-schema'
 import { detectStarterPack } from './starter-pack-detector'
+import { getNativeTranslator } from './native-i18n'
 import { createStarterScripts } from './script-manager'
 import { createStarterSnippets } from './snippet-manager'
 import { recordRecentCommand, toggleFavoriteCommandIds } from './project-behavior'
@@ -52,7 +53,7 @@ export async function getAllProjects(): Promise<ProjectsData> {
 export async function detectProjectStarterPack(
   workingDirectory: string
 ): Promise<StarterPackPreview> {
-  return detectStarterPack(workingDirectory)
+  return detectStarterPack(workingDirectory, await getNativeTranslator())
 }
 
 export async function createProject(
@@ -73,7 +74,7 @@ export async function createProject(
     skipStarterPack
       ? EMPTY_STARTER_PACK_PREVIEW
       : nextWorkspaceTarget.type === 'local'
-        ? await detectStarterPack(resolvedWorkingDirectory)
+        ? await detectStarterPack(resolvedWorkingDirectory, await getNativeTranslator())
         : EMPTY_STARTER_PACK_PREVIEW
   const now = new Date().toISOString()
   const project: Project = {
