@@ -30,7 +30,7 @@
     "package:win:arm64": "npm run generate-icon && electron-vite build && electron-builder --config electron-builder.config.mjs --win --arm64 --publish never && npm run generate-update-feeds",
     "package:all": "node scripts/package-all.mjs",
     "package:all:cross": "npm run package:mac:x64 && npm run package:mac:arm64 && npm run package:linux:x64 && npm run package:linux:arm64 && npm run package:win:x64 && npm run package:win:arm64",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps && node scripts/fix-node-pty-permissions.mjs",
     "i18n:check": "node scripts/check-i18n.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
