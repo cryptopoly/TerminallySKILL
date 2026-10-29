@@ -34,6 +34,11 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 ## 2026-10-29
 
+- **Four new Mid themes (Dan asked, Claude chose colours):** Slate (blue-gray + sky), Plum (mauve + orchid), Dove (soft gray-blue + cobalt), Clay (warm tan + emerald). 12 themes in total. Settings → Theme is now three columns (Dark, Mid, Light) and each card is a miniature of the app drawn in that theme's own colours. Other languages show English names for the new themes until translated.
+- **Settings card renamed "Notifications" in English** to match the other 17 languages (Dan approved).
+- **Dan on translations:** good enough for now; fix wording when a user reports it. No further review planned.
+- **Dot not seen on a `sleep 40` in Dan's dev run:** could not reproduce in the built app or in `npm run dev` with fresh data (dot appears). Waiting for Dan's exact steps.
+
 - **Bug found in hand-test and fixed:** the green/red tab dot never appeared for commands typed in the terminal (the command-start event was dropped while the shell was marked busy). Attention alerts now keep their own start marker; an end-to-end test covers it. Not a settings issue: the feature is on by default.
 - **Selected weekday chips are now solid accent colour** (same style as the app's primary buttons), checked in all 8 themes.
 - **Schedules need an open window** (answer to Dan): a run is skipped and marked skipped if no window is open. Background option banked in [backlog](backlog.md).

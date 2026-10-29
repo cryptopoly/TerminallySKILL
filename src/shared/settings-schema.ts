@@ -6,7 +6,10 @@ import {
   DEFAULT_UI_LOCALE
 } from './locale-schema'
 
-export type Theme = 'void' | 'ember' | 'dusk' | 'forest' | 'chalk' | 'mist' | 'sand' | 'stone'
+export type Theme =
+  | 'void' | 'ember' | 'dusk' | 'forest'
+  | 'slate' | 'plum' | 'dove' | 'clay'
+  | 'chalk' | 'mist' | 'sand' | 'stone'
 export type TerminalInputMode = 'classic' | 'editor'
 export type AIProviderConnectionType = 'api-key' | 'local'
 

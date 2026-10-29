@@ -50,6 +50,12 @@ Run on a packaged build (`npm run test:package:mac:arm64` output, or the release
 - [ ] Run a 3-step workflow against a local terminal. Steps report the right exit codes.
 - [ ] Projects, scripts and settings survive quit and relaunch.
 
+## 5b. Themes (new)
+
+- [ ] Settings → Theme shows three columns: Dark, Mid, Light, each card a small preview.
+- [ ] Pick each of Slate, Plum, Dove, Clay: whole app, terminal text, buttons and the schedule day chips stay readable.
+- [ ] Restart: the chosen theme is remembered.
+
 ## 6. Translations spot check (while here)
 
 - [ ] In 3 languages you can read, open Settings → Privacy, the schedule dialog and Settings → General → Attention. Wording makes sense; no cut-off text.

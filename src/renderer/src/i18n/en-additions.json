@@ -14,7 +14,7 @@
     "ai.providerDescriptions.ollama": "Local models running on your machine",
     "ai.providerDescriptions.lmstudio": "OpenAI-compatible local runtime",
     "tabs.privacy": "Privacy",
-    "general.attention.title": "Attention alerts",
+    "general.attention.title": "Notifications",
     "general.attention.description": "Show a dot on the tab and send a desktop notification when a long command finishes or fails, or a workflow waits for your approval.",
     "general.attention.minLabel": "Only for commands that run longer than",
     "privacy.title": "Privacy & network",

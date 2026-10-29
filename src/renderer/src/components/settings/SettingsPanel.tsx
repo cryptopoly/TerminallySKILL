@@ -49,16 +49,49 @@ import {
 import { resolveFormatLocale, syncI18nWithSettings } from '../../i18n'
 import { formatDateTime } from '../../i18n/format'
 
-const THEMES: { id: Theme; label: string; dot: string; desc: string; family: 'dark' | 'light' }[] = [
-  { id: 'void', label: 'Void', dot: '#06b6d4', desc: 'Dark · Teal', family: 'dark' },
-  { id: 'ember', label: 'Ember', dot: '#f59e0b', desc: 'Warm · Amber', family: 'dark' },
-  { id: 'dusk', label: 'Dusk', dot: '#818cf8', desc: 'Mid · Indigo', family: 'dark' },
-  { id: 'forest', label: 'Forest', dot: '#22c55e', desc: 'Dark · Pine', family: 'dark' },
-  { id: 'chalk', label: 'Chalk', dot: '#c2410c', desc: 'Light · Copper', family: 'light' },
-  { id: 'sand', label: 'Latte', dot: '#a0714a', desc: 'Light · Espresso', family: 'light' },
-  { id: 'stone', label: 'Sage', dot: '#5f8654', desc: 'Light · Olive', family: 'light' },
-  { id: 'mist', label: 'Mist', dot: '#0f766e', desc: 'Light · Slate', family: 'light' }
+const THEMES: { id: Theme; label: string; desc: string; family: 'dark' | 'mid' | 'light' }[] = [
+  { id: 'void', label: 'Void', desc: 'Dark · Teal', family: 'dark' },
+  { id: 'ember', label: 'Ember', desc: 'Warm · Amber', family: 'dark' },
+  { id: 'dusk', label: 'Dusk', desc: 'Mid · Indigo', family: 'dark' },
+  { id: 'forest', label: 'Forest', desc: 'Dark · Pine', family: 'dark' },
+  { id: 'slate', label: 'Slate', desc: 'Mid · Sky', family: 'mid' },
+  { id: 'plum', label: 'Plum', desc: 'Mid · Orchid', family: 'mid' },
+  { id: 'dove', label: 'Dove', desc: 'Mid · Cobalt', family: 'mid' },
+  { id: 'clay', label: 'Clay', desc: 'Mid · Emerald', family: 'mid' },
+  { id: 'chalk', label: 'Chalk', desc: 'Light · Copper', family: 'light' },
+  { id: 'sand', label: 'Latte', desc: 'Light · Espresso', family: 'light' },
+  { id: 'stone', label: 'Sage', desc: 'Light · Olive', family: 'light' },
+  { id: 'mist', label: 'Mist', desc: 'Light · Slate', family: 'light' }
 ]
+
+/** Miniature of the app drawn with the theme's own colours (data-theme scopes the CSS variables). */
+function ThemePreview({ theme }: { theme: Theme }): JSX.Element {
+  return (
+    <div
+      data-theme={theme}
+      aria-hidden="true"
+      className="overflow-hidden rounded-lg border border-surface-border bg-surface"
+    >
+      <div className="flex items-center gap-1.5 border-b border-surface-border bg-surface-light px-2 py-1.5">
+        <span className="h-1.5 w-8 rounded-full bg-accent" />
+        <span className="h-1.5 w-6 rounded-full bg-surface-lighter" />
+        <span className="h-1.5 w-6 rounded-full bg-surface-lighter" />
+      </div>
+      <div className="space-y-1 px-2.5 py-2 font-mono text-[10px] leading-4">
+        <div className="truncate text-gray-300">
+          <span className="text-accent-light">$</span> npm run build
+        </div>
+        <div className="truncate text-gray-500">ready in 312 ms</div>
+        <div className="flex items-center gap-1.5 pt-0.5">
+          <span className="rounded bg-accent px-1.5 text-[9px] font-medium text-white">Run</span>
+          <span className="rounded border border-surface-border bg-surface-light px-1.5 text-[9px] text-gray-400">
+            Edit
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const TERMINAL_INPUT_MODES: { id: TerminalInputMode; label: string; desc: string }[] = [
   {
@@ -1094,9 +1127,10 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
   const renderAppearanceTab = (): JSX.Element => (
     <div className="space-y-4">
       <SectionHeader icon={<Palette size={12} />} title={t('appearance.title', { ns: 'settings' })} />
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {([
           { id: 'dark', label: t('appearance.darkThemes', { ns: 'settings' }), description: t('appearance.darkThemesDescription', { ns: 'settings' }) },
+          { id: 'mid', label: t('appearance.midThemes', { ns: 'settings' }), description: t('appearance.midThemesDescription', { ns: 'settings' }) },
           { id: 'light', label: t('appearance.lightThemes', { ns: 'settings' }), description: t('appearance.lightThemesDescription', { ns: 'settings' }) }
         ] as const).map((group) => (
           <div key={group.id} className="rounded-xl border border-surface-border bg-surface-light/70 p-3">
@@ -1109,25 +1143,21 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
                 <button
                   key={theme.id}
                   onClick={() => void handleThemeChange(theme.id)}
+                  aria-pressed={settings.theme === theme.id}
                   className={clsx(
-                    'w-full rounded-xl border px-4 py-4 text-left transition-colors',
+                    'w-full rounded-xl border p-2.5 text-left transition-colors',
                     settings.theme === theme.id
                       ? 'border-accent bg-accent/10 text-gray-200'
                       : 'border-surface-border bg-surface text-gray-500 hover:text-gray-300 hover:border-gray-500'
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="h-4 w-4 rounded-full border border-white/15"
-                      style={{ background: theme.dot }}
-                    />
-                    <div>
-                      <div className="text-sm font-medium">
-                        {t(`appearance.themes.${theme.id}.label`, { ns: 'settings', defaultValue: theme.label })}
-                      </div>
-                      <div className="text-xs text-gray-600 mt-1">
-                        {t(`appearance.themes.${theme.id}.description`, { ns: 'settings', defaultValue: theme.desc })}
-                      </div>
+                  <ThemePreview theme={theme.id} />
+                  <div className="mt-2 px-0.5">
+                    <div className="text-sm font-medium">
+                      {t(`appearance.themes.${theme.id}.label`, { ns: 'settings', defaultValue: theme.label })}
+                    </div>
+                    <div className="text-xs text-gray-600 mt-0.5">
+                      {t(`appearance.themes.${theme.id}.description`, { ns: 'settings', defaultValue: theme.desc })}
                     </div>
                   </div>
                 </button>

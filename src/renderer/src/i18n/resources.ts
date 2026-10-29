@@ -146,9 +146,15 @@ const enBase: LocaleResource = {
       title: 'Theme',
       darkThemes: 'Dark Themes',
       darkThemesDescription: 'Low-glare palettes for longer terminal sessions.',
+      midThemes: 'Mid Themes',
+      midThemesDescription: 'Balanced palettes between dark and light, easy on the eyes in any room.',
       lightThemes: 'Light Themes',
       lightThemesDescription: 'Brighter palettes with softer contrast and paper-like surfaces.',
       themes: {
+        slate: { label: 'Slate', description: 'Mid - Sky' },
+        plum: { label: 'Plum', description: 'Mid - Orchid' },
+        dove: { label: 'Dove', description: 'Mid - Cobalt' },
+        clay: { label: 'Clay', description: 'Mid - Emerald' },
         void: { label: 'Void', description: 'Dark - Teal' },
         ember: { label: 'Ember', description: 'Warm - Amber' },
         dusk: { label: 'Dusk', description: 'Mid - Indigo' },
@@ -1809,7 +1815,7 @@ const enBase: LocaleResource = {
         steps: {
           themes: {
             label: 'Themes',
-            desc: 'Open Settings from the gear icon in the title bar. Choose from 8 themes: Void, Ember, Dusk, Forest, Chalk, Latte, Sage, or Mist.'
+            desc: 'Open Settings from the gear icon in the title bar. Choose from 12 themes: Void, Ember, Dusk, Forest, Slate, Plum, Dove, Clay, Chalk, Latte, Sage, or Mist.'
           },
           terminalInput: {
             label: 'Terminal input',
