@@ -357,7 +357,9 @@
     "empty.howItWorks": "Cómo funciona",
     "empty.description": "Crea un proyecto para fijar tu espacio de trabajo y anclar comandos favoritos",
     "topbar.sshShellDescription": "Abrir una nueva shell SSH interactiva para este espacio de trabajo",
-    "palette.actions.openSshShellDescription": "Abrir una nueva shell SSH interactiva para este espacio de trabajo"
+    "palette.actions.openSshShellDescription": "Abrir una nueva shell SSH interactiva para este espacio de trabajo",
+    "palette.actions.jumpAttention": "Ir a la terminal que te necesita",
+    "palette.actions.jumpAttentionDescription": "Abre la terminal que lleva más tiempo esperándote, en cualquier proyecto"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1034,7 +1036,11 @@
     "attention.failed": "Comando fallido (código de salida {{code}})",
     "attention.approval": "Se requiere aprobación",
     "attention.workflowDone": "Workflow terminado",
-    "attention.workflowFailed": "Workflow fallido"
+    "attention.workflowFailed": "Workflow fallido",
+    "attention.agentNotify": "Necesita tu atención",
+    "attention.agentBlocked": "Esperándote",
+    "attention.agentDone": "Listo",
+    "attention.agentError": "Se detuvo con un error"
   },
   "onboarding": {
     "subtitle": "Constructor visual de comandos, espacio de trabajo de terminal, workflows, registros y herramientas de IA",
@@ -1213,7 +1219,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "Abre esta guía de ayuda.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "Abre una nueva pestaña de terminal."
+    "sections.keyboard.steps.newTerminal.desc": "Abre una nueva pestaña de terminal.",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Ir a la terminal que lleva más tiempo esperándote (una pestaña con un punto), en cualquier proyecto. Ctrl+Shift+J en Windows y Linux."
   },
   "ai": {
     "explain.label": "Explicar con IA",

@@ -18,6 +18,7 @@ import { Dashboard } from '../dashboard/Dashboard'
 import { WorkflowRunnerEngine } from '../scripts/WorkflowRunnerHost'
 import { AttentionDot } from '../terminal/AttentionDot'
 import { useAttentionLayer } from '../../hooks/useAttentionLayer'
+import { jumpToNextAttention } from '../../lib/attention'
 import { useScheduledRuns } from '../../hooks/useScheduledRuns'
 import { HelpTip } from '../ui/HelpTip'
 import { UpdateReleaseNotes } from '../ui/UpdateReleaseNotes'
@@ -389,6 +390,22 @@ export function AppShell(): JSX.Element {
     setTerminalVisible,
     settingsOpen
   ])
+
+  // Cmd+Shift+J (macOS) / Ctrl+Shift+J — jump to the terminal that needs you. Capture phase, so the
+  // focused terminal never also receives the key (Ctrl+Shift+J would otherwise reach the shell as ^J).
+  useEffect(() => {
+    const handler = (e: KeyboardEvent): void => {
+      const modifier = isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey
+      if (!modifier || !e.shiftKey || e.altKey) return
+      const isJ = /^[a-z]$/i.test(e.key) ? e.key.toLowerCase() === 'j' : e.code === 'KeyJ'
+      if (!isJ) return
+      e.preventDefault()
+      e.stopPropagation()
+      jumpToNextAttention()
+    }
+    window.addEventListener('keydown', handler, true)
+    return () => window.removeEventListener('keydown', handler, true)
+  }, [isMac])
 
   useEffect(() => {
     if (!activeProject) {

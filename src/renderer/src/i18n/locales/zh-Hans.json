@@ -49,7 +49,9 @@
   },
   "layout": {
     "topbar.github": "GitHub",
-    "topbar.websiteDescription": "terminallyskill.com"
+    "topbar.websiteDescription": "terminallyskill.com",
+    "palette.actions.jumpAttention": "跳到需要你的终端",
+    "palette.actions.jumpAttentionDescription": "在任意项目中打开等你最久的终端"
   },
   "projects": {
     "dialog.workingDirectoryPlaceholder": "/path/to/your/project",
@@ -139,7 +141,11 @@
     "attention.failed": "命令失败（退出码 {{code}}）",
     "attention.approval": "需要批准",
     "attention.workflowDone": "工作流已完成",
-    "attention.workflowFailed": "工作流失败"
+    "attention.workflowFailed": "工作流失败",
+    "attention.agentNotify": "需要你处理",
+    "attention.agentBlocked": "正在等你",
+    "attention.agentDone": "已完成",
+    "attention.agentError": "因错误停止"
   },
   "native": {
     "menu.file": "文件",
@@ -265,6 +271,8 @@
     "sections.keyboard.steps.snapshot.label": "Command+Shift+S",
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.settings.steps.themes.desc": "从标题栏齿轮图标打开设置。可在 8 个主题中选择：虚空、余烬、黄昏、森林、粉笔、拿铁、鼠尾草或薄雾。"
+    "sections.settings.steps.themes.desc": "从标题栏齿轮图标打开设置。可在 8 个主题中选择：虚空、余烬、黄昏、森林、粉笔、拿铁、鼠尾草或薄雾。",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "跳到等你最久的终端（带圆点的标签页），适用于任意项目。在 Windows 和 Linux 上为 Ctrl+Shift+J。"
   }
 }

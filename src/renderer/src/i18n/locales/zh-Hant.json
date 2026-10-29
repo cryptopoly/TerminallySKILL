@@ -430,7 +430,9 @@
     "updates.downloadInstall": "下載並安裝更新",
     "updates.downloadOpen": "下載並開啟更新",
     "updates.installing": "正在安裝更新",
-    "updates.opening": "正在開啟更新"
+    "updates.opening": "正在開啟更新",
+    "palette.actions.jumpAttention": "跳到需要你的終端機",
+    "palette.actions.jumpAttentionDescription": "在任何專案中開啟等你最久的終端機"
   },
   "projects": {
     "selector.none": "無專案",
@@ -1119,7 +1121,11 @@
     "attention.failed": "命令失敗（結束碼 {{code}}）",
     "attention.approval": "需要核准",
     "attention.workflowDone": "工作流程已完成",
-    "attention.workflowFailed": "工作流程失敗"
+    "attention.workflowFailed": "工作流程失敗",
+    "attention.agentNotify": "需要你處理",
+    "attention.agentBlocked": "正在等你",
+    "attention.agentDone": "已完成",
+    "attention.agentError": "因錯誤停止"
   },
   "onboarding": {
     "subtitle": "視覺化命令建構器、終端機工作區、工作流程、日誌與 AI 工具",
@@ -1298,7 +1304,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "開啟此說明指南。",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "開啟新的終端機分頁。"
+    "sections.keyboard.steps.newTerminal.desc": "開啟新的終端機分頁。",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "跳到等你最久的終端機（帶圓點的分頁），適用於任何專案。在 Windows 和 Linux 上為 Ctrl+Shift+J。"
   },
   "ai": {
     "explain.label": "以 AI 說明",

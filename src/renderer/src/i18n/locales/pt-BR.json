@@ -358,7 +358,9 @@
     "sidebar.starterPack.snippets": "Snippets",
     "sidebar.tabs.logs": "Logs",
     "topbar.sshShellDescription": "Abrir um novo shell SSH interativo para este workspace",
-    "palette.actions.openSshShellDescription": "Abrir um novo shell SSH interativo para este workspace"
+    "palette.actions.openSshShellDescription": "Abrir um novo shell SSH interativo para este workspace",
+    "palette.actions.jumpAttention": "Ir para o terminal que precisa de você",
+    "palette.actions.jumpAttentionDescription": "Abre o terminal que está esperando há mais tempo, em qualquer projeto"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1022,7 +1024,11 @@
     "attention.failed": "Falha no comando (código de saída {{code}})",
     "attention.approval": "Aprovação necessária",
     "attention.workflowDone": "Workflow concluído",
-    "attention.workflowFailed": "Falha no workflow"
+    "attention.workflowFailed": "Falha no workflow",
+    "attention.agentNotify": "Precisa da sua atenção",
+    "attention.agentBlocked": "Esperando por você",
+    "attention.agentDone": "Concluído",
+    "attention.agentError": "Parou com um erro"
   },
   "onboarding": {
     "subtitle": "Builder visual de comandos, workspace de terminal, workflows, logs e ferramentas de IA",
@@ -1203,7 +1209,9 @@
     "sections.keyboard.steps.newTerminal.label": "Command+T",
     "sections.keyboard.steps.newTerminal.desc": "Abre uma nova aba de terminal.",
     "sections.scripts.title": "Scripts",
-    "sections.snippets.title": "Snippets"
+    "sections.snippets.title": "Snippets",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Vai para o terminal que está esperando por você há mais tempo (uma aba com um ponto), em qualquer projeto. Ctrl+Shift+J no Windows e Linux."
   },
   "ai": {
     "explain.label": "Explicar com IA",

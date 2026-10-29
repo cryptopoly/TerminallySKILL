@@ -1,5 +1,10 @@
 import { useEffect } from 'react'
-import { describeWorkflowAttention, isUserWatchingSession, raiseAttention } from '../lib/attention'
+import {
+  describeWorkflowAttention,
+  focusAttentionSession,
+  isUserWatchingSession,
+  raiseAttention
+} from '../lib/attention'
 import { useAttentionStore } from '../store/attention-store'
 import { useProjectStore } from '../store/project-store'
 import { useTerminalStore } from '../store/terminal-store'
@@ -64,20 +69,7 @@ export function useAttentionLayer(): void {
   // Clicking the OS notification opens the terminal that raised it
   useEffect(() => {
     return window.electronAPI.onAttentionFocusSession((sessionId) => {
-      const terminals = useTerminalStore.getState()
-      const session = terminals.sessions.find((entry) => entry.id === sessionId)
-      if (!session) return
-
-      const projects = useProjectStore.getState()
-      if (session.projectId && projects.activeProject?.id !== session.projectId) {
-        const project = projects.projects.find((entry) => entry.id === session.projectId)
-        if (project) {
-          void window.electronAPI.setActiveProject(project.id)
-          projects.setActiveProject(project)
-        }
-      }
-      terminals.setActiveSession(sessionId)
-      terminals.setTerminalVisible(true)
+      focusAttentionSession(sessionId)
     })
   }, [])
 

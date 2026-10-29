@@ -434,7 +434,9 @@
     "updates.downloadOpen": "अपडेट डाउनलोड करें और खोलें",
     "updates.installing": "अपडेट इंस्टॉल हो रहा है",
     "updates.opening": "अपडेट खुल रहा है",
-    "sidebar.tabs.files": "फ़ाइलें"
+    "sidebar.tabs.files": "फ़ाइलें",
+    "palette.actions.jumpAttention": "उस टर्मिनल पर जाएँ जिसे आपकी ज़रूरत है",
+    "palette.actions.jumpAttentionDescription": "किसी भी प्रोजेक्ट में वह टर्मिनल खोलें जो सबसे लंबे समय से आपका इंतज़ार कर रहा है"
   },
   "projects": {
     "selector.none": "कोई प्रोजेक्ट नहीं",
@@ -1123,7 +1125,11 @@
     "attention.failed": "कमांड विफल रही (एग्ज़िट कोड {{code}})",
     "attention.approval": "स्वीकृति ज़रूरी है",
     "attention.workflowDone": "वर्कफ़्लो पूरा हुआ",
-    "attention.workflowFailed": "वर्कफ़्लो विफल रहा"
+    "attention.workflowFailed": "वर्कफ़्लो विफल रहा",
+    "attention.agentNotify": "आपका ध्यान चाहिए",
+    "attention.agentBlocked": "आपका इंतज़ार कर रहा है",
+    "attention.agentDone": "पूरा हुआ",
+    "attention.agentError": "त्रुटि के साथ रुका"
   },
   "onboarding": {
     "subtitle": "विज़ुअल कमांड बिल्डर, टर्मिनल वर्कस्पेस, वर्कफ़्लो, लॉग और AI टूल",
@@ -1303,7 +1309,9 @@
     "sections.keyboard.steps.help.desc": "यह सहायता गाइड खोलें।",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
     "sections.keyboard.steps.newTerminal.desc": "नया टर्मिनल टैब खोलें।",
-    "sections.files.title": "फ़ाइलें"
+    "sections.files.title": "फ़ाइलें",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "उस टर्मिनल पर जाएँ जो सबसे लंबे समय से आपका इंतज़ार कर रहा है (बिंदु वाला टैब), किसी भी प्रोजेक्ट में। Windows और Linux पर Ctrl+Shift+J।"
   },
   "ai": {
     "explain.label": "AI से समझाएं",

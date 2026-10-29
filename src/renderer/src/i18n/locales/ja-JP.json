@@ -343,7 +343,9 @@
     "updates.downloadInstall": "更新をダウンロードしてインストール",
     "updates.downloadOpen": "更新をダウンロードして開く",
     "updates.installing": "更新をインストール中",
-    "updates.opening": "更新を開いています"
+    "updates.opening": "更新を開いています",
+    "palette.actions.jumpAttention": "対応が必要なターミナルへ移動",
+    "palette.actions.jumpAttentionDescription": "どのプロジェクトでも、最も長く待っているターミナルを開きます"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} 個のターミナル",
@@ -1001,7 +1003,11 @@
     "attention.failed": "コマンドが失敗しました（終了コード {{code}}）",
     "attention.approval": "承認が必要です",
     "attention.workflowDone": "ワークフローが完了しました",
-    "attention.workflowFailed": "ワークフローが失敗しました"
+    "attention.workflowFailed": "ワークフローが失敗しました",
+    "attention.agentNotify": "対応が必要です",
+    "attention.agentBlocked": "あなたを待っています",
+    "attention.agentDone": "完了",
+    "attention.agentError": "エラーで停止しました"
   },
   "onboarding": {
     "subtitle": "ビジュアルコマンドビルダー、ターミナルワークスペース、ワークフロー、ログ、AI ツール",
@@ -1180,7 +1186,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "このヘルプガイドを開きます。",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "新しいターミナルタブを開きます。"
+    "sections.keyboard.steps.newTerminal.desc": "新しいターミナルタブを開きます。",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "最も長く待っているターミナル（ドット付きのタブ）へ、どのプロジェクトでも移動します。Windows と Linux では Ctrl+Shift+J。"
   },
   "ai": {
     "explain.label": "AI で説明",

@@ -373,7 +373,9 @@
     "updates.opening": "Otwieranie aktualizacji",
     "empty.description": "Utwórz projekt, aby ustawić obszar roboczy i przypiąć ulubione polecenia",
     "empty.createProject": "Utwórz projekt",
-    "empty.howItWorks": "Jak to działa"
+    "empty.howItWorks": "Jak to działa",
+    "palette.actions.jumpAttention": "Przejdź do terminala, który Cię potrzebuje",
+    "palette.actions.jumpAttentionDescription": "Otwórz terminal, który najdłużej na Ciebie czeka, w dowolnym projekcie"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1088,7 +1090,11 @@
     "attention.failed": "Polecenie nie powiodło się (kod {{code}})",
     "attention.approval": "Wymagane zatwierdzenie",
     "attention.workflowDone": "Workflow zakończony",
-    "attention.workflowFailed": "Workflow zakończony niepowodzeniem"
+    "attention.workflowFailed": "Workflow zakończony niepowodzeniem",
+    "attention.agentNotify": "Wymaga Twojej uwagi",
+    "attention.agentBlocked": "Czeka na Ciebie",
+    "attention.agentDone": "Gotowe",
+    "attention.agentError": "Zatrzymano z błędem"
   },
   "onboarding": {
     "subtitle": "Wizualny builder poleceń, obszar roboczy terminala, workflow, logi i narzędzia AI",
@@ -1273,7 +1279,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "Otwórz ten przewodnik pomocy.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "Otwórz nową kartę terminala."
+    "sections.keyboard.steps.newTerminal.desc": "Otwórz nową kartę terminala.",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Przejdź do terminala, który najdłużej na Ciebie czeka (karta z kropką), w dowolnym projekcie. Ctrl+Shift+J w systemach Windows i Linux."
   },
   "ai": {
     "explain.label": "Wyjaśnij z AI",

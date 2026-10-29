@@ -369,7 +369,9 @@
     "sidebar.starterPack.scripts": "Scripts",
     "empty.description": "Créez un projet pour définir votre espace de travail et épingler vos commandes favorites",
     "empty.createProject": "Créer un projet",
-    "empty.howItWorks": "Comment ça marche"
+    "empty.howItWorks": "Comment ça marche",
+    "palette.actions.jumpAttention": "Aller au terminal qui vous attend",
+    "palette.actions.jumpAttentionDescription": "Ouvrir le terminal qui vous attend depuis le plus longtemps, dans n’importe quel projet"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1059,7 +1061,11 @@
     "attention.failed": "Échec de la commande (code de sortie {{code}})",
     "attention.approval": "Approbation requise",
     "attention.workflowDone": "Workflow terminé",
-    "attention.workflowFailed": "Échec du workflow"
+    "attention.workflowFailed": "Échec du workflow",
+    "attention.agentNotify": "Requiert votre attention",
+    "attention.agentBlocked": "Vous attend",
+    "attention.agentDone": "Terminé",
+    "attention.agentError": "Arrêté sur une erreur"
   },
   "onboarding": {
     "subtitle": "Builder de commandes visuel, espace de travail de terminal, workflows, journaux et outils IA",
@@ -1242,7 +1248,9 @@
     "sections.keyboard.steps.help.desc": "Ouvrir ce guide d’aide.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
     "sections.keyboard.steps.newTerminal.desc": "Ouvrir un nouvel onglet de terminal.",
-    "sections.scripts.title": "Scripts"
+    "sections.scripts.title": "Scripts",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Aller au terminal qui vous attend depuis le plus longtemps (un onglet avec un point), dans n’importe quel projet. Ctrl+Shift+J sous Windows et Linux."
   },
   "ai": {
     "explain.label": "Expliquer avec l’IA",
