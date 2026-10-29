@@ -65,6 +65,14 @@ Run on a packaged build (`npm run test:package:mac:arm64` output, or the release
 
 Dev builds (`npm run dev`): the dot works, but macOS notifications and the dock badge may not show unless "Electron" is allowed in System Settings → Notifications. Prefer the packaged app for those two.
 
+## Electron 45 and locales (added 2026-10-29)
+
+- [ ] **Update from 0.9.102 keeps saved secrets:** in 0.9.102 save an AI key and a VNC password, install this build over it, confirm both still work. (Secrets now use the async safeStorage API; this is the main risk of the Electron upgrade.)
+- [ ] File open/save dialogs (import flow, export flow, choose folder) reopen in the last folder you used.
+- [ ] Start the app in a non-English language: no English flash on launch; switch to Arabic and back: layout flips and returns.
+- [ ] Terminal works (zsh, node-pty), Settings, Privacy tab, split view.
+- [ ] Windows and Linux builds: not tested on Electron 45 by Claude; check before announcing support.
+
 ## Not covered by automated tests
 
 Packaged-app launch, macOS notification permission, dock badge, notification click focus, real translations on screen, Windows and Linux behaviour.
