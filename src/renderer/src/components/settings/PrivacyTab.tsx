@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 import { ShieldCheck } from 'lucide-react'
-import type { OutboundRequestRecord } from '../../../../shared/privacy-schema'
+import type { OutboundRequestRecord, SecretMaskStats } from '../../../../shared/privacy-schema'
+import { SECRET_KINDS, totalSecretCount } from '../../../../shared/secret-mask'
 import { useSettingsStore } from '../../store/settings-store'
 import { formatTime } from '../../i18n/format'
+import { SettingToggleCard } from './SettingToggleCard'
 
 function StatusChip({ on }: { on: boolean }): JSX.Element {
   const { t } = useTranslation('settings')
@@ -40,13 +42,51 @@ function Row({
   )
 }
 
+/** Session-only kind + count summary. Secret values never reach the renderer. */
+function MaskedCounts({ stats }: { stats: SecretMaskStats }): JSX.Element {
+  const { t } = useTranslation('settings')
+  const lines = (['ai', 'logs'] as const)
+    .map((target) => {
+      const counts = stats[target]
+      const total = totalSecretCount(counts)
+      if (total === 0) return null
+      const kinds = SECRET_KINDS.filter((kind) => (counts[kind] ?? 0) > 0)
+        .map((kind) => `${t(`privacy.masking.kind.${kind}`)} ${counts[kind]}`)
+        .join(', ')
+      return { target, text: `${t(`privacy.masking.${target}`, { total })} (${kinds})` }
+    })
+    .filter((line): line is { target: 'ai' | 'logs'; text: string } => line !== null)
+
+  return (
+    <p className="px-1 text-[11px] leading-5 text-gray-500" data-testid="secret-mask-stats">
+      {lines.length === 0 ? (
+        t('privacy.masking.none')
+      ) : (
+        <>
+          <span className="text-gray-600">{t('privacy.masking.session')}</span>
+          {lines.map((line) => (
+            <span key={line.target}>{` · ${line.text}`}</span>
+          ))}
+        </>
+      )}
+    </p>
+  )
+}
+
 export function PrivacyTab(): JSX.Element {
   const { t } = useTranslation('settings')
   const settings = useSettingsStore((s) => s.settings)
+  const setMaskSecrets = useSettingsStore((s) => s.setMaskSecrets)
   const [records, setRecords] = useState<OutboundRequestRecord[]>([])
+  const [maskStats, setMaskStats] = useState<SecretMaskStats>({ ai: {}, logs: {} })
 
   const refresh = useCallback(async () => {
-    setRecords(await window.electronAPI.getNetworkLog())
+    const [nextRecords, nextStats] = await Promise.all([
+      window.electronAPI.getNetworkLog(),
+      window.electronAPI.getSecretMaskStats()
+    ])
+    setRecords(nextRecords)
+    setMaskStats(nextStats)
   }, [])
 
   useEffect(() => {
@@ -92,6 +132,20 @@ export function PrivacyTab(): JSX.Element {
             chip={<StatusChip on={settings.saveTerminalLogs} />}
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <SettingToggleCard
+          title={t('privacy.masking.title')}
+          description={t('privacy.masking.description')}
+          enabled={settings.maskSecrets}
+          onToggle={async () => {
+            const next = !settings.maskSecrets
+            setMaskSecrets(next)
+            await window.electronAPI.updateSettings({ maskSecrets: next })
+          }}
+        />
+        <MaskedCounts stats={maskStats} />
       </div>
 
       <div className="rounded-xl border border-surface-border bg-surface-light p-4">
