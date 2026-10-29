@@ -1,25 +1,7 @@
 import enAdditions from './en-additions.json'
-import locale_de_DE from './locales/de-DE.json'
-import locale_fr_FR from './locales/fr-FR.json'
-import locale_es from './locales/es.json'
-import locale_pt_BR from './locales/pt-BR.json'
-import locale_zh_Hans from './locales/zh-Hans.json'
-import locale_zh_Hant from './locales/zh-Hant.json'
-import locale_ja_JP from './locales/ja-JP.json'
-import locale_ru_RU from './locales/ru-RU.json'
-import locale_pl_PL from './locales/pl-PL.json'
-import locale_it_IT from './locales/it-IT.json'
-import locale_ko_KR from './locales/ko-KR.json'
-import locale_nl_NL from './locales/nl-NL.json'
-import locale_uk_UA from './locales/uk-UA.json'
-import locale_id_ID from './locales/id-ID.json'
-import locale_tr_TR from './locales/tr-TR.json'
-import locale_pt_PT from './locales/pt-PT.json'
-import locale_ar from './locales/ar.json'
-import locale_hi_IN from './locales/hi-IN.json'
 
 type ResourceNamespace = Record<string, unknown>
-type LocaleResource = Record<string, ResourceNamespace>
+export type LocaleResource = Record<string, ResourceNamespace>
 
 export const I18N_NAMESPACES = [
   'common',
@@ -3047,7 +3029,11 @@ function localizeKnownEnglishFallbacks(locale: string, value: unknown): unknown 
   return localized
 }
 
-export const resources: Record<string, LocaleResource> = {
+/**
+ * Every locale's bundle built from English plus the inline overrides in this file, WITHOUT the
+ * per-locale JSON translations (those are code-split and merged on demand by applyTranslatedBundle).
+ */
+export const baseResources: Record<string, LocaleResource> = {
   en,
   'en-US': withOverrides({}),
   'en-GB': withOverrides({
@@ -3487,38 +3473,19 @@ export const resources: Record<string, LocaleResource> = {
   })
 }
 
-const translatedBundles: Record<string, Record<string, Record<string, string>>> = {
-  'de-DE': locale_de_DE,
-  'fr-FR': locale_fr_FR,
-  'es': locale_es,
-  'pt-BR': locale_pt_BR,
-  'zh-Hans': locale_zh_Hans,
-  'zh-Hant': locale_zh_Hant,
-  'ja-JP': locale_ja_JP,
-  'ru-RU': locale_ru_RU,
-  'pl-PL': locale_pl_PL,
-  'it-IT': locale_it_IT,
-  'ko-KR': locale_ko_KR,
-  'nl-NL': locale_nl_NL,
-  'uk-UA': locale_uk_UA,
-  'id-ID': locale_id_ID,
-  'tr-TR': locale_tr_TR,
-  'pt-PT': locale_pt_PT,
-  'ar': locale_ar,
-  'hi-IN': locale_hi_IN,
-}
-
-for (const locale of Object.keys(resources)) {
-  if (locale.startsWith('en')) continue
-  const translated = translatedBundles[locale]
-  if (translated) {
-    const overrides = expandDottedBundle(translated)
-    resources[locale] = Object.fromEntries(
-      Object.entries(resources[locale]).map(([namespace, values]) => [
-        namespace,
-        mergeNamespace(values, overrides[namespace])
-      ])
-    )
-  }
-  resources[locale] = localizeKnownEnglishFallbacks(locale, resources[locale]) as LocaleResource
+/** Merge a locale's JSON translations (dotted keys) over its base bundle, then localize known English fallbacks */
+export function applyTranslatedBundle(
+  locale: string,
+  translated?: Record<string, Record<string, string>>
+): LocaleResource {
+  const base = baseResources[locale]
+  if (locale.startsWith('en')) return base
+  const overrides = translated ? expandDottedBundle(translated) : {}
+  const merged: LocaleResource = Object.fromEntries(
+    Object.entries(base).map(([namespace, values]) => [
+      namespace,
+      mergeNamespace(values, overrides[namespace])
+    ])
+  )
+  return localizeKnownEnglishFallbacks(locale, merged) as LocaleResource
 }

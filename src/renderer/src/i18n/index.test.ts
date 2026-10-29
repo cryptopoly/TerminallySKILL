@@ -69,7 +69,13 @@ describe('renderer i18n', () => {
     expect(testDocument.documentElement.dir).toBe('rtl')
     expect(testDocument.documentElement.dataset.locale).toBe('ar')
 
+    // Startup loads only English (fallback) and the active locale
+    expect(i18n.hasResourceBundle('en', 'common')).toBe(true)
+    expect(i18n.hasResourceBundle('ar', 'common')).toBe(true)
+    expect(i18n.hasResourceBundle('de-DE', 'common')).toBe(false)
+
     await syncI18nWithSettings({ uiLocale: 'de-DE' })
+    expect(i18n.hasResourceBundle('de-DE', 'common')).toBe(true)
     expect(i18n.language).toBe('de-DE')
     expect(testDocument.documentElement.lang).toBe('de-DE')
     expect(testDocument.documentElement.dir).toBe('ltr')

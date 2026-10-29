@@ -1,5 +1,6 @@
 import { app } from 'electron'
-import { resources } from '../renderer/src/i18n/resources'
+import { loadLocaleResource } from '../renderer/src/i18n/loader'
+import { baseResources } from '../renderer/src/i18n/resources'
 import { FALLBACK_LOCALE, resolveLocalePreference } from '../shared/locale-schema'
 import { getSettings } from './settings-manager'
 
@@ -56,14 +57,14 @@ let cachedTranslator: NativeTranslator | null = null
 /** Synchronous translate using the most recently resolved UI language (English before first use) */
 export function translateNativeSync(key: NativeKey, values: Record<string, string | number> = {}): string {
   if (cachedTranslator) return cachedTranslator(key, values)
-  return interpolate(lookup(resources[FALLBACK_LOCALE].native, key) ?? key, values)
+  return interpolate(lookup(baseResources[FALLBACK_LOCALE].native, key) ?? key, values)
 }
 
 export async function getNativeTranslator(): Promise<NativeTranslator> {
   const { uiLocale } = await getSettings()
   const locale = resolveLocalePreference(uiLocale, app.getPreferredSystemLanguages(), FALLBACK_LOCALE)
-  const bundle = resources[locale]?.native
-  const fallback = resources[FALLBACK_LOCALE].native
+  const bundle = (await loadLocaleResource(locale)).native
+  const fallback = baseResources[FALLBACK_LOCALE].native
 
   const translator: NativeTranslator = (key, values = {}) =>
     interpolate(lookup(bundle, key) ?? lookup(fallback, key) ?? key, values)
