@@ -362,7 +362,9 @@
     "updates.downloadInstall": "Скачать и установить обновление",
     "updates.downloadOpen": "Скачать и открыть обновление",
     "updates.installing": "Установка обновления",
-    "updates.opening": "Открытие обновления"
+    "updates.opening": "Открытие обновления",
+    "palette.actions.jumpAttention": "Перейти к терминалу, которому нужны вы",
+    "palette.actions.jumpAttentionDescription": "Открыть терминал, который ждёт вас дольше всех, в любом проекте"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} терминал",
@@ -1082,7 +1084,11 @@
     "attention.failed": "Команда завершилась с ошибкой (код {{code}})",
     "attention.approval": "Требуется подтверждение",
     "attention.workflowDone": "Workflow завершен",
-    "attention.workflowFailed": "Workflow завершился с ошибкой"
+    "attention.workflowFailed": "Workflow завершился с ошибкой",
+    "attention.agentNotify": "Требует вашего внимания",
+    "attention.agentBlocked": "Ждёт вас",
+    "attention.agentDone": "Готово",
+    "attention.agentError": "Остановлено с ошибкой"
   },
   "onboarding": {
     "subtitle": "Визуальный конструктор команд, терминальное рабочее пространство, workflow, логи и инструменты ИИ",
@@ -1267,7 +1273,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "Открыть это руководство.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "Открыть новую вкладку терминала."
+    "sections.keyboard.steps.newTerminal.desc": "Открыть новую вкладку терминала.",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Перейти к терминалу, который ждёт вас дольше всех (вкладка с точкой), в любом проекте. Ctrl+Shift+J в Windows и Linux."
   },
   "ai": {
     "explain.label": "Объяснить с помощью ИИ",

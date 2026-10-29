@@ -442,7 +442,9 @@
     "sidebar.tabs.scripts": "Scripts",
     "sidebar.tabs.snippets": "Snippets",
     "sidebar.starterPack.scripts": "Scripts",
-    "sidebar.starterPack.snippets": "Snippets"
+    "sidebar.starterPack.snippets": "Snippets",
+    "palette.actions.jumpAttention": "Ir para o terminal que precisa de si",
+    "palette.actions.jumpAttentionDescription": "Abre o terminal que está à sua espera há mais tempo, em qualquer projeto"
   },
   "projects": {
     "selector.none": "Sem projeto",
@@ -1151,7 +1153,11 @@
     "attention.failed": "Falha no comando (código de saída {{code}})",
     "attention.approval": "Aprovação necessária",
     "attention.workflowDone": "Workflow concluído",
-    "attention.workflowFailed": "Falha no workflow"
+    "attention.workflowFailed": "Falha no workflow",
+    "attention.agentNotify": "Precisa da sua atenção",
+    "attention.agentBlocked": "À sua espera",
+    "attention.agentDone": "Concluído",
+    "attention.agentError": "Parou com um erro"
   },
   "onboarding": {
     "subtitle": "Construtor visual de comandos, workspace de terminal, workflows, registos e ferramentas de IA",
@@ -1332,7 +1338,9 @@
     "sections.keyboard.steps.newTerminal.label": "Command+T",
     "sections.keyboard.steps.newTerminal.desc": "Abre um novo separador de terminal.",
     "sections.scripts.title": "Scripts",
-    "sections.snippets.title": "Snippets"
+    "sections.snippets.title": "Snippets",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Vai para o terminal que está à sua espera há mais tempo (um separador com um ponto), em qualquer projeto. Ctrl+Shift+J no Windows e Linux."
   },
   "ai": {
     "explain.label": "Explicar com IA",

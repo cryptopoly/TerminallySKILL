@@ -273,7 +273,9 @@
     "updates.available": "Update {{version}} ist verfügbar",
     "updates.releaseNotesHint": "Ausklappen, um Highlights und das vollständige Changelog zu sehen.",
     "updates.downloadOpen": "Update herunterladen und öffnen",
-    "updates.opening": "Update wird geöffnet"
+    "updates.opening": "Update wird geöffnet",
+    "palette.actions.jumpAttention": "Zum Terminal springen, das dich braucht",
+    "palette.actions.jumpAttentionDescription": "Das Terminal öffnen, das am längsten auf dich wartet, in jedem Projekt"
   },
   "projects": {
     "dialog.titleEdit": "Projekt bearbeiten",
@@ -943,7 +945,11 @@
     "attention.failed": "Befehl fehlgeschlagen (Exit-Code {{code}})",
     "attention.approval": "Freigabe erforderlich",
     "attention.workflowDone": "Workflow abgeschlossen",
-    "attention.workflowFailed": "Workflow fehlgeschlagen"
+    "attention.workflowFailed": "Workflow fehlgeschlagen",
+    "attention.agentNotify": "Braucht deine Aufmerksamkeit",
+    "attention.agentBlocked": "Wartet auf dich",
+    "attention.agentDone": "Fertig",
+    "attention.agentError": "Mit Fehler beendet"
   },
   "onboarding": {
     "subtitle": "Visueller Befehls-Builder, Terminal-Workspace, Workflows, Protokolle und KI-Tools",
@@ -1123,7 +1129,9 @@
     "sections.keyboard.steps.help.desc": "Diese Hilfe öffnen.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
     "sections.keyboard.steps.newTerminal.desc": "Einen neuen Terminal-Tab öffnen.",
-    "sections.snippets.title": "Snippets"
+    "sections.snippets.title": "Snippets",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Zum Terminal springen, das am längsten auf dich wartet (ein Tab mit Punkt), in jedem Projekt. Ctrl+Shift+J unter Windows und Linux."
   },
   "ai": {
     "explain.label": "Mit KI erklären",

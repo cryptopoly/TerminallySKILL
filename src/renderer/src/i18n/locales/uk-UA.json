@@ -450,7 +450,9 @@
     "updates.downloadInstall": "Завантажити й установити оновлення",
     "updates.downloadOpen": "Завантажити й відкрити оновлення",
     "updates.installing": "Установлення оновлення",
-    "updates.opening": "Відкриття оновлення"
+    "updates.opening": "Відкриття оновлення",
+    "palette.actions.jumpAttention": "Перейти до термінала, якому потрібні ви",
+    "palette.actions.jumpAttentionDescription": "Відкрити термінал, який чекає на вас найдовше, у будь-якому проєкті"
   },
   "projects": {
     "selector.none": "Немає проєкту",
@@ -1201,7 +1203,11 @@
     "attention.failed": "Команда завершилася помилкою (код {{code}})",
     "attention.approval": "Потрібне підтвердження",
     "attention.workflowDone": "Workflow завершено",
-    "attention.workflowFailed": "Workflow завершився помилкою"
+    "attention.workflowFailed": "Workflow завершився помилкою",
+    "attention.agentNotify": "Потребує вашої уваги",
+    "attention.agentBlocked": "Чекає на вас",
+    "attention.agentDone": "Готово",
+    "attention.agentError": "Зупинено з помилкою"
   },
   "onboarding": {
     "subtitle": "Візуальний конструктор команд, термінальний робочий простір, workflow, логи та інструменти ШІ",
@@ -1386,7 +1392,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "Відкрити цей посібник.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "Відкрити нову вкладку термінала."
+    "sections.keyboard.steps.newTerminal.desc": "Відкрити нову вкладку термінала.",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Перейти до термінала, який чекає на вас найдовше (вкладка з крапкою), у будь-якому проєкті. Ctrl+Shift+J у Windows і Linux."
   },
   "ai": {
     "explain.label": "Пояснити за допомогою ШІ",

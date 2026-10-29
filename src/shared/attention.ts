@@ -39,6 +39,20 @@ export function shouldRaiseCommandAttention(params: {
   return completed - started >= params.minSeconds * 1000
 }
 
+/** The terminal that has waited longest for the user, among those still open. */
+export function pickNextAttentionSession(
+  entries: Record<string, AttentionEntry>,
+  openSessionIds: Iterable<string>
+): string | null {
+  const open = new Set(openSessionIds)
+  let next: { sessionId: string; at: string } | null = null
+  for (const [sessionId, entry] of Object.entries(entries)) {
+    if (!open.has(sessionId)) continue
+    if (!next || entry.at < next.at) next = { sessionId, at: entry.at }
+  }
+  return next?.sessionId ?? null
+}
+
 export function attentionKindForExit(exitCode: number | null): AttentionKind {
   return exitCode !== null && exitCode !== 0 ? 'failed' : 'finished'
 }

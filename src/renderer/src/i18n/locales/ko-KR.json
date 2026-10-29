@@ -435,7 +435,9 @@
     "updates.downloadInstall": "업데이트 다운로드 및 설치",
     "updates.downloadOpen": "업데이트 다운로드 및 열기",
     "updates.installing": "업데이트 설치 중",
-    "updates.opening": "업데이트 여는 중"
+    "updates.opening": "업데이트 여는 중",
+    "palette.actions.jumpAttention": "확인이 필요한 터미널로 이동",
+    "palette.actions.jumpAttentionDescription": "어느 프로젝트에서든 가장 오래 기다린 터미널을 엽니다"
   },
   "projects": {
     "selector.none": "프로젝트 없음",
@@ -1138,7 +1140,11 @@
     "attention.failed": "명령 실패(종료 코드 {{code}})",
     "attention.approval": "승인 필요",
     "attention.workflowDone": "워크플로 완료",
-    "attention.workflowFailed": "워크플로 실패"
+    "attention.workflowFailed": "워크플로 실패",
+    "attention.agentNotify": "확인이 필요합니다",
+    "attention.agentBlocked": "입력을 기다리는 중",
+    "attention.agentDone": "완료",
+    "attention.agentError": "오류로 중지됨"
   },
   "onboarding": {
     "subtitle": "시각적 명령 빌더, 터미널 작업공간, 워크플로, 로그, AI 도구",
@@ -1317,7 +1323,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "이 도움말 가이드를 엽니다.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "새 터미널 탭을 엽니다."
+    "sections.keyboard.steps.newTerminal.desc": "새 터미널 탭을 엽니다.",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "가장 오래 기다린 터미널(점이 표시된 탭)로 어느 프로젝트에서든 이동합니다. Windows와 Linux에서는 Ctrl+Shift+J."
   },
   "ai": {
     "explain.label": "AI로 설명",

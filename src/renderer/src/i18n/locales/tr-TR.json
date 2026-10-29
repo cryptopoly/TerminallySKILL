@@ -435,7 +435,9 @@
     "updates.downloadInstall": "Güncellemeyi indir ve yükle",
     "updates.downloadOpen": "Güncellemeyi indir ve aç",
     "updates.installing": "Güncelleme yükleniyor",
-    "updates.opening": "Güncelleme açılıyor"
+    "updates.opening": "Güncelleme açılıyor",
+    "palette.actions.jumpAttention": "Sizi bekleyen terminale git",
+    "palette.actions.jumpAttentionDescription": "Herhangi bir projede sizi en uzun süredir bekleyen terminali açar"
   },
   "projects": {
     "selector.none": "Proje yok",
@@ -1136,7 +1138,11 @@
     "attention.failed": "Komut başarısız oldu (çıkış kodu {{code}})",
     "attention.approval": "Onay gerekli",
     "attention.workflowDone": "Workflow tamamlandı",
-    "attention.workflowFailed": "Workflow başarısız oldu"
+    "attention.workflowFailed": "Workflow başarısız oldu",
+    "attention.agentNotify": "İlginizi bekliyor",
+    "attention.agentBlocked": "Sizi bekliyor",
+    "attention.agentDone": "Bitti",
+    "attention.agentError": "Bir hatayla durdu"
   },
   "onboarding": {
     "subtitle": "Görsel komut oluşturucu, terminal çalışma alanı, workflow'lar, günlükler ve AI araçları",
@@ -1315,7 +1321,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "Bu yardım kılavuzunu aç.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "Yeni bir terminal sekmesi aç."
+    "sections.keyboard.steps.newTerminal.desc": "Yeni bir terminal sekmesi aç.",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Sizi en uzun süredir bekleyen terminale (noktalı sekme) herhangi bir projede gider. Windows ve Linux’ta Ctrl+Shift+J."
   },
   "ai": {
     "explain.label": "AI ile açıkla",

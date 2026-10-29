@@ -1,6 +1,7 @@
 import { i18n } from '../i18n'
 import {
   attentionKindForExit,
+  pickNextAttentionSession,
   shouldRaiseCommandAttention,
   type AttentionKind
 } from '../../../shared/attention'
@@ -40,6 +41,35 @@ export function raiseAttention(sessionId: string, kind: AttentionKind, title: st
   if (!document.hasFocus()) {
     void window.electronAPI.notifyAttention({ sessionId, title, body })
   }
+}
+
+/** Show a terminal, switching project first if it belongs to another one. */
+export function focusAttentionSession(sessionId: string): boolean {
+  const terminals = useTerminalStore.getState()
+  const session = terminals.sessions.find((entry) => entry.id === sessionId)
+  if (!session) return false
+
+  const projects = useProjectStore.getState()
+  if (session.projectId && projects.activeProject?.id !== session.projectId) {
+    const project = projects.projects.find((entry) => entry.id === session.projectId)
+    if (project) {
+      void window.electronAPI.setActiveProject(project.id)
+      projects.setActiveProject(project)
+    }
+  }
+  terminals.setActiveSession(sessionId)
+  terminals.setTerminalVisible(true)
+  return true
+}
+
+/** Jump to the terminal that has waited longest for the user (any project) and clear its dot. */
+export function jumpToNextAttention(): boolean {
+  const { entries, clear } = useAttentionStore.getState()
+  const open = useTerminalStore.getState().sessions.map((session) => session.id)
+  const sessionId = pickNextAttentionSession(entries, open)
+  if (!sessionId) return false
+  clear(sessionId)
+  return focusAttentionSession(sessionId)
 }
 
 export function raiseCommandAttention(params: {

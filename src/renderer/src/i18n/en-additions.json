@@ -89,7 +89,11 @@
     "attention.failed": "Command failed (exit {{code}})",
     "attention.approval": "Approval needed",
     "attention.workflowDone": "Workflow finished",
-    "attention.workflowFailed": "Workflow failed"
+    "attention.workflowFailed": "Workflow failed",
+    "attention.agentNotify": "Needs your attention",
+    "attention.agentBlocked": "Waiting for you",
+    "attention.agentDone": "Done",
+    "attention.agentError": "Stopped with an error"
   },
   "native": {
     "menu.file": "File",
@@ -245,5 +249,13 @@
     "schedule.history.reason.not-runnable": "could not start",
     "schedule.history.reason.busy": "previous run still going",
     "schedule.history.reason.interrupted": "app was closed"
+  },
+  "layout": {
+    "palette.actions.jumpAttention": "Jump to the terminal that needs you",
+    "palette.actions.jumpAttentionDescription": "Open the terminal that has waited longest for you, in any project"
+  },
+  "onboarding": {
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Jump to the terminal that has waited longest for you (a tab with a dot), in any project. Ctrl+Shift+J on Windows and Linux."
   }
 }

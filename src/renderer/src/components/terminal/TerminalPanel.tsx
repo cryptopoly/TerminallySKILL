@@ -48,6 +48,7 @@ import type { Theme } from '../../../../shared/settings-schema'
 import { resolveProjectWorkingDirectory } from '../../../../shared/project-schema'
 import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
 import { raiseCommandAttention } from '../../lib/attention'
+import { registerAgentAttention } from '../../lib/agent-attention'
 import type { ShellIntegrationEvent } from '../../../../shared/shell-integration'
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
@@ -1942,6 +1943,7 @@ function XTermInstance({
     term.loadAddon(searchAddon)
     term.loadAddon(serializeAddon)
     term.open(containerRef.current)
+    const agentAttention = registerAgentAttention(term, sessionId)
 
     // File path link provider — makes absolute paths clickable to open in file viewer
     const FILE_PATH_RE = /(?:^|\s)(\/[\w./@~-]+(?:\/[\w.@~-]+)*\.\w{1,10})(?=\s|:|,|$)/g
@@ -2163,6 +2165,7 @@ function XTermInstance({
       unsubData()
       unsubExit()
       unsubShellEvent()
+      agentAttention.forEach((disposable) => disposable.dispose())
       term.dispose()
     }
   }, [sessionId])

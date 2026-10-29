@@ -436,7 +436,9 @@
     "updates.downloadOpen": "Unduh & buka pembaruan",
     "updates.installing": "Menginstal pembaruan",
     "updates.opening": "Membuka pembaruan",
-    "sidebar.tabs.logs": "Log"
+    "sidebar.tabs.logs": "Log",
+    "palette.actions.jumpAttention": "Lompat ke terminal yang membutuhkan Anda",
+    "palette.actions.jumpAttentionDescription": "Buka terminal yang paling lama menunggu Anda, di proyek mana pun"
   },
   "projects": {
     "selector.none": "Tidak ada proyek",
@@ -1139,7 +1141,11 @@
     "attention.failed": "Perintah gagal (kode keluar {{code}})",
     "attention.approval": "Perlu persetujuan",
     "attention.workflowDone": "Workflow selesai",
-    "attention.workflowFailed": "Workflow gagal"
+    "attention.workflowFailed": "Workflow gagal",
+    "attention.agentNotify": "Perlu perhatian Anda",
+    "attention.agentBlocked": "Menunggu Anda",
+    "attention.agentDone": "Selesai",
+    "attention.agentError": "Berhenti karena galat"
   },
   "onboarding": {
     "subtitle": "Command builder visual, workspace terminal, workflow, log, dan alat AI",
@@ -1318,7 +1324,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "Buka panduan bantuan ini.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "Buka tab terminal baru."
+    "sections.keyboard.steps.newTerminal.desc": "Buka tab terminal baru.",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "Lompat ke terminal yang paling lama menunggu Anda (tab dengan titik), di proyek mana pun. Ctrl+Shift+J di Windows dan Linux."
   },
   "ai": {
     "explain.label": "Jelaskan dengan AI",

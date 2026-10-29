@@ -470,7 +470,9 @@
     "updates.downloadInstall": "تنزيل التحديث وتثبيته",
     "updates.downloadOpen": "تنزيل التحديث وفتحه",
     "updates.installing": "جارٍ تثبيت التحديث",
-    "updates.opening": "جارٍ فتح التحديث"
+    "updates.opening": "جارٍ فتح التحديث",
+    "palette.actions.jumpAttention": "الانتقال إلى الطرفية التي تحتاجك",
+    "palette.actions.jumpAttentionDescription": "افتح الطرفية التي تنتظرك منذ أطول وقت، في أي مشروع"
   },
   "projects": {
     "selector.none": "لا يوجد مشروع",
@@ -1271,7 +1273,11 @@
     "attention.failed": "فشل الأمر (رمز الخروج {{code}})",
     "attention.approval": "الموافقة مطلوبة",
     "attention.workflowDone": "انتهى سير العمل",
-    "attention.workflowFailed": "فشل سير العمل"
+    "attention.workflowFailed": "فشل سير العمل",
+    "attention.agentNotify": "يحتاج إلى انتباهك",
+    "attention.agentBlocked": "بانتظارك",
+    "attention.agentDone": "تم",
+    "attention.agentError": "توقف بسبب خطأ"
   },
   "onboarding": {
     "subtitle": "منشئ أوامر مرئي ومساحة عمل طرفية وسير عمل وسجلات وأدوات ذكاء اصطناعي",
@@ -1462,7 +1468,9 @@
     "sections.keyboard.steps.help.label": "Command+I",
     "sections.keyboard.steps.help.desc": "افتح دليل المساعدة هذا.",
     "sections.keyboard.steps.newTerminal.label": "Command+T",
-    "sections.keyboard.steps.newTerminal.desc": "افتح تبويب طرفية جديدًا."
+    "sections.keyboard.steps.newTerminal.desc": "افتح تبويب طرفية جديدًا.",
+    "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
+    "sections.keyboard.steps.jumpAttention.desc": "الانتقال إلى الطرفية التي تنتظرك منذ أطول وقت (تبويب عليه نقطة)، في أي مشروع. Ctrl+Shift+J على Windows وLinux."
   },
   "ai": {
     "explain.label": "اشرح بالذكاء الاصطناعي",
