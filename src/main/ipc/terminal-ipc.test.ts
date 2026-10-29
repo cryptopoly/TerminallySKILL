@@ -153,6 +153,8 @@ describe('terminal-ipc', () => {
       '/tmp/external-workspace',
       'directory'
     )
+    // Electron 43+ no longer remembers the last folder, so the app passes it back itself.
+    expect(electronMocks.showOpenDialog.mock.calls[1][1]).toMatchObject({ defaultPath: '/tmp' })
   })
 
   it('does not register approvals when the dialog is cancelled', async () => {
