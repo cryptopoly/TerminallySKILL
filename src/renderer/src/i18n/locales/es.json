@@ -90,7 +90,7 @@
     "general.safePaste.description": "Advertir antes de enviar a la shell pegados sospechosos o de varias líneas",
     "logs.saveTerminalLogs": "Guardar registros de la terminal",
     "tabs.privacy": "Privacidad",
-    "general.attention.title": "Alertas de atención",
+    "general.attention.title": "Notificaciones",
     "general.attention.description": "Muestra un punto en la pestaña y envía una notificación de escritorio cuando un comando largo termina o falla, o cuando un workflow espera tu aprobación.",
     "general.attention.minLabel": "Solo para comandos que tarden más de",
     "privacy.title": "Privacidad y red",
@@ -668,7 +668,7 @@
     "schedule.minutes": "minutos",
     "schedule.hours": "horas",
     "schedule.at": "A las",
-    "schedule.weekdaysHint": "Deja todos los días desactivados para ejecutar cada día.",
+    "schedule.weekdaysHint": "Si no marcas ningún día, se ejecutará todos los días.",
     "schedule.runIn": "Ejecutar en",
     "schedule.localShell": "Shell local (sin proyecto)",
     "schedule.add": "Añadir programación",
@@ -676,7 +676,7 @@
     "schedule.close": "Cerrar",
     "schedule.scheduledBadge": "Programado",
     "schedule.summaryInterval": "Cada {{interval}}",
-    "schedule.summaryDaily": "Diario a las {{time}}",
+    "schedule.summaryDaily": "Todos los días a las {{time}}",
     "schedule.summaryWeekdays": "{{days}} a las {{time}}"
   },
   "snippets": {

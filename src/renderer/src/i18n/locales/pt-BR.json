@@ -89,7 +89,7 @@
     "logs.title": "Logs",
     "general.terminalInput.modes.editor.label": "Prompt do editor",
     "tabs.privacy": "Privacidade",
-    "general.attention.title": "Alertas de atenção",
+    "general.attention.title": "Notificações",
     "general.attention.description": "Mostra um ponto na aba e envia uma notificação da área de trabalho quando um comando longo termina ou falha, ou quando um workflow aguarda sua aprovação.",
     "general.attention.minLabel": "Somente para comandos que demorem mais de",
     "privacy.title": "Privacidade e rede",
@@ -114,7 +114,7 @@
     "privacy.purpose.other": "Outro",
     "privacy.refresh": "Atualizar",
     "privacy.clear": "Limpar",
-    "privacy.failed": "falhou"
+    "privacy.failed": "falha"
   },
   "commands": {
     "addDialog.title": "Adicionar comando",
@@ -644,7 +644,7 @@
     "addToScript.tooltipLabel": "Script",
     "schedule.open": "Agendar este workflow",
     "schedule.title": "Agendamento: {{name}}",
-    "schedule.intro": "Executa em um temporizador enquanto o TerminallySKILL estiver aberto. Execuções que vencerem com o app fechado são ignoradas.",
+    "schedule.intro": "Executa por temporizador enquanto o TerminallySKILL estiver aberto. Execuções previstas para quando o app estiver fechado são ignoradas.",
     "schedule.needsDefaults": "Este workflow tem entradas obrigatórias sem valor padrão. Uma execução agendada não pode pedir dados, então defina antes um valor padrão para cada entrada obrigatória.",
     "schedule.none": "Ainda não agendado.",
     "schedule.enabled": "Ativado",
@@ -652,7 +652,7 @@
     "schedule.nextRun": "Próxima execução: {{when}}",
     "schedule.lastRun": "Última execução: {{status}}",
     "schedule.status.completed": "bem-sucedida",
-    "schedule.status.failed": "falhou",
+    "schedule.status.failed": "com falha",
     "schedule.status.cancelled": "cancelada",
     "schedule.status.skipped": "ignorada",
     "schedule.delete": "Excluir agendamento",
@@ -1019,10 +1019,10 @@
     "panel.noSessions": "Nenhuma sessão de terminal. Clique em + ou execute um comando.",
     "panel.sshShellDescription": "Abrir um novo shell SSH interativo para este workspace",
     "attention.finished": "Comando concluído",
-    "attention.failed": "Comando falhou (saída {{code}})",
+    "attention.failed": "Falha no comando (código de saída {{code}})",
     "attention.approval": "Aprovação necessária",
     "attention.workflowDone": "Workflow concluído",
-    "attention.workflowFailed": "Workflow falhou"
+    "attention.workflowFailed": "Falha no workflow"
   },
   "onboarding": {
     "subtitle": "Builder visual de comandos, workspace de terminal, workflows, logs e ferramentas de IA",

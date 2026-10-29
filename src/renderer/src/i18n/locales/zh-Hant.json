@@ -162,7 +162,7 @@
     "ai.providerDescriptions.ollama": "在您電腦上執行的本機模型",
     "ai.providerDescriptions.lmstudio": "OpenAI 相容的本機執行環境",
     "tabs.privacy": "隱私",
-    "general.attention.title": "注意提醒",
+    "general.attention.title": "提醒通知",
     "general.attention.description": "當長時間執行的命令完成或失敗，或工作流程等待你核准時，在分頁上顯示圓點並傳送桌面通知。",
     "general.attention.minLabel": "僅針對執行時間超過以下時長的命令",
     "privacy.title": "隱私與網路",

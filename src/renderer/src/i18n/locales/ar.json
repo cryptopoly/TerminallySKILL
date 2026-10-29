@@ -166,7 +166,7 @@
     "ai.providerDescriptions.ollama": "نماذج محلية تعمل على جهازك",
     "ai.providerDescriptions.lmstudio": "بيئة تشغيل محلية متوافقة مع OpenAI",
     "tabs.privacy": "الخصوصية",
-    "general.attention.title": "تنبيهات الانتباه",
+    "general.attention.title": "الإشعارات",
     "general.attention.description": "اعرض نقطة على علامة التبويب وأرسل إشعارًا على سطح المكتب عند انتهاء أمر طويل أو فشله، أو عندما ينتظر سير العمل موافقتك.",
     "general.attention.minLabel": "فقط للأوامر التي تستغرق أكثر من",
     "privacy.title": "الخصوصية والشبكة",
@@ -856,7 +856,7 @@
     "schedule.approvalNote": "تُوقف خطوات الموافقة التشغيل مؤقتًا حتى تؤكد. سيصلك تنبيه عندما ينتظر.",
     "schedule.close": "إغلاق",
     "schedule.scheduledBadge": "مجدول",
-    "schedule.summaryInterval": "كل {{interval}}",
+    "schedule.summaryInterval": "الفاصل الزمني: {{interval}}",
     "schedule.summaryDaily": "يوميًا في {{time}}",
     "schedule.summaryWeekdays": "{{days}} في {{time}}"
   },
