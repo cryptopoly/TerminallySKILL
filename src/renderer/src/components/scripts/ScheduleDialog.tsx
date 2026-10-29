@@ -1,19 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
-import { AlertTriangle, CalendarClock, Trash2, X } from 'lucide-react'
+import { AlertTriangle, CalendarClock, ChevronDown, ChevronRight, ExternalLink, Trash2, X } from 'lucide-react'
 import type { Script } from '../../../../shared/script-schema'
 import {
   MAX_SCHEDULE_INTERVAL_MINUTES,
   MIN_SCHEDULE_INTERVAL_MINUTES,
   isValidScheduleTime,
   type Schedule,
+  type ScheduleHistoryEntry,
   type ScheduleRecurrence
 } from '../../../../shared/schedule-schema'
 import {
   getMissingRequiredWorkflowInputs,
   getWorkflowInputInitialValues
 } from '../../../../shared/workflow-execution'
+import { useLogStore } from '../../store/log-store'
 import { useProjectStore } from '../../store/project-store'
 import { useScheduleStore } from '../../store/schedule-store'
 import { useSettingsStore } from '../../store/settings-store'
@@ -45,6 +47,7 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
   const settings = useSettingsStore((s) => s.settings)
   const projects = useProjectStore((s) => s.projects)
   const activeProject = useProjectStore((s) => s.activeProject)
+  const updateProjectInStore = useProjectStore((s) => s.updateProjectInStore)
   const allSchedules = useScheduleStore((s) => s.schedules)
   const refresh = useScheduleStore((s) => s.refresh)
   const locale = resolveFormatLocale(settings)
@@ -55,6 +58,8 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
   const [time, setTime] = useState('09:00')
   const [weekdays, setWeekdays] = useState<number[]>([])
   const [projectId, setProjectId] = useState<string>(script.projectId ?? activeProject?.id ?? NO_PROJECT)
+  const [catchUp, setCatchUp] = useState(false)
+  const [openHistory, setOpenHistory] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -106,7 +111,8 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
         scriptId: script.id,
         projectId: projectId === NO_PROJECT ? null : projectId,
         recurrence,
-        enabled: true
+        enabled: true,
+        catchUp
       })
       await refresh()
     } catch (e) {
@@ -117,6 +123,34 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
   const handleToggle = async (schedule: Schedule): Promise<void> => {
     await window.electronAPI.saveSchedule({ ...schedule, enabled: !schedule.enabled })
     await refresh()
+  }
+
+  const handleToggleCatchUp = async (schedule: Schedule): Promise<void> => {
+    await window.electronAPI.saveSchedule({ ...schedule, catchUp: !schedule.catchUp })
+    await refresh()
+  }
+
+  const handleOpenRun = async (runId: string): Promise<void> => {
+    useLogStore.getState().setPendingRunId(runId)
+    if (activeProject) {
+      const updated = await window.electronAPI.updateProject(activeProject.id, {
+        workspaceLayout: { sidebarTab: 'logs' }
+      })
+      if (updated) updateProjectInStore(updated)
+    }
+    onClose()
+  }
+
+  const historyLabel = (entry: ScheduleHistoryEntry): string => {
+    const status =
+      entry.status === 'missed' || entry.status === 'running'
+        ? t(`schedule.history.status.${entry.status}`)
+        : t(`schedule.status.${entry.status}`)
+    const extras = [
+      entry.trigger === 'catch-up' ? t('schedule.history.catchUp') : null,
+      entry.reason ? t(`schedule.history.reason.${entry.reason}`) : null
+    ].filter(Boolean)
+    return extras.length > 0 ? `${status} (${extras.join(', ')})` : status
   }
 
   const handleDelete = async (schedule: Schedule): Promise<void> => {
@@ -152,39 +186,90 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
           <section className="space-y-2">
             {schedules.length === 0 && <p className="text-sm text-gray-500">{t('schedule.none')}</p>}
             {schedules.map((schedule) => (
-              <div
-                key={schedule.id}
-                className="flex items-center gap-3 rounded-xl border border-surface-border bg-surface p-3"
-              >
-                <input
-                  type="checkbox"
-                  checked={schedule.enabled}
-                  onChange={() => void handleToggle(schedule)}
-                  aria-label={t('schedule.enabled')}
-                  className="rounded border-surface-border bg-surface"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm text-gray-200">{describe(schedule.recurrence)}</div>
-                  <div className="text-[11px] text-gray-500 mt-0.5 truncate">
-                    {schedule.enabled && schedule.nextRunAt
-                      ? t('schedule.nextRun', { when: formatDateTime(schedule.nextRunAt, settings) })
-                      : t('schedule.paused')}
-                    {schedule.lastStatus && (
-                      <>
-                        {' · '}
-                        {t('schedule.lastRun', { status: t(`schedule.status.${schedule.lastStatus}`) })}
-                      </>
-                    )}
+              <div key={schedule.id} className="rounded-xl border border-surface-border bg-surface p-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={schedule.enabled}
+                    onChange={() => void handleToggle(schedule)}
+                    aria-label={t('schedule.enabled')}
+                    className="rounded border-surface-border bg-surface"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-gray-200">{describe(schedule.recurrence)}</div>
+                    <div className="text-[11px] text-gray-500 mt-0.5 truncate">
+                      {schedule.enabled && schedule.nextRunAt
+                        ? t('schedule.nextRun', { when: formatDateTime(schedule.nextRunAt, settings) })
+                        : t('schedule.paused')}
+                      {schedule.lastStatus && (
+                        <>
+                          {' · '}
+                          {t('schedule.lastRun', { status: t(`schedule.status.${schedule.lastStatus}`) })}
+                        </>
+                      )}
+                    </div>
                   </div>
+                  <button
+                    onClick={() => void handleDelete(schedule)}
+                    className="tv-btn-icon-sm hover:text-destructive"
+                    title={t('schedule.delete')}
+                    aria-label={t('schedule.delete')}
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
+
+                <label className="mt-2 flex items-center gap-2 text-[11px] text-gray-400">
+                  <input
+                    type="checkbox"
+                    checked={schedule.catchUp}
+                    onChange={() => void handleToggleCatchUp(schedule)}
+                    className="rounded border-surface-border bg-surface"
+                  />
+                  {t('schedule.catchUp')}
+                </label>
+
                 <button
-                  onClick={() => void handleDelete(schedule)}
-                  className="tv-btn-icon-sm hover:text-destructive"
-                  title={t('schedule.delete')}
-                  aria-label={t('schedule.delete')}
+                  onClick={() => setOpenHistory(openHistory === schedule.id ? null : schedule.id)}
+                  aria-expanded={openHistory === schedule.id}
+                  className="mt-2 flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-300"
                 >
-                  <Trash2 size={13} />
+                  {openHistory === schedule.id ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                  {t('schedule.history.title', { count: schedule.history.length })}
                 </button>
+                {openHistory === schedule.id && (
+                  <ul className="mt-1.5 space-y-1" data-testid="schedule-history">
+                    {schedule.history.length === 0 && (
+                      <li className="text-[11px] text-gray-600">{t('schedule.history.empty')}</li>
+                    )}
+                    {schedule.history.map((entry, index) => (
+                      <li key={`${entry.at}-${index}`} className="flex items-center gap-2 text-[11px]">
+                        <span className="text-gray-500 tabular-nums">{formatDateTime(entry.at, settings)}</span>
+                        <span
+                          className={clsx(
+                            'min-w-0 flex-1 truncate',
+                            entry.status === 'completed' && 'text-safe',
+                            entry.status === 'failed' && 'text-destructive',
+                            (entry.status === 'missed' || entry.status === 'skipped') && 'text-caution',
+                            (entry.status === 'cancelled' || entry.status === 'running') && 'text-gray-400'
+                          )}
+                        >
+                          {historyLabel(entry)}
+                        </span>
+                        {entry.runId && (
+                          <button
+                            onClick={() => void handleOpenRun(entry.runId as string)}
+                            className="tv-btn-icon-sm"
+                            title={t('schedule.history.openRun')}
+                            aria-label={t('schedule.history.openRun')}
+                          >
+                            <ExternalLink size={11} />
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ))}
           </section>
@@ -280,6 +365,16 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
                 </select>
               </label>
             )}
+
+            <label className="flex items-center gap-2 text-xs text-gray-400">
+              <input
+                type="checkbox"
+                checked={catchUp}
+                onChange={(e) => setCatchUp(e.target.checked)}
+                className="rounded border-surface-border bg-surface"
+              />
+              {t('schedule.catchUp')}
+            </label>
 
             {error && <p className="text-xs text-destructive">{error}</p>}
             <button
