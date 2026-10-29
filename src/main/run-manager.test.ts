@@ -230,7 +230,7 @@ describe('run-manager', () => {
           cwd: '/legacy',
           shell: null,
           logFilePath: null,
-          startedAt: '2026-03-08T17:00:00.000Z',
+          startedAt: new Date().toISOString(),
           endedAt: null,
           status: 'running',
           error: null,
@@ -516,7 +516,7 @@ describe('run-manager', () => {
       cwd: '/repo',
       shell: '/bin/zsh',
       logFilePath: null,
-      startedAt: '2026-03-15T19:31:17.602Z',
+      startedAt: new Date().toISOString(),
       endedAt: null,
       status: 'running_command',
       error: null,
@@ -528,5 +528,33 @@ describe('run-manager', () => {
     expect(index).toHaveLength(1)
     expect(index[0].status).toBe('running_command')
     expect(index[0].endedAt).toBeNull()
+  })
+
+  it('recovers a run from an earlier launch even when a new terminal reuses its session id', async () => {
+    registerTerminalSession('term-1')
+
+    await upsertRunRecord({
+      runId: 'run-old-launch',
+      source: 'workflow',
+      sessionId: 'term-1',
+      scriptId: 'script-1',
+      scriptName: 'Build',
+      projectId: 'proj-1',
+      projectName: 'StuffDiver',
+      cwd: '/repo',
+      shell: '/bin/zsh',
+      logFilePath: null,
+      startedAt: '2020-01-01T00:00:00.000Z',
+      endedAt: null,
+      status: 'running_command',
+      error: null,
+      inputValues: {},
+      steps: []
+    })
+
+    resetRunManagerCache()
+    const index = await getRunIndex('proj-1')
+    expect(index[0].status).toBe('failed')
+    expect(index[0].endedAt).not.toBeNull()
   })
 })

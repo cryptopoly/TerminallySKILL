@@ -8,6 +8,10 @@ import { getDataDir } from './user-data-path'
 
 let cached: RunsData | null = null
 
+// Terminal ids (term-1, term-2...) restart from 1 on every launch, so an id match alone does not
+// prove a saved run is still live. A live run must have started after this process did.
+const PROCESS_STARTED_AT_MS = Date.now() - process.uptime() * 1000
+
 function getRunsFile(): string {
   return join(getDataDir(), 'runs.json')
 }
@@ -94,9 +98,8 @@ function getLatestObservedTimestamp(run: RunRecord): string {
 }
 
 function recoverStaleRun(run: RunRecord): RunRecord {
-  if (isTerminalRunStatus(run.status) || hasTerminalSession(run.sessionId)) {
-    return run
-  }
+  if (isTerminalRunStatus(run.status)) return run
+  if (hasTerminalSession(run.sessionId) && Date.parse(run.startedAt) >= PROCESS_STARTED_AT_MS) return run
 
   const endedAt = run.endedAt ?? getLatestObservedTimestamp(run)
   const activeStep =

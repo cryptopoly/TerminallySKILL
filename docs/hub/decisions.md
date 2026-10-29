@@ -25,6 +25,8 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 ### P3: later
 
+9. **Busy indicator in the project picker for any running terminal command, not only workflow runs.** Raised by Dan 2026-10-29: a dev server typed by hand showed no "running" badge. **Team recommendation:** yes, show the same green badge when a terminal in that project is mid-command (the app already knows from shell integration). **Why:** matches what people expect and reuses the attention layer's start/finish tracking. Small change.
+
 5. **Next headline feature for 0.9.104.** Options in [ideas](ideas.md): command blocks lite, multi-host SSH run. **Team recommendation:** command blocks lite first. **Why:** smaller, reuses Explain & fix, and the attention layer already knows when a command ends.
 6. **"Private tab" (no-logs option).** Full analysis in [ideas](ideas.md#verdict-a-no-logs--incognito-option). **Team recommendation:** bank; do not build now. **Why:** a browser-style incognito mode does not fit a terminal (the shell, remote servers and AI providers keep their own records, and the app already has global and per-project log switches); a per-tab version helps little and risks false trust.
 7. **Move shell-integration tests and type-check to cover test files.** About 13 fixture type errors are excluded today. **Team recommendation:** fix when touching those tests.
@@ -33,6 +35,9 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 <summary>Decision log (made decisions, newest section last)</summary>
 
 ## 2026-10-29
+
+- **Bug fixed: ghost "running" runs.** Terminal ids restart at term-1 each launch, so a run left unfinished by an earlier launch (Dan's Build TSKILL from 2026-10-28) was never cleaned up while a new term-1 existed. Unfinished runs from before the current launch are now recovered at startup. Unit test added.
+- **Not a bug:** a workflow run ends when its command ends. Run TSKILL ended (15m56s) when the dev server was stopped; the restart was typed by hand, so no new run exists. See item 9.
 
 - **Four new Mid themes (Dan asked, Claude chose colours):** Slate (blue-gray + sky), Plum (mauve + orchid), Dove (soft gray-blue + cobalt), Clay (warm tan + emerald). 12 themes in total. Settings → Theme is now three columns (Dark, Mid, Light) and each card is a miniature of the app drawn in that theme's own colours. Other languages show English names for the new themes until translated.
 - **Settings card renamed "Notifications" in English** to match the other 17 languages (Dan approved).
