@@ -15,7 +15,7 @@
     "ai.providerDescriptions.ollama": "在本机运行的本地模型",
     "ai.providerDescriptions.lmstudio": "OpenAI 兼容的本地运行时",
     "tabs.privacy": "隐私",
-    "general.attention.title": "注意提醒",
+    "general.attention.title": "提醒通知",
     "general.attention.description": "当长时间运行的命令完成或失败，或工作流等待你批准时，在标签页上显示圆点并发送桌面通知。",
     "general.attention.minLabel": "仅针对运行时间超过以下时长的命令",
     "privacy.title": "隐私与网络",

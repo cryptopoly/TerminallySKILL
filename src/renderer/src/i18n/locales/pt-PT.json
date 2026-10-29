@@ -167,7 +167,7 @@
     "general.resetCommandTrees.confirm": "Repor todas as árvores de comandos detetadas/manuais e dados de ajuda gerados?\n\nScripts, snippets, projetos, definições e registos são mantidos.",
     "locale.aiDescription": "Comandos, flags, caminhos de ficheiros, código e saída da shell permanecem inalterados.",
     "tabs.privacy": "Privacidade",
-    "general.attention.title": "Alertas de atenção",
+    "general.attention.title": "Notificações",
     "general.attention.description": "Mostra um ponto no separador e envia uma notificação do ambiente de trabalho quando um comando demorado termina ou falha, ou quando um workflow aguarda a tua aprovação.",
     "general.attention.minLabel": "Apenas para comandos que demorem mais de",
     "privacy.title": "Privacidade e rede",
@@ -192,7 +192,7 @@
     "privacy.purpose.other": "Outro",
     "privacy.refresh": "Atualizar",
     "privacy.clear": "Limpar",
-    "privacy.failed": "falhou"
+    "privacy.failed": "falha"
   },
   "commands": {
     "addDialog.title": "Adicionar comando",
@@ -741,7 +741,7 @@
     "addToScript.tooltipLabel": "Script",
     "schedule.open": "Agendar este workflow",
     "schedule.title": "Agendamento: {{name}}",
-    "schedule.intro": "Executa-se com um temporizador enquanto o TerminallySKILL estiver aberto. As execuções que vencerem com a app fechada são ignoradas.",
+    "schedule.intro": "Executa-se com um temporizador enquanto o TerminallySKILL estiver aberto. As execuções previstas para quando a app estiver fechada são ignoradas.",
     "schedule.needsDefaults": "Este workflow tem entradas obrigatórias sem valor predefinido. Uma execução agendada não pode pedir dados, por isso define primeiro um valor predefinido para cada entrada obrigatória.",
     "schedule.none": "Ainda não agendado.",
     "schedule.enabled": "Ativado",
@@ -749,7 +749,7 @@
     "schedule.nextRun": "Próxima execução: {{when}}",
     "schedule.lastRun": "Última execução: {{status}}",
     "schedule.status.completed": "bem-sucedida",
-    "schedule.status.failed": "falhou",
+    "schedule.status.failed": "com falha",
     "schedule.status.cancelled": "cancelada",
     "schedule.status.skipped": "ignorada",
     "schedule.delete": "Eliminar agendamento",
@@ -1136,10 +1136,10 @@
     "promotion.defaultCommandName": "Comando do terminal",
     "promotion.defaultWorkflowName": "Workflow do terminal",
     "attention.finished": "Comando concluído",
-    "attention.failed": "Comando falhou (saída {{code}})",
+    "attention.failed": "Falha no comando (código de saída {{code}})",
     "attention.approval": "Aprovação necessária",
     "attention.workflowDone": "Workflow concluído",
-    "attention.workflowFailed": "Workflow falhou"
+    "attention.workflowFailed": "Falha no workflow"
   },
   "onboarding": {
     "subtitle": "Construtor visual de comandos, workspace de terminal, workflows, registos e ferramentas de IA",

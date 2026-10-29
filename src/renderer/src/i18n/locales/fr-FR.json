@@ -89,7 +89,7 @@
     "locale.formatDescription": "Contrôle les dates, heures, nombres et le tri.",
     "locale.aiDescription": "Les commandes, options, chemins, code et sorties shell restent inchangés.",
     "tabs.privacy": "Confidentialité",
-    "general.attention.title": "Alertes d’attention",
+    "general.attention.title": "Notifications",
     "general.attention.description": "Affiche un point sur l’onglet et envoie une notification de bureau lorsqu’une commande longue se termine ou échoue, ou qu’un workflow attend votre approbation.",
     "general.attention.minLabel": "Uniquement pour les commandes qui durent plus de",
     "privacy.title": "Confidentialité et réseau",
@@ -114,7 +114,7 @@
     "privacy.purpose.other": "Autre",
     "privacy.refresh": "Actualiser",
     "privacy.clear": "Effacer",
-    "privacy.failed": "échoué"
+    "privacy.failed": "échec"
   },
   "commands": {
     "addDialog.title": "Ajouter une commande",
@@ -692,14 +692,14 @@
     "schedule.minutes": "minutes",
     "schedule.hours": "heures",
     "schedule.at": "À",
-    "schedule.weekdaysHint": "Laissez tous les jours désactivés pour exécuter chaque jour.",
+    "schedule.weekdaysHint": "Si aucun jour n’est sélectionné, le workflow s’exécute tous les jours.",
     "schedule.runIn": "Exécuter dans",
     "schedule.localShell": "Shell local (aucun projet)",
     "schedule.add": "Ajouter une planification",
     "schedule.approvalNote": "Les étapes d’approbation mettent l’exécution en pause jusqu’à votre confirmation. Vous recevez une alerte lorsqu’elle attend.",
     "schedule.close": "Fermer",
     "schedule.scheduledBadge": "Planifié",
-    "schedule.summaryInterval": "Toutes les {{interval}}",
+    "schedule.summaryInterval": "Intervalle : {{interval}}",
     "schedule.summaryDaily": "Tous les jours à {{time}}",
     "schedule.summaryWeekdays": "{{days}} à {{time}}"
   },
@@ -1056,10 +1056,10 @@
     "promotion.defaultWorkflowName": "Workflow de terminal",
     "panel.noSessions": "Aucune session de terminal. Cliquez sur + ou exécutez une commande.",
     "attention.finished": "Commande terminée",
-    "attention.failed": "Commande échouée (sortie {{code}})",
+    "attention.failed": "Échec de la commande (code de sortie {{code}})",
     "attention.approval": "Approbation requise",
     "attention.workflowDone": "Workflow terminé",
-    "attention.workflowFailed": "Workflow échoué"
+    "attention.workflowFailed": "Échec du workflow"
   },
   "onboarding": {
     "subtitle": "Builder de commandes visuel, espace de travail de terminal, workflows, journaux et outils IA",
