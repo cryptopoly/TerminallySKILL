@@ -65,6 +65,15 @@ Run on a packaged build (`npm run test:package:mac:arm64` output, or the release
 
 Dev builds (`npm run dev`): the dot works, but macOS notifications and the dock badge may not show unless "Electron" is allowed in System Settings → Notifications. Prefer the packaged app for those two.
 
+## New in the final 0.9.103 scope (added 2026-10-29)
+
+- [ ] **Jump shortcut (idea 6):** start `sleep 20` in two background tabs, wait for the dots, press Cmd+Shift+J (Ctrl+Shift+J on Windows/Linux). Opens the terminal that waited longest, clears its dot, works across projects. Also in the command palette and Help → Keyboard Shortcuts.
+- [ ] **Agent-aware dots (idea 14):** in a background tab run `printf '\e]9;Build done\a'` (amber dot, notification when the window is not in front). Run Claude Code in a background tab, give it a task that needs approval or finishes: dot and notification appear. (Real Claude Code sessions were NOT tested by Claude: needs paid credits.)
+- [ ] **Schedule history (idea 7):** add a schedule, let it run, open its History: entry with status and a link that opens the run in Runs & Logs (works when that run's project is open). Runs & Logs shows a "Scheduled" tag.
+- [ ] **Catch-up (idea 7):** tick "Run once on launch if a run was missed", quit the app past the due time, relaunch: exactly one run, entry marked catch-up. With it off: entry marked missed, no run.
+- [ ] **Secret masking (idea 15):** in a terminal type `echo ghp_` followed by 36 letters/digits, then save the session log and run Explain & fix: terminal shows the raw text, saved log and AI request show `[hidden: GitHub token]`. Settings → Privacy shows the switch and a count. Turn the switch off: nothing is masked.
+- [ ] Known gap: the Explain & fix button itself was not clicked in an e2e test (the request path is unit-tested).
+
 ## Electron 45 and locales (added 2026-10-29)
 
 - [ ] **Update from 0.9.102 keeps saved secrets:** in 0.9.102 save an AI key and a VNC password, install this build over it, confirm both still work. (Secrets now use the async safeStorage API; this is the main risk of the Electron upgrade.)

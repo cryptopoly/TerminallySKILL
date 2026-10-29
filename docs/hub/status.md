@@ -9,6 +9,10 @@ summary: Read this first in every new session.
 
 Branch flow: feature branches go into `staging` (default branch), `staging` is promoted to `main`, tags are cut from the release commit. Release builds run from the GitHub `Release` workflow (macOS jobs are pinned to `macos-15`).
 
+## Update 2026-10-29, night (final scope built)
+
+All four extra features are merged on `feat/0.9.103-attention-schedule-privacy` and verified there: `test:ci` 427 unit tests, e2e 15 passed (6 skipped by design), local OpenSSH e2e 4 passed, packaged mac arm64 smoke test passed (Electron 45.1.0). **Left:** Dan starts the Docker daemon so the Docker SSH test can run; Claude then does the version bump to 0.9.103, `docs/releases/v0.9.103.md` (lead with "No telemetry. No analytics. No account."), one PR into `staging`; Dan hand-tests the [UAT list](uat-0.9.103.md) in a packaged build (secrets after update, real Claude Code dots), merges, promotes, releases, tweets. Housekeeping awaiting Dan's OK: delete old agent worktrees and merged branches.
+
 ## Update 2026-10-29, night (later)
 
 Electron 45, lazy locales and the local SSH test are merged and verified (test:ci 271 unit tests, e2e 11 passed, packaged mac arm64 smoke test passed). The main folder now sits on that merged code (run `npm ci` done). Dan chose four extra features: ideas 6, 7, 14, 15; three agents are building them from `origin/integ/0.9.103`. After they report: merge, full tests, packaged smoke test, UAT list update, version bump, notes, PR.
