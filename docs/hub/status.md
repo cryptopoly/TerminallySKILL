@@ -9,6 +9,19 @@ summary: Read this first in every new session.
 
 Branch flow: feature branches go into `staging` (default branch), `staging` is promoted to `main`, tags are cut from the release commit. Release builds run from the GitHub `Release` workflow (macOS jobs are pinned to `macos-15`).
 
+## Update 2026-10-29, late
+
+**Done since the earlier update:** schedule icon in the Scripts list; Opus translation review merged (77 strings); four Mid themes and a three-column Theme tab with live previews; settings card renamed "Notifications"; fix for the command-finish dot (typed commands) and for ghost "running" runs. `npm run test:ci` passes on the branch.
+
+**Left before release**
+
+1. Dan: re-test the green/red dot with `sleep 40` (still unexplained on his machine), then the [UAT checklist](uat-0.9.103.md) in a packaged build.
+2. Claude, on request: run `npm run test:package:mac:arm64`, bump to 0.9.103, write `docs/releases/v0.9.103.md` (lead with "No telemetry. No analytics. No account."), open one PR (the feature branch already contains the dependency commit).
+3. Dan: merge into `staging`, promote to `main`, run the `Release` workflow, post the tweet.
+4. Optional: busy badge for any running terminal command ([decisions](decisions.md) item 9).
+
+**Note:** Dan's dev app shares its data folder with the outer app, so run records can cross over.
+
 ## Update 2026-10-29
 
 **Done** (branch `feat/0.9.103-attention-schedule-privacy`, on top of `chore/deps-and-hub-0.9.103`, commit `4f0fb3c2`)
