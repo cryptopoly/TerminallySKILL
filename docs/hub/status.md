@@ -5,9 +5,31 @@ summary: Read this first in every new session.
 ---
 # Status and handover
 
-> **Read first.** TerminallySKILL is an Electron + React terminal workspace. v0.9.102 is released (2026-10-28). Now: **v0.9.103**, a dependency-security update plus one new flagship feature. Then read [decisions](decisions.md) and [backlog](backlog.md).
+> **Read first.** TerminallySKILL is an Electron + React terminal workspace. v0.9.102 is released (2026-10-28). Now: **v0.9.103**, a dependency-security update plus three new features (attention alerts, scheduled workflows, Privacy tab), built and awaiting merge. Then read [decisions](decisions.md) and [backlog](backlog.md).
 
 Branch flow: feature branches go into `staging` (default branch), `staging` is promoted to `main`, tags are cut from the release commit. Release builds run from the GitHub `Release` workflow (macOS jobs are pinned to `macos-15`).
+
+## Update 2026-10-29
+
+**Done** (branch `feat/0.9.103-attention-schedule-privacy`, on top of `chore/deps-and-hub-0.9.103`, commit `4f0fb3c2`)
+
+- **Attention layer.** Tab dot (green finished, red failed, pulsing amber approval), dock badge, desktop notification (click opens that terminal). Settings → General: switch plus threshold. See [progress](progress/features-0.9.103.md).
+- **Scheduled workflows.** Clock icon in the workflow header opens one dialog (interval or daily, weekday chips). Main process timer, runs in a background tab.
+- **Privacy tab.** Statement, what can leave the computer, host-only request list for this session.
+- Translations for all 18 locales (machine-assisted, not native-reviewed). 263 unit tests, type-check, i18n check, build and 6 Electron E2E tests pass, including new ones for a scheduled run and the approval alert.
+- Ideas bank and the "no-logs" verdict added: [ideas](ideas.md).
+
+**Open for Dan**
+
+- Decide ship timing and merge order ([decisions](decisions.md) items 1 and 2).
+- Hand-test in the packaged app: run a 20-second command in another tab and switch away (expect dot and notification); add a schedule and wait for it. macOS may ask to allow notifications the first time.
+- Everything from the 2026-10-28 list below still stands.
+
+**Known limits**
+
+- A tab dot only shows for terminals in the project you are viewing; notification and dock badge cover other projects. No numeric badge on Windows.
+- Schedules do nothing while the app is closed. Only the first open window runs them.
+- Version is still 0.9.102; bump and release notes happen at release.
 
 ## Update 2026-10-28, evening
 

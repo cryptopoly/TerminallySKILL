@@ -21,3 +21,6 @@ Review at the end of every release.
 | Native `node-pty` breaks in a packaged build | low | P1 | Packaged smoke test `npm run test:package:mac:arm64` before every release | mitigated |
 | CI runner image changes break signing or builds | medium | P2 | Pin runner images; read failed logs before re-running | mitigated |
 | Telemetry or account features creep in | low | P1 | Product rule: none; see [decisions](decisions.md) | open |
+| Alerts feel noisy or missed | medium | P2 | 15 s default threshold, no alert while watching, one switch to turn off; collect feedback after release | open |
+| Scheduled run misfires (wrong tab busy, missed while app closed) | medium | P2 | Skips overlapping runs, skips missed runs and says so in the dialog; only defaults fill inputs | open |
+| Users over-trust the Privacy tab or a future private tab | low | P2 | Wording says what the app does not control; no incognito claim | open |

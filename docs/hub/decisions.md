@@ -13,19 +13,32 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 ### P1: decide soon
 
-1. **Flagship feature for 0.9.103.** Options from [research](research-competitors.md): (a) attention layer: tab badge and OS notification when a long command finishes or fails, or a workflow step waits for approval; (b) multi-host SSH run; (c) command blocks lite (copy output, rerun, Explain & fix per command); (d) scheduled workflows; (e) privacy and network panel; (f) Fig-spec completions for the command builder. **Explainer:** people now run several AI agents and builds at once and lose track of which needs them; competitors (cmux, Warp) sell this. **Team recommendation:** (a) the attention layer, smallest version first. **Why:** smallest effort, no new data model, reuses the command queue, approvals and Explain & fix, and is visible in a tweet. A cheap add-on is (e), a static privacy statement, because trust is the loudest complaint about rivals.
+1. **Ship 0.9.103 now, or add more first?** Contents today: dependency security update, attention alerts, scheduled workflows, Privacy tab (see [ideas](ideas.md)). **Explainer:** all three features are built and tested on a branch; nothing is merged or released yet. **Team recommendation:** hand-test the attention alerts and one scheduled run in the packaged app, then merge both branches into `staging` (dependencies first) and release as 0.9.103. **Why:** the three features are small, self-contained and visible; waiting adds risk without adding much.
+2. **Merge order.** `chore/deps-and-hub-0.9.103` first, then `feat/0.9.103-attention-schedule-privacy` (it is built on top). **Team recommendation:** two PRs into `staging`, in that order. **Why:** keeps the dependency change reviewable on its own.
 
 ### P2: before the next milestone
 
-2. **Native-speaker review of translations.** Machine-assisted today. **Team recommendation:** ask friendly speakers for German, French, Spanish and Japanese first. **Why:** these have the most likely users; flag Arabic as "needs right-to-left review" until checked.
-3. **Lazy-load locale bundles.** All 19 languages load at startup (renderer about 4.9 MB). **Team recommendation:** load only the active language. **Why:** faster start, smaller memory; not urgent.
+3. **Native-speaker review of translations.** Machine-assisted today. **Team recommendation:** ask friendly speakers for German, French, Spanish and Japanese first. **Why:** these have the most likely users; flag Arabic as "needs right-to-left review" until checked.
+4. **Lazy-load locale bundles.** All 19 languages load at startup (renderer about 4.9 MB). **Team recommendation:** load only the active language. **Why:** faster start, smaller memory; not urgent.
 
 ### P3: later
 
-4. **Move shell-integration tests and type-check to cover test files.** About 13 fixture type errors are excluded today. **Team recommendation:** fix when touching those tests.
+5. **Next headline feature for 0.9.104.** Options in [ideas](ideas.md): command blocks lite, multi-host SSH run. **Team recommendation:** command blocks lite first. **Why:** smaller, reuses Explain & fix, and the attention layer already knows when a command ends.
+6. **"Private tab" (no-logs option).** Full analysis in [ideas](ideas.md#verdict-a-no-logs--incognito-option). **Team recommendation:** bank; do not build now. **Why:** a browser-style incognito mode does not fit a terminal (the shell, remote servers and AI providers keep their own records, and the app already has global and per-project log switches); a per-tab version helps little and risks false trust.
+7. **Move shell-integration tests and type-check to cover test files.** About 13 fixture type errors are excluded today. **Team recommendation:** fix when touching those tests.
 
 <details>
 <summary>Decision log (made decisions, newest section last)</summary>
+
+## 2026-10-29
+
+- **Features for 0.9.103 chosen by Dan:** attention layer, scheduled workflows, privacy and network panel. (Replaces the open "flagship feature" decision.)
+- **Attention defaults (Claude, low risk, Dan can change):** on by default; only commands running 15 s or longer; no alert while the user is looking at that terminal; desktop notification only when the window is not in front; workflow approvals, completions and failures always alert. Setting lives in Settings → General.
+- **Scheduled workflows run only while the app is open and skip missed runs (Claude, low risk).** Honest and simple; a "catch up" option is banked. Runs open a background tab and never take focus. Required inputs must have defaults, otherwise the run is skipped and marked so.
+- **Schedules are checked by the main process every 20 s and handed to the first open window.** Interval minimum 5 minutes.
+- **Privacy panel keeps hosts only, in memory, cleared on quit (Claude).** No paths, headers or content; no disk copy.
+- **UI rule for new features:** no new toolbar buttons. One icon in the workflow header, a dot on the existing tab, one settings tab, one settings card. Decided by Dan ("mind the UI").
+- **"No-logs / incognito" idea reviewed and banked** (not built). See [ideas](ideas.md).
 
 ## 2026-10-28
 
