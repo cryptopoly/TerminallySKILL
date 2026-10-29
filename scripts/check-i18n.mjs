@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { Script, createContext } from 'node:vm'
 import ts from 'typescript'
 
@@ -35,12 +35,40 @@ function loadTypeScriptModule(relativePath, baseUrl = import.meta.url) {
   return sandbox.module.exports
 }
 
-const { resources, I18N_NAMESPACES } = loadTypeScriptModule('../src/renderer/src/i18n/resources.ts')
+const { baseResources, applyTranslatedBundle, I18N_NAMESPACES } = loadTypeScriptModule(
+  '../src/renderer/src/i18n/resources.ts'
+)
 const {
   FALLBACK_LOCALE,
   LOCALE_METADATA,
   SUPPORTED_LOCALES
 } = loadTypeScriptModule('../src/shared/locale-schema.ts')
+
+// The app lazy-loads each locale's JSON (src/renderer/src/i18n/loader.ts), so build the same
+// fully merged bundles here: base + ./locales/<locale>.json through applyTranslatedBundle.
+const localesDir = new URL('../src/renderer/src/i18n/locales/', import.meta.url)
+const localeFiles = new Set(readdirSync(localesDir).filter((file) => file.endsWith('.json')))
+const resources = {}
+const failures = []
+
+for (const locale of Object.keys(baseResources)) {
+  const file = `${locale}.json`
+  if (locale.startsWith('en')) {
+    resources[locale] = baseResources[locale]
+    continue
+  }
+  if (!localeFiles.has(file)) {
+    failures.push(`${locale}: missing locales/${file} (the lazy loader would fall back to English)`)
+    resources[locale] = applyTranslatedBundle(locale)
+    continue
+  }
+  localeFiles.delete(file)
+  resources[locale] = applyTranslatedBundle(locale, JSON.parse(readFileSync(new URL(file, localesDir), 'utf8')))
+}
+
+for (const file of localeFiles) {
+  failures.push(`locales/${file} does not match any supported locale`)
+}
 
 if (!resources || !resources.en) {
   throw new Error('No English i18n resource bundle found')
@@ -80,7 +108,6 @@ function formatList(values) {
   return values.length > 0 ? values.join(', ') : '(none)'
 }
 
-const failures = []
 const expectedNamespaces = new Set(I18N_NAMESPACES)
 const resourceLocales = Object.keys(resources)
 const metadataLocales = Object.keys(LOCALE_METADATA ?? {})
