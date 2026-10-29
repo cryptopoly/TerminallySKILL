@@ -21,6 +21,8 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 3. **Native-speaker review of translations.** Machine-assisted today. **Team recommendation:** ask friendly speakers for German, French, Spanish and Japanese first. **Why:** these have the most likely users; flag Arabic as "needs right-to-left review" until checked.
 4. **Lazy-load locale bundles.** All 19 languages load at startup (renderer about 4.9 MB). **Team recommendation:** load only the active language. **Why:** faster start, smaller memory; not urgent.
 
+8. **Opus review of translations.** Asked by Dan 2026-10-29. **Team recommendation:** yes, run one Opus pass over the 66 new 0.9.103 strings in the 18 locale files (not the whole app), then fix the Russian, Ukrainian and Polish plural forms. **Why:** Sonnet wrote them, so a stronger second model catches wrong terms and plural errors cheaply (small token cost). It does not replace native speakers, so keep item 3 open and keep the "machine-assisted" note in the release notes.
+
 ### P3: later
 
 5. **Next headline feature for 0.9.104.** Options in [ideas](ideas.md): command blocks lite, multi-host SSH run. **Team recommendation:** command blocks lite first. **Why:** smaller, reuses Explain & fix, and the attention layer already knows when a command ends.
@@ -31,6 +33,8 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 <summary>Decision log (made decisions, newest section last)</summary>
 
 ## 2026-10-29
+
+- **Schedule icon also in the Scripts list (Dan):** next to Play on each row, opens the same dialog. The small "scheduled" badge in the row's meta line was removed; the icon turns blue when a schedule exists. A UAT checklist for 0.9.103 was added to the hub.
 
 - **Features for 0.9.103 chosen by Dan:** attention layer, scheduled workflows, privacy and network panel. (Replaces the open "flagship feature" decision.)
 - **Attention defaults (Claude, low risk, Dan can change):** on by default; only commands running 15 s or longer; no alert while the user is looking at that terminal; desktop notification only when the window is not in front; workflow approvals, completions and failures always alert. Setting lives in Settings → General.
