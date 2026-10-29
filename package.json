@@ -39,6 +39,7 @@
     "test:ci": "npm run test:runtime-baseline && npm run i18n:check && npm run typecheck && npm test && npm run build",
     "test:e2e": "npm run build && playwright test",
     "test:e2e:ssh-docker": "npm run build && RUN_DOCKER_E2E=1 playwright test tests/e2e/ssh-docker.spec.mjs",
+    "test:e2e:ssh-local": "npm run build && RUN_LOCAL_SSH_E2E=1 playwright test tests/e2e/ssh-local.spec.mjs",
     "test:package:mac:arm64": "npm run package:mac:arm64 && RUN_PACKAGED_E2E=1 TERMINALLYSKILL_PACKAGED_EXECUTABLE=dist/mac-arm64/TerminallySKILL.app/Contents/MacOS/TerminallySKILL playwright test tests/e2e/packaged-mac.spec.mjs",
     "test:audit:runtime": "npm audit --omit=dev --audit-level=moderate",
     "test:audit:all": "npm audit --audit-level=moderate",
