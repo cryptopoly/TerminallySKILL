@@ -79,7 +79,8 @@ export async function launchTerminallySkill(testInfo, env = {}) {
 
   return launchElectronExecutable({
     executablePath: electronPath,
-    args: [mainPath],
+    // Fake key store: unpackaged Electron would otherwise ask the real macOS Keychain for "Electron Key".
+    args: ['--use-mock-keychain', mainPath],
     testInfo,
     env
   })
