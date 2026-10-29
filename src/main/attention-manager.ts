@@ -7,7 +7,7 @@ const badgeCountByWindow = new Map<number, number>()
 function applyBadge(): void {
   let total = 0
   for (const count of badgeCountByWindow.values()) total += count
-  // macOS dock and Linux launchers. Windows has no numeric badge; it is a no-op there.
+  // macOS dock only. Since Electron 44 it is a no-op on Linux (Unity launcher support removed) and Windows.
   app.setBadgeCount(total)
 }
 
