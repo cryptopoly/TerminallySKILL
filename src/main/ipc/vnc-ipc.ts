@@ -28,7 +28,7 @@ export function registerVncIpcHandlers(): void {
   })
 
   ipcMain.handle(IPC_CHANNELS.VNC_SAVE_PASSWORD, (_event, storageKey: string, password: string) => {
-    saveVncPassword(requireString(storageKey, 'storageKey'), requireString(password, 'password'))
+    return saveVncPassword(requireString(storageKey, 'storageKey'), requireString(password, 'password'))
   })
 
   ipcMain.handle(IPC_CHANNELS.VNC_DELETE_PASSWORD, (_event, storageKey: string) => {
