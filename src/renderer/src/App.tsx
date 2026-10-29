@@ -4,6 +4,7 @@ import { useProjectStore } from './store/project-store'
 import { useScriptStore } from './store/script-store'
 import { useSnippetStore } from './store/snippet-store'
 import { useSettingsStore } from './store/settings-store'
+import { useScheduleStore } from './store/schedule-store'
 import { AppShell } from './components/layout/AppShell'
 import { initializeI18n, i18n } from './i18n'
 
@@ -56,6 +57,7 @@ export default function App(): JSX.Element {
         if (cancelled) return
 
         setSettings(settings)
+        void useScheduleStore.getState().refresh()
 
         const [commands, scripts, snippets, projectsData] = await Promise.all([
           window.electronAPI.loadAllCommands(),

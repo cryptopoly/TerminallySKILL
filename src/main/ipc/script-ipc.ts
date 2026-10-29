@@ -19,6 +19,7 @@ import {
   exportScript,
   importScript
 } from '../script-manager'
+import { deleteSchedulesForScript } from '../schedule-manager'
 
 export function registerScriptIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.SCRIPTS_GET_ALL, async () => {
@@ -41,7 +42,8 @@ export function registerScriptIpcHandlers(): void {
   })
 
   ipcMain.handle(IPC_CHANNELS.SCRIPTS_DELETE, async (_event, id: string) => {
-    return deleteScript(id)
+    await deleteScript(id)
+    await deleteSchedulesForScript(id)
   })
 
   ipcMain.handle(

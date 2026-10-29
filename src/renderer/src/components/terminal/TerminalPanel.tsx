@@ -16,6 +16,7 @@ import { useSnippetStore } from '../../store/snippet-store'
 import { useSettingsStore } from '../../store/settings-store'
 import { useSnapshotStore, type OutputSnapshot } from '../../store/snapshot-store'
 import { isTerminalRunStatus, useWorkflowRunnerStore } from '../../store/workflow-runner-store'
+import { AttentionDot } from './AttentionDot'
 import { TerminalSearchBar } from './TerminalSearchBar'
 import { SnapshotPanel } from './SnapshotPanel'
 import { PromoteCommandDialog } from './PromoteCommandDialog'
@@ -46,6 +47,7 @@ import { confirmTerminalClose } from '../../lib/terminal-close'
 import type { Theme } from '../../../../shared/settings-schema'
 import { resolveProjectWorkingDirectory } from '../../../../shared/project-schema'
 import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
+import { raiseCommandAttention } from '../../lib/attention'
 import type { ShellIntegrationEvent } from '../../../../shared/shell-integration'
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
@@ -295,6 +297,7 @@ export function TerminalPanel({
                   />
                 )}
                 <span className="font-mono truncate max-w-[120px]">{tabLabel}</span>
+                <AttentionDot sessionId={session.id} />
                 {workflowRun && (
                   <span
                     className={clsx(
@@ -1707,6 +1710,17 @@ function XTermInstance({
       return
     }
 
+    const finishedBlock = activeCommandBlockRef.current
+    if (finishedBlock) {
+      raiseCommandAttention({
+        sessionId,
+        command: finishedBlock.command,
+        startedAt: finishedBlock.startedAt,
+        completedAt: event.receivedAt,
+        exitCode: event.exitCode
+      })
+    }
+
     const nextCwd = event.cwd ?? shellCwdRef.current ?? projectWorkingDirectory
     const promptLine = getActiveBufferLine()
     setSecureInputState(false)
@@ -1722,7 +1736,8 @@ function XTermInstance({
     completeActiveCommandBlock,
     getActiveBufferLine,
     processQueue,
-    projectWorkingDirectory
+    projectWorkingDirectory,
+    sessionId
   ])
 
   const activeCommandBlockRef = useRef(activeCommandBlock)

@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, ScrollText, Clock, Trash2, Copy, Play, X, Download, Share2 } from 'lucide-react'
+import { Plus, ScrollText, Clock, CalendarClock, Trash2, Copy, Play, X, Download, Share2 } from 'lucide-react'
 import clsx from 'clsx'
 import { useScriptStore } from '../../store/script-store'
 import { useProjectStore } from '../../store/project-store'
 import { useSettingsStore } from '../../store/settings-store'
+import { useScheduleStore } from '../../store/schedule-store'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
 import { isTerminalRunStatus, useWorkflowRunnerStore } from '../../store/workflow-runner-store'
 import { ScriptSelector, type ScriptSelection } from './ScriptSelector'
@@ -29,6 +30,11 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
   const projects = useProjectStore((s) => s.projects)
   const { updateProjectInStore } = useProjectStore()
   const settings = useSettingsStore((s) => s.settings)
+  const schedules = useScheduleStore((s) => s.schedules)
+  const scheduledScriptIds = useMemo(
+    () => new Set(schedules.filter((entry) => entry.enabled).map((entry) => entry.scriptId)),
+    [schedules]
+  )
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
   const startWorkflowRun = useWorkflowRunnerStore((s) => s.startRun)
   const { activeSessionId, splitSessionId, sessions, setTerminalVisible, addSession } = useTerminalStore()
@@ -493,6 +499,11 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                   {script.inputs.length > 0 && (
                     <span className="tv-pill normal-case tracking-normal">
                       {t('meta.input', { count: script.inputs.length })}
+                    </span>
+                  )}
+                  {scheduledScriptIds.has(script.id) && (
+                    <span className="text-accent-light" title={t('schedule.scheduledBadge')}>
+                      <CalendarClock size={11} />
                     </span>
                   )}
                   {script.description && <span className="truncate min-w-0 flex-1">{script.description}</span>}

@@ -16,6 +16,9 @@ import { InfoPanel } from '../onboarding/InfoPanel'
 import { CommandPalette } from '../palette/CommandPalette'
 import { Dashboard } from '../dashboard/Dashboard'
 import { WorkflowRunnerEngine } from '../scripts/WorkflowRunnerHost'
+import { AttentionDot } from '../terminal/AttentionDot'
+import { useAttentionLayer } from '../../hooks/useAttentionLayer'
+import { useScheduledRuns } from '../../hooks/useScheduledRuns'
 import { HelpTip } from '../ui/HelpTip'
 import { UpdateReleaseNotes } from '../ui/UpdateReleaseNotes'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
@@ -82,6 +85,8 @@ export function AppShell(): JSX.Element {
   const settings = useSettingsStore((s) => s.settings)
   const settingsHydrated = useSettingsStore((s) => s.settingsHydrated)
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
+  useAttentionLayer()
+  useScheduledRuns()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -876,6 +881,7 @@ export function AppShell(): JSX.Element {
                     <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: tabColor }} />
                   )}
                   <span className="font-mono truncate max-w-[140px]">{tabLabel}</span>
+                  <AttentionDot sessionId={session.id} />
                   <span
                     onClick={(event) => {
                       event.stopPropagation()

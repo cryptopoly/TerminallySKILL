@@ -2,10 +2,13 @@ import { describe, expect, it, vi, afterEach } from 'vitest'
 
 vi.mock('./ipc', () => ({
   registerAppIpcHandlers: vi.fn(),
+  registerAttentionIpcHandlers: vi.fn(),
   registerCommandIpcHandlers: vi.fn(),
   registerFileIpcHandlers: vi.fn(),
   registerLogIpcHandlers: vi.fn(),
+  registerPrivacyIpcHandlers: vi.fn(),
   registerProjectIpcHandlers: vi.fn(),
+  registerScheduleIpcHandlers: vi.fn(),
   registerScriptIpcHandlers: vi.fn(),
   registerSettingsIpcHandlers: vi.fn(),
   registerSnippetIpcHandlers: vi.fn(),
@@ -15,10 +18,13 @@ vi.mock('./ipc', () => ({
 
 import {
   registerAppIpcHandlers,
+  registerAttentionIpcHandlers,
   registerCommandIpcHandlers,
   registerFileIpcHandlers,
   registerLogIpcHandlers,
+  registerPrivacyIpcHandlers,
   registerProjectIpcHandlers,
+  registerScheduleIpcHandlers,
   registerScriptIpcHandlers,
   registerSettingsIpcHandlers,
   registerSnippetIpcHandlers,
@@ -36,10 +42,13 @@ describe('registerIpcHandlers', () => {
     registerIpcHandlers()
 
     expect(registerAppIpcHandlers).toHaveBeenCalledTimes(1)
+    expect(registerAttentionIpcHandlers).toHaveBeenCalledTimes(1)
     expect(registerCommandIpcHandlers).toHaveBeenCalledTimes(1)
     expect(registerFileIpcHandlers).toHaveBeenCalledTimes(1)
     expect(registerLogIpcHandlers).toHaveBeenCalledTimes(1)
+    expect(registerPrivacyIpcHandlers).toHaveBeenCalledTimes(1)
     expect(registerProjectIpcHandlers).toHaveBeenCalledTimes(1)
+    expect(registerScheduleIpcHandlers).toHaveBeenCalledTimes(1)
     expect(registerScriptIpcHandlers).toHaveBeenCalledTimes(1)
     expect(registerSettingsIpcHandlers).toHaveBeenCalledTimes(1)
     expect(registerSnippetIpcHandlers).toHaveBeenCalledTimes(1)

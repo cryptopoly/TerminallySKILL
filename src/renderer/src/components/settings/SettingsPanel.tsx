@@ -18,6 +18,7 @@ import {
   Plus,
   RefreshCw,
   Server,
+  ShieldCheck,
   Sparkles,
   X,
   XCircle,
@@ -28,6 +29,8 @@ import clsx from 'clsx'
 import { useCommandStore } from '../../store/command-store'
 import { useSettingsStore } from '../../store/settings-store'
 import { UpdateReleaseNotes } from '../ui/UpdateReleaseNotes'
+import { PrivacyTab } from './PrivacyTab'
+import { ATTENTION_MIN_SECONDS_OPTIONS } from '../../../../shared/attention'
 import type {
   AIProvider,
   AIRoutingTarget,
@@ -43,7 +46,7 @@ import {
   type LocalePreference,
   type SupportedLocale
 } from '../../../../shared/locale-schema'
-import { syncI18nWithSettings } from '../../i18n'
+import { resolveFormatLocale, syncI18nWithSettings } from '../../i18n'
 import { formatDateTime } from '../../i18n/format'
 
 const THEMES: { id: Theme; label: string; dot: string; desc: string; family: 'dark' | 'light' }[] = [
@@ -70,7 +73,7 @@ const TERMINAL_INPUT_MODES: { id: TerminalInputMode; label: string; desc: string
   }
 ]
 
-type SettingsTabId = 'general' | 'data' | 'ai' | 'logs' | 'appearance' | 'about'
+type SettingsTabId = 'general' | 'data' | 'ai' | 'logs' | 'privacy' | 'appearance' | 'about'
 
 type ProviderCatalogEntry = {
   id: AIProvider['id']
@@ -92,6 +95,7 @@ const SETTINGS_TABS: {
   { id: 'data', label: 'Data', icon: <HardDrive size={13} /> },
   { id: 'ai', label: 'AI', icon: <Zap size={13} /> },
   { id: 'logs', label: 'Logs', icon: <FolderOpen size={13} /> },
+  { id: 'privacy', label: 'Privacy', icon: <ShieldCheck size={13} /> },
   { id: 'appearance', label: 'Theme', icon: <Palette size={13} /> },
   { id: 'about', label: 'About', icon: <Sparkles size={13} /> }
 ]
@@ -331,6 +335,8 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
     setSettings,
     setTheme,
     setShowHelpTooltips,
+    setAttentionAlerts,
+    setAttentionMinSeconds,
     setTerminalInputMode,
     setSafePasteMode,
     setSaveTerminalLogs,
@@ -887,6 +893,39 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
             await window.electronAPI.updateSettings({ showHelpTooltips: next })
           }}
         />
+
+        <SettingToggleCard
+          title={t('general.attention.title', { ns: 'settings' })}
+          description={t('general.attention.description', { ns: 'settings' })}
+          enabled={settings.attentionAlerts}
+          onToggle={async () => {
+            const next = !settings.attentionAlerts
+            setAttentionAlerts(next)
+            await window.electronAPI.updateSettings({ attentionAlerts: next })
+          }}
+        />
+        {settings.attentionAlerts && (
+          <label className="flex items-center justify-between gap-3 rounded-xl border border-surface-border bg-surface-light p-4">
+            <span className="text-sm text-gray-300">{t('general.attention.minLabel', { ns: 'settings' })}</span>
+            <select
+              value={settings.attentionMinSeconds}
+              onChange={async (event) => {
+                const next = Number(event.target.value)
+                setAttentionMinSeconds(next)
+                await window.electronAPI.updateSettings({ attentionMinSeconds: next })
+              }}
+              className="tv-input-compact w-auto"
+            >
+              {ATTENTION_MIN_SECONDS_OPTIONS.map((seconds) => (
+                <option key={seconds} value={seconds}>
+                  {seconds >= 60
+                    ? new Intl.NumberFormat(resolveFormatLocale(settings), { style: 'unit', unit: 'minute', unitDisplay: 'long' }).format(seconds / 60)
+                    : new Intl.NumberFormat(resolveFormatLocale(settings), { style: 'unit', unit: 'second', unitDisplay: 'long' }).format(seconds)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
           <div className="mb-3">
@@ -1939,6 +1978,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
         {activeTab === 'data' && renderDataTab()}
         {activeTab === 'ai' && renderAITab()}
         {activeTab === 'logs' && renderLogsTab()}
+        {activeTab === 'privacy' && <PrivacyTab />}
         {activeTab === 'appearance' && renderAppearanceTab()}
         {activeTab === 'about' && renderAboutTab()}
       </div>
