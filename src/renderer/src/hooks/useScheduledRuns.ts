@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { Schedule, ScheduleRunStatus } from '../../../shared/schedule-schema'
+import type { Schedule, ScheduleHistoryReason, ScheduleRunStatus } from '../../../shared/schedule-schema'
 import {
   getMissingRequiredWorkflowInputs,
   getWorkflowInputInitialValues
@@ -17,25 +17,31 @@ const sessionByScheduleId = new Map<string, string>()
 /** Runs started by a schedule, so their outcome can be written back */
 const scheduleIdByRunId = new Map<string, string>()
 
-function report(scheduleId: string, status: ScheduleRunStatus): void {
-  void window.electronAPI.markScheduleResult(scheduleId, status).then(() => useScheduleStore.getState().refresh())
+function report(
+  scheduleId: string,
+  status: ScheduleRunStatus,
+  details?: { runId?: string; reason?: ScheduleHistoryReason }
+): void {
+  void window.electronAPI
+    .markScheduleResult(scheduleId, status, details)
+    .then(() => useScheduleStore.getState().refresh())
 }
 
 async function runDueSchedule(schedule: Schedule): Promise<void> {
   const script = useScriptStore.getState().scripts.find((entry) => entry.id === schedule.scriptId)
-  if (!script) return report(schedule.id, 'skipped')
+  if (!script) return report(schedule.id, 'skipped', { reason: 'not-runnable' })
 
   // Only defaults can fill inputs: nobody is there to type them in.
   const inputValues = getWorkflowInputInitialValues(script.inputs)
   if (getMissingRequiredWorkflowInputs(script.inputs, inputValues).length > 0) {
-    return report(schedule.id, 'skipped')
+    return report(schedule.id, 'skipped', { reason: 'not-runnable' })
   }
 
   const projects = useProjectStore.getState()
   const project = schedule.projectId
     ? projects.projects.find((entry) => entry.id === schedule.projectId) ?? null
     : null
-  if (schedule.projectId && !project) return report(schedule.id, 'skipped')
+  if (schedule.projectId && !project) return report(schedule.id, 'skipped', { reason: 'not-runnable' })
 
   const runner = useWorkflowRunnerStore.getState()
   const terminals = useTerminalStore.getState()
@@ -45,7 +51,9 @@ async function runDueSchedule(schedule: Schedule): Promise<void> {
 
   // Never start over a run that has not finished
   const previousRun = sessionId ? runner.runsBySession[sessionId] : undefined
-  if (previousRun && !isTerminalRunStatus(previousRun.status)) return report(schedule.id, 'skipped')
+  if (previousRun && !isTerminalRunStatus(previousRun.status)) {
+    return report(schedule.id, 'skipped', { reason: 'busy' })
+  }
 
   if (!sessionId) {
     // A scheduled run must not pull the user away from what they are doing, so the new tab
@@ -60,8 +68,13 @@ async function runDueSchedule(schedule: Schedule): Promise<void> {
     sessionByScheduleId.set(schedule.id, sessionId)
   }
 
-  const run = useWorkflowRunnerStore.getState().startRun({ script, sessionId, inputValues })
-  if (!run) return report(schedule.id, 'skipped')
+  const run = useWorkflowRunnerStore.getState().startRun({
+    script,
+    sessionId,
+    inputValues,
+    scheduleId: schedule.id
+  })
+  if (!run) return report(schedule.id, 'skipped', { reason: 'not-runnable' })
   scheduleIdByRunId.set(run.runId, schedule.id)
 }
 
@@ -81,9 +94,12 @@ export function useScheduledRuns(): void {
         const scheduleId = scheduleIdByRunId.get(run.runId)
         if (!scheduleId || !isTerminalRunStatus(run.status)) continue
         scheduleIdByRunId.delete(run.runId)
-        report(scheduleId, run.status as ScheduleRunStatus)
+        report(scheduleId, run.status as ScheduleRunStatus, { runId: run.runId })
       }
     })
+
+    // Listening now: runs queued for catch-up at launch fire once the first window says so.
+    void window.electronAPI.scheduleRendererReady().catch(() => {})
 
     return () => {
       unsubscribeDue()

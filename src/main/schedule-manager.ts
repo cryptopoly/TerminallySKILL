@@ -5,11 +5,17 @@ import { randomUUID } from 'crypto'
 import { readJsonFile, writeJsonAtomic } from './atomic-write'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
 import {
+  appendHistory,
   computeNextRun,
+  findMissedRun,
   isScheduleDue,
   normalizeRecurrence,
+  normalizeStoredSchedule,
+  recordRunOutcome,
   resolveNextRunAt,
   type Schedule,
+  type ScheduleHistoryReason,
+  type ScheduleHistoryTrigger,
   type SchedulesData,
   type ScheduleRunStatus
 } from '../shared/schedule-schema'
@@ -19,6 +25,14 @@ const TICK_MS = 20_000
 
 let cached: SchedulesData | null = null
 let timer: ReturnType<typeof setInterval> | null = null
+/** Schedules whose missed run should fire once the first window's renderer is ready. */
+const pendingCatchUp = new Set<string>()
+
+/** For tests: forget the loaded file and any pending catch-up. */
+export function resetScheduleManagerCache(): void {
+  cached = null
+  pendingCatchUp.clear()
+}
 
 function getSchedulesFile(): string {
   return join(getDataDir(), 'schedules.json')
@@ -30,14 +44,39 @@ async function load(): Promise<SchedulesData> {
     getSchedulesFile(),
     (value) => {
       const raw = value as Partial<SchedulesData>
-      return { schedules: Array.isArray(raw.schedules) ? raw.schedules : [] }
+      const schedules = (Array.isArray(raw.schedules) ? raw.schedules : [])
+        .map(normalizeStoredSchedule)
+        .filter((schedule): schedule is Schedule => schedule !== null)
+      return { schedules }
     },
     () => ({ schedules: [] })
   )
-  // Runs that came due while the app was closed are skipped, not replayed.
+  // A run that came due while the app was closed is skipped (recorded as missed), or, for schedules
+  // that opted in, queued to run once when the first window is ready. Never a backlog.
   const now = new Date()
+  let recorded = false
   for (const schedule of cached.schedules) {
+    const missed = findMissedRun(schedule, now)
+    if (missed?.catchUp) {
+      pendingCatchUp.add(schedule.id)
+    } else if (missed) {
+      schedule.history = appendHistory(schedule.history, {
+        at: missed.missedAt,
+        status: 'missed',
+        trigger: 'schedule',
+        runId: null,
+        reason: null
+      })
+      recorded = true
+    }
     schedule.nextRunAt = resolveNextRunAt(schedule, now)
+  }
+  if (recorded) {
+    try {
+      await save(cached)
+    } catch (error) {
+      console.error('[terminallyskill] Failed to persist missed schedule runs:', error)
+    }
   }
   return cached
 }
@@ -58,6 +97,8 @@ export interface ScheduleInput {
   projectId: string | null
   recurrence: unknown
   enabled: boolean
+  /** Omitted keeps the stored value (false for a new schedule). */
+  catchUp?: boolean
 }
 
 export async function saveSchedule(input: ScheduleInput): Promise<Schedule> {
@@ -76,6 +117,7 @@ export async function saveSchedule(input: ScheduleInput): Promise<Schedule> {
     existing.projectId = input.projectId
     existing.recurrence = recurrence
     existing.enabled = input.enabled
+    if (typeof input.catchUp === 'boolean') existing.catchUp = input.catchUp
     existing.nextRunAt = input.enabled
       ? changed || !existing.nextRunAt
         ? computeNextRun(recurrence, now).toISOString()
@@ -94,7 +136,9 @@ export async function saveSchedule(input: ScheduleInput): Promise<Schedule> {
     nextRunAt: input.enabled ? computeNextRun(recurrence, now).toISOString() : null,
     lastRunAt: null,
     lastStatus: null,
-    createdAt: now.toISOString()
+    createdAt: now.toISOString(),
+    catchUp: input.catchUp === true,
+    history: []
   }
   data.schedules.push(schedule)
   await save(data)
@@ -112,16 +156,35 @@ export async function deleteSchedulesForScript(scriptId: string): Promise<void> 
   if (remaining.length !== data.schedules.length) await save({ schedules: remaining })
 }
 
-export async function markScheduleResult(id: string, status: ScheduleRunStatus): Promise<void> {
+export async function markScheduleResult(
+  id: string,
+  status: ScheduleRunStatus,
+  details: { runId?: string | null; reason?: ScheduleHistoryReason | null } = {}
+): Promise<void> {
   const data = await load()
   const schedule = data.schedules.find((entry) => entry.id === id)
   if (!schedule) return
   schedule.lastStatus = status
+  schedule.history = recordRunOutcome(schedule.history, { status, ...details }, new Date())
   await save(data)
 }
 
 function pickDeliveryWindow(): BrowserWindow | null {
   return BrowserWindow.getAllWindows().find((win) => !win.isDestroyed()) ?? null
+}
+
+/** Marks a schedule as fired now and advances it; the caller sends the due event if there is a window. */
+function fire(schedule: Schedule, now: Date, trigger: ScheduleHistoryTrigger, hasWindow: boolean): void {
+  schedule.nextRunAt = computeNextRun(schedule.recurrence, now).toISOString()
+  schedule.lastRunAt = now.toISOString()
+  if (!hasWindow) schedule.lastStatus = 'skipped'
+  schedule.history = appendHistory(schedule.history, {
+    at: now.toISOString(),
+    status: hasWindow ? 'running' : 'skipped',
+    trigger,
+    runId: null,
+    reason: hasWindow ? null : 'no-window'
+  })
 }
 
 async function tick(): Promise<void> {
@@ -131,15 +194,34 @@ async function tick(): Promise<void> {
   if (due.length === 0) return
 
   const win = pickDeliveryWindow()
-  for (const schedule of due) {
-    schedule.nextRunAt = computeNextRun(schedule.recurrence, now).toISOString()
-    schedule.lastRunAt = now.toISOString()
-    if (!win) schedule.lastStatus = 'skipped'
-  }
+  for (const schedule of due) fire(schedule, now, 'schedule', win !== null)
   await save(data)
 
   if (!win) return
   for (const schedule of due) {
+    win.webContents.send(IPC_CHANNELS.SCHEDULES_DUE, schedule)
+  }
+}
+
+/**
+ * Called by a window's renderer once it is listening for due schedules. The first window to
+ * report in runs the queued catch-up runs (one per schedule); later windows find nothing queued.
+ */
+export async function deliverCatchUps(win: BrowserWindow): Promise<void> {
+  if (pendingCatchUp.size === 0) return
+  const data = await load()
+  const ids = [...pendingCatchUp]
+  pendingCatchUp.clear()
+
+  const now = new Date()
+  const fired = data.schedules.filter(
+    (schedule) => ids.includes(schedule.id) && schedule.enabled && schedule.catchUp
+  )
+  if (fired.length === 0) return
+  for (const schedule of fired) fire(schedule, now, 'catch-up', true)
+  await save(data)
+
+  for (const schedule of fired) {
     win.webContents.send(IPC_CHANNELS.SCHEDULES_DUE, schedule)
   }
 }

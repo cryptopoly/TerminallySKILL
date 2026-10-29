@@ -124,6 +124,7 @@ export const IPC_CHANNELS = {
   SCHEDULES_DELETE: 'schedules:delete',
   SCHEDULES_MARK_RESULT: 'schedules:mark-result',
   SCHEDULES_DUE: 'schedules:due',
+  SCHEDULES_RENDERER_READY: 'schedules:renderer-ready',
 
   // Privacy
   PRIVACY_GET_NETWORK_LOG: 'privacy:get-network-log',

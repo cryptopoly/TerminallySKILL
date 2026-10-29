@@ -67,6 +67,8 @@ export interface RunRecord {
   scriptName: string
   projectId: string | null
   projectName: string | null
+  /** Set when a schedule started the run; absent or null for runs started by hand. */
+  scheduleId?: string | null
   cwd: string | null
   shell: string | null
   logFilePath: string | null
