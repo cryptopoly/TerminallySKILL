@@ -115,6 +115,7 @@ export function backfillSettings(raw: Partial<AppSettings>): AppSettings {
     attentionAlerts:
       typeof raw.attentionAlerts === 'boolean' ? raw.attentionAlerts : DEFAULT_SETTINGS.attentionAlerts,
     attentionMinSeconds: normalizeAttentionMinSeconds(raw.attentionMinSeconds),
+    maskSecrets: typeof raw.maskSecrets === 'boolean' ? raw.maskSecrets : DEFAULT_SETTINGS.maskSecrets,
     aiProviders: providers
   }
 }

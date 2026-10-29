@@ -82,6 +82,8 @@ export interface AppSettings {
   attentionAlerts: boolean
   /** Commands shorter than this many seconds never raise an alert */
   attentionMinSeconds: number
+  /** Replace well-known secret shapes before text is saved to logs/run history or sent to AI */
+  maskSecrets: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -109,6 +111,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   aiResponseLocale: DEFAULT_AI_RESPONSE_LOCALE,
   attentionAlerts: true,
   attentionMinSeconds: DEFAULT_ATTENTION_MIN_SECONDS,
+  maskSecrets: true,
   aiProviders: [
     {
       id: 'openai',

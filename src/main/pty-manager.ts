@@ -36,6 +36,8 @@ interface PtySession {
   /** Raw PTY output accumulated for log saving */
   outputBuffer: string[]
   outputBufferSize: number
+  /** True once the oldest output was dropped to stay under the buffer cap */
+  outputTrimmed: boolean
   /** Guard to prevent double-save */
   saved: boolean
   /** Hold early shell startup text so we can strip launcher-specific noise before display. */
@@ -190,6 +192,14 @@ export async function initTerminalPath(): Promise<void> {
   await getEnrichedPath()
 }
 
+function bufferForLog(session: PtySession, data: string): void {
+  const expectedSize = session.outputBufferSize + data.length
+  const buffered = appendOutputChunk(session.outputBuffer, session.outputBufferSize, data)
+  session.outputBuffer = buffered.outputBuffer
+  session.outputBufferSize = buffered.outputBufferSize
+  if (buffered.outputBufferSize < expectedSize) session.outputTrimmed = true
+}
+
 /**
  * Auto-save a session log from the buffered PTY output.
  * Called from both killTerminal (manual close) and onExit (natural exit).
@@ -205,7 +215,7 @@ async function autoSaveLog(session: PtySession, exitCode: number | null = null):
     return
   }
 
-  const content = prepareLogContent(session.outputBuffer)
+  const content = prepareLogContent(session.outputBuffer, session.outputTrimmed)
   if (!content) {
     console.log(`[pty] Skipping log save for ${session.sessionId} — empty content`)
     return
@@ -400,6 +410,7 @@ export async function createTerminal(
     shell,
     outputBuffer: [],
     outputBufferSize: 0,
+    outputTrimmed: false,
     saved: false,
     startupBuffer: '',
     markerCarry: '',
@@ -416,9 +427,7 @@ export async function createTerminal(
   // ...) that marker never comes, so flush on a timeout or size cap instead of staying blank.
   const emitFlushedData = (data: string): void => {
     if (!data) return
-    const buffered = appendOutputChunk(session.outputBuffer, session.outputBufferSize, data)
-    session.outputBuffer = buffered.outputBuffer
-    session.outputBufferSize = buffered.outputBufferSize
+    bufferForLog(session, data)
     if (!window.isDestroyed()) {
       window.webContents.send(IPC_CHANNELS.PTY_DATA, sessionId, data)
     }
@@ -527,9 +536,7 @@ export async function createTerminal(
     }
 
     // Buffer output for auto-save on close/exit
-    const buffered = appendOutputChunk(session.outputBuffer, session.outputBufferSize, data)
-    session.outputBuffer = buffered.outputBuffer
-    session.outputBufferSize = buffered.outputBufferSize
+    bufferForLog(session, data)
 
     if (!window.isDestroyed()) {
       window.webContents.send(IPC_CHANNELS.PTY_DATA, sessionId, data)

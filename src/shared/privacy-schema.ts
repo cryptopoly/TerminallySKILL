@@ -1,3 +1,5 @@
+import type { SecretCounts } from './secret-mask'
+
 export type OutboundPurpose = 'ai' | 'update' | 'other'
 
 export interface OutboundRequestRecord {
@@ -9,4 +11,12 @@ export interface OutboundRequestRecord {
   status: number | null
   /** True when the host is this computer (Ollama, LM Studio, a local proxy) */
   local: boolean
+}
+
+/** Per-kind counts of secrets hidden this session. Never contains the secret values. */
+export interface SecretMaskStats {
+  /** Hidden from AI requests (counted per request). */
+  ai: SecretCounts
+  /** Hidden from saved terminal logs and workflow run history. */
+  logs: SecretCounts
 }
