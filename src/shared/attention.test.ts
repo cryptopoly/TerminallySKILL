@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   attentionKindForExit,
   normalizeAttentionMinSeconds,
+  pickNextAttentionSession,
   shouldRaiseCommandAttention
 } from './attention'
 
@@ -39,5 +40,18 @@ describe('normalizeAttentionMinSeconds', () => {
     expect(normalizeAttentionMinSeconds(30)).toBe(30)
     expect(normalizeAttentionMinSeconds(7)).toBe(15)
     expect(normalizeAttentionMinSeconds('30')).toBe(15)
+  })
+})
+
+describe('pickNextAttentionSession', () => {
+  const entry = (seconds: number) => ({ kind: 'approval' as const, detail: 'x', at: after(seconds) })
+
+  it('picks the terminal that has waited longest', () => {
+    expect(pickNextAttentionSession({ b: entry(20), a: entry(5), c: entry(10) }, ['a', 'b', 'c'])).toBe('a')
+  })
+
+  it('skips closed terminals and returns null when nothing is waiting', () => {
+    expect(pickNextAttentionSession({ gone: entry(1), b: entry(9) }, ['b'])).toBe('b')
+    expect(pickNextAttentionSession({}, ['a'])).toBeNull()
   })
 })
