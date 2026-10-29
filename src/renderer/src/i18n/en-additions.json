@@ -206,7 +206,7 @@
   "scripts": {
     "schedule.open": "Schedule this workflow",
     "schedule.title": "Schedule: {{name}}",
-    "schedule.intro": "Runs on a timer while TerminallySKILL is open. Runs that come due while the app is closed are skipped.",
+    "schedule.intro": "Runs on a timer while TerminallySKILL is open. Runs that come due while the app is closed are skipped, unless you turn on catch-up for that schedule.",
     "schedule.needsDefaults": "This workflow has required inputs without a default value. A scheduled run cannot ask for input, so give each required input a default first.",
     "schedule.none": "Not scheduled yet.",
     "schedule.enabled": "Enabled",
