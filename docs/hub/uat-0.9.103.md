@@ -5,7 +5,7 @@ Run on a packaged build (`npm run test:package:mac:arm64` output, or the release
 ## 1. Attention alerts (new)
 
 - [ ] Settings → General: "Attention alerts" is on; threshold shows 15 seconds.
-- [ ] Run `sleep 20` in tab A, switch to tab B. When it ends, tab A shows a green dot. The dot clears when you open tab A.
+- [ ] Run `sleep 20` in tab A (typed in the terminal), then open or switch to tab B before it ends. When it ends, tab A shows a green dot. The dot clears when you open tab A.
 - [ ] Run `sleep 20; false` in tab A, switch away. Red dot.
 - [ ] Run `sleep 3` in tab A, switch away. No dot (under the threshold).
 - [ ] Run `sleep 20` and stay on that tab. No dot, no notification.
@@ -54,6 +54,8 @@ Run on a packaged build (`npm run test:package:mac:arm64` output, or the release
 
 - [ ] In 3 languages you can read, open Settings → Privacy, the schedule dialog and Settings → General → Attention. Wording makes sense; no cut-off text.
 - [ ] Russian, Ukrainian, Polish: the "1 minute / 2 hours" unit wording is acceptable (known plural weakness).
+
+Dev builds (`npm run dev`): the dot works, but macOS notifications and the dock badge may not show unless "Electron" is allowed in System Settings → Notifications. Prefer the packaged app for those two.
 
 ## Not covered by automated tests
 

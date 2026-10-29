@@ -21,7 +21,7 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 3. **Native-speaker review of translations.** Machine-assisted today. **Team recommendation:** ask friendly speakers for German, French, Spanish and Japanese first. **Why:** these have the most likely users; flag Arabic as "needs right-to-left review" until checked.
 4. **Lazy-load locale bundles.** All 19 languages load at startup (renderer about 4.9 MB). **Team recommendation:** load only the active language. **Why:** faster start, smaller memory; not urgent.
 
-8. **Opus review of translations.** Asked by Dan 2026-10-29. **Team recommendation:** yes, run one Opus pass over the 66 new 0.9.103 strings in the 18 locale files (not the whole app), then fix the Russian, Ukrainian and Polish plural forms. **Why:** Sonnet wrote them, so a stronger second model catches wrong terms and plural errors cheaply (small token cost). It does not replace native speakers, so keep item 3 open and keep the "machine-assisted" note in the release notes.
+8. **Opus review of translations (approved by Dan 2026-10-29, running).** **Team recommendation:** yes, run one Opus pass over the 66 new 0.9.103 strings in the 18 locale files (not the whole app), then fix the Russian, Ukrainian and Polish plural forms. **Why:** Sonnet wrote them, so a stronger second model catches wrong terms and plural errors cheaply (small token cost). It does not replace native speakers, so keep item 3 open and keep the "machine-assisted" note in the release notes.
 
 ### P3: later
 
@@ -33,6 +33,11 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 <summary>Decision log (made decisions, newest section last)</summary>
 
 ## 2026-10-29
+
+- **Bug found in hand-test and fixed:** the green/red tab dot never appeared for commands typed in the terminal (the command-start event was dropped while the shell was marked busy). Attention alerts now keep their own start marker; an end-to-end test covers it. Not a settings issue: the feature is on by default.
+- **Selected weekday chips are now solid accent colour** (same style as the app's primary buttons), checked in all 8 themes.
+- **Schedules need an open window** (answer to Dan): a run is skipped and marked skipped if no window is open. Background option banked in [backlog](backlog.md).
+- **Privacy line for the release tweet:** "No telemetry. No analytics. No account." (backlog reminder added).
 
 - **Schedule icon also in the Scripts list (Dan):** next to Play on each row, opens the same dialog. The small "scheduled" badge in the row's meta line was removed; the icon turns blue when a schedule exists. A UAT checklist for 0.9.103 was added to the hub.
 

@@ -11,6 +11,7 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 
 - [ ] **Monthly, first week: dependency and security review.** Update the packages we use and check for security issues, so we ship the newest, safest software we can. Run `npm audit`, `npm outdated`, check Electron's release notes and security advisories, bump, then run `npm run test:ci`, `npm run test:e2e` and `npm run test:package:mac:arm64`. A monthly GitHub issue is opened automatically by `.github/workflows/dependency-review.yml` as the prompt. Next due: **2026-11-02**.
 - [ ] **Also review immediately** when a serious advisory is in the news (Electron, node-pty, ws, electron-updater are the shipped runtime packages).
+- [ ] **Release tweet / notes for 0.9.103:** lead with the privacy line "No telemetry. No analytics. No account." (verified 2026-10-29: no telemetry, analytics or crash-reporting code in the app; the only network use is the update check, AI providers and SSH/VNC the user chooses).
 - [ ] Hand-test the 0.9.103 features in a packaged build (attention alert, one schedule, Privacy tab) before release.
 - [ ] Hand-test the packaged v0.9.102: `python3` typing, Explain & fix, language switch, Arabic layout.
 - [ ] Ask a few native speakers to review translations (see [decisions](decisions.md) item 2).
@@ -27,6 +28,7 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [ ] **P2, todo.** Command blocks lite.
 - [ ] **P3, banked.** Private tab ("don't record this tab"): see [ideas](ideas.md).
 - [ ] **P3, banked.** Attention dots for other projects' tabs; "jump to next terminal that needs me" shortcut.
+- [ ] **P3, banked.** Background schedules: today a schedule needs an open window (closing the last window on macOS skips runs). Options: keep a hidden window alive, launch at login, menu-bar item. Decide after real use.
 - [ ] **P3, banked.** Schedule run history and an optional catch-up for missed runs.
 - [ ] **P3, todo.** Fig-spec completions for the command builder (check licence first).
 - [ ] **P3, todo.** Lazy-load locale bundles.

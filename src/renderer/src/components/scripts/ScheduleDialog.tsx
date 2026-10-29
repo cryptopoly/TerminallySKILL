@@ -250,7 +250,7 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
                         className={clsx(
                           'rounded-md border px-2 py-1 text-xs transition-colors',
                           on
-                            ? 'border-accent/40 bg-accent/10 text-accent-light'
+                            ? 'border-accent bg-accent font-medium text-white'
                             : 'border-surface-border text-gray-500 hover:text-gray-300'
                         )}
                       >

@@ -101,3 +101,33 @@ test('privacy network log keeps only hosts and can be cleared', async ({}, testI
     await app.close()
   }
 })
+
+test('a long command finishing in a background tab raises a tab dot', async ({}, testInfo) => {
+  const { app, page } = await launchTerminallySkill(testInfo)
+  try {
+    const workspaceDir = testInfo.outputPath('workspace')
+    await mkdir(workspaceDir, { recursive: true })
+    await page.evaluate(
+      async (cwd) => {
+        await window.electronAPI.updateSettings({ attentionAlerts: true, attentionMinSeconds: 5 })
+        await window.electronAPI.createProject('E2E Attention', cwd, '#14b8a6', undefined, 'disabled', true)
+      },
+      workspaceDir
+    )
+    await page.reload()
+    await page.waitForFunction(() => Boolean(window.electronAPI?.getAppVersion))
+
+    const input = page.locator('.xterm-helper-textarea').first()
+    await input.waitFor({ state: 'attached', timeout: 20_000 })
+    await page.waitForTimeout(2000)
+    await input.focus()
+    await page.keyboard.type('sleep 6')
+    await page.keyboard.press('Enter')
+
+    // Move to a second tab so the first one is no longer being watched.
+    await page.locator('button.p-2:has(svg.lucide-plus)').last().click()
+    await expect(page.getByRole('status')).toHaveCount(1, { timeout: 20_000 })
+  } finally {
+    await app.close()
+  }
+})

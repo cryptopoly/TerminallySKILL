@@ -1672,8 +1672,13 @@ function XTermInstance({
     setInputPreview('')
   }, [])
 
+  // Typing in the terminal already marks the shell as executing, so no command block is made for it.
+  // Attention alerts keep their own start marker so they cover every command.
+  const attentionStartRef = useRef<{ command: string; startedAt: string } | null>(null)
+
   const handleShellEvent = useCallback((event: ShellIntegrationEvent) => {
     if (event.type === 'command-start') {
+      attentionStartRef.current ??= { command: event.command, startedAt: event.receivedAt }
       if (shellStateRef.current === 'executing') {
         return
       }
@@ -1710,12 +1715,13 @@ function XTermInstance({
       return
     }
 
-    const finishedBlock = activeCommandBlockRef.current
-    if (finishedBlock) {
+    const attentionStart = attentionStartRef.current
+    attentionStartRef.current = null
+    if (attentionStart) {
       raiseCommandAttention({
         sessionId,
-        command: finishedBlock.command,
-        startedAt: finishedBlock.startedAt,
+        command: attentionStart.command,
+        startedAt: attentionStart.startedAt,
         completedAt: event.receivedAt,
         exitCode: event.exitCode
       })
