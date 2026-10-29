@@ -21,6 +21,9 @@ interface TerminalStore {
   splitSessionId: string | null
   splitDirection: SplitDirection
   focusedPane: 'primary' | 'secondary'
+  /** Sessions with a command currently running (from shell integration) */
+  busySessionIds: Record<string, true>
+  setSessionBusy: (id: string, busy: boolean) => void
   addSession: (id: string, projectId?: string | null, mode?: TerminalSessionMode, vncWsPort?: number, vncToken?: string) => void
   removeSession: (id: string) => void
   setActiveSession: (id: string) => void
@@ -77,6 +80,26 @@ export function resolveProjectTerminalContext(
   }
 }
 
+/**
+ * The one session the user is working in. Both panes of a split are visible, but only the
+ * focused pane counts, so a long command in the other pane can still ask for attention.
+ */
+export function resolveWatchedSessionId(
+  sessions: TerminalSession[],
+  projectId: string | null,
+  activeSessionId: string | null,
+  splitSessionId: string | null,
+  focusedPane: 'primary' | 'secondary'
+): string | null {
+  const { activeProjectSessionId, splitProjectSessionId } = resolveProjectTerminalContext(
+    sessions,
+    projectId,
+    activeSessionId,
+    splitSessionId
+  )
+  return splitProjectSessionId && focusedPane === 'secondary' ? splitProjectSessionId : activeProjectSessionId
+}
+
 export const useTerminalStore = create<TerminalStore>((set) => ({
   sessions: [],
   activeSessionId: null,
@@ -85,6 +108,13 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
   splitSessionId: null,
   splitDirection: 'vertical',
   focusedPane: 'primary',
+  busySessionIds: {},
+  setSessionBusy: (id, busy) =>
+    set((state) => {
+      if (Boolean(state.busySessionIds[id]) === busy) return state
+      const { [id]: _removed, ...rest } = state.busySessionIds
+      return { busySessionIds: busy ? { ...rest, [id]: true as const } : rest }
+    }),
   addSession: (id, projectId = null, mode = 'workspace-shell', vncWsPort, vncToken) =>
     set((state) => ({
       sessions: [
@@ -113,10 +143,12 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
       if (activeSessionId === id) {
         activeSessionId = sessions[0]?.id ?? null
       }
+      const { [id]: _closed, ...busySessionIds } = state.busySessionIds
       return {
         sessions,
         activeSessionId,
         splitSessionId,
+        busySessionIds,
         focusedPane: 'primary',
         terminalVisible: sessions.length > 0,
       }

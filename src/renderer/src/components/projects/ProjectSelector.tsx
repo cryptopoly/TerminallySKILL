@@ -43,6 +43,7 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
   const settings = useSettingsStore((s) => s.settings)
   const sessions = useTerminalStore((s) => s.sessions)
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
+  const busySessionIds = useTerminalStore((s) => s.busySessionIds)
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [highlightIndex, setHighlightIndex] = useState(0)
@@ -56,10 +57,10 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
     const count = projectSessions.length
     const hasActive = projectSessions.some((s) => {
       const run = runsBySession[s.id]
-      return run && !isTerminalRunStatus(run.status)
+      return Boolean(busySessionIds[s.id]) || (run && !isTerminalRunStatus(run.status))
     })
     return { count, hasActive }
-  }, [sessions, runsBySession])
+  }, [sessions, runsBySession, busySessionIds])
 
   // Sort: active processes first, then open terminals, then by lastOpenedAt
   const sorted = useMemo(() => {

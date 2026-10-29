@@ -131,3 +131,63 @@ test('a long command finishing in a background tab raises a tab dot', async ({},
     await app.close()
   }
 })
+
+async function openProjectWithTerminal(page, testInfo, name) {
+  const workspaceDir = testInfo.outputPath('workspace')
+  await mkdir(workspaceDir, { recursive: true })
+  await page.evaluate(
+    async ({ cwd, name }) => {
+      await window.electronAPI.updateSettings({ attentionAlerts: true, attentionMinSeconds: 5 })
+      await window.electronAPI.createProject(name, cwd, '#14b8a6', undefined, 'disabled', true)
+    },
+    { cwd: workspaceDir, name }
+  )
+  await page.reload()
+  const input = page.locator('.xterm-helper-textarea').first()
+  await input.waitFor({ state: 'attached', timeout: 20_000 })
+  await page.waitForTimeout(2000)
+}
+
+test('in a split, a long command in the pane you are not working in raises a dot', async ({}, testInfo) => {
+  test.setTimeout(90_000)
+  const { app, page } = await launchTerminallySkill(testInfo)
+  try {
+    await openProjectWithTerminal(page, testInfo, 'E2E Split')
+    await page.locator('button:has(svg[class*="columns"])').first().click()
+    await expect(page.locator('.xterm')).toHaveCount(2, { timeout: 15_000 })
+    await page.waitForTimeout(1500)
+
+    await page.locator('.xterm').first().click()
+    await page.keyboard.type('sleep 6')
+    await page.keyboard.press('Enter')
+    await page.waitForTimeout(500)
+    await page.locator('.xterm').last().click()
+
+    await expect(page.getByRole('status')).toHaveCount(1, { timeout: 20_000 })
+  } finally {
+    await app.close()
+  }
+})
+
+test('the project picker marks a project green while a typed command runs', async ({}, testInfo) => {
+  test.setTimeout(60_000)
+  const { app, page } = await launchTerminallySkill(testInfo)
+  try {
+    await openProjectWithTerminal(page, testInfo, 'E2E Busy')
+    await page.locator('.xterm-helper-textarea').first().focus()
+    await page.keyboard.type('sleep 8')
+    await page.keyboard.press('Enter')
+    await page.waitForTimeout(1500)
+
+    await page.getByText('E2E Busy', { exact: true }).first().click()
+    const badge = page.locator('span.text-green-400:has(svg.lucide-terminal)')
+    await expect(badge).toHaveCount(1, { timeout: 5_000 })
+
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(8000)
+    await page.getByText('E2E Busy', { exact: true }).first().click()
+    await expect(page.locator('span.text-green-400:has(svg.lucide-terminal)')).toHaveCount(0)
+  } finally {
+    await app.close()
+  }
+})

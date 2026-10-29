@@ -23,6 +23,7 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [x] **P1, done on branch.** Attention layer (tab dot, badge, notification).
 - [x] **P1, done on branch.** Scheduled workflows.
 - [x] **P1, done on branch.** Privacy and network panel.
+- [ ] **P1, todo.** Upgrade Electron 42 to 45 (42 is out of support since 2026-10-21): own release, 0.9.104.
 - [ ] **P1, todo.** Merge both branches into `staging`, bump to 0.9.103, write release notes, release.
 - [ ] **P2, todo.** Multi-host SSH run.
 - [ ] **P2, todo.** Command blocks lite.

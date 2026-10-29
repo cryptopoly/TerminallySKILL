@@ -13,6 +13,8 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 ### P1: decide soon
 
+0. **Upgrade Electron 42 to 44 or 45 right after 0.9.103.** 42 stopped receiving security fixes on 2026-10-21. **Team recommendation:** go to 45 (supported longest), as its own release (0.9.104) with the full test run and a packaged smoke test; do not mix it into 0.9.103. **Why:** a major Chromium/Node jump can break the native terminal (node-pty), so it needs its own test pass; shipping the tested 0.9.103 first keeps risk low.
+
 1. **Ship 0.9.103 now, or add more first?** Contents today: dependency security update, attention alerts, scheduled workflows, Privacy tab (see [ideas](ideas.md)). **Explainer:** all three features are built and tested on a branch; nothing is merged or released yet. **Team recommendation:** hand-test the attention alerts and one scheduled run in the packaged app, then merge both branches into `staging` (dependencies first) and release as 0.9.103. **Why:** the three features are small, self-contained and visible; waiting adds risk without adding much.
 2. **Merge order.** `chore/deps-and-hub-0.9.103` first, then `feat/0.9.103-attention-schedule-privacy` (it is built on top). **Team recommendation:** two PRs into `staging`, in that order. **Why:** keeps the dependency change reviewable on its own.
 
@@ -25,7 +27,6 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 ### P3: later
 
-9. **Busy indicator in the project picker for any running terminal command, not only workflow runs.** Raised by Dan 2026-10-29: a dev server typed by hand showed no "running" badge. **Team recommendation:** yes, show the same green badge when a terminal in that project is mid-command (the app already knows from shell integration). **Why:** matches what people expect and reuses the attention layer's start/finish tracking. Small change.
 
 5. **Next headline feature for 0.9.104.** Options in [ideas](ideas.md): command blocks lite, multi-host SSH run. **Team recommendation:** command blocks lite first. **Why:** smaller, reuses Explain & fix, and the attention layer already knows when a command ends.
 6. **"Private tab" (no-logs option).** Full analysis in [ideas](ideas.md#verdict-a-no-logs--incognito-option). **Team recommendation:** bank; do not build now. **Why:** a browser-style incognito mode does not fit a terminal (the shell, remote servers and AI providers keep their own records, and the app already has global and per-project log switches); a per-tab version helps little and risks false trust.
@@ -35,6 +36,10 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 <summary>Decision log (made decisions, newest section last)</summary>
 
 ## 2026-10-29
+
+- **Decision 9 done (Dan approved):** the project picker's green terminal badge now also turns green while any terminal in that project is mid-command, not only for workflow runs. Busy state comes from shell integration.
+- **Split view rule (Dan approved):** only the pane you are working in counts as watched, so a long command in the other pane still raises its dot.
+- **Electron 42 is out of support (found 2026-10-29):** Electron supports the latest three majors; 45.0.0 shipped 2026-10-21, so 42 got its last patch (42.11.18) the same day. Upgrade planned after 0.9.103 (see below).
 
 - **Bug fixed: ghost "running" runs.** Terminal ids restart at term-1 each launch, so a run left unfinished by an earlier launch (Dan's Build TSKILL from 2026-10-28) was never cleaned up while a new term-1 existed. Unfinished runs from before the current launch are now recovered at startup. Unit test added.
 - **Not a bug:** a workflow run ends when its command ends. Run TSKILL ended (15m56s) when the dev server was stopped; the restart was typed by hand, so no new run exists. See item 9.

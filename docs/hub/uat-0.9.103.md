@@ -7,6 +7,8 @@ Run on a packaged build (`npm run test:package:mac:arm64` output, or the release
 - [ ] Settings → General: "Attention alerts" is on; threshold shows 15 seconds.
 - [ ] Run `sleep 20` in tab A (typed in the terminal), then open or switch to tab B before it ends. When it ends, tab A shows a green dot. The dot clears when you open tab A.
 - [ ] Run `sleep 20; false` in tab A, switch away. Red dot.
+- [ ] Split the terminal. Run `sleep 20` in the left pane, click into the right pane. Left pane gets a dot when it ends.
+- [ ] Project picker: a project turns green (terminal count badge) while any command runs in it, including one you typed.
 - [ ] Run `sleep 3` in tab A, switch away. No dot (under the threshold).
 - [ ] Run `sleep 20` and stay on that tab. No dot, no notification.
 - [ ] Run `sleep 20`, then switch to another app. macOS shows a notification (accept the permission prompt on first use). Clicking it brings TerminallySKILL forward on that tab.

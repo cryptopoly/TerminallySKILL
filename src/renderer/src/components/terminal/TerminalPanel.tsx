@@ -1715,6 +1715,7 @@ function XTermInstance({
   const handleShellEvent = useCallback((event: ShellIntegrationEvent) => {
     if (event.type === 'command-start') {
       attentionStartRef.current ??= { command: event.command, startedAt: event.receivedAt }
+      useTerminalStore.getState().setSessionBusy(sessionId, true)
       if (shellStateRef.current === 'executing') {
         return
       }
@@ -1753,6 +1754,7 @@ function XTermInstance({
 
     const attentionStart = attentionStartRef.current
     attentionStartRef.current = null
+    useTerminalStore.getState().setSessionBusy(sessionId, false)
     if (attentionStart) {
       raiseCommandAttention({
         sessionId,
@@ -2140,6 +2142,7 @@ function XTermInstance({
 
     const unsubExit = window.electronAPI.onTerminalExit((sid) => {
       if (sid !== sessionId) return
+      useTerminalStore.getState().setSessionBusy(sessionId, false)
     })
 
     const unsubShellEvent = window.electronAPI.onShellEvent((sid, event) => {
