@@ -178,7 +178,13 @@ export function extractWorkflowStepResults(data: string): {
   }
 }
 
-export function prepareLogContent(outputBuffer: string[]): string | null {
-  const content = stripAnsi(outputBuffer.join(''))
+export function prepareLogContent(outputBuffer: string[], trimmed = false): string | null {
+  let content = stripAnsi(outputBuffer.join(''))
+  // When old chunks were dropped, the first kept line may start mid-token; a secret cut in half
+  // no longer matches a mask pattern, so drop that partial line.
+  if (trimmed) {
+    const newline = content.indexOf('\n')
+    content = newline >= 0 ? content.slice(newline + 1) : ''
+  }
   return content.trim().length > 0 ? content : null
 }

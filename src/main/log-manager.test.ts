@@ -37,6 +37,7 @@ import {
   shouldSaveSessionLog
 } from './log-manager'
 import { resetPathAccessCacheForTests } from './path-access'
+import { getSecretMaskStats, resetSecretMaskStats } from './secret-mask-stats'
 
 describe('log-manager', () => {
   let tempDir: string
@@ -132,6 +133,41 @@ describe('log-manager', () => {
 
     const savedContent = await readFile(second!.logFilePath, 'utf8')
     expect(savedContent).toBe('build failed\nerror: missing env\n')
+  })
+
+  describe('secret masking', () => {
+    const token = 'ghp_' + 'Zx9'.repeat(12)
+    const save = (content: string): ReturnType<typeof saveSessionLog> =>
+      saveSessionLog({
+        sessionId: 'term-5',
+        projectId: 'proj-1',
+        projectName: 'Alpha',
+        shell: '/bin/zsh',
+        cwd: '/repo',
+        startedAt: '2026-03-08T15:00:00.000Z',
+        exitCode: 0,
+        content
+      })
+
+    beforeEach(() => resetSecretMaskStats())
+
+    it('writes masked content and counts kinds when masking is on', async () => {
+      mockGetSettings.mockResolvedValue({ saveTerminalLogs: true, logDirectory: tempDir, maskSecrets: true })
+      const meta = await save(`$ echo ${token}\n${token}\n$ mysql --password hunter2\n`)
+      const saved = await readFile(meta!.logFilePath, 'utf8')
+      expect(saved).not.toContain(token)
+      expect(saved).not.toContain('hunter2')
+      expect(saved).toBe('$ echo [hidden: GitHub token]\n[hidden: GitHub token]\n$ mysql --password [hidden: password]\n')
+      expect(meta!.sizeBytes).toBe(Buffer.byteLength(saved, 'utf8'))
+      expect(getSecretMaskStats().logs).toEqual({ 'github-token': 2, password: 1 })
+    })
+
+    it('writes the content unchanged when masking is off', async () => {
+      mockGetSettings.mockResolvedValue({ saveTerminalLogs: true, logDirectory: tempDir, maskSecrets: false })
+      const meta = await save(`token ${token}\n`)
+      expect(await readFile(meta!.logFilePath, 'utf8')).toBe(`token ${token}\n`)
+      expect(getSecretMaskStats().logs).toEqual({})
+    })
   })
 
   it('deletes log files and companion metadata', async () => {

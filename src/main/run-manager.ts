@@ -5,6 +5,16 @@ import type { RunRecord, RunStepRecord, RunsData } from '../shared/run-schema'
 import { filterRuns, type RunStatusFilter } from '../shared/run-history'
 import { hasTerminalSession } from './terminal-session-registry'
 import { getDataDir } from './user-data-path'
+import { getSettings } from './settings-manager'
+import { recordMaskedForRun } from './secret-mask-stats'
+import {
+  addSecretCounts,
+  formatSecretMask,
+  isPlaceholderValue,
+  isSecretFieldName,
+  maskSecrets,
+  type SecretCounts
+} from '../shared/secret-mask'
 
 let cached: RunsData | null = null
 
@@ -180,9 +190,52 @@ async function save(data: RunsData): Promise<void> {
   await writeJsonAtomic(getRunsFile(), data)
 }
 
+/** Mask secrets in the parts of a run record that hold typed or generated text. */
+export function maskRunRecord(run: RunRecord): { run: RunRecord; counts: SecretCounts } {
+  const counts: SecretCounts = {}
+  const mask = (text: string): string => {
+    const result = maskSecrets(text)
+    addSecretCounts(counts, result.counts)
+    return result.text
+  }
+
+  const inputValues: RunRecord['inputValues'] = {}
+  for (const [name, value] of Object.entries(run.inputValues)) {
+    if (typeof value !== 'string') {
+      inputValues[name] = value
+      continue
+    }
+    // An input named like a secret (db_password, apiToken) is hidden whatever its shape.
+    const fieldKind = isSecretFieldName(name)
+    if (fieldKind && !isPlaceholderValue(value)) {
+      inputValues[name] = formatSecretMask(fieldKind)
+      addSecretCounts(counts, { [fieldKind]: 1 })
+    } else {
+      inputValues[name] = mask(value)
+    }
+  }
+
+  const steps = run.steps.map((step): RunStepRecord => {
+    const label = mask(step.label)
+    if (step.type === 'command') return { ...step, label, commandString: mask(step.commandString) }
+    if (step.type === 'approval') return { ...step, label, message: mask(step.message) }
+    return { ...step, label, content: mask(step.content) }
+  })
+
+  return {
+    run: { ...run, error: run.error === null ? null : mask(run.error), inputValues, steps },
+    counts
+  }
+}
+
 export async function upsertRunRecord(run: RunRecord): Promise<RunRecord> {
   const data = await load()
-  const nextRun = backfillRunRecord(run, data.runs.length)
+  let nextRun = backfillRunRecord(run, data.runs.length)
+  if ((await getSettings()).maskSecrets) {
+    const masked = maskRunRecord(nextRun)
+    nextRun = masked.run
+    recordMaskedForRun(nextRun.runId, masked.counts)
+  }
   const index = data.runs.findIndex((entry) => entry.runId === nextRun.runId)
 
   if (index >= 0) {

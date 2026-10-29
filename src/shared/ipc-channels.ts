@@ -128,6 +128,7 @@ export const IPC_CHANNELS = {
   // Privacy
   PRIVACY_GET_NETWORK_LOG: 'privacy:get-network-log',
   PRIVACY_CLEAR_NETWORK_LOG: 'privacy:clear-network-log',
+  PRIVACY_GET_SECRET_MASK_STATS: 'privacy:get-secret-mask-stats',
 
   // VNC
   VNC_START: 'vnc:start',

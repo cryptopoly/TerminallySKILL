@@ -117,6 +117,11 @@ describe('pty-output', () => {
     expect(prepareLogContent(['ok\r\n'])).toBe('ok\n')
   })
 
+  it('drops the partial first line when older output was trimmed', () => {
+    expect(prepareLogContent(['_tail_of_a_token rest\nnext line\n'], true)).toBe('next line\n')
+    expect(prepareLogContent(['no newline at all'], true)).toBeNull()
+  })
+
   it('holds back a marker that is split across PTY chunks', () => {
     const first = splitIncompleteMarker('output\x1b]7337;workflow-step;wf-1;step-1;')
     expect(first).toEqual({ complete: 'output', tail: '\x1b]7337;workflow-step;wf-1;step-1;' })

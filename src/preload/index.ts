@@ -23,7 +23,7 @@ import type { AppUpdateCheckResult, AppUpdateInstallResult } from '../shared/upd
 import type { InstallableCommandMatch } from '../shared/cli-install-catalog'
 import type { AttentionNotifyRequest } from '../shared/attention'
 import type { Schedule, ScheduleRunStatus, ScheduleRecurrence } from '../shared/schedule-schema'
-import type { OutboundRequestRecord } from '../shared/privacy-schema'
+import type { OutboundRequestRecord, SecretMaskStats } from '../shared/privacy-schema'
 import type { BackupLocationSuggestion, BackupRunResult } from '../shared/backup-schema'
 
 type ProjectUpdates = Partial<Omit<Project, 'workspaceLayout'>> & {
@@ -530,6 +530,9 @@ export const electronAPI = {
 
   clearNetworkLog: (): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.PRIVACY_CLEAR_NETWORK_LOG),
+
+  getSecretMaskStats: (): Promise<SecretMaskStats> =>
+    ipcRenderer.invoke(IPC_CHANNELS.PRIVACY_GET_SECRET_MASK_STATS),
 
   getVncPassword: (storageKey: string): Promise<string | null> =>
     ipcRenderer.invoke(IPC_CHANNELS.VNC_GET_PASSWORD, storageKey),
