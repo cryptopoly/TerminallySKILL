@@ -18,8 +18,6 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 1. **Ship 0.9.103 scope (updated 2026-10-29: Dan chose to add Electron 45, lazy-loaded locales and ONE more headline feature).** Old question, kept for context: ship now, or add more first? Contents today: dependency security update, attention alerts, scheduled workflows, Privacy tab (see [ideas](ideas.md)). **Explainer:** all three features are built and tested on a branch; nothing is merged or released yet. **Team recommendation:** hand-test the attention alerts and one scheduled run in the packaged app, then merge both branches into `staging` (dependencies first) and release as 0.9.103. **Why:** the three features are small, self-contained and visible; waiting adds risk without adding much.
 2. **Merge order.** `chore/deps-and-hub-0.9.103` first, then `feat/0.9.103-attention-schedule-privacy` (it is built on top). **Team recommendation:** two PRs into `staging`, in that order. **Why:** keeps the dependency change reviewable on its own.
 
-10. **Pick the extra headline feature for 0.9.103.** Research is in: [ideas](ideas.md) now has 18 numbered ideas (13 expanded, 5 new: 14 agent-aware attention, 15 secret masking, 16 save recent commands as a workflow, 17 paste a command into the visual builder, 18 markdown runbooks). **Team recommendation:** idea 14 plus 6 (agent-aware attention + "jump to next terminal that needs me"), about 3 to 4 days. **Why:** finishes the attention story built this week, best demo GIF, no privacy cost. iTerm2 3.7, Zed and cmux already show which agent tab needs you, so we need it to stay ahead. Runners-up: 15 secret masking (4 to 5 days), 7 schedule run history (2 days). **Cheaper alternative:** ship 0.9.103 with no extra feature. **Caveat:** the claim that Claude Code already sends OSC 7501 status codes is from the research agent and not yet checked by Claude; read the spec before building.
-
 ### P2: before the next milestone
 
 3. **Native-speaker review of translations.** Machine-assisted today. **Team recommendation:** ask friendly speakers for German, French, Spanish and Japanese first. **Why:** these have the most likely users; flag Arabic as "needs right-to-left review" until checked.
@@ -38,6 +36,11 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 <summary>Decision log (made decisions, newest section last)</summary>
 
 ## 2026-10-29, evening
+
+- **Extra features for 0.9.103 chosen by Dan:** ideas 6 (jump to next terminal that needs me), 7 (schedule run history and optional catch-up), 14 (agent-aware attention) and 15 (secret masking in logs and AI requests). Dan picked four, not one, so the release grows again. Agents run in separate worktrees from `origin/integ/0.9.103`: `feat/agent-attention` (6 and 14), `feat/schedule-history` (7), `feat/secret-masking` (15). **Claude note:** idea 14 depends on the OSC 7501 claim, which is unverified; the agent must verify it first and fall back to OSC 9/777.
+- **Docker installed (Dan):** the CLI is there but the daemon is not running, so `npm run test:e2e:ssh-docker` skips. Start Docker Desktop (or OrbStack/Colima), then rerun. Known risk: that spec overrides `HOME`, which made Electron hang on quit in the local SSH test.
+- **Keychain popup (Dan approved):** stale keychain search-list entries removed; unpackaged e2e launches use `--use-mock-keychain`.
+- **Merge note:** agent worktrees can start from old commits; every agent now branches explicitly from `origin/integ/0.9.103`. The main folder was fast-forwarded to it (Dan's dev app was closed first).
 
 - **Release scope changed (Dan):** 0.9.103 now = dependency update + attention alerts + scheduled workflows + Privacy tab + Electron 45 + lazy-loaded locales + one more headline feature (to be picked from the expanded ideas list). Reason: Dan was mocked for being on Electron 42 and wants the release to be current.
 - **Agents started (separate worktrees):** Electron 45 upgrade (Opus), lazy-load locales (Sonnet), local OpenSSH remote-session e2e (Sonnet), competitor research and idea expansion (Opus).

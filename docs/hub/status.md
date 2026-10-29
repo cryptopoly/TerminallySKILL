@@ -9,6 +9,10 @@ summary: Read this first in every new session.
 
 Branch flow: feature branches go into `staging` (default branch), `staging` is promoted to `main`, tags are cut from the release commit. Release builds run from the GitHub `Release` workflow (macOS jobs are pinned to `macos-15`).
 
+## Update 2026-10-29, night (later)
+
+Electron 45, lazy locales and the local SSH test are merged and verified (test:ci 271 unit tests, e2e 11 passed, packaged mac arm64 smoke test passed). The main folder now sits on that merged code (run `npm ci` done). Dan chose four extra features: ideas 6, 7, 14, 15; three agents are building them from `origin/integ/0.9.103`. After they report: merge, full tests, packaged smoke test, UAT list update, version bump, notes, PR.
+
 ## Update 2026-10-29, night
 
 **Scope of 0.9.103 grew (Dan):** Electron 45, lazy-loaded locales and one more headline feature join the release. Four agents are working in separate worktrees: `feat/electron-45`, `feat/lazy-locales`, `test/local-ssh-e2e`, `docs/ideas-expansion`. Merged into `integ/0.9.103` (verified: test:ci 271 unit tests, e2e 11 passed 2 skipped): lazy locales, ideas expansion. Waiting: Electron 45, local SSH e2e. NOTE: agent worktrees branched from older commits (main or earlier), so merge into `integ/0.9.103` and re-test. Next: Dan picks the extra feature from the expanded [ideas](ideas.md); then build, merge, full test run, packaged smoke test, version bump, notes, PR.

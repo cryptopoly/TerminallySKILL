@@ -24,7 +24,7 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [x] **P1, done on branch.** Scheduled workflows.
 - [x] **P1, done on branch.** Privacy and network panel.
 - [ ] **P1, in progress.** Upgrade Electron 42 to 45 (42 is out of support since 2026-10-21): now part of 0.9.103 (branch `feat/electron-45`).
-- [ ] **P1, todo.** Pick and build one more headline feature for 0.9.103 (see [decisions](decisions.md) item 10).
+- [ ] **P1, in progress.** Four extra features for 0.9.103: agent-aware attention (14), jump-to-next-terminal (6), schedule history and catch-up (7), secret masking (15). See [ideas](ideas.md).
 - [ ] **P1, in progress.** Local OpenSSH remote-session e2e (branch `test/local-ssh-e2e`).
 - [ ] **P1, todo.** Merge both branches into `staging`, bump to 0.9.103, write release notes, release.
 - [ ] **P2, todo.** Multi-host SSH run.
