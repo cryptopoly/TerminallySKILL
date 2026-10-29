@@ -11,7 +11,7 @@ Branch flow: feature branches go into `staging` (default branch), `staging` is p
 
 ## Update 2026-10-29, night
 
-**Scope of 0.9.103 grew (Dan):** Electron 45, lazy-loaded locales and one more headline feature join the release. Four agents are working in separate worktrees: `feat/electron-45`, `feat/lazy-locales`, `test/local-ssh-e2e`, `docs/ideas-expansion`. Nothing from them is merged yet. Next: Dan picks the extra feature from the expanded [ideas](ideas.md); then build, merge, full test run, packaged smoke test, version bump, notes, PR.
+**Scope of 0.9.103 grew (Dan):** Electron 45, lazy-loaded locales and one more headline feature join the release. Four agents are working in separate worktrees: `feat/electron-45`, `feat/lazy-locales`, `test/local-ssh-e2e`, `docs/ideas-expansion`. Merged into `integ/0.9.103` (verified: test:ci 271 unit tests, e2e 11 passed 2 skipped): lazy locales, ideas expansion. Waiting: Electron 45, local SSH e2e. NOTE: agent worktrees branched from older commits (main or earlier), so merge into `integ/0.9.103` and re-test. Next: Dan picks the extra feature from the expanded [ideas](ideas.md); then build, merge, full test run, packaged smoke test, version bump, notes, PR.
 
 ## Update 2026-10-29, late
 
