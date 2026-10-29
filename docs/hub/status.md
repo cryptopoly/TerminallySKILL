@@ -5,9 +5,13 @@ summary: Read this first in every new session.
 ---
 # Status and handover
 
-> **Read first.** TerminallySKILL is an Electron + React terminal workspace. v0.9.102 is released (2026-10-28). Now: **v0.9.103**, a dependency-security update plus three new features (attention alerts, scheduled workflows, Privacy tab), built and awaiting merge. Then read [decisions](decisions.md) and [backlog](backlog.md).
+> **Read first.** TerminallySKILL is an Electron + React terminal workspace. v0.9.102 is released (2026-10-28). Now: **v0.9.103**, a dependency-security update plus three new features (attention alerts, scheduled workflows, Privacy tab) and, added late, Electron 45, lazy-loaded locales and one more headline feature (in progress). Then read [decisions](decisions.md) and [backlog](backlog.md).
 
 Branch flow: feature branches go into `staging` (default branch), `staging` is promoted to `main`, tags are cut from the release commit. Release builds run from the GitHub `Release` workflow (macOS jobs are pinned to `macos-15`).
+
+## Update 2026-10-29, night
+
+**Scope of 0.9.103 grew (Dan):** Electron 45, lazy-loaded locales and one more headline feature join the release. Four agents are working in separate worktrees: `feat/electron-45`, `feat/lazy-locales`, `test/local-ssh-e2e`, `docs/ideas-expansion`. Nothing from them is merged yet. Next: Dan picks the extra feature from the expanded [ideas](ideas.md); then build, merge, full test run, packaged smoke test, version bump, notes, PR.
 
 ## Update 2026-10-29, late
 

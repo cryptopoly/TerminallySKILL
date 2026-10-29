@@ -13,15 +13,17 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 ### P1: decide soon
 
-0. **Upgrade Electron 42 to 44 or 45 right after 0.9.103.** 42 stopped receiving security fixes on 2026-10-21. **Team recommendation:** go to 45 (supported longest), as its own release (0.9.104) with the full test run and a packaged smoke test; do not mix it into 0.9.103. **Why:** a major Chromium/Node jump can break the native terminal (node-pty), so it needs its own test pass; shipping the tested 0.9.103 first keeps risk low.
+0. **Electron 45 inside 0.9.103 (Dan decided 2026-10-29, overrides the earlier "own release" recommendation).** Dan wants 0.9.103 to ship on Electron 45 plus one more headline feature. **Status:** upgrade running on branch `feat/electron-45` (Opus agent, own worktree). **Risk to watch:** a Chromium/Node jump can break node-pty, so the packaged smoke test and the full suite gate the release; if they fail, say so and decide again. **Remote test:** no Docker or VM tool is installed, so a real OpenSSH server is started in user space on this Mac for the SSH end-to-end test (branch `test/local-ssh-e2e`). A true VM (Lima or Tart) would be a third-party install and needs Dan's OK.
 
-1. **Ship 0.9.103 now, or add more first?** Contents today: dependency security update, attention alerts, scheduled workflows, Privacy tab (see [ideas](ideas.md)). **Explainer:** all three features are built and tested on a branch; nothing is merged or released yet. **Team recommendation:** hand-test the attention alerts and one scheduled run in the packaged app, then merge both branches into `staging` (dependencies first) and release as 0.9.103. **Why:** the three features are small, self-contained and visible; waiting adds risk without adding much.
+1. **Ship 0.9.103 scope (updated 2026-10-29: Dan chose to add Electron 45, lazy-loaded locales and ONE more headline feature).** Old question, kept for context: ship now, or add more first? Contents today: dependency security update, attention alerts, scheduled workflows, Privacy tab (see [ideas](ideas.md)). **Explainer:** all three features are built and tested on a branch; nothing is merged or released yet. **Team recommendation:** hand-test the attention alerts and one scheduled run in the packaged app, then merge both branches into `staging` (dependencies first) and release as 0.9.103. **Why:** the three features are small, self-contained and visible; waiting adds risk without adding much.
 2. **Merge order.** `chore/deps-and-hub-0.9.103` first, then `feat/0.9.103-attention-schedule-privacy` (it is built on top). **Team recommendation:** two PRs into `staging`, in that order. **Why:** keeps the dependency change reviewable on its own.
+
+10. **Pick the extra headline feature for 0.9.103.** Research agent is expanding every banked idea into its own numbered point and adding 5 new ones from competitor research ([ideas](ideas.md)). **Team recommendation:** pending that report; Claude will give one pick with a cut-down first version. **Why:** one more feature on top of Electron 45 keeps the release tweetable without stretching the test pass.
 
 ### P2: before the next milestone
 
 3. **Native-speaker review of translations.** Machine-assisted today. **Team recommendation:** ask friendly speakers for German, French, Spanish and Japanese first. **Why:** these have the most likely users; flag Arabic as "needs right-to-left review" until checked.
-4. **Lazy-load locale bundles.** All 19 languages load at startup (renderer about 4.9 MB). **Team recommendation:** load only the active language. **Why:** faster start, smaller memory; not urgent.
+4. **Lazy-load locale bundles: in progress for 0.9.103 (Dan asked 2026-10-29).** Branch `feat/lazy-locales`. Loads English plus the active language only.
 
 8. **Opus review of translations (approved by Dan, done 2026-10-29, merged).** 77 strings fixed in 18 locales (plural-safe unit labels for ru/uk/pl, neutral "Interval:" labels where "Every" broke, meaning errors in tr/nl/ja/zh). Open: the settings card is titled "Notifications" in 17 locales but "Attention alerts" in English; recommend renaming English to "Notifications" for consistency. Native speakers still to confirm items listed in the review hand-back; Arabic needs a visual right-to-left check (letter-spacing on headings, `ml-2` in PrivacyTab). **Team recommendation:** yes, run one Opus pass over the 66 new 0.9.103 strings in the 18 locale files (not the whole app), then fix the Russian, Ukrainian and Polish plural forms. **Why:** Sonnet wrote them, so a stronger second model catches wrong terms and plural errors cheaply (small token cost). It does not replace native speakers, so keep item 3 open and keep the "machine-assisted" note in the release notes.
 
@@ -34,6 +36,12 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 <details>
 <summary>Decision log (made decisions, newest section last)</summary>
+
+## 2026-10-29, evening
+
+- **Release scope changed (Dan):** 0.9.103 now = dependency update + attention alerts + scheduled workflows + Privacy tab + Electron 45 + lazy-loaded locales + one more headline feature (to be picked from the expanded ideas list). Reason: Dan was mocked for being on Electron 42 and wants the release to be current.
+- **Agents started (separate worktrees):** Electron 45 upgrade (Opus), lazy-load locales (Sonnet), local OpenSSH remote-session e2e (Sonnet), competitor research and idea expansion (Opus).
+- **Remote VM test:** nobody in this repo had one; Docker spec exists but Docker is not installed. We test a real OpenSSH server run in user space instead. Real VM stays optional.
 
 ## 2026-10-29
 

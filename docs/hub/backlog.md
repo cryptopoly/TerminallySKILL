@@ -23,7 +23,9 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [x] **P1, done on branch.** Attention layer (tab dot, badge, notification).
 - [x] **P1, done on branch.** Scheduled workflows.
 - [x] **P1, done on branch.** Privacy and network panel.
-- [ ] **P1, todo.** Upgrade Electron 42 to 45 (42 is out of support since 2026-10-21): own release, 0.9.104.
+- [ ] **P1, in progress.** Upgrade Electron 42 to 45 (42 is out of support since 2026-10-21): now part of 0.9.103 (branch `feat/electron-45`).
+- [ ] **P1, todo.** Pick and build one more headline feature for 0.9.103 (see [decisions](decisions.md) item 10).
+- [ ] **P1, in progress.** Local OpenSSH remote-session e2e (branch `test/local-ssh-e2e`).
 - [ ] **P1, todo.** Merge both branches into `staging`, bump to 0.9.103, write release notes, release.
 - [ ] **P2, todo.** Multi-host SSH run.
 - [ ] **P2, todo.** Command blocks lite.
@@ -32,7 +34,7 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [ ] **P3, banked.** Background schedules: today a schedule needs an open window (closing the last window on macOS skips runs). Options: keep a hidden window alive, launch at login, menu-bar item. Decide after real use.
 - [ ] **P3, banked.** Schedule run history and an optional catch-up for missed runs.
 - [ ] **P3, todo.** Fig-spec completions for the command builder (check licence first).
-- [ ] **P3, todo.** Lazy-load locale bundles.
+- [ ] **P2, in progress.** Lazy-load locale bundles (branch `feat/lazy-locales`, in 0.9.103).
 - [ ] **P3, todo.** Fix 13 test-fixture type errors, then include test files in the type-check.
 
 ## Issues
