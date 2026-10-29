@@ -66,6 +66,7 @@ function backfillRunRecord(raw: Partial<RunRecord>, index: number): RunRecord {
     scriptName: typeof raw.scriptName === 'string' ? raw.scriptName : 'Workflow',
     projectId: typeof raw.projectId === 'string' ? raw.projectId : null,
     projectName: typeof raw.projectName === 'string' ? raw.projectName : null,
+    scheduleId: typeof raw.scheduleId === 'string' ? raw.scheduleId : null,
     cwd: typeof raw.cwd === 'string' ? raw.cwd : null,
     shell: typeof raw.shell === 'string' ? raw.shell : null,
     logFilePath: typeof raw.logFilePath === 'string' ? raw.logFilePath : null,

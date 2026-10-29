@@ -22,7 +22,12 @@ import type { ShellIntegrationEvent } from '../shared/shell-integration'
 import type { AppUpdateCheckResult, AppUpdateInstallResult } from '../shared/update-schema'
 import type { InstallableCommandMatch } from '../shared/cli-install-catalog'
 import type { AttentionNotifyRequest } from '../shared/attention'
-import type { Schedule, ScheduleRunStatus, ScheduleRecurrence } from '../shared/schedule-schema'
+import type {
+  Schedule,
+  ScheduleHistoryReason,
+  ScheduleRunStatus,
+  ScheduleRecurrence
+} from '../shared/schedule-schema'
 import type { OutboundRequestRecord } from '../shared/privacy-schema'
 import type { BackupLocationSuggestion, BackupRunResult } from '../shared/backup-schema'
 
@@ -510,13 +515,21 @@ export const electronAPI = {
     projectId: string | null
     recurrence: ScheduleRecurrence
     enabled: boolean
+    catchUp?: boolean
   }): Promise<Schedule> => ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_SAVE, input),
 
   deleteSchedule: (id: string): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_DELETE, id),
 
-  markScheduleResult: (id: string, status: ScheduleRunStatus): Promise<void> =>
-    ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_MARK_RESULT, id, status),
+  markScheduleResult: (
+    id: string,
+    status: ScheduleRunStatus,
+    details?: { runId?: string | null; reason?: ScheduleHistoryReason | null }
+  ): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_MARK_RESULT, id, status, details),
+
+  /** Tells the main process this window is listening for due schedules (queued catch-up runs fire now). */
+  scheduleRendererReady: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_RENDERER_READY),
 
   onScheduleDue: (callback: (schedule: Schedule) => void): (() => void) => {
     const handler = (_e: Electron.IpcRendererEvent, schedule: Schedule): void => callback(schedule)

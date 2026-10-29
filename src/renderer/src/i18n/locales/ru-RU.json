@@ -704,7 +704,18 @@
     "schedule.scheduledBadge": "По расписанию",
     "schedule.summaryInterval": "Интервал: {{interval}}",
     "schedule.summaryDaily": "Ежедневно в {{time}}",
-    "schedule.summaryWeekdays": "{{days}} в {{time}}"
+    "schedule.summaryWeekdays": "{{days}} в {{time}}",
+    "schedule.catchUp": "Запустить один раз при старте, если запуск был пропущен",
+    "schedule.history.title": "История ({{count}})",
+    "schedule.history.empty": "Запусков пока нет.",
+    "schedule.history.openRun": "Открыть в «Запуски и журналы»",
+    "schedule.history.catchUp": "догоняющий",
+    "schedule.history.status.missed": "пропущен",
+    "schedule.history.status.running": "выполняется",
+    "schedule.history.reason.no-window": "не было открытых окон",
+    "schedule.history.reason.not-runnable": "не удалось запустить",
+    "schedule.history.reason.busy": "предыдущий запуск еще выполняется",
+    "schedule.history.reason.interrupted": "приложение было закрыто"
   },
   "snippets": {
     "placeholders.name": "Название фрагмента...",
@@ -919,7 +930,8 @@
     "diagnostics.summary.success": "Команда завершилась успешно.",
     "diagnostics.summary.command": "{{command}} завершилась с кодом {{code}}.",
     "diagnostics.summary.title": "{{title}} завершилась с кодом {{code}}.",
-    "diagnostics.summary.fallbackTitle": "Эта команда"
+    "diagnostics.summary.fallbackTitle": "Эта команда",
+    "labels.scheduled": "По расписанию"
   },
   "terminal": {
     "panel.newTerminalDescription": "Открыть новую вкладку shell в workspace вашего проекта",

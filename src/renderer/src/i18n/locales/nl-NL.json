@@ -762,7 +762,18 @@
     "schedule.scheduledBadge": "Gepland",
     "schedule.summaryInterval": "Elke {{interval}}",
     "schedule.summaryDaily": "Dagelijks om {{time}}",
-    "schedule.summaryWeekdays": "{{days}} om {{time}}"
+    "schedule.summaryWeekdays": "{{days}} om {{time}}",
+    "schedule.catchUp": "Eenmaal uitvoeren bij het starten als een uitvoering is gemist",
+    "schedule.history.title": "Geschiedenis ({{count}})",
+    "schedule.history.empty": "Nog geen uitvoeringen.",
+    "schedule.history.openRun": "Openen in Uitvoeringen en logs",
+    "schedule.history.catchUp": "inhalen",
+    "schedule.history.status.missed": "gemist",
+    "schedule.history.status.running": "bezig",
+    "schedule.history.reason.no-window": "er was geen venster open",
+    "schedule.history.reason.not-runnable": "kon niet starten",
+    "schedule.history.reason.busy": "vorige uitvoering loopt nog",
+    "schedule.history.reason.interrupted": "app was gesloten"
   },
   "snippets": {
     "placeholders.name": "Fragmentnaam...",
@@ -969,7 +980,8 @@
     "diagnostics.summary.command": "{{command}} is beëindigd met code {{code}}.",
     "diagnostics.summary.title": "{{title}} is beëindigd met code {{code}}.",
     "diagnostics.summary.fallbackTitle": "Deze opdracht",
-    "list.logs": "Logs"
+    "list.logs": "Logs",
+    "labels.scheduled": "Gepland"
   },
   "terminal": {
     "panel.newTerminalDescription": "Een nieuw shell-tabblad openen voor je projectwerkruimte",

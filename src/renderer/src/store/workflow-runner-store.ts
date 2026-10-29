@@ -35,6 +35,8 @@ export interface WorkflowActiveRun {
   startedAt: string
   endedAt: string | null
   inputValues: WorkflowInputValues
+  /** Set when a schedule started this run */
+  scheduleId: string | null
   fromIndex: number
   singleOnly: boolean
   currentStepIndex: number
@@ -54,6 +56,7 @@ interface WorkflowRunnerStore {
     inputValues: WorkflowInputValues
     fromIndex?: number
     singleOnly?: boolean
+    scheduleId?: string | null
   }) => WorkflowActiveRun | null
   markSessionReady: (sessionId: string) => void
   markSessionExecuting: (sessionId: string) => void
@@ -120,7 +123,7 @@ export const useWorkflowRunnerStore = create<WorkflowRunnerStore>((set, get) => 
   runsBySession: {},
   sessionStates: {},
 
-  startRun: ({ script, sessionId, inputValues, fromIndex = 0, singleOnly = false }) => {
+  startRun: ({ script, sessionId, inputValues, fromIndex = 0, singleOnly = false, scheduleId = null }) => {
     const existingRun = get().runsBySession[sessionId]
     if (existingRun && !isTerminalRunStatus(existingRun.status)) {
       return null
@@ -145,6 +148,7 @@ export const useWorkflowRunnerStore = create<WorkflowRunnerStore>((set, get) => 
       startedAt: nowIso(),
       endedAt: null,
       inputValues,
+      scheduleId,
       fromIndex,
       singleOnly,
       currentStepIndex: 0,

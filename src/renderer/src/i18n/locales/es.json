@@ -677,7 +677,18 @@
     "schedule.scheduledBadge": "Programado",
     "schedule.summaryInterval": "Cada {{interval}}",
     "schedule.summaryDaily": "Todos los días a las {{time}}",
-    "schedule.summaryWeekdays": "{{days}} a las {{time}}"
+    "schedule.summaryWeekdays": "{{days}} a las {{time}}",
+    "schedule.catchUp": "Ejecutar una vez al iniciar si se perdió una ejecución",
+    "schedule.history.title": "Historial ({{count}})",
+    "schedule.history.empty": "Aún no hay ejecuciones.",
+    "schedule.history.openRun": "Abrir en Ejecuciones y registros",
+    "schedule.history.catchUp": "recuperación",
+    "schedule.history.status.missed": "perdida",
+    "schedule.history.status.running": "en curso",
+    "schedule.history.reason.no-window": "no había ninguna ventana abierta",
+    "schedule.history.reason.not-runnable": "no se pudo iniciar",
+    "schedule.history.reason.busy": "la ejecución anterior sigue en curso",
+    "schedule.history.reason.interrupted": "la aplicación estaba cerrada"
   },
   "snippets": {
     "placeholders.name": "Nombre del fragmento...",
@@ -884,7 +895,8 @@
     "diagnostics.summary.command": "{{command}} terminó con el código {{code}}.",
     "diagnostics.summary.title": "{{title}} terminó con el código {{code}}.",
     "diagnostics.summary.fallbackTitle": "Este comando",
-    "list.terminalLogs": "Registros de la terminal"
+    "list.terminalLogs": "Registros de la terminal",
+    "labels.scheduled": "Programada"
   },
   "terminal": {
     "panel.newTerminalDescription": "Abrir una nueva pestaña de shell para el espacio de trabajo de tu proyecto",

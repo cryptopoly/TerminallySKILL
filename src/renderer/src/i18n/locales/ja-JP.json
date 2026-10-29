@@ -653,7 +653,18 @@
     "schedule.scheduledBadge": "スケジュール済み",
     "schedule.summaryInterval": "{{interval}}ごと",
     "schedule.summaryDaily": "毎日 {{time}}",
-    "schedule.summaryWeekdays": "{{days}} {{time}}"
+    "schedule.summaryWeekdays": "{{days}} {{time}}",
+    "schedule.catchUp": "実行を逃した場合、起動時に1回だけ実行する",
+    "schedule.history.title": "履歴 ({{count}})",
+    "schedule.history.empty": "まだ実行はありません。",
+    "schedule.history.openRun": "実行とログで開く",
+    "schedule.history.catchUp": "キャッチアップ",
+    "schedule.history.status.missed": "未実行",
+    "schedule.history.status.running": "実行中",
+    "schedule.history.reason.no-window": "開いているウィンドウがありませんでした",
+    "schedule.history.reason.not-runnable": "開始できませんでした",
+    "schedule.history.reason.busy": "前回の実行がまだ続いています",
+    "schedule.history.reason.interrupted": "アプリが終了していました"
   },
   "snippets": {
     "placeholders.name": "スニペット名...",
@@ -858,7 +869,8 @@
     "diagnostics.summary.success": "コマンドは正常に終了しました。",
     "diagnostics.summary.command": "{{command}} は終了コード {{code}} で終了しました。",
     "diagnostics.summary.title": "{{title}} は終了コード {{code}} で終了しました。",
-    "diagnostics.summary.fallbackTitle": "このコマンド"
+    "diagnostics.summary.fallbackTitle": "このコマンド",
+    "labels.scheduled": "スケジュール済み"
   },
   "terminal": {
     "panel.newTerminalDescription": "プロジェクトワークスペース用の新しい shell タブを開く",

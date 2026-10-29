@@ -754,7 +754,18 @@
     "schedule.scheduledBadge": "已排程",
     "schedule.summaryInterval": "每 {{interval}}",
     "schedule.summaryDaily": "每天 {{time}}",
-    "schedule.summaryWeekdays": "{{days}} {{time}}"
+    "schedule.summaryWeekdays": "{{days}} {{time}}",
+    "schedule.catchUp": "若錯過了執行，則在啟動時執行一次",
+    "schedule.history.title": "歷史記錄 ({{count}})",
+    "schedule.history.empty": "尚無執行記錄。",
+    "schedule.history.openRun": "在執行與記錄中開啟",
+    "schedule.history.catchUp": "補跑",
+    "schedule.history.status.missed": "錯過",
+    "schedule.history.status.running": "執行中",
+    "schedule.history.reason.no-window": "沒有開啟的視窗",
+    "schedule.history.reason.not-runnable": "無法啟動",
+    "schedule.history.reason.busy": "上一次執行仍在進行",
+    "schedule.history.reason.interrupted": "應用程式已關閉"
   },
   "snippets": {
     "placeholders.name": "片段名稱...",
@@ -960,7 +971,8 @@
     "diagnostics.summary.success": "命令已成功結束。",
     "diagnostics.summary.command": "{{command}} 以結束碼 {{code}} 結束。",
     "diagnostics.summary.title": "{{title}} 以結束碼 {{code}} 結束。",
-    "diagnostics.summary.fallbackTitle": "此命令"
+    "diagnostics.summary.fallbackTitle": "此命令",
+    "labels.scheduled": "已排程"
   },
   "terminal": {
     "panel.newTerminalDescription": "為您的專案工作區開啟新的 shell 分頁",

@@ -659,7 +659,18 @@
     "schedule.scheduledBadge": "Pianificato",
     "schedule.summaryInterval": "Ogni {{interval}}",
     "schedule.summaryDaily": "Ogni giorno alle {{time}}",
-    "schedule.summaryWeekdays": "{{days}} alle {{time}}"
+    "schedule.summaryWeekdays": "{{days}} alle {{time}}",
+    "schedule.catchUp": "Esegui una volta all'avvio se un'esecuzione è stata saltata",
+    "schedule.history.title": "Cronologia ({{count}})",
+    "schedule.history.empty": "Nessuna esecuzione ancora.",
+    "schedule.history.openRun": "Apri in Esecuzioni e log",
+    "schedule.history.catchUp": "recupero",
+    "schedule.history.status.missed": "persa",
+    "schedule.history.status.running": "in corso",
+    "schedule.history.reason.no-window": "nessuna finestra aperta",
+    "schedule.history.reason.not-runnable": "impossibile avviare",
+    "schedule.history.reason.busy": "l'esecuzione precedente è ancora in corso",
+    "schedule.history.reason.interrupted": "l'app era chiusa"
   },
   "snippets": {
     "placeholders.name": "Nome dello snippet...",
@@ -864,7 +875,8 @@
     "diagnostics.summary.success": "Il comando è terminato con successo.",
     "diagnostics.summary.command": "{{command}} è terminato con codice {{code}}.",
     "diagnostics.summary.title": "{{title}} è terminato con codice {{code}}.",
-    "diagnostics.summary.fallbackTitle": "Questo comando"
+    "diagnostics.summary.fallbackTitle": "Questo comando",
+    "labels.scheduled": "Pianificata"
   },
   "terminal": {
     "panel.newTerminalDescription": "Apri una nuova scheda shell per il workspace del progetto",

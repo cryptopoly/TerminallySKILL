@@ -671,7 +671,18 @@
     "schedule.scheduledBadge": "Agendado",
     "schedule.summaryInterval": "A cada {{interval}}",
     "schedule.summaryDaily": "Diariamente às {{time}}",
-    "schedule.summaryWeekdays": "{{days}} às {{time}}"
+    "schedule.summaryWeekdays": "{{days}} às {{time}}",
+    "schedule.catchUp": "Executar uma vez ao iniciar se uma execução foi perdida",
+    "schedule.history.title": "Histórico ({{count}})",
+    "schedule.history.empty": "Nenhuma execução ainda.",
+    "schedule.history.openRun": "Abrir em Execuções e logs",
+    "schedule.history.catchUp": "recuperação",
+    "schedule.history.status.missed": "perdida",
+    "schedule.history.status.running": "em andamento",
+    "schedule.history.reason.no-window": "nenhuma janela estava aberta",
+    "schedule.history.reason.not-runnable": "não foi possível iniciar",
+    "schedule.history.reason.busy": "a execução anterior ainda está em andamento",
+    "schedule.history.reason.interrupted": "o app estava fechado"
   },
   "snippets": {
     "placeholders.name": "Nome do snippet...",
@@ -877,7 +888,8 @@
     "diagnostics.summary.command": "{{command}} foi encerrado com o código {{code}}.",
     "diagnostics.summary.title": "{{title}} foi encerrado com o código {{code}}.",
     "diagnostics.summary.fallbackTitle": "Este comando",
-    "list.logs": "Logs"
+    "list.logs": "Logs",
+    "labels.scheduled": "Agendada"
   },
   "terminal": {
     "panel.newTerminalDescription": "Abrir uma nova aba de shell para o workspace do seu projeto",

@@ -760,7 +760,18 @@
     "schedule.scheduledBadge": "Terjadwal",
     "schedule.summaryInterval": "Setiap {{interval}}",
     "schedule.summaryDaily": "Setiap hari pukul {{time}}",
-    "schedule.summaryWeekdays": "{{days}} pukul {{time}}"
+    "schedule.summaryWeekdays": "{{days}} pukul {{time}}",
+    "schedule.catchUp": "Jalankan sekali saat peluncuran jika ada eksekusi yang terlewat",
+    "schedule.history.title": "Riwayat ({{count}})",
+    "schedule.history.empty": "Belum ada eksekusi.",
+    "schedule.history.openRun": "Buka di Eksekusi & Log",
+    "schedule.history.catchUp": "menyusul",
+    "schedule.history.status.missed": "terlewat",
+    "schedule.history.status.running": "berjalan",
+    "schedule.history.reason.no-window": "tidak ada jendela yang terbuka",
+    "schedule.history.reason.not-runnable": "tidak dapat dimulai",
+    "schedule.history.reason.busy": "eksekusi sebelumnya masih berjalan",
+    "schedule.history.reason.interrupted": "aplikasi sedang tertutup"
   },
   "snippets": {
     "placeholders.name": "Nama snippet...",
@@ -967,7 +978,8 @@
     "diagnostics.summary.command": "{{command}} keluar dengan kode {{code}}.",
     "diagnostics.summary.title": "{{title}} keluar dengan kode {{code}}.",
     "diagnostics.summary.fallbackTitle": "Perintah ini",
-    "list.logs": "Log"
+    "list.logs": "Log",
+    "labels.scheduled": "Terjadwal"
   },
   "terminal": {
     "panel.newTerminalDescription": "Buka tab shell baru untuk workspace proyek Anda",

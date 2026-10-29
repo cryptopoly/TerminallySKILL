@@ -806,7 +806,18 @@
     "schedule.scheduledBadge": "За розкладом",
     "schedule.summaryInterval": "Інтервал: {{interval}}",
     "schedule.summaryDaily": "Щодня о {{time}}",
-    "schedule.summaryWeekdays": "{{days}} о {{time}}"
+    "schedule.summaryWeekdays": "{{days}} о {{time}}",
+    "schedule.catchUp": "Запустити один раз під час старту, якщо запуск було пропущено",
+    "schedule.history.title": "Історія ({{count}})",
+    "schedule.history.empty": "Запусків ще немає.",
+    "schedule.history.openRun": "Відкрити в «Запуски та журнали»",
+    "schedule.history.catchUp": "надолуження",
+    "schedule.history.status.missed": "пропущено",
+    "schedule.history.status.running": "виконується",
+    "schedule.history.reason.no-window": "не було відкритих вікон",
+    "schedule.history.reason.not-runnable": "не вдалося запустити",
+    "schedule.history.reason.busy": "попередній запуск ще триває",
+    "schedule.history.reason.interrupted": "застосунок було закрито"
   },
   "snippets": {
     "placeholders.name": "Назва фрагмента...",
@@ -1022,7 +1033,8 @@
     "diagnostics.summary.success": "Команда завершилася успішно.",
     "diagnostics.summary.command": "{{command}} завершилася з кодом {{code}}.",
     "diagnostics.summary.title": "{{title}} завершилося з кодом {{code}}.",
-    "diagnostics.summary.fallbackTitle": "Ця команда"
+    "diagnostics.summary.fallbackTitle": "Ця команда",
+    "labels.scheduled": "За розкладом"
   },
   "terminal": {
     "panel.newTerminalDescription": "Відкрити нову вкладку shell для робочого простору проєкту",

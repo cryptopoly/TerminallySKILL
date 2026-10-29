@@ -858,7 +858,18 @@
     "schedule.scheduledBadge": "مجدول",
     "schedule.summaryInterval": "الفاصل الزمني: {{interval}}",
     "schedule.summaryDaily": "يوميًا في {{time}}",
-    "schedule.summaryWeekdays": "{{days}} في {{time}}"
+    "schedule.summaryWeekdays": "{{days}} في {{time}}",
+    "schedule.catchUp": "تشغيل مرة واحدة عند الإطلاق إذا فاتت دورة تشغيل",
+    "schedule.history.title": "السجل ({{count}})",
+    "schedule.history.empty": "لا توجد عمليات تشغيل بعد.",
+    "schedule.history.openRun": "فتح في عمليات التشغيل والسجلات",
+    "schedule.history.catchUp": "تعويض",
+    "schedule.history.status.missed": "فائت",
+    "schedule.history.status.running": "قيد التشغيل",
+    "schedule.history.reason.no-window": "لم تكن هناك نافذة مفتوحة",
+    "schedule.history.reason.not-runnable": "تعذر البدء",
+    "schedule.history.reason.busy": "التشغيل السابق لا يزال جارياً",
+    "schedule.history.reason.interrupted": "كان التطبيق مغلقاً"
   },
   "snippets": {
     "placeholders.name": "اسم المقتطف...",
@@ -1084,7 +1095,8 @@
     "diagnostics.summary.success": "انتهى الأمر بنجاح.",
     "diagnostics.summary.command": "انتهى {{command}} برمز الخروج {{code}}.",
     "diagnostics.summary.title": "انتهى {{title}} برمز الخروج {{code}}.",
-    "diagnostics.summary.fallbackTitle": "هذا الأمر"
+    "diagnostics.summary.fallbackTitle": "هذا الأمر",
+    "labels.scheduled": "مجدول"
   },
   "terminal": {
     "panel.newTerminalDescription": "افتح تبويب shell جديدًا لمساحة عمل مشروعك",

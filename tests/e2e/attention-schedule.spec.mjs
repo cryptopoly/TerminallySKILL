@@ -1,4 +1,5 @@
-import { mkdir } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
 
@@ -67,6 +68,101 @@ test('a due schedule runs the workflow in a background tab and records the resul
         { timeout: 30_000 }
       )
       .toBe('completed')
+  } finally {
+    await app.close()
+  }
+})
+
+test('a missed run is recorded, and runs once on relaunch only for schedules that opted in', async ({}, testInfo) => {
+  test.setTimeout(120_000)
+  let schedules
+  {
+    const { app, page } = await launchTerminallySkill(testInfo)
+    try {
+      const seeded = await seedScheduledScript(page, testInfo, { withApproval: false })
+      schedules = await page.evaluate(
+        async ({ projectId, scriptId }) => {
+          const base = {
+            scriptId,
+            projectId,
+            recurrence: { kind: 'interval', everyMinutes: 30 },
+            enabled: true
+          }
+          const catchUp = await window.electronAPI.saveSchedule({ ...base, catchUp: true })
+          const skip = await window.electronAPI.saveSchedule({ ...base })
+          return { catchUp, skip }
+        },
+        { projectId: seeded.project.id, scriptId: seeded.script.id }
+      )
+      expect(schedules.catchUp.catchUp).toBe(true)
+      expect(schedules.skip.catchUp).toBe(false)
+    } finally {
+      await app.close()
+    }
+  }
+
+  // Pretend the app was closed for a day: both next runs are far in the past. The file is also
+  // rewritten without the new fields, as an older version would have left it.
+  const file = join(testInfo.outputPath('user-data'), 'data', 'schedules.json')
+  const stored = JSON.parse(await readFile(file, 'utf8'))
+  const missedAt = new Date(Date.now() - 24 * 3_600_000).toISOString()
+  for (const schedule of stored.schedules) {
+    schedule.nextRunAt = missedAt
+    if (schedule.id === schedules.skip.id) {
+      delete schedule.catchUp
+      delete schedule.history
+    }
+  }
+  await writeFile(file, JSON.stringify(stored))
+
+  const { app, page } = await launchTerminallySkill(testInfo)
+  try {
+    await expect
+      .poll(
+        async () => {
+          const all = await page.evaluate(() => window.electronAPI.getSchedules())
+          return all.find((entry) => entry.id === schedules.catchUp.id)?.lastStatus ?? null
+        },
+        { timeout: 45_000 }
+      )
+      .toBe('completed')
+
+    const all = await page.evaluate(() => window.electronAPI.getSchedules())
+    const caught = all.find((entry) => entry.id === schedules.catchUp.id)
+    const skipped = all.find((entry) => entry.id === schedules.skip.id)
+
+    // Exactly one catch-up run, however long the app was closed, linked to its run record.
+    expect(caught.history).toHaveLength(1)
+    expect(caught.history[0]).toMatchObject({ status: 'completed', trigger: 'catch-up' })
+    expect(caught.history[0].runId).toBeTruthy()
+    expect(Date.parse(caught.nextRunAt)).toBeGreaterThan(Date.now())
+
+    // The default is still skip: recorded as missed, nothing ran.
+    expect(skipped.catchUp).toBe(false)
+    expect(skipped.lastStatus).toBeNull()
+    expect(skipped.history).toHaveLength(1)
+    expect(skipped.history[0]).toMatchObject({ status: 'missed', at: missedAt, runId: null })
+
+    const runs = await page.evaluate((projectId) => window.electronAPI.getRunIndex(projectId), (await page.evaluate(
+      () => window.electronAPI.getAllProjects().then((data) => data.projects[0].id)
+    )))
+    const scheduledRuns = runs.filter((run) => run.scheduleId)
+    expect(scheduledRuns).toHaveLength(1)
+    expect(scheduledRuns[0]).toMatchObject({ runId: caught.history[0].runId, scheduleId: caught.id })
+
+    // The history is visible per schedule in the schedule dialog, with a jump to the run.
+    await page.evaluate(
+      ({ projectId, scriptId }) => window.electronAPI.updateProject(projectId, { enabledScriptIds: [scriptId] }),
+      { projectId: schedules.catchUp.projectId, scriptId: schedules.catchUp.scriptId }
+    )
+    await page.reload()
+    await page.waitForFunction(() => Boolean(window.electronAPI?.getAppVersion))
+    await page.locator('span[title="Scheduled"]').first().click({ force: true })
+    await page.getByRole('button', { name: /^History \(/ }).first().click()
+    const rows = page.getByTestId('schedule-history').first().locator('li')
+    await expect(rows).toHaveCount(1)
+    await page.getByRole('button', { name: 'Open in Runs & Logs' }).click()
+    await expect(page.getByText('Scheduled', { exact: true }).first()).toBeVisible({ timeout: 10_000 })
   } finally {
     await app.close()
   }

@@ -723,7 +723,18 @@
     "schedule.scheduledBadge": "Zaplanowany",
     "schedule.summaryInterval": "Interwał: {{interval}}",
     "schedule.summaryDaily": "Codziennie o {{time}}",
-    "schedule.summaryWeekdays": "{{days}} o {{time}}"
+    "schedule.summaryWeekdays": "{{days}} o {{time}}",
+    "schedule.catchUp": "Uruchom raz przy starcie, jeśli pominięto uruchomienie",
+    "schedule.history.title": "Historia ({{count}})",
+    "schedule.history.empty": "Brak uruchomień.",
+    "schedule.history.openRun": "Otwórz w Uruchomieniach i logach",
+    "schedule.history.catchUp": "nadrabianie",
+    "schedule.history.status.missed": "pominięte",
+    "schedule.history.status.running": "w toku",
+    "schedule.history.reason.no-window": "brak otwartego okna",
+    "schedule.history.reason.not-runnable": "nie udało się rozpocząć",
+    "schedule.history.reason.busy": "poprzednie uruchomienie nadal trwa",
+    "schedule.history.reason.interrupted": "aplikacja była zamknięta"
   },
   "snippets": {
     "placeholders.name": "Nazwa fragmentu...",
@@ -938,7 +949,8 @@
     "diagnostics.summary.success": "Polecenie zakończyło się pomyślnie.",
     "diagnostics.summary.command": "{{command}} zakończyło się kodem {{code}}.",
     "diagnostics.summary.title": "{{title}} zakończyło się kodem {{code}}.",
-    "diagnostics.summary.fallbackTitle": "To polecenie"
+    "diagnostics.summary.fallbackTitle": "To polecenie",
+    "labels.scheduled": "Zaplanowane"
   },
   "terminal": {
     "panel.newTerminalDescription": "Otwórz nową kartę powłoki dla obszaru roboczego projektu",
