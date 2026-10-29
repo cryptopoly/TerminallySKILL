@@ -9,6 +9,7 @@ import { useScheduleStore } from '../../store/schedule-store'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
 import { isTerminalRunStatus, useWorkflowRunnerStore } from '../../store/workflow-runner-store'
 import { ScriptSelector, type ScriptSelection } from './ScriptSelector'
+import { ScheduleDialog } from './ScheduleDialog'
 import type { Script } from '../../../../shared/script-schema'
 import type { WorkflowInputValues } from '../../../../shared/workflow-execution'
 import { buildScriptExecutionPlan, buildScriptPreparationSteps } from '../../../../shared/workflow-execution'
@@ -41,6 +42,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [confirmDelete, setConfirmDelete] = useState<Script | null>(null)
+  const [scheduleScript, setScheduleScript] = useState<Script | null>(null)
   const [dragScriptId, setDragScriptId] = useState<string | null>(null)
   const [dragOverScriptId, setDragOverScriptId] = useState<string | null>(null)
   const [scriptSelectorOpen, setScriptSelectorOpen] = useState(false)
@@ -454,6 +456,16 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                       <Play size={11} />
                     </span>
                     <span
+                      onClick={(e) => { e.stopPropagation(); setScheduleScript(script) }}
+                      className={clsx(
+                        'tv-btn-icon-sm',
+                        scheduledScriptIds.has(script.id) && 'text-accent-light'
+                      )}
+                      title={scheduledScriptIds.has(script.id) ? t('schedule.scheduledBadge') : t('schedule.open')}
+                    >
+                      <CalendarClock size={11} />
+                    </span>
+                    <span
                       onClick={(e) => handleExport(e, script)}
                       className="tv-btn-icon-sm"
                       title={t('actions.exportTvflow')}
@@ -499,11 +511,6 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                   {script.inputs.length > 0 && (
                     <span className="tv-pill normal-case tracking-normal">
                       {t('meta.input', { count: script.inputs.length })}
-                    </span>
-                  )}
-                  {scheduledScriptIds.has(script.id) && (
-                    <span className="text-accent-light" title={t('schedule.scheduledBadge')}>
-                      <CalendarClock size={11} />
                     </span>
                   )}
                   {script.description && <span className="truncate min-w-0 flex-1">{script.description}</span>}
@@ -576,6 +583,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
           onCancel={() => setConfirmDelete(null)}
         />
       )}
+      {scheduleScript && <ScheduleDialog script={scheduleScript} onClose={() => setScheduleScript(null)} />}
     </div>
   )
 }
