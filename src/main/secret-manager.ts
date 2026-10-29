@@ -19,11 +19,13 @@ function getSecretsFile(): string {
   return join(getDataDir(), 'secrets.json')
 }
 
-export function encodeSecretValue(secret: string): SecretEnvelope {
-  if (safeStorage.isEncryptionAvailable()) {
+// Electron 45 deprecates the synchronous safeStorage calls (removed in 46). The async ones use
+// the same OS key store and still decrypt values written by the synchronous API.
+export async function encodeSecretValue(secret: string): Promise<SecretEnvelope> {
+  if (await safeStorage.isAsyncEncryptionAvailable()) {
     return {
       mode: 'safeStorage',
-      value: safeStorage.encryptString(secret).toString('base64')
+      value: (await safeStorage.encryptStringAsync(secret)).toString('base64')
     }
   }
 
@@ -33,16 +35,16 @@ export function encodeSecretValue(secret: string): SecretEnvelope {
   }
 }
 
-export function decodeSecretValue(envelope: SecretEnvelope): string {
+export async function decodeSecretValue(envelope: SecretEnvelope): Promise<string> {
   if (envelope.mode === 'plain-base64') {
     return Buffer.from(envelope.value, 'base64').toString('utf8')
   }
 
-  if (!safeStorage.isEncryptionAvailable()) {
+  if (!(await safeStorage.isAsyncEncryptionAvailable())) {
     return ''
   }
 
-  return safeStorage.decryptString(Buffer.from(envelope.value, 'base64'))
+  return (await safeStorage.decryptStringAsync(Buffer.from(envelope.value, 'base64'))).result
 }
 
 async function ensureDataDir(): Promise<void> {
@@ -68,7 +70,7 @@ export async function getStoredProviderApiKeys(): Promise<Record<string, string>
 
   for (const [providerId, envelope] of Object.entries(store.aiProviderKeys)) {
     try {
-      const apiKey = decodeSecretValue(envelope)
+      const apiKey = await decodeSecretValue(envelope)
       if (!apiKey) continue
       apiKeys[providerId] = apiKey
     } catch {
@@ -79,9 +81,9 @@ export async function getStoredProviderApiKeys(): Promise<Record<string, string>
   return apiKeys
 }
 
-function tryDecode(envelope: SecretEnvelope): string | null {
+async function tryDecode(envelope: SecretEnvelope): Promise<string | null> {
   try {
-    return decodeSecretValue(envelope)
+    return await decodeSecretValue(envelope)
   } catch {
     return null
   }
@@ -97,14 +99,14 @@ export async function setStoredProviderApiKeys(apiKeys: Record<string, string>):
     // Keep the stored envelope when the value is unchanged so a settings save does not
     // re-encrypt (and rewrite) every key.
     store.aiProviderKeys[providerId] =
-      current && tryDecode(current) === apiKey ? current : encodeSecretValue(apiKey)
+      current && (await tryDecode(current)) === apiKey ? current : await encodeSecretValue(apiKey)
   }
 
   // A key we cannot decrypt right now (keyring locked or unavailable) never reaches the
   // caller, so its absence from `apiKeys` does not mean the user removed it. Keep it.
   for (const [providerId, envelope] of Object.entries(existing)) {
     if (providerId in apiKeys || providerId in store.aiProviderKeys) continue
-    if (!tryDecode(envelope)) store.aiProviderKeys[providerId] = envelope
+    if (!(await tryDecode(envelope))) store.aiProviderKeys[providerId] = envelope
   }
 
   if (JSON.stringify(store) === JSON.stringify({ aiProviderKeys: existing })) return

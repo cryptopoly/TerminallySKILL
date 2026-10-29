@@ -1,6 +1,7 @@
 import { ipcMain, BrowserWindow, dialog } from 'electron'
 import { IPC_CHANNELS } from '../../shared/ipc-channels'
 import { translateNativeSync } from '../native-i18n'
+import { dialogDefaultPath, rememberDialogSelection } from '../dialog-path'
 import { getTVFlowName, isTVFlowFile, type TVFlowFile } from '../../shared/tvflow-schema'
 import {
   getAllScripts,
@@ -107,10 +108,11 @@ export function registerScriptIpcHandlers(): void {
     if (!flow) return false
     const win = BrowserWindow.fromWebContents(event.sender)!
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
-      defaultPath: `${getTVFlowName(flow).replace(/[^a-zA-Z0-9_-]/g, '_')}.tvflow`,
+      defaultPath: dialogDefaultPath(`${getTVFlowName(flow).replace(/[^a-zA-Z0-9_-]/g, '_')}.tvflow`),
       filters: [{ name: 'TerminallySKILL Flow', extensions: ['tvflow'] }]
     })
     if (canceled || !filePath) return false
+    rememberDialogSelection(filePath)
     const { writeFile } = await import('fs/promises')
     await writeFile(filePath, JSON.stringify(flow, null, 2), 'utf-8')
     return true
@@ -121,10 +123,12 @@ export function registerScriptIpcHandlers(): void {
     async (event, projectId: string | null) => {
       const win = BrowserWindow.fromWebContents(event.sender)!
       const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+        defaultPath: dialogDefaultPath(),
         filters: [{ name: 'TerminallySKILL Flow', extensions: ['tvflow'] }],
         properties: ['openFile']
       })
       if (canceled || filePaths.length === 0) return null
+      rememberDialogSelection(filePaths[0])
       const { readFile } = await import('fs/promises')
       const raw = await readFile(filePaths[0], 'utf-8')
       const data = JSON.parse(raw) as unknown

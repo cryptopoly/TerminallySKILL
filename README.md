@@ -256,7 +256,7 @@ Click **More info → Run anyway**.
 
 | Layer | Technology |
 |-------|------------|
-| Desktop shell | Electron 42 |
+| Desktop shell | Electron 45 |
 | UI framework | React 18 |
 | Language | TypeScript (end-to-end) |
 | Styling | Tailwind CSS 3 + CSS custom properties |
@@ -295,7 +295,7 @@ scripts/          # Build and packaging helpers
 
 | Platform | Minimum Version |
 |----------|----------------|
-| **macOS** | 12 Monterey or later (M1/M2/M3 or Intel) |
+| **macOS** | 13 Ventura or later (M1/M2/M3 or Intel) |
 | **Linux** | glibc 2.28+ (Ubuntu 20.04+ / Debian 10+) |
 | **Windows** | Windows 10 (1903) or later, x64 *(beta — some features may be limited)* |
 
