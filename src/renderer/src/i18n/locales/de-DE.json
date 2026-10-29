@@ -582,7 +582,18 @@
     "schedule.scheduledBadge": "Geplant",
     "schedule.summaryInterval": "Im Abstand von {{interval}}",
     "schedule.summaryDaily": "Täglich um {{time}}",
-    "schedule.summaryWeekdays": "{{days}} um {{time}}"
+    "schedule.summaryWeekdays": "{{days}} um {{time}}",
+    "schedule.catchUp": "Beim Start einmal ausführen, wenn ein Lauf verpasst wurde",
+    "schedule.history.title": "Verlauf ({{count}})",
+    "schedule.history.empty": "Noch keine Läufe.",
+    "schedule.history.openRun": "In Läufe & Protokolle öffnen",
+    "schedule.history.catchUp": "Nachholen",
+    "schedule.history.status.missed": "verpasst",
+    "schedule.history.status.running": "läuft",
+    "schedule.history.reason.no-window": "kein Fenster offen",
+    "schedule.history.reason.not-runnable": "konnte nicht starten",
+    "schedule.history.reason.busy": "vorheriger Lauf läuft noch",
+    "schedule.history.reason.interrupted": "App war geschlossen"
   },
   "snippets": {
     "placeholders.name": "Snippet-Name...",
@@ -787,7 +798,8 @@
     "diagnostics.summary.success": "Der Befehl wurde erfolgreich beendet.",
     "diagnostics.summary.command": "{{command}} wurde mit Code {{code}} beendet.",
     "diagnostics.summary.title": "{{title}} wurde mit Code {{code}} beendet.",
-    "diagnostics.summary.fallbackTitle": "Dieser Befehl"
+    "diagnostics.summary.fallbackTitle": "Dieser Befehl",
+    "labels.scheduled": "Geplant"
   },
   "terminal": {
     "panel.newTerminalDescription": "Einen neuen Shell-Tab für deinen Projekt-Workspace öffnen",

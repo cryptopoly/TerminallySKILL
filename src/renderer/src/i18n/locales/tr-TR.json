@@ -759,7 +759,18 @@
     "schedule.scheduledBadge": "Zamanlanmış",
     "schedule.summaryInterval": "{{interval}} aralıkla",
     "schedule.summaryDaily": "Her gün {{time}}",
-    "schedule.summaryWeekdays": "{{days}} {{time}}"
+    "schedule.summaryWeekdays": "{{days}} {{time}}",
+    "schedule.catchUp": "Bir çalıştırma kaçırıldıysa açılışta bir kez çalıştır",
+    "schedule.history.title": "Geçmiş ({{count}})",
+    "schedule.history.empty": "Henüz çalıştırma yok.",
+    "schedule.history.openRun": "Çalıştırmalar ve Günlükler'de aç",
+    "schedule.history.catchUp": "telafi",
+    "schedule.history.status.missed": "kaçırıldı",
+    "schedule.history.status.running": "çalışıyor",
+    "schedule.history.reason.no-window": "açık pencere yoktu",
+    "schedule.history.reason.not-runnable": "başlatılamadı",
+    "schedule.history.reason.busy": "önceki çalıştırma hâlâ sürüyor",
+    "schedule.history.reason.interrupted": "uygulama kapalıydı"
   },
   "snippets": {
     "placeholders.name": "Parça adı...",
@@ -965,7 +976,8 @@
     "diagnostics.summary.success": "Komut başarıyla tamamlandı.",
     "diagnostics.summary.command": "{{command}}, {{code}} koduyla çıktı.",
     "diagnostics.summary.title": "{{title}}, {{code}} koduyla çıktı.",
-    "diagnostics.summary.fallbackTitle": "Bu komut"
+    "diagnostics.summary.fallbackTitle": "Bu komut",
+    "labels.scheduled": "Zamanlanmış"
   },
   "terminal": {
     "panel.newTerminalDescription": "Proje çalışma alanın için yeni bir shell sekmesi aç",

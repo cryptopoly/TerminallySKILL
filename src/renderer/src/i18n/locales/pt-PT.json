@@ -768,7 +768,18 @@
     "schedule.scheduledBadge": "Agendado",
     "schedule.summaryInterval": "A cada {{interval}}",
     "schedule.summaryDaily": "Diariamente às {{time}}",
-    "schedule.summaryWeekdays": "{{days}} às {{time}}"
+    "schedule.summaryWeekdays": "{{days}} às {{time}}",
+    "schedule.catchUp": "Executar uma vez ao iniciar se uma execução foi perdida",
+    "schedule.history.title": "Histórico ({{count}})",
+    "schedule.history.empty": "Ainda sem execuções.",
+    "schedule.history.openRun": "Abrir em Execuções e registos",
+    "schedule.history.catchUp": "recuperação",
+    "schedule.history.status.missed": "perdida",
+    "schedule.history.status.running": "em curso",
+    "schedule.history.reason.no-window": "nenhuma janela estava aberta",
+    "schedule.history.reason.not-runnable": "não foi possível iniciar",
+    "schedule.history.reason.busy": "a execução anterior ainda está em curso",
+    "schedule.history.reason.interrupted": "a aplicação estava fechada"
   },
   "snippets": {
     "placeholders.name": "Nome do snippet...",
@@ -980,7 +991,8 @@
     "list.logs": "Registos",
     "list.openLogsFolder": "Abrir pasta de registos",
     "actions.openLog": "Abrir registo",
-    "actions.deleteLog": "Eliminar registo"
+    "actions.deleteLog": "Eliminar registo",
+    "labels.scheduled": "Agendada"
   },
   "terminal": {
     "panel.newTerminalDescription": "Abrir um novo separador de shell para o workspace do projeto",

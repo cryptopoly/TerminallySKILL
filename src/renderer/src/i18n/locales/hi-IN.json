@@ -758,7 +758,18 @@
     "schedule.scheduledBadge": "शेड्यूल किया गया",
     "schedule.summaryInterval": "हर {{interval}}",
     "schedule.summaryDaily": "रोज़ {{time}} बजे",
-    "schedule.summaryWeekdays": "{{days}} {{time}} बजे"
+    "schedule.summaryWeekdays": "{{days}} {{time}} बजे",
+    "schedule.catchUp": "यदि कोई रन छूट गया हो तो लॉन्च पर एक बार चलाएँ",
+    "schedule.history.title": "इतिहास ({{count}})",
+    "schedule.history.empty": "अभी तक कोई रन नहीं।",
+    "schedule.history.openRun": "रन और लॉग में खोलें",
+    "schedule.history.catchUp": "कैच-अप",
+    "schedule.history.status.missed": "छूटा",
+    "schedule.history.status.running": "चल रहा है",
+    "schedule.history.reason.no-window": "कोई विंडो खुली नहीं थी",
+    "schedule.history.reason.not-runnable": "शुरू नहीं हो सका",
+    "schedule.history.reason.busy": "पिछला रन अभी भी चल रहा है",
+    "schedule.history.reason.interrupted": "ऐप बंद था"
   },
   "snippets": {
     "placeholders.name": "स्निपेट का नाम...",
@@ -964,7 +975,8 @@
     "diagnostics.summary.success": "कमांड सफलतापूर्वक पूरी हुई।",
     "diagnostics.summary.command": "{{command}} कोड {{code}} के साथ समाप्त हुई।",
     "diagnostics.summary.title": "{{title}} कोड {{code}} के साथ समाप्त हुई।",
-    "diagnostics.summary.fallbackTitle": "यह कमांड"
+    "diagnostics.summary.fallbackTitle": "यह कमांड",
+    "labels.scheduled": "निर्धारित"
   },
   "terminal": {
     "panel.newTerminalDescription": "अपने प्रोजेक्ट वर्कस्पेस के लिए नया shell टैब खोलें",

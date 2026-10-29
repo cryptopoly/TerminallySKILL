@@ -701,7 +701,18 @@
     "schedule.scheduledBadge": "Planifié",
     "schedule.summaryInterval": "Intervalle : {{interval}}",
     "schedule.summaryDaily": "Tous les jours à {{time}}",
-    "schedule.summaryWeekdays": "{{days}} à {{time}}"
+    "schedule.summaryWeekdays": "{{days}} à {{time}}",
+    "schedule.catchUp": "Exécuter une fois au lancement si une exécution a été manquée",
+    "schedule.history.title": "Historique ({{count}})",
+    "schedule.history.empty": "Aucune exécution pour l'instant.",
+    "schedule.history.openRun": "Ouvrir dans Exécutions et journaux",
+    "schedule.history.catchUp": "rattrapage",
+    "schedule.history.status.missed": "manquée",
+    "schedule.history.status.running": "en cours",
+    "schedule.history.reason.no-window": "aucune fenêtre ouverte",
+    "schedule.history.reason.not-runnable": "démarrage impossible",
+    "schedule.history.reason.busy": "l'exécution précédente est toujours en cours",
+    "schedule.history.reason.interrupted": "l'application était fermée"
   },
   "snippets": {
     "placeholders.name": "Nom de l’extrait...",
@@ -912,7 +923,8 @@
     "diagnostics.summary.success": "La commande s’est terminée avec succès.",
     "diagnostics.summary.command": "{{command}} s’est terminée avec le code {{code}}.",
     "diagnostics.summary.title": "{{title}} s’est terminé avec le code {{code}}.",
-    "diagnostics.summary.fallbackTitle": "Cette commande"
+    "diagnostics.summary.fallbackTitle": "Cette commande",
+    "labels.scheduled": "Planifiée"
   },
   "terminal": {
     "panel.newTerminalDescription": "Ouvrir un nouvel onglet shell pour l’espace de travail de votre projet",

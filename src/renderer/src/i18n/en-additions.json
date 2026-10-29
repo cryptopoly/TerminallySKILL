@@ -75,7 +75,8 @@
     "diagnostics.summary.success": "The command exited successfully.",
     "diagnostics.summary.command": "{{command}} exited with code {{code}}.",
     "diagnostics.summary.title": "{{title}} exited with code {{code}}.",
-    "diagnostics.summary.fallbackTitle": "This command"
+    "diagnostics.summary.fallbackTitle": "This command",
+    "labels.scheduled": "Scheduled"
   },
   "commandBuilder": {
     "explainSegments.command": "command",
@@ -232,6 +233,17 @@
     "schedule.scheduledBadge": "Scheduled",
     "schedule.summaryInterval": "Every {{interval}}",
     "schedule.summaryDaily": "Daily at {{time}}",
-    "schedule.summaryWeekdays": "{{days}} at {{time}}"
+    "schedule.summaryWeekdays": "{{days}} at {{time}}",
+    "schedule.catchUp": "Run once on launch if a run was missed",
+    "schedule.history.title": "History ({{count}})",
+    "schedule.history.empty": "No runs yet.",
+    "schedule.history.openRun": "Open in Runs & Logs",
+    "schedule.history.catchUp": "catch-up",
+    "schedule.history.status.missed": "missed",
+    "schedule.history.status.running": "running",
+    "schedule.history.reason.no-window": "no window was open",
+    "schedule.history.reason.not-runnable": "could not start",
+    "schedule.history.reason.busy": "previous run still going",
+    "schedule.history.reason.interrupted": "app was closed"
   }
 }

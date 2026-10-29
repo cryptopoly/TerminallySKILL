@@ -759,7 +759,18 @@
     "schedule.scheduledBadge": "예약됨",
     "schedule.summaryInterval": "{{interval}}마다",
     "schedule.summaryDaily": "매일 {{time}}",
-    "schedule.summaryWeekdays": "{{days}} {{time}}"
+    "schedule.summaryWeekdays": "{{days}} {{time}}",
+    "schedule.catchUp": "실행을 놓친 경우 시작할 때 한 번 실행",
+    "schedule.history.title": "기록 ({{count}})",
+    "schedule.history.empty": "아직 실행 기록이 없습니다.",
+    "schedule.history.openRun": "실행 및 로그에서 열기",
+    "schedule.history.catchUp": "따라잡기",
+    "schedule.history.status.missed": "놓침",
+    "schedule.history.status.running": "실행 중",
+    "schedule.history.reason.no-window": "열려 있는 창이 없었습니다",
+    "schedule.history.reason.not-runnable": "시작할 수 없었습니다",
+    "schedule.history.reason.busy": "이전 실행이 아직 진행 중입니다",
+    "schedule.history.reason.interrupted": "앱이 종료되어 있었습니다"
   },
   "snippets": {
     "placeholders.name": "스니펫 이름...",
@@ -965,7 +976,8 @@
     "diagnostics.summary.success": "명령이 성공적으로 종료되었습니다.",
     "diagnostics.summary.command": "{{command}}이(가) 코드 {{code}}(으)로 종료되었습니다.",
     "diagnostics.summary.title": "{{title}}이(가) 코드 {{code}}(으)로 종료되었습니다.",
-    "diagnostics.summary.fallbackTitle": "이 명령"
+    "diagnostics.summary.fallbackTitle": "이 명령",
+    "labels.scheduled": "예약됨"
   },
   "terminal": {
     "panel.newTerminalDescription": "프로젝트 작업공간에 새 셸 탭 열기",

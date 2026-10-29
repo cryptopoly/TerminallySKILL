@@ -87,7 +87,18 @@
     "schedule.scheduledBadge": "已计划",
     "schedule.summaryInterval": "每 {{interval}}",
     "schedule.summaryDaily": "每天 {{time}}",
-    "schedule.summaryWeekdays": "{{days}} {{time}}"
+    "schedule.summaryWeekdays": "{{days}} {{time}}",
+    "schedule.catchUp": "如果错过了运行，则在启动时运行一次",
+    "schedule.history.title": "历史记录 ({{count}})",
+    "schedule.history.empty": "尚无运行记录。",
+    "schedule.history.openRun": "在运行与日志中打开",
+    "schedule.history.catchUp": "补跑",
+    "schedule.history.status.missed": "错过",
+    "schedule.history.status.running": "运行中",
+    "schedule.history.reason.no-window": "没有打开的窗口",
+    "schedule.history.reason.not-runnable": "无法启动",
+    "schedule.history.reason.busy": "上一次运行仍在进行",
+    "schedule.history.reason.interrupted": "应用已关闭"
   },
   "logs": {
     "labels.shell": "Shell",
@@ -124,7 +135,8 @@
     "diagnostics.summary.success": "命令已成功退出。",
     "diagnostics.summary.command": "{{command}} 已退出，退出代码为 {{code}}。",
     "diagnostics.summary.title": "{{title}} 已退出，退出代码为 {{code}}。",
-    "diagnostics.summary.fallbackTitle": "此命令"
+    "diagnostics.summary.fallbackTitle": "此命令",
+    "labels.scheduled": "已计划"
   },
   "terminal": {
     "aiReview.suggestedCommands": "建议命令",
