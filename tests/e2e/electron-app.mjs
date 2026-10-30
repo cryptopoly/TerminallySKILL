@@ -62,7 +62,8 @@ export function resolvePackagedExecutablePath() {
   }
 
   if (process.platform === 'linux') {
-    return resolve(rootDir, 'dist', 'linux-unpacked', 'terminallyskill')
+    const linuxDir = process.arch === 'arm64' ? 'linux-arm64-unpacked' : 'linux-unpacked'
+    return resolve(rootDir, 'dist', linuxDir, 'terminallyskill')
   }
 
   if (process.platform === 'win32') {
@@ -79,7 +80,8 @@ export async function launchTerminallySkill(testInfo, env = {}) {
 
   return launchElectronExecutable({
     executablePath: electronPath,
-    args: [mainPath],
+    // Fake key store: unpackaged Electron would otherwise ask the real macOS Keychain for "Electron Key".
+    args: ['--use-mock-keychain', mainPath],
     testInfo,
     env
   })

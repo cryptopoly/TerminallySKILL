@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { extractShellPath, getShellPathProbeArgs } from './command-detector'
 
 describe('command-detector', () => {
@@ -19,13 +19,29 @@ describe('command-detector', () => {
   })
 
   describe('getShellPathProbeArgs', () => {
-    it('uses an interactive login shell for zsh and bash', () => {
+    const originalPlatform = process.platform
+    const setPlatform = (platform: NodeJS.Platform): void => {
+      Object.defineProperty(process, 'platform', { value: platform, configurable: true })
+    }
+
+    afterEach(() => setPlatform(originalPlatform))
+
+    it('uses an interactive login shell for zsh and bash outside Linux', () => {
+      setPlatform('darwin')
       expect(getShellPathProbeArgs('/bin/zsh').slice(0, 3)).toEqual(['-i', '-l', '-c'])
       expect(getShellPathProbeArgs('/bin/bash').slice(0, 3)).toEqual(['-i', '-l', '-c'])
     })
 
-    it('uses an interactive shell for fish', () => {
+    it('uses an interactive shell for fish outside Linux', () => {
+      setPlatform('darwin')
       expect(getShellPathProbeArgs('/opt/homebrew/bin/fish').slice(0, 2)).toEqual(['-i', '-c'])
+    })
+
+    it('uses a login shell without -i on Linux', () => {
+      setPlatform('linux')
+      expect(getShellPathProbeArgs('/bin/zsh').slice(0, 2)).toEqual(['-l', '-c'])
+      expect(getShellPathProbeArgs('/bin/bash').slice(0, 2)).toEqual(['-l', '-c'])
+      expect(getShellPathProbeArgs('/usr/bin/fish').slice(0, 2)).toEqual(['-l', '-c'])
     })
   })
 })

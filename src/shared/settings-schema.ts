@@ -1,3 +1,4 @@
+import { DEFAULT_ATTENTION_MIN_SECONDS } from './attention'
 import type { AIResponseLocalePreference, LocalePreference } from './locale-schema'
 import {
   DEFAULT_AI_RESPONSE_LOCALE,
@@ -5,7 +6,10 @@ import {
   DEFAULT_UI_LOCALE
 } from './locale-schema'
 
-export type Theme = 'void' | 'ember' | 'dusk' | 'forest' | 'chalk' | 'mist' | 'sand' | 'stone'
+export type Theme =
+  | 'void' | 'ember' | 'dusk' | 'forest'
+  | 'slate' | 'plum' | 'dove' | 'clay'
+  | 'chalk' | 'mist' | 'sand' | 'stone'
 export type TerminalInputMode = 'classic' | 'editor'
 export type AIProviderConnectionType = 'api-key' | 'local'
 
@@ -74,6 +78,12 @@ export interface AppSettings {
   formatLocale: LocalePreference
   /** Language requested for AI prose responses. Commands and code stay literal. */
   aiResponseLocale: AIResponseLocalePreference
+  /** Tab badge and OS notification when a long command or workflow needs the user */
+  attentionAlerts: boolean
+  /** Commands shorter than this many seconds never raise an alert */
+  attentionMinSeconds: number
+  /** Replace well-known secret shapes before text is saved to logs/run history or sent to AI */
+  maskSecrets: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -99,6 +109,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   uiLocale: DEFAULT_UI_LOCALE,
   formatLocale: DEFAULT_FORMAT_LOCALE,
   aiResponseLocale: DEFAULT_AI_RESPONSE_LOCALE,
+  attentionAlerts: true,
+  attentionMinSeconds: DEFAULT_ATTENTION_MIN_SECONDS,
+  maskSecrets: true,
   aiProviders: [
     {
       id: 'openai',

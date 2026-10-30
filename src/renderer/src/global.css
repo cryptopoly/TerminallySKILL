@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 /* ── Void (default) — Dark Carbon + Electric Teal ── */
-:root {
+/* [data-theme="void"] lets the Settings previews show Void while another theme is active */
+:root,
+[data-theme="void"] {
   --surface:        #0e0f11;
   --surface-light:  #16181d;
   --surface-lighter:#1e2028;
@@ -161,6 +163,86 @@
   --gray-800: #e2e8f0;
   --logo-start: #14b8a6;
   --logo-end:   #0f766e;
+}
+
+/* ── Slate — Mid Blue-Gray + Sky ── */
+[data-theme="slate"] {
+  --surface:        #364152;
+  --surface-light:  #404c5f;
+  --surface-lighter:#4a576c;
+  --surface-border: #62708a;
+  --accent:         #0284c7;
+  --accent-light:   #38bdf8;
+  --accent-dark:    #0369a1;
+  --gray-200: #f1f5f9;
+  --gray-300: #e2e8f0;
+  --gray-400: #c0cbdb;
+  --gray-500: #a2b0c4;
+  --gray-600: #8392a9;
+  --gray-700: #62708a;
+  --gray-800: #4a576c;
+  --logo-start: #38bdf8;
+  --logo-end:   #0284c7;
+}
+
+/* ── Plum — Mid Mauve + Orchid ── */
+[data-theme="plum"] {
+  --surface:        #44354d;
+  --surface-light:  #4f405a;
+  --surface-lighter:#5b4b68;
+  --surface-border: #7a6788;
+  --accent:         #c026d3;
+  --accent-light:   #e879f9;
+  --accent-dark:    #a21caf;
+  --gray-200: #f5f0f8;
+  --gray-300: #e6dcec;
+  --gray-400: #c9bad3;
+  --gray-500: #ae9dbb;
+  --gray-600: #8f7ca0;
+  --gray-700: #7a6788;
+  --gray-800: #5b4b68;
+  --logo-start: #e879f9;
+  --logo-end:   #c026d3;
+}
+
+/* ── Dove — Soft Gray-Blue + Cobalt ── */
+[data-theme="dove"] {
+  --surface:        #bcc5d1;
+  --surface-light:  #b1bbc9;
+  --surface-lighter:#a5b0c0;
+  --surface-border: #8794a8;
+  --accent:         #1d4ed8;
+  --accent-light:   #3b82f6;
+  --accent-dark:    #1e40af;
+  --gray-200: #0b1220;
+  --gray-300: #172033;
+  --gray-400: #2a3547;
+  --gray-500: #414e63;
+  --gray-600: #5d6b81;
+  --gray-700: #8794a8;
+  --gray-800: #a5b0c0;
+  --logo-start: #3b82f6;
+  --logo-end:   #1d4ed8;
+}
+
+/* ── Clay — Warm Tan + Emerald ── */
+[data-theme="clay"] {
+  --surface:        #d2c0ae;
+  --surface-light:  #c8b5a2;
+  --surface-lighter:#bda995;
+  --surface-border: #a38f7a;
+  --accent:         #047857;
+  --accent-light:   #059669;
+  --accent-dark:    #065f46;
+  --gray-200: #1f160d;
+  --gray-300: #2f2418;
+  --gray-400: #4a3c2e;
+  --gray-500: #5e4e3e;
+  --gray-600: #7d6c5a;
+  --gray-700: #a38f7a;
+  --gray-800: #bda995;
+  --logo-start: #059669;
+  --logo-end:   #047857;
 }
 
 @layer base {

@@ -1,7 +1,10 @@
 FROM alpine:3.20
 
+# A random password unlocks the account: sshd refuses locked accounts even for key logins.
+# Password logins stay off (PasswordAuthentication=no below).
 RUN apk add --no-cache openssh-server \
   && adduser -D -h /home/e2e -s /bin/sh e2e \
+  && echo "e2e:$(head -c 24 /dev/urandom | base64)" | chpasswd \
   && mkdir -p /home/e2e/.ssh /srv/terminallyskill-e2e /run/sshd \
   && chown -R e2e:e2e /home/e2e /srv/terminallyskill-e2e
 

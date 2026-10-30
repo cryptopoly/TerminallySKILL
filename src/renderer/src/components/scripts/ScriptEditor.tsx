@@ -17,6 +17,7 @@ import {
   X,
   Share2,
   ChevronsRight,
+  CalendarClock,
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useScriptStore } from '../../store/script-store'
@@ -37,6 +38,8 @@ import { renameWorkflowStepPlaceholders } from '../../../../shared/workflow-vali
 import { WorkflowInputEditor } from './WorkflowInputEditor'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { WorkflowRunDialog } from './WorkflowRunDialog'
+import { ScheduleDialog } from './ScheduleDialog'
+import { useScheduleStore } from '../../store/schedule-store'
 import { createProjectTerminalSession, ensureProjectExecutionSession } from '../../lib/workspace-session'
 import { formatDate } from '../../i18n/format'
 
@@ -50,6 +53,10 @@ export function ScriptEditor(): JSX.Element {
   const activeProject = useProjectStore((s) => s.activeProject)
   const { updateProjectInStore } = useProjectStore()
   const settings = useSettingsStore((s) => s.settings)
+  const scheduleCount = useScheduleStore((s) =>
+    activeScript ? s.schedules.filter((entry) => entry.scriptId === activeScript.id && entry.enabled).length : 0
+  )
+  const [scheduleOpen, setScheduleOpen] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [editingDesc, setEditingDesc] = useState(false)
   const [name, setName] = useState('')
@@ -457,6 +464,17 @@ export function ScriptEditor(): JSX.Element {
             >
               <Share2 size={14} />
             </button>
+            <button
+              onClick={() => setScheduleOpen(true)}
+              className={clsx(
+                'p-1.5 rounded-lg hover:bg-surface-light transition-colors',
+                scheduleCount > 0 ? 'text-accent-light' : 'text-gray-500 hover:text-accent-light'
+              )}
+              title={t('schedule.open')}
+              aria-label={t('schedule.open')}
+            >
+              <CalendarClock size={14} />
+            </button>
             <span className="text-xs text-gray-500">
               {t('meta.step', { count: enabledCount })}
             </span>
@@ -662,6 +680,7 @@ export function ScriptEditor(): JSX.Element {
           </div>
         </div>
       )}
+      {scheduleOpen && <ScheduleDialog script={activeScript} onClose={() => setScheduleOpen(false)} />}
       {pendingRun && (
         <WorkflowRunDialog
           script={activeScript}

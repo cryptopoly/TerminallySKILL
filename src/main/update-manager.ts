@@ -13,6 +13,7 @@ import type {
 } from '../shared/update-schema'
 import { getSettings } from './settings-manager'
 import { translateNativeSync } from './native-i18n'
+import { recordOutboundRequest } from './network-log'
 import {
   compareVersions,
   pickBestInstallerAsset,
@@ -513,6 +514,7 @@ async function checkForAppUpdateViaCustomFeed(
           accept: 'application/json, text/yaml, application/x-yaml, text/plain;q=0.9, */*;q=0.8'
         }
       })
+      recordOutboundRequest(manifestUrl, 'update', response.status)
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
@@ -602,6 +604,7 @@ async function downloadAndOpenCustomAppUpdate(
 
     for (const candidateUrl of buildDownloadUrlCandidates(update.downloadUrl)) {
       const candidateResponse = await fetch(candidateUrl)
+      recordOutboundRequest(candidateUrl, 'update', candidateResponse.status)
       if (candidateResponse.ok) {
         response = candidateResponse
         break

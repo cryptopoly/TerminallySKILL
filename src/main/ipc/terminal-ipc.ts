@@ -8,6 +8,7 @@ import {
   getSessionInfo
 } from '../pty-manager'
 import { approveExternalPath } from '../path-approvals'
+import { dialogDefaultPath, rememberDialogSelection } from '../dialog-path'
 import {
   optionalString,
   optionalStringRecord,
@@ -62,12 +63,14 @@ export function registerTerminalIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_FILE, async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)!
     const result = await dialog.showOpenDialog(win, {
+      defaultPath: dialogDefaultPath(),
       properties: ['openFile']
     })
     if (result.canceled) return null
 
     const selectedPath = result.filePaths[0] ?? null
     if (selectedPath) {
+      rememberDialogSelection(selectedPath)
       approveExternalPath(selectedPath, 'file')
     }
     return selectedPath
@@ -76,19 +79,22 @@ export function registerTerminalIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY, async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)!
     const result = await dialog.showOpenDialog(win, {
+      defaultPath: dialogDefaultPath(),
       properties: ['openDirectory']
     })
     if (result.canceled) return null
 
     const selectedPath = result.filePaths[0] ?? null
     if (selectedPath) {
+      rememberDialogSelection(selectedPath)
       approveExternalPath(selectedPath, 'directory')
     }
     return selectedPath
   })
 
   ipcMain.handle(IPC_CHANNELS.CLIPBOARD_WRITE, (_event, text: string) => {
-    clipboard.writeText(requireString(text, 'text'))
+    // Electron 44 made the main-process clipboard asynchronous.
+    return clipboard.writeText(requireString(text, 'text'))
   })
 
   ipcMain.handle(IPC_CHANNELS.SHELL_GET_DEFAULT, () => {

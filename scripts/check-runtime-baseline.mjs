@@ -7,14 +7,14 @@ const packageJson = JSON.parse(await readFile(join(rootDir, 'package.json'), 'ut
 
 const checks = [
   {
-    label: 'Node engine is aligned with Electron 42 installer requirements',
+    label: 'Node engine is aligned with Electron 45 installer requirements',
     value: packageJson.engines?.node,
     expected: '>=22.12.0'
   },
   {
-    label: 'Electron stays on the supported v42 runtime baseline',
+    label: 'Electron stays on the supported v45 runtime baseline',
     value: packageJson.devDependencies?.electron,
-    expected: '^42.4.0'
+    expected: '^45.1.0'
   },
   {
     label: 'ws stays on the patched runtime baseline',
@@ -39,12 +39,12 @@ const checks = [
   {
     label: 'Vite stays on the audit-clean build baseline',
     value: packageJson.devDependencies?.vite,
-    expected: '^7.3.5'
+    expected: '^7.3.7'
   },
   {
     label: 'Vitest stays on the audit-clean test baseline',
     value: packageJson.devDependencies?.vitest,
-    expected: '^4.1.8'
+    expected: '^4.1.12'
   },
   {
     label: 'React Vite plugin stays compatible with Vite 7',

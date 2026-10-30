@@ -1,9 +1,12 @@
 import {
   registerAppIpcHandlers,
+  registerAttentionIpcHandlers,
   registerCommandIpcHandlers,
   registerFileIpcHandlers,
   registerLogIpcHandlers,
+  registerPrivacyIpcHandlers,
   registerProjectIpcHandlers,
+  registerScheduleIpcHandlers,
   registerScriptIpcHandlers,
   registerSettingsIpcHandlers,
   registerSnippetIpcHandlers,
@@ -22,4 +25,7 @@ export function registerIpcHandlers(): void {
   registerLogIpcHandlers()
   registerSettingsIpcHandlers()
   registerVncIpcHandlers()
+  registerAttentionIpcHandlers()
+  registerScheduleIpcHandlers()
+  registerPrivacyIpcHandlers()
 }

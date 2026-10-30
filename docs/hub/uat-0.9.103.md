@@ -1,0 +1,87 @@
+# UAT checklist: 0.9.103
+
+Run on a packaged build (`npm run test:package:mac:arm64` output, or the release candidate), not `npm run dev`. Tick each line. Note failures on the [Decisions](decisions.md) page.
+
+## 1. Attention alerts (new)
+
+- [ ] Settings → General: "Attention alerts" is on; threshold shows 15 seconds.
+- [ ] Run `sleep 20` in tab A (typed in the terminal), then open or switch to tab B before it ends. When it ends, tab A shows a green dot. The dot clears when you open tab A.
+- [ ] Run `sleep 20; false` in tab A, switch away. Red dot.
+- [ ] Split the terminal. Run `sleep 20` in the left pane, click into the right pane. Left pane gets a dot when it ends.
+- [ ] Project picker: a project turns green (terminal count badge) while any command runs in it, including one you typed.
+- [ ] Run `sleep 3` in tab A, switch away. No dot (under the threshold).
+- [ ] Run `sleep 20` and stay on that tab. No dot, no notification.
+- [ ] Run `sleep 20`, then switch to another app. macOS shows a notification (accept the permission prompt on first use). Clicking it brings TerminallySKILL forward on that tab.
+- [ ] Dock icon shows a count while alerts are waiting; it clears when you look at them.
+- [ ] Collapse the terminal bar while a command finishes. The dot shows on the collapsed bar.
+- [ ] Turn the setting off. No dots or notifications.
+- [ ] A workflow waiting for approval shows a pulsing amber dot.
+
+## 2. Scheduled workflows (new)
+
+- [ ] Scripts list: each row has a calendar-clock icon right after Play. Click it: the schedule dialog opens for that script.
+- [ ] Open the editor of a script: the same icon sits in the header next to Share. Same dialog.
+- [ ] Add "every 5 minutes". Row icon turns blue (scheduled). Run happens within about 5 minutes in a background tab, without taking focus.
+- [ ] Add "daily at a time" with weekday chips. Next run time reads correctly.
+- [ ] A script with a required input and no default: dialog blocks saving or the run is skipped and marked.
+- [ ] Pause or delete a schedule. No further runs.
+- [ ] Quit and relaunch. Schedules are still listed; missed runs did not replay.
+- [ ] Delete a script. Its schedules disappear.
+- [ ] A scheduled run that fails or waits for approval raises the same dot and notification as above.
+
+## 3. Privacy tab (new)
+
+- [ ] Settings has a Privacy tab. It says no telemetry, no analytics, no account.
+- [ ] Trigger "Check for updates". A `github.com` (or update host) row appears. Host only, no path.
+- [ ] Use an AI feature (Explain & fix). The AI provider host appears. No prompt text anywhere.
+- [ ] Local AI (Ollama or LM Studio) shows as local, if you use one.
+- [ ] Clear the list. It empties. Quit and relaunch: it starts empty.
+
+## 4. Dependency and security update (Electron 42.11, Vite, vitest, sharp)
+
+- [ ] App launches; window, menu and dock icon look normal.
+- [ ] Open 3 terminals, run `vim`, `less`, `python3`. Keystrokes work.
+- [ ] SSH to a host (or the Docker fixture). Password prompt works.
+- [ ] Check for updates works and reports correctly.
+- [ ] Open the app a second time: it focuses the first window (single instance).
+
+## 5. Quick regression of 0.9.102 headlines
+
+- [ ] Change UI language (for example German, Japanese). Menus and settings change.
+- [ ] Run a failing command, click Explain & fix. Suggestion is inserted, not run.
+- [ ] Run a 3-step workflow against a local terminal. Steps report the right exit codes.
+- [ ] Projects, scripts and settings survive quit and relaunch.
+
+## 5b. Themes (new)
+
+- [ ] Settings → Theme shows three columns: Dark, Mid, Light, each card a small preview.
+- [ ] Pick each of Slate, Plum, Dove, Clay: whole app, terminal text, buttons and the schedule day chips stay readable.
+- [ ] Restart: the chosen theme is remembered.
+
+## 6. Translations spot check (while here)
+
+- [ ] In 3 languages you can read, open Settings → Privacy, the schedule dialog and Settings → General → Attention. Wording makes sense; no cut-off text.
+- [ ] Russian, Ukrainian, Polish: the "1 minute / 2 hours" unit wording is acceptable (known plural weakness).
+
+Dev builds (`npm run dev`): the dot works, but macOS notifications and the dock badge may not show unless "Electron" is allowed in System Settings → Notifications. Prefer the packaged app for those two.
+
+## New in the final 0.9.103 scope (added 2026-10-29)
+
+- [ ] **Jump shortcut (idea 6):** start `sleep 20` in two background tabs, wait for the dots, press Cmd+Shift+J (Ctrl+Shift+J on Windows/Linux). Opens the terminal that waited longest, clears its dot, works across projects. Also in the command palette and Help → Keyboard Shortcuts.
+- [ ] **Agent-aware dots (idea 14):** in a background tab run `printf '\e]9;Build done\a'` (amber dot, notification when the window is not in front). Run Claude Code in a background tab, give it a task that needs approval or finishes: dot and notification appear. (Real Claude Code sessions were NOT tested by Claude: needs paid credits.)
+- [ ] **Schedule history (idea 7):** add a schedule, let it run, open its History: entry with status and a link that opens the run in Runs & Logs (works when that run's project is open). Runs & Logs shows a "Scheduled" tag.
+- [ ] **Catch-up (idea 7):** tick "Run once on launch if a run was missed", quit the app past the due time, relaunch: exactly one run, entry marked catch-up. With it off: entry marked missed, no run.
+- [ ] **Secret masking (idea 15):** in a terminal type `echo ghp_` followed by 36 letters/digits, then save the session log and run Explain & fix: terminal shows the raw text, saved log and AI request show `[hidden: GitHub token]`. Settings → Privacy shows the switch and a count. Turn the switch off: nothing is masked.
+- [ ] Known gap: the Explain & fix button itself was not clicked in an e2e test (the request path is unit-tested).
+
+## Electron 45 and locales (added 2026-10-29)
+
+- [ ] **Update from 0.9.102 keeps saved secrets:** in 0.9.102 save an AI key and a VNC password, install this build over it, confirm both still work. (Secrets now use the async safeStorage API; this is the main risk of the Electron upgrade.)
+- [ ] File open/save dialogs (import flow, export flow, choose folder) reopen in the last folder you used.
+- [ ] Start the app in a non-English language: no English flash on launch; switch to Arabic and back: layout flips and returns.
+- [ ] Terminal works (zsh, node-pty), Settings, Privacy tab, split view.
+- [ ] Windows and Linux builds: not tested on Electron 45 by Claude; check before announcing support.
+
+## Not covered by automated tests
+
+Packaged-app launch, macOS notification permission, dock badge, notification click focus, real translations on screen, Windows and Linux behaviour.

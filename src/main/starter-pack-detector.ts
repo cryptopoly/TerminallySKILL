@@ -1,6 +1,6 @@
 import { readdir, readFile } from 'fs/promises'
 import { join } from 'path'
-import { resources } from '../renderer/src/i18n/resources'
+import { baseResources } from '../renderer/src/i18n/resources'
 import {
   EMPTY_STARTER_PACK_PREVIEW,
   type StarterPackPreview,
@@ -23,7 +23,7 @@ const GO_PROJECT_FILES = ['go.mod']
 export type Translate = (key: string, values?: Record<string, string | number>) => string
 
 function lookupEnglish(key: string): string | undefined {
-  let node: unknown = resources.en?.native
+  let node: unknown = baseResources.en?.native
   for (const part of key.split('.')) {
     if (typeof node !== 'object' || node === null) return undefined
     node = (node as Record<string, unknown>)[part]

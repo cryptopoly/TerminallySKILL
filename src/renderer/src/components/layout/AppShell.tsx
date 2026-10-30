@@ -16,6 +16,10 @@ import { InfoPanel } from '../onboarding/InfoPanel'
 import { CommandPalette } from '../palette/CommandPalette'
 import { Dashboard } from '../dashboard/Dashboard'
 import { WorkflowRunnerEngine } from '../scripts/WorkflowRunnerHost'
+import { AttentionDot } from '../terminal/AttentionDot'
+import { useAttentionLayer } from '../../hooks/useAttentionLayer'
+import { jumpToNextAttention } from '../../lib/attention'
+import { useScheduledRuns } from '../../hooks/useScheduledRuns'
 import { HelpTip } from '../ui/HelpTip'
 import { UpdateReleaseNotes } from '../ui/UpdateReleaseNotes'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
@@ -82,6 +86,8 @@ export function AppShell(): JSX.Element {
   const settings = useSettingsStore((s) => s.settings)
   const settingsHydrated = useSettingsStore((s) => s.settingsHydrated)
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
+  useAttentionLayer()
+  useScheduledRuns()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -384,6 +390,22 @@ export function AppShell(): JSX.Element {
     setTerminalVisible,
     settingsOpen
   ])
+
+  // Cmd+Shift+J (macOS) / Ctrl+Shift+J — jump to the terminal that needs you. Capture phase, so the
+  // focused terminal never also receives the key (Ctrl+Shift+J would otherwise reach the shell as ^J).
+  useEffect(() => {
+    const handler = (e: KeyboardEvent): void => {
+      const modifier = isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey
+      if (!modifier || !e.shiftKey || e.altKey) return
+      const isJ = /^[a-z]$/i.test(e.key) ? e.key.toLowerCase() === 'j' : e.code === 'KeyJ'
+      if (!isJ) return
+      e.preventDefault()
+      e.stopPropagation()
+      jumpToNextAttention()
+    }
+    window.addEventListener('keydown', handler, true)
+    return () => window.removeEventListener('keydown', handler, true)
+  }, [isMac])
 
   useEffect(() => {
     if (!activeProject) {
@@ -876,6 +898,7 @@ export function AppShell(): JSX.Element {
                     <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: tabColor }} />
                   )}
                   <span className="font-mono truncate max-w-[140px]">{tabLabel}</span>
+                  <AttentionDot sessionId={session.id} />
                   <span
                     onClick={(event) => {
                       event.stopPropagation()

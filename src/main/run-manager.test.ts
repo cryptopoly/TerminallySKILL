@@ -10,13 +10,22 @@ const { mockGetPath } = vi.hoisted(() => ({
   mockGetPath: vi.fn()
 }))
 
+const { mockGetSettings } = vi.hoisted(() => ({
+  mockGetSettings: vi.fn(async () => ({ maskSecrets: true }))
+}))
+
 vi.mock('electron', () => ({
   app: {
     getPath: mockGetPath
   }
 }))
 
+vi.mock('./settings-manager', () => ({
+  getSettings: mockGetSettings
+}))
+
 import { attachLogToRuns, getRunIndex, resetRunManagerCache, searchRuns, upsertRunRecord } from './run-manager'
+import { getSecretMaskStats, resetSecretMaskStats } from './secret-mask-stats'
 
 describe('run-manager', () => {
   let tempDir: string
@@ -230,7 +239,7 @@ describe('run-manager', () => {
           cwd: '/legacy',
           shell: null,
           logFilePath: null,
-          startedAt: '2026-03-08T17:00:00.000Z',
+          startedAt: new Date().toISOString(),
           endedAt: null,
           status: 'running',
           error: null,
@@ -516,7 +525,7 @@ describe('run-manager', () => {
       cwd: '/repo',
       shell: '/bin/zsh',
       logFilePath: null,
-      startedAt: '2026-03-15T19:31:17.602Z',
+      startedAt: new Date().toISOString(),
       endedAt: null,
       status: 'running_command',
       error: null,
@@ -528,5 +537,101 @@ describe('run-manager', () => {
     expect(index).toHaveLength(1)
     expect(index[0].status).toBe('running_command')
     expect(index[0].endedAt).toBeNull()
+  })
+
+  it('recovers a run from an earlier launch even when a new terminal reuses its session id', async () => {
+    registerTerminalSession('term-1')
+
+    await upsertRunRecord({
+      runId: 'run-old-launch',
+      source: 'workflow',
+      sessionId: 'term-1',
+      scriptId: 'script-1',
+      scriptName: 'Build',
+      projectId: 'proj-1',
+      projectName: 'StuffDiver',
+      cwd: '/repo',
+      shell: '/bin/zsh',
+      logFilePath: null,
+      startedAt: '2020-01-01T00:00:00.000Z',
+      endedAt: null,
+      status: 'running_command',
+      error: null,
+      inputValues: {},
+      steps: []
+    })
+
+    resetRunManagerCache()
+    const index = await getRunIndex('proj-1')
+    expect(index[0].status).toBe('failed')
+    expect(index[0].endedAt).not.toBeNull()
+  })
+
+  describe('secret masking', () => {
+    const token = 'ghp_' + 'aB3'.repeat(12)
+    const run = (): RunRecord => ({
+      runId: 'run-secret',
+      source: 'workflow',
+      sessionId: 'term-9',
+      scriptId: 'script-1',
+      scriptName: 'Deploy',
+      projectId: 'proj-1',
+      projectName: 'Alpha',
+      cwd: '/repo',
+      shell: '/bin/zsh',
+      logFilePath: '/logs/a.log',
+      startedAt: '2026-03-08T18:00:00.000Z',
+      endedAt: null,
+      status: 'running',
+      error: `push failed for ${token}`,
+      inputValues: { db_password: 'hunter2', branch: 'main', retries: 3 },
+      steps: [
+        {
+          stepId: 'step-1',
+          sourceIndex: 0,
+          type: 'command',
+          label: 'Login',
+          status: 'running',
+          attempts: 1,
+          exitCode: null,
+          startedAt: null,
+          endedAt: null,
+          commandString: `GITHUB_TOKEN=${token} gh auth status`,
+          continueOnError: false,
+          delayMs: 0,
+          retryCount: 0
+        }
+      ]
+    })
+
+    beforeEach(() => {
+      resetSecretMaskStats()
+      mockGetSettings.mockResolvedValue({ maskSecrets: true })
+    })
+
+    it('masks command strings, errors and secret-named inputs before saving, and counts once per run', async () => {
+      await upsertRunRecord(run())
+      await upsertRunRecord({ ...run(), status: 'completed' })
+
+      resetRunManagerCache()
+      const [saved] = await getRunIndex('proj-1')
+      const json = JSON.stringify(saved)
+      expect(json).not.toContain(token)
+      expect(json).not.toContain('hunter2')
+      expect(saved.steps[0].type === 'command' && saved.steps[0].commandString).toBe(
+        'GITHUB_TOKEN=[hidden: GitHub token] gh auth status'
+      )
+      expect(saved.inputValues).toEqual({ db_password: '[hidden: password]', branch: 'main', retries: 3 })
+      expect(saved.logFilePath).toBe('/logs/a.log')
+      expect(getSecretMaskStats().logs).toEqual({ 'github-token': 2, password: 1 })
+    })
+
+    it('saves the record unchanged when masking is off', async () => {
+      mockGetSettings.mockResolvedValue({ maskSecrets: false })
+      await upsertRunRecord(run())
+      const [saved] = await getRunIndex('proj-1')
+      expect(saved.inputValues.db_password).toBe('hunter2')
+      expect(getSecretMaskStats().logs).toEqual({})
+    })
   })
 })

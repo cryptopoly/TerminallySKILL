@@ -16,6 +16,7 @@ import { useSnippetStore } from '../../store/snippet-store'
 import { useSettingsStore } from '../../store/settings-store'
 import { useSnapshotStore, type OutputSnapshot } from '../../store/snapshot-store'
 import { isTerminalRunStatus, useWorkflowRunnerStore } from '../../store/workflow-runner-store'
+import { AttentionDot } from './AttentionDot'
 import { TerminalSearchBar } from './TerminalSearchBar'
 import { SnapshotPanel } from './SnapshotPanel'
 import { PromoteCommandDialog } from './PromoteCommandDialog'
@@ -46,6 +47,8 @@ import { confirmTerminalClose } from '../../lib/terminal-close'
 import type { Theme } from '../../../../shared/settings-schema'
 import { resolveProjectWorkingDirectory } from '../../../../shared/project-schema'
 import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
+import { raiseCommandAttention } from '../../lib/attention'
+import { registerAgentAttention } from '../../lib/agent-attention'
 import type { ShellIntegrationEvent } from '../../../../shared/shell-integration'
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
@@ -295,6 +298,7 @@ export function TerminalPanel({
                   />
                 )}
                 <span className="font-mono truncate max-w-[120px]">{tabLabel}</span>
+                <AttentionDot sessionId={session.id} />
                 {workflowRun && (
                   <span
                     className={clsx(
@@ -612,6 +616,42 @@ const XTERM_THEMES: Record<Theme, Record<string, string>> = {
     brightBlack: '#38503f', brightRed: '#f87171', brightGreen: '#4ade80',
     brightYellow: '#fde047', brightBlue: '#7dd3fc',
     brightMagenta: '#6ee7b7', brightCyan: '#99f6e4', brightWhite: '#ffffff',
+  },
+  slate: {
+    background: '#364152', foreground: '#f1f5f9',
+    cursor: '#38bdf8', cursorAccent: '#364152', selectionBackground: '#38bdf840',
+    black: '#4a576c', red: '#f87171', green: '#4ade80', yellow: '#fbbf24',
+    blue: '#60a5fa', magenta: '#c4b5fd', cyan: '#38bdf8', white: '#e2e8f0',
+    brightBlack: '#62708a', brightRed: '#fca5a5', brightGreen: '#86efac',
+    brightYellow: '#fcd34d', brightBlue: '#93c5fd',
+    brightMagenta: '#ddd6fe', brightCyan: '#7dd3fc', brightWhite: '#ffffff',
+  },
+  plum: {
+    background: '#44354d', foreground: '#f5f0f8',
+    cursor: '#e879f9', cursorAccent: '#44354d', selectionBackground: '#e879f940',
+    black: '#5b4b68', red: '#f87171', green: '#4ade80', yellow: '#fbbf24',
+    blue: '#60a5fa', magenta: '#e879f9', cyan: '#67e8f9', white: '#e6dcec',
+    brightBlack: '#7a6788', brightRed: '#fca5a5', brightGreen: '#86efac',
+    brightYellow: '#fcd34d', brightBlue: '#93c5fd',
+    brightMagenta: '#f0abfc', brightCyan: '#a5f3fc', brightWhite: '#ffffff',
+  },
+  dove: {
+    background: '#bcc5d1', foreground: '#0b1220',
+    cursor: '#1d4ed8', cursorAccent: '#bcc5d1', selectionBackground: '#1d4ed830',
+    black: '#2a3547', red: '#b91c1c', green: '#15803d', yellow: '#92610a',
+    blue: '#1d4ed8', magenta: '#7e22ce', cyan: '#0e7490', white: '#414e63',
+    brightBlack: '#5d6b81', brightRed: '#dc2626', brightGreen: '#16a34a',
+    brightYellow: '#b45309', brightBlue: '#2563eb',
+    brightMagenta: '#9333ea', brightCyan: '#0891b2', brightWhite: '#0b1220',
+  },
+  clay: {
+    background: '#d2c0ae', foreground: '#1f160d',
+    cursor: '#047857', cursorAccent: '#d2c0ae', selectionBackground: '#04785730',
+    black: '#2f2418', red: '#b91c1c', green: '#15803d', yellow: '#92610a',
+    blue: '#1d4ed8', magenta: '#9d174d', cyan: '#0e7490', white: '#5e4e3e',
+    brightBlack: '#7d6c5a', brightRed: '#dc2626', brightGreen: '#16a34a',
+    brightYellow: '#b45309', brightBlue: '#2563eb',
+    brightMagenta: '#be185d', brightCyan: '#0891b2', brightWhite: '#1f160d',
   },
   chalk: {
     background: '#faf9f7', foreground: '#1c1917',
@@ -1669,8 +1709,14 @@ function XTermInstance({
     setInputPreview('')
   }, [])
 
+  // Typing in the terminal already marks the shell as executing, so no command block is made for it.
+  // Attention alerts keep their own start marker so they cover every command.
+  const attentionStartRef = useRef<{ command: string; startedAt: string } | null>(null)
+
   const handleShellEvent = useCallback((event: ShellIntegrationEvent) => {
     if (event.type === 'command-start') {
+      attentionStartRef.current ??= { command: event.command, startedAt: event.receivedAt }
+      useTerminalStore.getState().setSessionBusy(sessionId, true)
       if (shellStateRef.current === 'executing') {
         return
       }
@@ -1707,6 +1753,19 @@ function XTermInstance({
       return
     }
 
+    const attentionStart = attentionStartRef.current
+    attentionStartRef.current = null
+    useTerminalStore.getState().setSessionBusy(sessionId, false)
+    if (attentionStart) {
+      raiseCommandAttention({
+        sessionId,
+        command: attentionStart.command,
+        startedAt: attentionStart.startedAt,
+        completedAt: event.receivedAt,
+        exitCode: event.exitCode
+      })
+    }
+
     const nextCwd = event.cwd ?? shellCwdRef.current ?? projectWorkingDirectory
     const promptLine = getActiveBufferLine()
     setSecureInputState(false)
@@ -1722,7 +1781,8 @@ function XTermInstance({
     completeActiveCommandBlock,
     getActiveBufferLine,
     processQueue,
-    projectWorkingDirectory
+    projectWorkingDirectory,
+    sessionId
   ])
 
   const activeCommandBlockRef = useRef(activeCommandBlock)
@@ -1883,6 +1943,7 @@ function XTermInstance({
     term.loadAddon(searchAddon)
     term.loadAddon(serializeAddon)
     term.open(containerRef.current)
+    const agentAttention = registerAgentAttention(term, sessionId)
 
     // File path link provider — makes absolute paths clickable to open in file viewer
     const FILE_PATH_RE = /(?:^|\s)(\/[\w./@~-]+(?:\/[\w.@~-]+)*\.\w{1,10})(?=\s|:|,|$)/g
@@ -2083,6 +2144,7 @@ function XTermInstance({
 
     const unsubExit = window.electronAPI.onTerminalExit((sid) => {
       if (sid !== sessionId) return
+      useTerminalStore.getState().setSessionBusy(sessionId, false)
     })
 
     const unsubShellEvent = window.electronAPI.onShellEvent((sid, event) => {
@@ -2103,6 +2165,7 @@ function XTermInstance({
       unsubData()
       unsubExit()
       unsubShellEvent()
+      agentAttention.forEach((disposable) => disposable.dispose())
       term.dispose()
     }
   }, [sessionId])

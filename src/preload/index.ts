@@ -21,6 +21,14 @@ import type { RunStatusFilter } from '../shared/run-history'
 import type { ShellIntegrationEvent } from '../shared/shell-integration'
 import type { AppUpdateCheckResult, AppUpdateInstallResult } from '../shared/update-schema'
 import type { InstallableCommandMatch } from '../shared/cli-install-catalog'
+import type { AttentionNotifyRequest } from '../shared/attention'
+import type {
+  Schedule,
+  ScheduleHistoryReason,
+  ScheduleRunStatus,
+  ScheduleRecurrence
+} from '../shared/schedule-schema'
+import type { OutboundRequestRecord, SecretMaskStats } from '../shared/privacy-schema'
 import type { BackupLocationSuggestion, BackupRunResult } from '../shared/backup-schema'
 
 type ProjectUpdates = Partial<Omit<Project, 'workspaceLayout'>> & {
@@ -483,6 +491,61 @@ export const electronAPI = {
     ipcRenderer.on(IPC_CHANNELS.VNC_ERROR, handler)
     return () => ipcRenderer.removeListener(IPC_CHANNELS.VNC_ERROR, handler)
   },
+
+  // Attention layer
+  notifyAttention: (request: AttentionNotifyRequest): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.ATTENTION_NOTIFY, request),
+
+  setAttentionBadge: (count: number): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.ATTENTION_SET_BADGE, count),
+
+  onAttentionFocusSession: (callback: (sessionId: string) => void): (() => void) => {
+    const handler = (_e: Electron.IpcRendererEvent, sessionId: string): void => callback(sessionId)
+    ipcRenderer.on(IPC_CHANNELS.ATTENTION_FOCUS_SESSION, handler)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.ATTENTION_FOCUS_SESSION, handler)
+  },
+
+  // Scheduled workflows
+  getSchedules: (): Promise<Schedule[]> =>
+    ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_GET_ALL),
+
+  saveSchedule: (input: {
+    id?: string
+    scriptId: string
+    projectId: string | null
+    recurrence: ScheduleRecurrence
+    enabled: boolean
+    catchUp?: boolean
+  }): Promise<Schedule> => ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_SAVE, input),
+
+  deleteSchedule: (id: string): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_DELETE, id),
+
+  markScheduleResult: (
+    id: string,
+    status: ScheduleRunStatus,
+    details?: { runId?: string | null; reason?: ScheduleHistoryReason | null }
+  ): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_MARK_RESULT, id, status, details),
+
+  /** Tells the main process this window is listening for due schedules (queued catch-up runs fire now). */
+  scheduleRendererReady: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.SCHEDULES_RENDERER_READY),
+
+  onScheduleDue: (callback: (schedule: Schedule) => void): (() => void) => {
+    const handler = (_e: Electron.IpcRendererEvent, schedule: Schedule): void => callback(schedule)
+    ipcRenderer.on(IPC_CHANNELS.SCHEDULES_DUE, handler)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.SCHEDULES_DUE, handler)
+  },
+
+  // Privacy
+  getNetworkLog: (): Promise<OutboundRequestRecord[]> =>
+    ipcRenderer.invoke(IPC_CHANNELS.PRIVACY_GET_NETWORK_LOG),
+
+  clearNetworkLog: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.PRIVACY_CLEAR_NETWORK_LOG),
+
+  getSecretMaskStats: (): Promise<SecretMaskStats> =>
+    ipcRenderer.invoke(IPC_CHANNELS.PRIVACY_GET_SECRET_MASK_STATS),
 
   getVncPassword: (storageKey: string): Promise<string | null> =>
     ipcRenderer.invoke(IPC_CHANNELS.VNC_GET_PASSWORD, storageKey),

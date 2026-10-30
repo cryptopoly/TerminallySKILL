@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, session } from 'electron'
 import { join, resolve } from 'path'
 import { readFileSync, existsSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -9,6 +9,9 @@ import { IPC_CHANNELS } from '../shared/ipc-channels'
 import { getUserDataDir, setCustomDataDir } from './user-data-path'
 import { openSafeExternalUrl } from './external-url'
 import { getNativeTranslator, onUiLocaleChange } from './native-i18n'
+import { forgetWindowBadge } from './attention-manager'
+import { describeOutboundUrl, recordOutboundRequest } from './network-log'
+import { startScheduler, stopScheduler } from './schedule-manager'
 
 console.log('[terminallyskill] Main process loaded (v2 — shell integration + log save)')
 
@@ -125,6 +128,7 @@ function createWindow(projectId?: string): void {
   win.on('closed', () => {
     killSessionsForWindow(win)
     stopVncSessionsForWindow(win)
+    forgetWindowBadge(win)
     windows.delete(win)
   })
 
@@ -249,6 +253,14 @@ app.whenReady().then(() => {
     console.error('[terminallyskill] Failed to pre-warm terminal PATH cache:', error)
   })
 
+  // Anything Electron's network stack sends (updater, renderer) is listed on the Privacy tab.
+  // Only the host is kept. Node-level fetches record themselves where they are made.
+  session.defaultSession.webRequest.onCompleted({ urls: ['http://*/*', 'https://*/*'] }, (details) => {
+    // The dev server and other pages on this computer are not outbound traffic.
+    if (details.webContents && describeOutboundUrl(details.url)?.local) return
+    recordOutboundRequest(details.url, details.webContents ? 'other' : 'update', details.statusCode)
+  })
+
   // Register IPC handlers once globally (handlers derive window from event.sender)
   registerIpcHandlers()
 
@@ -260,6 +272,7 @@ app.whenReady().then(() => {
     createWindow(projectId)
   })
 
+  startScheduler()
   void buildMenu()
   onUiLocaleChange(() => void buildMenu())
   createWindow()
@@ -270,6 +283,7 @@ app.whenReady().then(() => {
 })
 
 app.on('before-quit', () => {
+  stopScheduler()
   killAllTerminals()
   stopAllVncSessions()
 })
