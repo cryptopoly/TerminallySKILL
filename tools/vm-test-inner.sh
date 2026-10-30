@@ -33,7 +33,7 @@ else
   results+=("SKIP  test:e2e:ssh-docker (Docker not running in this VM)")
 fi
 
-step "package:linux" npm run package:linux
+step "package:linux" npm run "package:linux:$([ "$(uname -m)" = aarch64 ] && echo arm64 || echo x64)"
 step "package smoke (unpacked, AppImage, deb)" tools/linux-package-smoke.sh
 
 echo; echo "=== Summary"
