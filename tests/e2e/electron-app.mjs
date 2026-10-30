@@ -62,7 +62,8 @@ export function resolvePackagedExecutablePath() {
   }
 
   if (process.platform === 'linux') {
-    return resolve(rootDir, 'dist', 'linux-unpacked', 'terminallyskill')
+    const linuxDir = process.arch === 'arm64' ? 'linux-arm64-unpacked' : 'linux-unpacked'
+    return resolve(rootDir, 'dist', linuxDir, 'terminallyskill')
   }
 
   if (process.platform === 'win32') {

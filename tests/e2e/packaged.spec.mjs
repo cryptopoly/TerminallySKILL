@@ -10,7 +10,6 @@ const packageJson = JSON.parse(
 )
 
 test.skip(process.env.RUN_PACKAGED_E2E !== '1', 'Set RUN_PACKAGED_E2E=1 to run packaged smoke tests.')
-test.skip(process.platform !== 'darwin', 'macOS packaged smoke requires a macOS host.')
 
 async function closeAndAssertExited(app) {
   const child = app.process()
@@ -43,7 +42,7 @@ async function assertPackagedTerminalStarts(page, cwd) {
   await page.evaluate((id) => window.electronAPI.killTerminal(id), sessionId)
 }
 
-test('macOS packaged app launches and persists settings across relaunch', async ({}, testInfo) => {
+test(`packaged app (${process.platform}) launches and persists settings across relaunch`, async ({}, testInfo) => {
   const executablePath = resolvePackagedExecutablePath()
   const terminalCwd = testInfo.outputPath('terminal-cwd')
   await mkdir(terminalCwd, { recursive: true })
@@ -100,7 +99,7 @@ test('macOS packaged app launches and persists settings across relaunch', async 
       theme: 'stone'
     })
 
-    expect(executablePath).toContain('TerminallySKILL.app')
+    if (process.platform === 'darwin') expect(executablePath).toContain('TerminallySKILL.app')
   } finally {
     await closeAndAssertExited(secondLaunch.app)
   }
