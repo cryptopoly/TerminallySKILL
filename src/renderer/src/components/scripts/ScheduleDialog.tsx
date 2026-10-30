@@ -47,7 +47,6 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
   const settings = useSettingsStore((s) => s.settings)
   const projects = useProjectStore((s) => s.projects)
   const activeProject = useProjectStore((s) => s.activeProject)
-  const updateProjectInStore = useProjectStore((s) => s.updateProjectInStore)
   const allSchedules = useScheduleStore((s) => s.schedules)
   const refresh = useScheduleStore((s) => s.refresh)
   const locale = resolveFormatLocale(settings)
@@ -130,14 +129,10 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
     await refresh()
   }
 
-  const handleOpenRun = async (runId: string): Promise<void> => {
+  const handleOpenRun = (runId: string): void => {
     useLogStore.getState().setPendingRunId(runId)
-    if (activeProject) {
-      const updated = await window.electronAPI.updateProject(activeProject.id, {
-        workspaceLayout: { sidebarTab: 'logs' }
-      })
-      if (updated) updateProjectInStore(updated)
-    }
+    // The store switches the tab at once and saves it in the background, so a slow save cannot undo the jump.
+    useProjectStore.getState().setSidebarTab('logs')
     onClose()
   }
 
@@ -258,7 +253,7 @@ export function ScheduleDialog({ script, onClose }: ScheduleDialogProps): JSX.El
                         </span>
                         {entry.runId && (
                           <button
-                            onClick={() => void handleOpenRun(entry.runId as string)}
+                            onClick={() => handleOpenRun(entry.runId as string)}
                             className="tv-btn-icon-sm"
                             title={t('schedule.history.openRun')}
                             aria-label={t('schedule.history.openRun')}
