@@ -70,3 +70,11 @@ jobs:
       - run: npm run test:ci
 
       - run: npm run test:e2e
+
+      - name: Keep e2e traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-results-${{ matrix.os }}
+          path: test-results
+          retention-days: 7
