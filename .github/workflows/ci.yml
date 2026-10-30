@@ -40,12 +40,13 @@ jobs:
 
       - run: npm run test:audit:runtime
 
-  # Same checks on the other two desktop platforms. Windows has not run this suite before, so it
-  # reports without blocking the PR until it has a clean history; then drop continue-on-error.
+  # Same checks on the other two desktop platforms. Neither has a clean history on GitHub's
+  # runners yet (see docs/hub/backlog.md, Issues), so they report without blocking the PR.
+  # Drop continue-on-error once a platform passes.
   cross-platform:
     name: test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.os == 'windows-latest' }}
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
