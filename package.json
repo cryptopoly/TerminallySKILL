@@ -24,7 +24,7 @@
     "package:linux": "npm run generate-icon && electron-vite build && electron-builder --config electron-builder.config.mjs --linux --publish never && npm run generate-update-feeds",
     "build:linux": "npm run package:linux",
     "package:linux:x64": "npm run generate-icon && electron-vite build && electron-builder --config electron-builder.config.mjs --linux --x64 --publish never && npm run generate-update-feeds",
-    "package:linux:arm64": "npm run generate-icon && electron-vite build && electron-builder --config electron-builder.config.mjs --linux --arm64 --publish never && npm run generate-update-feeds",
+    "package:linux:arm64": "npm run generate-icon && electron-vite build && electron-builder --config electron-builder.config.mjs --linux deb --arm64 --publish never && npm run generate-update-feeds",
     "package:win": "npm run generate-icon && electron-vite build && electron-builder --config electron-builder.config.mjs --win --publish never && npm run generate-update-feeds",
     "package:win:x64": "npm run generate-icon && electron-vite build && electron-builder --config electron-builder.config.mjs --win --x64 --publish never && npm run generate-update-feeds",
     "package:win:arm64": "npm run generate-icon && electron-vite build && electron-builder --config electron-builder.config.mjs --win --arm64 --publish never && npm run generate-update-feeds",

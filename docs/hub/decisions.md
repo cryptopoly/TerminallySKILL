@@ -38,6 +38,8 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 ## 2026-10-30
 
+- **Linux arm64 ships as `.deb` only (Dan decided):** electron-builder's arm64 AppImage runtime links `libz.so` and does not start on stock Ubuntu; a `patchelf` fix was proven but needs a double build, so it is banked. x64 keeps AppImage and `.deb`. Both architectures stay supported. PR `chore/linux-arm64-deb-only`.
+- **Lightning on the website (Dan's LNbits was a paid instance, now decommissioned):** card stays removed. Self-hosting needs a Lightning node with channels and backups, more upkeep than a donation jar; revisit with a hosted Lightning address if wanted.
 - **Branch protection on `staging` and `main` (Dan said yes):** applied with the GitHub API. Force-push and deletion blocked, a pull request required (0 approvals), CI check `test` required, admin bypass left on. The new macOS and Windows jobs are not required.
 - **Lightning wallet removed from the website (Dan lost the wallet):** card with the LNURL QR code and the lnbits address deleted from `TerminallySKILLSite/index.html`, pushed to `main` (commit `05f49c9`). The other wallets (BTC, ETH, SOL, LTC, DOGE, ZEC) and PayPal remain. The old address stays in the site repo's git history, so treat it as dead; do not reuse.
 - **Linux packages are tested (Dan asked):** `tools/linux-package-smoke.sh` checks the unpacked app, the AppImage and a real `dpkg -i` install of the deb. On Ubuntu arm64: unpacked and deb pass, AppImage fails without `libz.so` (see backlog, noted in release notes). Windows 11 ARM64 VM (`W11 Testing`, snapshot `pre-test-2026-10-30`) gets Node and MinGit in `C:\tools` and runs `tools/vm-test.sh --windows`.
