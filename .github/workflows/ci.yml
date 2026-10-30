@@ -39,3 +39,33 @@ jobs:
       - run: REQUIRE_DOCKER_E2E=1 xvfb-run -a npm run test:e2e:ssh-docker
 
       - run: npm run test:audit:runtime
+
+  # Same checks on the other two desktop platforms. Windows has not run this suite before, so it
+  # reports without blocking the PR until it has a clean history; then drop continue-on-error.
+  cross-platform:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - run: pip install setuptools
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run test:ci
+
+      - run: npm run test:e2e
