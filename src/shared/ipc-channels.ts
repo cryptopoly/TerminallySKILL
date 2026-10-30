@@ -113,6 +113,24 @@ export const IPC_CHANNELS = {
   // Shell utilities
   SHELL_OPEN_EXTERNAL: 'shell:open-external',
 
+  // Attention layer
+  ATTENTION_NOTIFY: 'attention:notify',
+  ATTENTION_SET_BADGE: 'attention:set-badge',
+  ATTENTION_FOCUS_SESSION: 'attention:focus-session',
+
+  // Scheduled workflows
+  SCHEDULES_GET_ALL: 'schedules:get-all',
+  SCHEDULES_SAVE: 'schedules:save',
+  SCHEDULES_DELETE: 'schedules:delete',
+  SCHEDULES_MARK_RESULT: 'schedules:mark-result',
+  SCHEDULES_DUE: 'schedules:due',
+  SCHEDULES_RENDERER_READY: 'schedules:renderer-ready',
+
+  // Privacy
+  PRIVACY_GET_NETWORK_LOG: 'privacy:get-network-log',
+  PRIVACY_CLEAR_NETWORK_LOG: 'privacy:clear-network-log',
+  PRIVACY_GET_SECRET_MASK_STATS: 'privacy:get-secret-mask-stats',
+
   // VNC
   VNC_START: 'vnc:start',
   VNC_STOP: 'vnc:stop',

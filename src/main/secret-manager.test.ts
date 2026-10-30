@@ -8,9 +8,12 @@ let dataDir = ''
 
 vi.mock('electron', () => ({
   safeStorage: {
-    isEncryptionAvailable: () => encryptionAvailable,
-    encryptString: (value: string) => Buffer.from(`enc:${value}`),
-    decryptString: (buffer: Buffer) => buffer.toString('utf8').replace(/^enc:/, '')
+    isAsyncEncryptionAvailable: async () => encryptionAvailable,
+    encryptStringAsync: async (value: string) => Buffer.from(`enc:${value}`),
+    decryptStringAsync: async (buffer: Buffer) => ({
+      shouldReEncrypt: false,
+      result: buffer.toString('utf8').replace(/^enc:/, '')
+    })
   }
 }))
 vi.mock('./user-data-path', () => ({ getDataDir: () => dataDir }))

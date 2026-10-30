@@ -30,6 +30,8 @@ import type {
   AIChatFollowUpRequest
 } from '../shared/ai-schema'
 import { translateNativeSync } from './native-i18n'
+import { recordMaskedForAI } from './secret-mask-stats'
+import { addSecretCounts, maskSecrets, maskSecretsDeep, type SecretCounts } from '../shared/secret-mask'
 
 const OUTPUT_REVIEW_MAX_CHARS = 12_000
 const OPENAI_COMPATIBLE_PROVIDER_IDS = new Set<AIProvider['id']>([
@@ -1225,14 +1227,7 @@ function getRoutingCandidates(
   )
 }
 
-export async function runAIAction(request: AIActionRequest): Promise<AIActionResponse> {
-  const settings = await getSettings()
-  const routingCandidates = getRoutingCandidates(settings)
-
-  if (routingCandidates.length === 0) {
-    throw new Error(translateNativeSync('errors.aiNotConfigured'))
-  }
-
+function buildPromptForRequest(request: AIActionRequest, settings: AppSettings): AIPrompt {
   let prompt: AIPrompt
 
   switch (request.action) {
@@ -1264,7 +1259,43 @@ export async function runAIAction(request: AIActionRequest): Promise<AIActionRes
       throw new Error(`Unsupported AI action: ${(request as { action?: string }).action ?? 'unknown'}`)
   }
 
-  prompt = { ...withLocaleInstruction(prompt, settings), maxTokens: getMaxOutputTokens(request.action) }
+  return { ...withLocaleInstruction(prompt, settings), maxTokens: getMaxOutputTokens(request.action) }
+}
+
+/**
+ * Build the prompt from a masked copy of the request, then mask the finished prompt as well.
+ * Masking the request first matters: prompt builders keep only the tail of long transcripts,
+ * and a cut through the middle of a token would leave a fragment no pattern recognises.
+ */
+export function maskPromptSecrets(
+  request: AIActionRequest,
+  settings: AppSettings
+): { prompt: AIPrompt; counts: SecretCounts } {
+  const maskedRequest = maskSecretsDeep(request)
+  const built = buildPromptForRequest(maskedRequest.value, settings)
+  const instructions = maskSecrets(built.instructions)
+  const input = maskSecrets(built.input)
+  const counts = addSecretCounts(addSecretCounts({ ...maskedRequest.counts }, instructions.counts), input.counts)
+  return { prompt: { ...built, instructions: instructions.text, input: input.text }, counts }
+}
+
+export async function runAIAction(request: AIActionRequest): Promise<AIActionResponse> {
+  const settings = await getSettings()
+  const routingCandidates = getRoutingCandidates(settings)
+
+  if (routingCandidates.length === 0) {
+    throw new Error(translateNativeSync('errors.aiNotConfigured'))
+  }
+
+  // Every provider call below sends only this prompt, so masking it here covers all AI actions.
+  let prompt: AIPrompt
+  if (settings.maskSecrets) {
+    const masked = maskPromptSecrets(request, settings)
+    prompt = masked.prompt
+    recordMaskedForAI(masked.counts)
+  } else {
+    prompt = buildPromptForRequest(request, settings)
+  }
 
   let content: string | null = null
   let resolvedModel = routingCandidates[0].model

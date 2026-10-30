@@ -437,6 +437,7 @@ function buildRunRecord(
     scriptName: activeRun.script.name,
     projectId: sessionInfo?.projectId ?? activeRun.script.projectId,
     projectName: sessionInfo?.projectName ?? null,
+    scheduleId: activeRun.scheduleId,
     cwd: sessionInfo?.projectWorkingDir ?? sessionInfo?.cwd ?? null,
     shell: sessionInfo?.shell ?? null,
     logFilePath: null,

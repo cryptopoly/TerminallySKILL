@@ -17,6 +17,8 @@ import { useTerminalStore } from '../../store/terminal-store'
 import { useProjectStore } from '../../store/project-store'
 import { useBuilderStore } from '../../store/builder-store'
 import { useSettingsStore } from '../../store/settings-store'
+import { useAttentionStore } from '../../store/attention-store'
+import { jumpToNextAttention } from '../../lib/attention'
 import {
   buildProjectExecutionCommand,
   createProjectTerminalSession,
@@ -72,12 +74,22 @@ export function CommandPalette({
   const { activeSessionId, setTerminalVisible, addToHistory } = useTerminalStore()
   const activeProject = useProjectStore((s) => s.activeProject)
   const hiddenCommandExecutables = useSettingsStore((s) => s.settings.hiddenCommandExecutables)
+  const hasAttention = useAttentionStore((s) => Object.keys(s.entries).length > 0)
 
   // Build the full item list
   const allItems = useMemo((): PaletteItem[] => {
     const items: PaletteItem[] = []
 
     // Actions
+    if (hasAttention) {
+      items.push({
+        id: 'action:jump-attention',
+        type: 'action',
+        label: t('palette.actions.jumpAttention'),
+        detail: t('palette.actions.jumpAttentionDescription'),
+        action: () => { onClose(); jumpToNextAttention() }
+      })
+    }
     items.push({
       id: 'action:terminal',
       type: 'action',
@@ -191,7 +203,7 @@ export function CommandPalette({
     }
 
     return items
-  }, [commands, scripts, snippets, history, activeProject, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onCreateProject, resetValues, setActiveCommand, setActiveScript, setActiveSnippet, t])
+  }, [commands, scripts, snippets, history, activeProject, hasAttention, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onCreateProject, resetValues, setActiveCommand, setActiveScript, setActiveSnippet, t])
 
   const runHistoryCommand = useCallback(async (cmd: string) => {
     const envOverrides = useProjectStore.getState().getActiveEnvOverrides()

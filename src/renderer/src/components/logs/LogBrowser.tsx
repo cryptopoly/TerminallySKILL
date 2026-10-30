@@ -21,7 +21,8 @@ import {
   Info,
   Copy,
   SendHorizontal,
-  Play
+  Play,
+  CalendarClock
 } from 'lucide-react'
 import { useLogStore } from '../../store/log-store'
 import { useProjectStore } from '../../store/project-store'
@@ -58,7 +59,9 @@ export function LogBrowser(): JSX.Element {
     setLoading,
     setSelectedLog,
     setSelectedLogContent,
-    setSearchQuery
+    setSearchQuery,
+    pendingRunId,
+    setPendingRunId
   } = useLogStore()
 
   const loadHistory = useCallback(async () => {
@@ -80,6 +83,16 @@ export function LogBrowser(): JSX.Element {
   useEffect(() => {
     loadHistory()
   }, [loadHistory])
+
+  // The schedule history asked for one run to be opened. The request stays in the store until the run is in
+  // the loaded list, so it survives a reload of the list or a remount of this panel.
+  useEffect(() => {
+    if (!pendingRunId) return
+    const requested = runs.find((entry) => entry.runId === pendingRunId)
+    if (!requested) return
+    setPendingRunId(null)
+    setSelectedRun(requested)
+  }, [pendingRunId, runs, setPendingRunId])
 
   const handleSelectLog = useCallback(
     async (log: SessionLogMeta) => {
@@ -389,6 +402,7 @@ function RunEntry({
           <div className="flex items-center gap-2">
             <statusMeta.icon size={12} className={`${statusMeta.tone} shrink-0`} />
             <span className="text-xs font-medium text-gray-200 truncate">{run.scriptName}</span>
+            <ScheduledTag run={run} />
             <span className="font-mono text-[10px] text-gray-600">{run.sessionId}</span>
           </div>
           <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-600">
@@ -407,6 +421,17 @@ function RunEntry({
         </span>
       </div>
     </button>
+  )
+}
+
+function ScheduledTag({ run }: { run: RunRecord }): JSX.Element | null {
+  const { t } = useTranslation('logs')
+  if (!run.scheduleId) return null
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded border border-surface-border px-1 py-px text-[10px] text-gray-500">
+      <CalendarClock size={9} />
+      {t('labels.scheduled')}
+    </span>
   )
 }
 
@@ -583,6 +608,7 @@ function RunDetail({
           </button>
           <statusMeta.icon size={13} className={statusMeta.tone} />
           <span className="text-sm text-gray-200 font-medium">{run.scriptName}</span>
+          <ScheduledTag run={run} />
           <span className={`ml-auto text-xs uppercase ${statusMeta.tone}`}>{statusMeta.label}</span>
         </div>
 

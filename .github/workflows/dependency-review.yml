@@ -1,0 +1,53 @@
+name: Dependency review
+
+# Monthly prompt to update packages and check for security issues.
+on:
+  schedule:
+    - cron: "0 8 2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - name: Collect audit and outdated reports
+        run: |
+          {
+            echo "### npm audit (all dependencies)"
+            echo '```'
+            npm audit || true
+            echo '```'
+            echo "### npm outdated"
+            echo '```'
+            npm outdated || true
+            echo '```'
+          } > report.md
+
+      - name: Open review issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          month=$(date -u +%Y-%m)
+          {
+            echo "Monthly dependency and security review for $month."
+            echo
+            echo "- [ ] Bump packages (check Electron release notes and advisories too)"
+            echo "- [ ] \`npm audit\` clean; \`npm run test:ci\`, \`npm run test:e2e\` and the packaged smoke test pass"
+            echo "- [ ] Note the result in \`docs/hub/status.md\`"
+            echo
+            cat report.md
+          } > body.md
+          gh issue create --title "Dependency review $month" --body-file body.md

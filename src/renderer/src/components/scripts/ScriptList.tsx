@@ -1,13 +1,15 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, ScrollText, Clock, Trash2, Copy, Play, X, Download, Share2 } from 'lucide-react'
+import { Plus, ScrollText, Clock, CalendarClock, Trash2, Copy, Play, X, Download, Share2 } from 'lucide-react'
 import clsx from 'clsx'
 import { useScriptStore } from '../../store/script-store'
 import { useProjectStore } from '../../store/project-store'
 import { useSettingsStore } from '../../store/settings-store'
+import { useScheduleStore } from '../../store/schedule-store'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
 import { isTerminalRunStatus, useWorkflowRunnerStore } from '../../store/workflow-runner-store'
 import { ScriptSelector, type ScriptSelection } from './ScriptSelector'
+import { ScheduleDialog } from './ScheduleDialog'
 import type { Script } from '../../../../shared/script-schema'
 import type { WorkflowInputValues } from '../../../../shared/workflow-execution'
 import { buildScriptExecutionPlan, buildScriptPreparationSteps } from '../../../../shared/workflow-execution'
@@ -29,12 +31,18 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
   const projects = useProjectStore((s) => s.projects)
   const { updateProjectInStore } = useProjectStore()
   const settings = useSettingsStore((s) => s.settings)
+  const schedules = useScheduleStore((s) => s.schedules)
+  const scheduledScriptIds = useMemo(
+    () => new Set(schedules.filter((entry) => entry.enabled).map((entry) => entry.scriptId)),
+    [schedules]
+  )
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
   const startWorkflowRun = useWorkflowRunnerStore((s) => s.startRun)
   const { activeSessionId, splitSessionId, sessions, setTerminalVisible, addSession } = useTerminalStore()
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [confirmDelete, setConfirmDelete] = useState<Script | null>(null)
+  const [scheduleScript, setScheduleScript] = useState<Script | null>(null)
   const [dragScriptId, setDragScriptId] = useState<string | null>(null)
   const [dragOverScriptId, setDragOverScriptId] = useState<string | null>(null)
   const [scriptSelectorOpen, setScriptSelectorOpen] = useState(false)
@@ -448,6 +456,16 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
                       <Play size={11} />
                     </span>
                     <span
+                      onClick={(e) => { e.stopPropagation(); setScheduleScript(script) }}
+                      className={clsx(
+                        'tv-btn-icon-sm',
+                        scheduledScriptIds.has(script.id) && 'text-accent-light'
+                      )}
+                      title={scheduledScriptIds.has(script.id) ? t('schedule.scheduledBadge') : t('schedule.open')}
+                    >
+                      <CalendarClock size={11} />
+                    </span>
+                    <span
                       onClick={(e) => handleExport(e, script)}
                       className="tv-btn-icon-sm"
                       title={t('actions.exportTvflow')}
@@ -565,6 +583,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
           onCancel={() => setConfirmDelete(null)}
         />
       )}
+      {scheduleScript && <ScheduleDialog script={scheduleScript} onClose={() => setScheduleScript(null)} />}
     </div>
   )
 }

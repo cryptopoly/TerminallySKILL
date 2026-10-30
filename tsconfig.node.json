@@ -17,6 +17,7 @@
     "src/preload/**/*",
     "src/shared/**/*",
     "src/renderer/src/i18n/resources.ts",
+    "src/renderer/src/i18n/loader.ts",
     "src/renderer/src/i18n/*.json",
     "src/renderer/src/i18n/locales/*.json",
     "electron.vite.config.ts"

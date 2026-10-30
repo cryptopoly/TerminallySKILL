@@ -1,5 +1,5 @@
 import { i18n } from '../i18n'
-import { resources } from '../i18n/resources'
+import { baseResources } from '../i18n/resources'
 
 export interface ExitDiagnosticInput {
   title?: string | null
@@ -18,7 +18,7 @@ export interface ExitDiagnostics {
 type Options = Record<string, string | number>
 
 function lookupEnglish(key: string): string {
-  let node: unknown = (resources.en as unknown as Record<string, unknown>).logs
+  let node: unknown = (baseResources.en as unknown as Record<string, unknown>).logs
   for (const part of key.split('.')) {
     node = (node as Record<string, unknown> | undefined)?.[part]
   }

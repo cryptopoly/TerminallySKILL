@@ -5,6 +5,8 @@ import { getSettings } from './settings-manager'
 import { getAllProjects } from './project-manager'
 import { observePathAccess } from './path-access'
 import { getLogsDir } from './user-data-path'
+import { maskSecrets } from '../shared/secret-mask'
+import { recordMaskedForLog } from './secret-mask-stats'
 
 export async function resolveLogBaseDir(): Promise<string> {
   const settings = await getSettings()
@@ -60,11 +62,20 @@ export async function saveSessionLog(params: {
     const logPath = join(logDir, `${safeName}.log`)
     const metaPath = join(logDir, `${safeName}.meta.json`)
 
-    // Write log content first — if this fails, no meta file is written
-    await writeFile(logPath, params.content, 'utf-8')
+    // The whole log is masked at once, so a secret that arrived split across PTY chunks is
+    // already joined here (there is no streaming log writer).
+    let content = params.content
+    if ((await getSettings()).maskSecrets) {
+      const masked = maskSecrets(content)
+      content = masked.text
+      recordMaskedForLog(masked.counts)
+    }
 
-    const lineCount = params.content.split('\n').length
-    const sizeBytes = Buffer.byteLength(params.content, 'utf-8')
+    // Write log content first — if this fails, no meta file is written
+    await writeFile(logPath, content, 'utf-8')
+
+    const lineCount = content.split('\n').length
+    const sizeBytes = Buffer.byteLength(content, 'utf-8')
 
     const meta: SessionLogMeta = {
       sessionId: params.sessionId,
