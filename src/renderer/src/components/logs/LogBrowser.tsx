@@ -73,23 +73,26 @@ export function LogBrowser(): JSX.Element {
       ])
       setLogs(entries)
       setRuns(runEntries)
-      // The schedule history asked for one run to be opened
-      const requestedRunId = useLogStore.getState().pendingRunId
-      if (requestedRunId) {
-        setPendingRunId(null)
-        const requested = runEntries.find((entry) => entry.runId === requestedRunId)
-        if (requested) setSelectedRun(requested)
-      }
     } catch {
       setLogs([])
       setRuns([])
     }
     setLoading(false)
-  }, [activeProject?.id, setLogs, setLoading, setPendingRunId])
+  }, [activeProject?.id, setLogs, setLoading])
 
   useEffect(() => {
     loadHistory()
-  }, [loadHistory, pendingRunId])
+  }, [loadHistory])
+
+  // The schedule history asked for one run to be opened. The request stays in the store until the run is in
+  // the loaded list, so it survives a reload of the list or a remount of this panel.
+  useEffect(() => {
+    if (!pendingRunId) return
+    const requested = runs.find((entry) => entry.runId === pendingRunId)
+    if (!requested) return
+    setPendingRunId(null)
+    setSelectedRun(requested)
+  }, [pendingRunId, runs, setPendingRunId])
 
   const handleSelectLog = useCallback(
     async (log: SessionLogMeta) => {
