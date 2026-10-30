@@ -25,6 +25,8 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 8. **Opus review of translations (approved by Dan, done 2026-10-29, merged).** 77 strings fixed in 18 locales (plural-safe unit labels for ru/uk/pl, neutral "Interval:" labels where "Every" broke, meaning errors in tr/nl/ja/zh). Open: the settings card is titled "Notifications" in 17 locales but "Attention alerts" in English; recommend renaming English to "Notifications" for consistency. Native speakers still to confirm items listed in the review hand-back; Arabic needs a visual right-to-left check (letter-spacing on headings, `ml-2` in PrivacyTab). **Team recommendation:** yes, run one Opus pass over the 66 new 0.9.103 strings in the 18 locale files (not the whole app), then fix the Russian, Ukrainian and Polish plural forms. **Why:** Sonnet wrote them, so a stronger second model catches wrong terms and plural errors cheaply (small token cost). It does not replace native speakers, so keep item 3 open and keep the "machine-assisted" note in the release notes.
 
+9. **Protect `staging` and `main` on GitHub (asked by Dan 2026-10-30; GitHub banner says staging is unprotected, main is too).** **Team recommendation:** yes, light rules on both, set in Settings, Rules, Rulesets (or the "Protect this branch" button): block force-push, block deletion, require a pull request, require the CI check `test` to pass, zero required approvals (a solo owner cannot approve their own PR), admin bypass left on so Dan can still fix things. Do not require the new `cross-platform` jobs yet. **Why:** the flow (feature branch, PR into `staging`, promote to `main`, Release workflow) is safe only if nobody can push over it by accident; the Release workflow does not push to branches (it creates releases), so rules will not block it. Claude can apply this with `gh api` on Dan's go-ahead; it changes repo settings, so it asks first.
+
 ### P3: later
 
 
@@ -34,6 +36,10 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 <details>
 <summary>Decision log (made decisions, newest section last)</summary>
+
+## 2026-10-30
+
+- **Linux test VM automation (Dan asked):** `tools/vm-test.sh` runs the whole suite on the Ubuntu 26.04 ARM64 Parallels VM (`npm ci`, `test:ci`, `test:e2e`, local SSH, Docker SSH) and prints PASS/FAIL per step. Docker installed in that VM from Ubuntu's own `docker.io` package (snapshot `tools-ready-2026-10-30` taken first). **All five steps pass.** Finding: the Docker SSH test had never passed on Linux. Two fixes: the fixture account was locked (sshd refuses locked accounts even for key logins), and the spec overrode `HOME`, which OpenSSH ignores; it now uses the `ssh` wrapper like the local SSH spec. CI also gets macOS and Windows jobs (`cross-platform`; Windows is non-blocking until it has a clean run). App launched on the VM's real desktop and screenshotted: opens, shows v0.9.103.
 
 ## 2026-10-29, evening
 
