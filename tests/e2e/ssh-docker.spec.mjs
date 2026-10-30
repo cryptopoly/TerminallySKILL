@@ -1,8 +1,9 @@
 import { mkdir, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { delimiter, join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { isDockerAvailable, startDockerOpenSshFixture } from './docker-openssh-fixture.mjs'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { createSshIsolationShim } from './local-openssh-fixture.mjs'
 
 test('validates a real OpenSSH handshake through Docker', async ({}, testInfo) => {
   test.skip(process.env.RUN_DOCKER_E2E !== '1', 'Set RUN_DOCKER_E2E=1 to run Docker-backed SSH E2E tests.')
@@ -18,13 +19,21 @@ test('validates a real OpenSSH handshake through Docker', async ({}, testInfo) =
   let app
 
   try {
+    // OpenSSH ignores $HOME (and overriding it hangs Electron on quit on macOS), so pin the
+    // known_hosts file with an `ssh` wrapper on PATH instead.
     const sshHome = testInfo.outputPath('ssh-home')
     await mkdir(join(sshHome, '.ssh'), { recursive: true })
-    await writeFile(join(sshHome, '.ssh', 'known_hosts'), ssh.knownHostsEntry, 'utf8')
+    const knownHostsFile = join(sshHome, '.ssh', 'known_hosts')
+    await writeFile(knownHostsFile, ssh.knownHostsEntry, 'utf8')
+    const binDir = await createSshIsolationShim({
+      zshDir: join(sshHome, 'zdotdir'),
+      binDir: join(sshHome, 'bin'),
+      knownHostsFile,
+      logFile: join(sshHome, 'ssh-calls.log')
+    })
 
     const launched = await launchTerminallySkill(testInfo, {
-      HOME: sshHome,
-      USERPROFILE: sshHome
+      PATH: `${binDir}${delimiter}${process.env.PATH ?? ''}`
     })
     app = launched.app
 
