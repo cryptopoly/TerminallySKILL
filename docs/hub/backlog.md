@@ -26,7 +26,8 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [x] **P1, done on branch.** Upgrade Electron 42 to 45 (42 is out of support since 2026-10-21): now part of 0.9.103 (branch `feat/electron-45`).
 - [x] **P1, done on branch.** Four extra features for 0.9.103: agent-aware attention (14), jump-to-next-terminal (6), schedule history and catch-up (7), secret masking (15). See [ideas](ideas.md).
 - [x] **P1, done on branch.** Local OpenSSH remote-session e2e (branch `test/local-ssh-e2e`).
-- [ ] **P1, todo.** Merge both branches into `staging`, bump to 0.9.103, write release notes, release.
+- [ ] **P1, in progress.** Release 0.9.103: version bumped, notes written, PR #2 open into `staging`. Dan: hand-test UAT, merge, promote to `main`, run the Release workflow, tweet.
+- [ ] **P2, todo.** Automated Windows/Linux test: GitHub Actions matrix plus a Parallels `prlctl` script (see [decisions](decisions.md)).
 - [ ] **P2, todo.** Multi-host SSH run.
 - [ ] **P2, todo.** Command blocks lite.
 - [ ] **P3, banked.** Private tab ("don't record this tab"): see [ideas](ideas.md).
