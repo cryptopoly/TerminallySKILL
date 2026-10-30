@@ -38,8 +38,6 @@ async function launchElectronExecutable({
   })
 
   const page = await app.firstWindow()
-  // CI runners have a ~1024x768 virtual screen, where the terminal panel is left with a single row.
-  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.setSize(1440, 900))
   await page.waitForLoadState('domcontentloaded')
   await page.waitForFunction(() => Boolean(window.electronAPI?.getAppVersion))
 
