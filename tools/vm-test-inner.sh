@@ -3,6 +3,8 @@
 # Usage: vm-test-inner.sh <branch>
 set -uo pipefail
 export PATH=/usr/local/bin:$PATH
+# prlctl exec starts with umask 007, which would end up inside the deb's file modes.
+umask 022
 BRANCH=${1:?branch required}
 REPO=https://github.com/cryptopoly/TerminallySKILL.git
 
@@ -30,6 +32,9 @@ if docker info >/dev/null 2>&1; then
 else
   results+=("SKIP  test:e2e:ssh-docker (Docker not running in this VM)")
 fi
+
+step "package:linux" npm run package:linux
+step "package smoke (unpacked, AppImage, deb)" tools/linux-package-smoke.sh
 
 echo; echo "=== Summary"
 printf '%s\n' "${results[@]}"
