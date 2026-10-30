@@ -8,6 +8,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['dot']] : [['list']],
   use: {
-    trace: 'retain-on-failure'
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure'
   }
 })

@@ -4,6 +4,7 @@ import { launchTerminallySkill } from './electron-app.mjs'
 
 const JUMP_SHORTCUT = process.platform === 'darwin' ? 'Meta+Shift+J' : 'Control+Shift+J'
 
+// 'classic' input mode: the editor prompt takes ~190px of the terminal panel, which on a CI runner's ~1024x768 screen leaves one visible row.
 async function typeInVisibleTerminal(page, text) {
   await page.locator('.xterm:visible').click()
   await page.keyboard.type(text)
@@ -23,7 +24,7 @@ test('the terminal answers the OSC 7501 support query through the pty', async ({
     const workspaceDir = testInfo.outputPath('workspace')
     await mkdir(workspaceDir, { recursive: true })
     await page.evaluate(async (cwd) => {
-      await window.electronAPI.updateSettings({ attentionAlerts: true })
+      await window.electronAPI.updateSettings({ attentionAlerts: true, terminalInputMode: 'classic' })
       await window.electronAPI.createProject('E2E Agent Query', cwd, '#14b8a6', undefined, 'disabled', true)
     }, workspaceDir)
     await page.reload()
@@ -49,7 +50,7 @@ test('agent escape sequences in background tabs raise dots, and the shortcut jum
     await mkdir(workspaceDir, { recursive: true })
     await page.evaluate(async (cwd) => {
       // A high threshold keeps the ordinary "long command finished" dot out of this test.
-      await window.electronAPI.updateSettings({ attentionAlerts: true, attentionMinSeconds: 300 })
+      await window.electronAPI.updateSettings({ attentionAlerts: true, attentionMinSeconds: 300, terminalInputMode: 'classic' })
       await window.electronAPI.createProject('E2E Agents', cwd, '#14b8a6', undefined, 'disabled', true)
     }, workspaceDir)
     await page.reload()

@@ -41,7 +41,12 @@ test('a secret typed in a terminal is shown as typed but masked in the AI reques
       async ({ cwd, baseUrl }) => {
         await window.electronAPI.updateProvider('ollama', { enabled: true, baseUrl, model: 'mock-model' })
         await window.electronAPI.updateSettings({ activeAIProvider: 'ollama', maskSecrets: true })
-        return window.electronAPI.createProject('E2E Masking', cwd, '#14b8a6', undefined, 'enabled', true)
+        const created = await window.electronAPI.createProject('E2E Masking', cwd, '#14b8a6', undefined, 'enabled', true)
+        // A tall terminal panel: on a CI runner's ~1024x768 screen the default leaves the terminal one visible row.
+        await window.electronAPI.updateProject(created.id, {
+          workspaceLayout: { ...created.workspaceLayout, terminalSize: 75 }
+        })
+        return created
       },
       { cwd: workspaceDir, baseUrl: mock.url }
     )
