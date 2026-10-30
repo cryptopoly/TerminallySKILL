@@ -27,7 +27,7 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [x] **P1, done on branch.** Four extra features for 0.9.103: agent-aware attention (14), jump-to-next-terminal (6), schedule history and catch-up (7), secret masking (15). See [ideas](ideas.md).
 - [x] **P1, done on branch.** Local OpenSSH remote-session e2e (branch `test/local-ssh-e2e`).
 - [ ] **P1, in progress.** Release 0.9.103: version bumped, notes written, PR #2 open into `staging`. Dan: hand-test UAT, merge, promote to `main`, run the Release workflow, tweet.
-- [ ] **P2, todo.** Automated Windows/Linux test: GitHub Actions matrix plus a Parallels `prlctl` script (see [decisions](decisions.md)).
+- [x] **P2, started.** Ubuntu 26.04 ARM64 VM is set up (snapshot `fresh-install-2026-10-30`, Node 22, Xvfb, repo clone in `~/tsk`); test:ci and e2e pass there. Still todo: `prlctl` script, GitHub Actions matrix, Windows VMs. Original item: GitHub Actions matrix plus a Parallels `prlctl` script (see [decisions](decisions.md)).
 - [ ] **P2, todo.** Multi-host SSH run.
 - [ ] **P2, todo.** Command blocks lite.
 - [ ] **P3, banked.** Private tab ("don't record this tab"): see [ideas](ideas.md).
@@ -45,3 +45,4 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 | npm 10.9.4 crashes on dependency re-resolve | P2 | worked around | Use `npx -y npm@11`; consider upgrading npm in CI and locally |
 | `macos-latest` runner fails code signing | P2 | worked around | Pinned to `macos-15` |
 | Old x86_64 `node-pty` `build/Release` leftover | P3 | todo | Harmless; clean up |
+| E2E "a missed run is recorded..." fails about 1 run in 20 on a slow 2-CPU Linux VM at its last step (after "Open in Runs & Logs" the Runs list does not show the run; the snapshot shows the Dashboard instead of the Logs panel). Two real races already fixed (tab switch through the store; requested run kept until loaded); a rarer cause remains | P2 | worked around with one CI retry | Reproduce in the Parallels Ubuntu VM: loop `xvfb-run npx playwright test tests/e2e/attention-schedule.spec.mjs -g "missed run is recorded"`. May be a product bug: the jump can land on the Dashboard. |

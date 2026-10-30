@@ -37,6 +37,9 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 
 ## 2026-10-29, evening
 
+- **CI on `staging`/`main` had been failing since before 0.9.103 (found 2026-10-30):** `command-detector.test.ts` assumed macOS shell flags but CI runs Linux. Fixed by stubbing the platform in the test. The new Linux VM also exposed a bash-vs-zsh prompt assumption in the SSH e2e (fixed) and a rare race when opening a run from schedule history (partly fixed, one CI retry added).
+- **Ubuntu VM access (Dan):** Parallels Ubuntu 26.04 ARM64 is the general test VM. Snapshot taken first; tools installed inside (git, build tools, Xvfb, Electron libraries, openssh-server, Node 22). Windows VMs untouched.
+
 - **Release PR opened (Dan said go):** version bumped to 0.9.103, notes in `docs/releases/v0.9.103.md`, PR cryptopoly/TerminallySKILL#2 into `staging`. Old agent worktrees and merged local branches deleted (Dan OK). Remote branches left in place.
 - **VM test automation (Dan asked):** Parallels Desktop Pro is installed (licence valid to 2027-08-16, `prlctl` available) with VMs: Ubuntu 26.04 ARM64, W11, W11 CLEAN (snapshots), W11 Testing. UTM not installed. **Recommendation:** (1) add a GitHub Actions matrix (windows-latest, ubuntu-latest with xvfb) for unit + e2e, free and repeatable; (2) a `prlctl` script that reverts a VM snapshot, starts it, clones the branch, runs `npm ci`, `test:ci`, `test:e2e` and the packaged installer smoke test, collects results, shuts down. **Why:** CI covers x64 cheaply; the VMs cover Arm builds, a clean install and the update path. Needs Dan's OK before touching any VM (the Ubuntu VM is running; W11 is password protected; snapshots must be taken or reverted).
 
