@@ -60,20 +60,25 @@ export function attentionKindForExit(exitCode: number | null): AttentionKind {
 /** What a program reported about itself through OSC 7501: busy, or open but not working. */
 export type AgentActivity = 'working' | 'idle'
 
-/** The tab dot: one of the attention kinds, or `running` while a command or agent is busy. */
-export type TabDotState = AttentionKind | 'running'
+/**
+ * The tab dot: one of the attention kinds, `running` while a command or agent is busy, or `idle`
+ * while a program is open but quiet (it said so through OSC 7501, or printed nothing for a while).
+ */
+export type TabDotState = AttentionKind | 'running' | 'idle'
 
 /**
- * Finished, failed and needs-you entries always win, since they wait for the user. Otherwise the
- * dot shows `running` while the terminal is busy. An agent that reports its own state overrides
- * the shell, so an open but quiet agent does not look busy.
+ * Finished, failed and needs-you entries always win, since they wait for the user. An agent that
+ * reports its own state overrides the shell, so an open but quiet agent shows idle, not running.
+ * Otherwise a busy terminal that went quiet shows idle, and a busy one shows running.
  */
 export function resolveTabDotState(params: {
   entry: AttentionEntry | null | undefined
   shellBusy: boolean
   agentActivity: AgentActivity | null | undefined
+  quiet?: boolean
 }): TabDotState | null {
   if (params.entry) return params.entry.kind
-  if (params.agentActivity) return params.agentActivity === 'working' ? 'running' : null
-  return params.shellBusy ? 'running' : null
+  if (params.agentActivity) return params.agentActivity === 'working' ? 'running' : 'idle'
+  if (!params.shellBusy) return null
+  return params.quiet ? 'idle' : 'running'
 }
