@@ -36,6 +36,10 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 <details>
 <summary>Decision log (made decisions, newest section last)</summary>
 
+## 2026-10-31
+
+- **Linux and Windows smoke tests are part of every release (Dan asked):** see [release checklist](release-checklist.md). Linux: `tools/vm-release-smoke.sh <version>` on the draft release files. Windows: manual on `W11 Testing`, best effort. Lesson: the GitHub-built arm64 `.deb` shipped an x86 `pty.node`, so no terminal could start; a local build hid it. Also found: Run Script with no project threw "Invalid projectWorkingDir: expected string" (renderer sent null). Both fixed in PRs; draft release to be rebuilt before publishing.
+
 ## 2026-10-30
 
 - **Linux arm64 ships as `.deb` only (Dan decided):** electron-builder's arm64 AppImage runtime links `libz.so` and does not start on stock Ubuntu; a `patchelf` fix was proven but needs a double build, so it is banked. x64 keeps AppImage and `.deb`. Both architectures stay supported. PR `chore/linux-arm64-deb-only`.
