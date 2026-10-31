@@ -481,7 +481,11 @@
     "updates.installing": "Установлення оновлення",
     "updates.opening": "Відкриття оновлення",
     "palette.actions.jumpAttention": "Перейти до термінала, якому потрібні ви",
-    "palette.actions.jumpAttentionDescription": "Відкрити термінал, який чекає на вас найдовше, у будь-якому проєкті"
+    "palette.actions.jumpAttentionDescription": "Відкрити термінал, який чекає на вас найдовше, у будь-якому проєкті",
+    "palette.actions.nextProject": "Наступний проєкт",
+    "palette.actions.nextProjectDescription": "Перейти до наступного проєкту в списку вибору проєктів ({{shortcut}})",
+    "palette.actions.previousProject": "Попередній проєкт",
+    "palette.actions.previousProjectDescription": "Перейти до попереднього проєкту в списку вибору проєктів ({{shortcut}})"
   },
   "projects": {
     "selector.none": "Немає проєкту",
@@ -1436,6 +1440,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Відкрити нову вкладку термінала.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Перейти до термінала, який чекає на вас найдовше (вкладка з крапкою), у будь-якому проєкті. Ctrl+Shift+J у Windows і Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Перемикає на наступний або попередній проєкт у порядку списку вибору проєктів. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp у Windows і Linux.",
     "tour.show": "Показати вітальний тур",
     "tour.showDescription": "Коротка екскурсія всіма розділами застосунку",
     "tour.stepOf": "Крок {{current}} з {{total}}",

@@ -374,7 +374,11 @@
     "updates.installing": "更新をインストール中",
     "updates.opening": "更新を開いています",
     "palette.actions.jumpAttention": "対応が必要なターミナルへ移動",
-    "palette.actions.jumpAttentionDescription": "どのプロジェクトでも、最も長く待っているターミナルを開きます"
+    "palette.actions.jumpAttentionDescription": "どのプロジェクトでも、最も長く待っているターミナルを開きます",
+    "palette.actions.nextProject": "次のプロジェクト",
+    "palette.actions.nextProjectDescription": "プロジェクトセレクターの順で次のプロジェクトに切り替えます（{{shortcut}}）",
+    "palette.actions.previousProject": "前のプロジェクト",
+    "palette.actions.previousProjectDescription": "プロジェクトセレクターの順で前のプロジェクトに切り替えます（{{shortcut}}）"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} 個のターミナル",
@@ -1242,6 +1246,8 @@
     "sections.keyboard.steps.newTerminal.desc": "新しいターミナルタブを開きます。",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "最も長く待っているターミナル（ドット付きのタブ）へ、どのプロジェクトでも移動します。Windows と Linux では Ctrl+Shift+J。",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "プロジェクトセレクターの並び順で、次または前のプロジェクトに切り替えます。Windows と Linux では Ctrl+Alt+PageDown / Ctrl+Alt+PageUp。",
     "tour.show": "ようこそツアーを表示",
     "tour.showDescription": "アプリの各画面を短く案内します",
     "tour.stepOf": "ステップ {{current}} / {{total}}",

@@ -388,7 +388,11 @@
     "topbar.sshShellDescription": "Abrir una nueva shell SSH interactiva para este espacio de trabajo",
     "palette.actions.openSshShellDescription": "Abrir una nueva shell SSH interactiva para este espacio de trabajo",
     "palette.actions.jumpAttention": "Ir a la terminal que te necesita",
-    "palette.actions.jumpAttentionDescription": "Abre la terminal que lleva más tiempo esperándote, en cualquier proyecto"
+    "palette.actions.jumpAttentionDescription": "Abre la terminal que lleva más tiempo esperándote, en cualquier proyecto",
+    "palette.actions.nextProject": "Proyecto siguiente",
+    "palette.actions.nextProjectDescription": "Cambiar al siguiente proyecto del selector de proyectos ({{shortcut}})",
+    "palette.actions.previousProject": "Proyecto anterior",
+    "palette.actions.previousProjectDescription": "Cambiar al proyecto anterior del selector de proyectos ({{shortcut}})"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1275,6 +1279,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Abre una nueva pestaña de terminal.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Ir a la terminal que lleva más tiempo esperándote (una pestaña con un punto), en cualquier proyecto. Ctrl+Shift+J en Windows y Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Cambia al proyecto siguiente o anterior, en el orden del selector de proyectos. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp en Windows y Linux.",
     "tour.show": "Mostrar recorrido de bienvenida",
     "tour.showDescription": "Un breve recorrido por cada parte de la aplicación",
     "tour.stepOf": "Paso {{current}} de {{total}}",

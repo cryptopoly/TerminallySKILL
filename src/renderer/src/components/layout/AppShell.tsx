@@ -19,6 +19,7 @@ import { Dashboard } from '../dashboard/Dashboard'
 import { WorkflowRunnerEngine } from '../scripts/WorkflowRunnerHost'
 import { AttentionDot } from '../terminal/AttentionDot'
 import { useAttentionLayer } from '../../hooks/useAttentionLayer'
+import { useProjectCycleShortcut } from '../../hooks/useProjectCycleShortcut'
 import { jumpToNextAttention } from '../../lib/attention'
 import { useScheduledRuns } from '../../hooks/useScheduledRuns'
 import { HelpTip } from '../ui/HelpTip'
@@ -88,6 +89,7 @@ export function AppShell(): JSX.Element {
   const settingsHydrated = useSettingsStore((s) => s.settingsHydrated)
   const runsBySession = useWorkflowRunnerStore((s) => s.runsBySession)
   useAttentionLayer()
+  useProjectCycleShortcut()
   useScheduledRuns()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)

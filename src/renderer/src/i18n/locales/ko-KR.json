@@ -466,7 +466,11 @@
     "updates.installing": "업데이트 설치 중",
     "updates.opening": "업데이트 여는 중",
     "palette.actions.jumpAttention": "확인이 필요한 터미널로 이동",
-    "palette.actions.jumpAttentionDescription": "어느 프로젝트에서든 가장 오래 기다린 터미널을 엽니다"
+    "palette.actions.jumpAttentionDescription": "어느 프로젝트에서든 가장 오래 기다린 터미널을 엽니다",
+    "palette.actions.nextProject": "다음 프로젝트",
+    "palette.actions.nextProjectDescription": "프로젝트 선택기 순서에서 다음 프로젝트로 전환합니다 ({{shortcut}})",
+    "palette.actions.previousProject": "이전 프로젝트",
+    "palette.actions.previousProjectDescription": "프로젝트 선택기 순서에서 이전 프로젝트로 전환합니다 ({{shortcut}})"
   },
   "projects": {
     "selector.none": "프로젝트 없음",
@@ -1367,6 +1371,8 @@
     "sections.keyboard.steps.newTerminal.desc": "새 터미널 탭을 엽니다.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "가장 오래 기다린 터미널(점이 표시된 탭)로 어느 프로젝트에서든 이동합니다. Windows와 Linux에서는 Ctrl+Shift+J.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "프로젝트 선택기의 순서대로 다음 또는 이전 프로젝트로 전환합니다. Windows와 Linux에서는 Ctrl+Alt+PageDown / Ctrl+Alt+PageUp.",
     "tour.show": "환영 둘러보기 보기",
     "tour.showDescription": "앱의 각 화면을 짧게 안내합니다",
     "tour.stepOf": "{{total}}단계 중 {{current}}단계",

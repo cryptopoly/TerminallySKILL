@@ -304,7 +304,11 @@
     "updates.downloadOpen": "Update herunterladen und öffnen",
     "updates.opening": "Update wird geöffnet",
     "palette.actions.jumpAttention": "Zum Terminal springen, das dich braucht",
-    "palette.actions.jumpAttentionDescription": "Das Terminal öffnen, das am längsten auf dich wartet, in jedem Projekt"
+    "palette.actions.jumpAttentionDescription": "Das Terminal öffnen, das am längsten auf dich wartet, in jedem Projekt",
+    "palette.actions.nextProject": "Nächstes Projekt",
+    "palette.actions.nextProjectDescription": "Zum nächsten Projekt in der Projektauswahl wechseln ({{shortcut}})",
+    "palette.actions.previousProject": "Vorheriges Projekt",
+    "palette.actions.previousProjectDescription": "Zum vorherigen Projekt in der Projektauswahl wechseln ({{shortcut}})"
   },
   "projects": {
     "dialog.titleEdit": "Projekt bearbeiten",
@@ -1173,6 +1177,8 @@
     "sections.snippets.title": "Snippets",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Zum Terminal springen, das am längsten auf dich wartet (ein Tab mit Punkt), in jedem Projekt. Ctrl+Shift+J unter Windows und Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Wechselt zum nächsten oder vorherigen Projekt, in der Reihenfolge der Projektauswahl. Strg+Alt+Bild-ab / Strg+Alt+Bild-auf unter Windows und Linux (Ctrl+Alt+PageDown / Ctrl+Alt+PageUp).",
     "tour.show": "Willkommenstour anzeigen",
     "tour.showDescription": "Ein kurzer Rundgang durch alle Bereiche der App",
     "tour.stepOf": "Schritt {{current}} von {{total}}",
