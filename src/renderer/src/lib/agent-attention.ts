@@ -74,8 +74,8 @@ function readScreen(term: Terminal): string[] {
 function describeApprovalPrompt(term: Terminal): string | null {
   const match = matchApprovalPrompt(readScreen(term))
   if (!match) return null
-  const line = sanitizeAgentText(maskSecrets(match.line).text.replace(/[│╭╮╰╯─❯]/g, ' '))
-  return match.tool === 'generic' || !line ? line : `${match.tool}: ${line}`
+  // The prompt line itself, not the tool name: some rows overlap, and the line says what is asked.
+  return sanitizeAgentText(maskSecrets(match.line).text.replace(/[│╭╮╰╯─❯]/g, ' ')) || null
 }
 
 function sessionActivity(sessionId: string) {

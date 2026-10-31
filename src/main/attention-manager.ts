@@ -24,6 +24,7 @@ export function forgetWindowBadge(win: BrowserWindow): void {
 export function notifyAttention(win: BrowserWindow, request: AttentionNotifyRequest): void {
   if (!Notification.isSupported() || win.isDestroyed()) return
 
+  // Not silent and no custom sound: the system's default notification sound plays (if the user allows sounds).
   const notification = new Notification({ title: request.title, body: request.body, silent: false })
   notification.on('click', () => {
     if (win.isDestroyed()) return

@@ -961,7 +961,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
           </label>
         )}
         {settings.attentionAlerts && (
-          <p className="px-1 text-xs text-gray-500" data-testid="attention-agent-hint">
+          <p className="px-4 text-xs text-gray-500" data-testid="attention-agent-hint">
             {t('general.attention.agentHint', { ns: 'settings' })}
           </p>
         )}
