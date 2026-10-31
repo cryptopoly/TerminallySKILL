@@ -1,14 +1,15 @@
 import { fetchWithTimeout } from './ai-fetch'
 import { translateNativeSync } from './native-i18n'
+import { existsSync, readdirSync } from 'fs'
 import { mkdir } from 'fs/promises'
 import { join } from 'path'
 import { readJsonFile, writeJsonAtomic } from './atomic-write'
 import type { AppSettings, AIProvider } from '../shared/settings-schema'
-import { DEFAULT_SETTINGS } from '../shared/settings-schema'
 import { getStoredProviderApiKeys, setStoredProviderApiKeys } from './secret-manager'
 import {
   applyProviderApiKeys,
   backfillSettings,
+  createInitialSettings,
   extractProviderApiKeys,
   stripProviderApiKeys
 } from './settings-persistence'
@@ -32,6 +33,17 @@ const OPENAI_COMPATIBLE_PROVIDER_IDS = new Set<AIProvider['id']>([
   'lmstudio'
 ])
 
+/** True when the data folder already holds files from an earlier run of the app. */
+export function dataDirHasExistingData(dataDir: string): boolean {
+  if (!existsSync(dataDir)) return false
+  try {
+    return readdirSync(dataDir).some((name) => !name.startsWith('.'))
+  } catch {
+    // Unreadable folder: assume an existing user rather than greeting them with a tour
+    return true
+  }
+}
+
 async function ensureDataDir(): Promise<void> {
   await mkdir(getDataDir(), { recursive: true })
 }
@@ -42,7 +54,7 @@ async function load(): Promise<AppSettings> {
   const data = await readJsonFile(
     getSettingsFile(),
     (value) => backfillSettings(value as Partial<AppSettings>),
-    () => structuredClone(DEFAULT_SETTINGS)
+    () => createInitialSettings(dataDirHasExistingData(getDataDir()))
   )
   const storedApiKeys = await getStoredProviderApiKeys()
   const legacyApiKeys = extractProviderApiKeys(data)

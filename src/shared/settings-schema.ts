@@ -84,6 +84,11 @@ export interface AppSettings {
   attentionMinSeconds: number
   /** Replace well-known secret shapes before text is saved to logs/run history or sent to AI */
   maskSecrets: boolean
+  /**
+   * The first-run welcome tour has been shown (finished or skipped). False only for a
+   * brand-new data folder; an existing settings.json without this field counts as seen.
+   */
+  hasSeenWelcomeTour: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -112,6 +117,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   attentionAlerts: true,
   attentionMinSeconds: DEFAULT_ATTENTION_MIN_SECONDS,
   maskSecrets: true,
+  hasSeenWelcomeTour: false,
   aiProviders: [
     {
       id: 'openai',
