@@ -53,6 +53,18 @@ export function pickNextAttentionSession(
   return next?.sessionId ?? null
 }
 
+/** With no keyboard or mouse input for this long, a terminal in front of nobody counts as unwatched. */
+export const AWAY_AFTER_SECONDS = 120
+
+export function isUserAway(idleSeconds: number): boolean {
+  return idleSeconds >= AWAY_AFTER_SECONDS
+}
+
+/** SIGHUP, SIGINT (Ctrl+C) and SIGTERM: the user or the system ended it on purpose. Not news. */
+export function isUserStopExitCode(exitCode: number | null): boolean {
+  return exitCode === 129 || exitCode === 130 || exitCode === 143
+}
+
 export function attentionKindForExit(exitCode: number | null): AttentionKind {
   return exitCode !== null && exitCode !== 0 ? 'failed' : 'finished'
 }

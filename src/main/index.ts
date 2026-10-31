@@ -12,6 +12,7 @@ import { getNativeTranslator, onUiLocaleChange } from './native-i18n'
 import { forgetWindowBadge } from './attention-manager'
 import { describeOutboundUrl, recordOutboundRequest } from './network-log'
 import { startScheduler, stopScheduler } from './schedule-manager'
+import { markAppQuitting } from './attention-manager'
 
 console.log('[terminallyskill] Main process loaded (v2 — shell integration + log save)')
 
@@ -283,6 +284,7 @@ app.whenReady().then(() => {
 })
 
 app.on('before-quit', () => {
+  markAppQuitting()
   stopScheduler()
   killAllTerminals()
   stopAllVncSessions()

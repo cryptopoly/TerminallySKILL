@@ -3,6 +3,12 @@ import { IPC_CHANNELS } from '../shared/ipc-channels'
 import type { AttentionNotifyRequest } from '../shared/attention'
 
 const badgeCountByWindow = new Map<number, number>()
+let appQuitting = false
+
+/** Quitting ends every terminal; those endings are not news to the person who quit. */
+export function markAppQuitting(): void {
+  appQuitting = true
+}
 
 function applyBadge(): void {
   let total = 0
@@ -22,7 +28,7 @@ export function forgetWindowBadge(win: BrowserWindow): void {
 }
 
 export function notifyAttention(win: BrowserWindow, request: AttentionNotifyRequest): void {
-  if (!Notification.isSupported() || win.isDestroyed()) return
+  if (appQuitting || !Notification.isSupported() || win.isDestroyed()) return
 
   // Not silent and no custom sound: the system's default notification sound plays (if the user allows sounds).
   const notification = new Notification({ title: request.title, body: request.body, silent: false })

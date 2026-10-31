@@ -1,6 +1,7 @@
 import { i18n } from '../i18n'
 import {
   attentionKindForExit,
+  isUserStopExitCode,
   pickNextAttentionSession,
   shouldRaiseCommandAttention,
   type AttentionKind
@@ -18,16 +19,33 @@ function truncate(text: string): string {
   return singleLine.length > MAX_BODY_LENGTH ? `${singleLine.slice(0, MAX_BODY_LENGTH - 1)}…` : singleLine
 }
 
+let userAway = false
+
+export function setUserAway(away: boolean): void {
+  userAway = away
+}
+
+/** The window is in front and someone is at the keyboard. */
+export function isUserAttending(): boolean {
+  return document.hasFocus() && !userAway
+}
+
 /** True when the user is already working in this terminal, so an alert would only repeat what is on screen. */
 export function isUserWatchingSession(sessionId: string): boolean {
-  if (!document.hasFocus()) return false
+  if (!isUserAttending()) return false
   const { sessions, activeSessionId, splitSessionId, focusedPane, terminalVisible } = useTerminalStore.getState()
   if (!terminalVisible) return false
   const projectId = useProjectStore.getState().activeProject?.id ?? null
   return sessionId === resolveWatchedSessionId(sessions, projectId, activeSessionId, splitSessionId, focusedPane)
 }
 
-export function raiseAttention(sessionId: string, kind: AttentionKind, title: string, body: string): void {
+export function raiseAttention(
+  sessionId: string,
+  kind: AttentionKind,
+  title: string,
+  body: string,
+  options: { notify?: boolean } = {}
+): void {
   if (!useSettingsStore.getState().settings.attentionAlerts) return
   if (isUserWatchingSession(sessionId)) return
 
@@ -37,8 +55,8 @@ export function raiseAttention(sessionId: string, kind: AttentionKind, title: st
     at: new Date().toISOString()
   })
 
-  // Inside the app the tab dot is enough. The OS notification is for when the window is not in front.
-  if (!document.hasFocus()) {
+  // Inside the app the tab dot is enough. The OS notification is for when nobody is looking at it.
+  if (options.notify !== false && !isUserAttending()) {
     void window.electronAPI.notifyAttention({ sessionId, title, body })
   }
 }
@@ -99,7 +117,9 @@ export function raiseCommandAttention(params: {
     kind === 'failed'
       ? i18n.t('attention.failed', { ns: 'terminal', code: params.exitCode })
       : i18n.t('attention.finished', { ns: 'terminal' })
-  raiseAttention(params.sessionId, kind, title, truncate(params.command))
+  raiseAttention(params.sessionId, kind, title, truncate(params.command), {
+    notify: !isUserStopExitCode(params.exitCode)
+  })
 }
 
 export function describeWorkflowAttention(

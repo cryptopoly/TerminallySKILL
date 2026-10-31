@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
 import { createReminderScheduler } from '../../../shared/attention-reminders'
 import { i18n, resolveFormatLocale } from '../i18n'
+import { isUserAway, isUserStopExitCode } from '../../../shared/attention'
 import {
   describeWorkflowAttention,
+  isUserAttending,
+  setUserAway,
   focusAttentionSession,
   isUserWatchingSession,
   raiseAttention
@@ -29,6 +32,7 @@ function sendReminder(sessionId: string, minutes: number): void {
   })
 }
 
+const IDLE_POLL_MS = 10_000
 const ALERT_STATUSES: WorkflowRunStatus[] = ['awaiting_approval', 'completed', 'failed']
 
 function clearWatchedEntries(): void {
@@ -57,7 +61,9 @@ export function useAttentionLayer(): void {
           run.status as 'awaiting_approval' | 'completed' | 'failed',
           run.script.name
         )
-        raiseAttention(sessionId, alert.kind, alert.title, alert.body)
+        raiseAttention(sessionId, alert.kind, alert.title, alert.body, {
+          notify: !run.steps.some((step) => isUserStopExitCode(step.exitCode))
+        })
       }
     })
   }, [])
@@ -74,6 +80,23 @@ export function useAttentionLayer(): void {
     }
   }, [])
 
+  // Walked away with the window in front: after a while with no input, nobody is watching any terminal
+  useEffect(() => {
+    let away = false
+    const check = async (): Promise<void> => {
+      const nowAway = isUserAway(await window.electronAPI.getSystemIdleSeconds())
+      if (nowAway === away) return
+      away = nowAway
+      setUserAway(nowAway)
+      if (!nowAway) clearWatchedEntries()
+    }
+    const timer = setInterval(() => void check(), IDLE_POLL_MS)
+    return () => {
+      clearInterval(timer)
+      setUserAway(false)
+    }
+  }, [])
+
   // Still waiting for a yes: remind at 10 and 30 minutes while the window is not in front
   useEffect(() => {
     const reminders = createReminderScheduler({
@@ -82,7 +105,7 @@ export function useAttentionLayer(): void {
         return (
           entry?.kind === 'approval' &&
           entry.at === at &&
-          !document.hasFocus() &&
+          !isUserAttending() &&
           useSettingsStore.getState().settings.attentionAlerts
         )
       },

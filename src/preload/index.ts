@@ -499,6 +499,8 @@ export const electronAPI = {
   notifyAttention:(request: AttentionNotifyRequest): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.ATTENTION_NOTIFY, request),
 
+  getSystemIdleSeconds: (): Promise<number> => ipcRenderer.invoke(IPC_CHANNELS.ATTENTION_IDLE_SECONDS),
+
   setAttentionBadge: (count: number): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.ATTENTION_SET_BADGE, count),
 
