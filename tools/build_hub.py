@@ -259,7 +259,8 @@ def render_table(rows: list[str], ctx: Ctx) -> str:
         style = f' style="text-align:{align[n]}"' if n < len(align) and align[n] else ""
         return f"<{tag}{style}>{content}</{tag}>"
 
-    out = ['<div class="tablewrap"><table>', "<thead><tr>" + "".join(cell("th", c, n) for n, c in enumerate(head)) + "</tr></thead><tbody>"]
+    wide = ' class="wide"' if len(head) >= 8 else ""
+    out = [f'<div class="tablewrap"><table{wide}>', "<thead><tr>" + "".join(cell("th", c, n) for n, c in enumerate(head)) + "</tr></thead><tbody>"]
     for r in body:
         cells = split_row(r)
         out.append("<tr>" + "".join(cell("td", c, n) for n, c in enumerate(cells)) + "</tr>")
@@ -477,6 +478,53 @@ def git_commit(root: Path) -> str:
         return ""
 
 
+# Filter chips for tables with a Status column. Done and dropped rows start hidden; the choice is remembered per browser.
+STATUS_FILTER_JS = """<script>
+document.querySelectorAll("main table.wide").forEach(function(table,tableIndex){
+  var heads=Array.prototype.map.call(table.tHead.rows[0].cells,function(c){return c.textContent.trim().toLowerCase()});
+  var col=heads.indexOf("status");
+  if(col<0)return;
+  var rows=Array.prototype.slice.call(table.tBodies[0].rows);
+  var statusOf=function(r){return r.cells[col].textContent.trim().toLowerCase()};
+  var statuses=[];
+  rows.forEach(function(r){var v=statusOf(r);if(v&&statuses.indexOf(v)<0)statuses.push(v)});
+  var key="hub-status-filter:"+location.pathname+":"+tableIndex;
+  var hidden=null;
+  try{hidden=JSON.parse(localStorage.getItem(key))}catch(e){}
+  if(!Array.isArray(hidden))hidden=["done","dropped"];
+  var bar=document.createElement("div");
+  bar.className="statusfilter";
+  bar.setAttribute("role","group");
+  bar.setAttribute("aria-label","Filter by status");
+  var count=document.createElement("span");
+  var apply=function(){
+    var shown=0;
+    rows.forEach(function(r){var off=hidden.indexOf(statusOf(r))>=0;r.hidden=off;if(!off)shown++});
+    count.textContent="Showing "+shown+" of "+rows.length;
+    try{localStorage.setItem(key,JSON.stringify(hidden))}catch(e){}
+  };
+  statuses.forEach(function(status){
+    var b=document.createElement("button");
+    b.type="button";
+    b.textContent=status.charAt(0).toUpperCase()+status.slice(1);
+    b.setAttribute("aria-pressed",String(hidden.indexOf(status)<0));
+    b.addEventListener("click",function(){
+      var at=hidden.indexOf(status);
+      if(at>=0)hidden.splice(at,1);else hidden.push(status);
+      b.setAttribute("aria-pressed",String(at>=0));
+      apply();
+    });
+    bar.appendChild(b);
+  });
+  bar.appendChild(count);
+  table.closest(".tablewrap").before(bar);
+  apply();
+  addEventListener("beforeprint",function(){rows.forEach(function(r){r.hidden=false})});
+  addEventListener("afterprint",apply);
+});
+</script>"""
+
+
 def page_html(page: Page, body: str, ctx: dict) -> str:
     here = posixpath.dirname(page.out) or "."
     css = posixpath.relpath(CSS_PATH, here)
@@ -513,6 +561,7 @@ def page_html(page: Page, body: str, ctx: dict) -> str:
 </main>
 </div>
 <script>addEventListener("beforeprint",function(){{document.querySelectorAll("main details").forEach(function(d){{d.open=true}})}})</script>
+{STATUS_FILTER_JS}
 </body>
 </html>
 """
@@ -700,6 +749,29 @@ table{border-collapse:collapse;width:100%;font-size:.93rem}
 th,td{padding:8px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
 th{background:var(--panel);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 tr:last-child td{border-bottom:0}
+main:has(table.wide){max-width:none}
+table.wide{width:100%;min-width:58rem;table-layout:fixed;border-collapse:separate;border-spacing:0}
+table.wide th,table.wide td{padding:8px 7px;font-size:.8rem;overflow-wrap:anywhere}
+table.wide th{font-size:.66rem;letter-spacing:.02em;overflow-wrap:normal}
+table.wide .badge{overflow-wrap:normal;white-space:normal}
+table.wide th:nth-child(1){width:4%}
+table.wide th:nth-child(2){width:8%}
+table.wide th:nth-child(3){width:6%}
+table.wide th:nth-child(4){width:7%}
+table.wide th:nth-child(5){width:13%}
+table.wide th:nth-child(6){width:20%}
+table.wide th:nth-child(7){width:13%}
+table.wide th:nth-child(8){width:9%}
+table.wide th:nth-child(9){width:7%}
+table.wide th:nth-child(10){width:6%}
+table.wide th:nth-child(11){width:7%}
+.statusfilter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:1em 0 -.4em;font-size:.82rem;color:var(--muted)}
+.statusfilter button{font:inherit;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.statusfilter button[aria-pressed=true]{color:var(--text,inherit);background:var(--panel)}
+.statusfilter button:focus-visible{outline:2px solid currentColor;outline-offset:1px}
+@media print{.statusfilter{display:none}}
+table.wide th:first-child,table.wide td:first-child{position:sticky;left:0;background:var(--card);z-index:1}
+table.wide th:first-child{background:var(--panel)}
 blockquote{margin:1em 0;padding:.4em 1em;border-left:4px solid var(--line);color:var(--muted)}
 blockquote.callout{border-radius:0 10px 10px 0;color:var(--text);background:var(--note);border-left-color:var(--p3)}
 blockquote.warning{background:var(--warn);border-left-color:var(--p2)}

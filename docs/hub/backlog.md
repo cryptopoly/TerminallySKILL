@@ -29,6 +29,8 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [x] **P1, done on branch.** Local OpenSSH remote-session e2e (branch `test/local-ssh-e2e`).
 - [x] **P1, done (published 2026-10-31).** Release 0.9.103: version bumped, notes written, PR #2 open into `staging`. Dan: hand-test UAT, merge, promote to `main`, run the Release workflow, tweet.
 - [x] **P2, started.** Ubuntu 26.04 ARM64 VM is set up (snapshot `fresh-install-2026-10-30`, Node 22, Xvfb, repo clone in `~/tsk`); test:ci and e2e pass there. Still todo: `prlctl` script, GitHub Actions matrix, Windows VMs. Original item: GitHub Actions matrix plus a Parallels `prlctl` script (see [decisions](decisions.md)).
+- [ ] **P2, todo (from 0.9.103 feedback, see [decisions](decisions.md) item 11).** Maximise terminal toggle (11a); running/needs-you/idle dots with legend (11b); agent-waiting notifications: BEL, quiet-terminal check, repeat reminder, verify Claude Code output first (11c, headline candidate); cycle-projects shortcut (11d); masking gaps: empty-user URL password, `DB_PASS`/`PWD`, `_KEY` names (11e).
+- [ ] **P2, todo (decisions item 12).** zsh history: HISTFILE points into the temp ZDOTDIR so history is lost per tab (12c); no OS alert for user stops, exit 130/143/129 (12a); workflow step marker `printf` leaking to the display (12b, P3).
 - [ ] **P2, todo.** Multi-host SSH run.
 - [ ] **P2, todo.** Command blocks lite.
 - [ ] **P3, banked.** Private tab ("don't record this tab"): see [ideas](ideas.md).
