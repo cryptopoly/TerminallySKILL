@@ -756,10 +756,10 @@ table.wide th{font-size:.66rem;letter-spacing:.02em;overflow-wrap:normal}
 table.wide .badge{overflow-wrap:normal;white-space:normal}
 table.wide th:nth-child(1){width:4%}
 table.wide th:nth-child(2){width:8%}
-table.wide th:nth-child(3){width:5%}
+table.wide th:nth-child(3){width:6%}
 table.wide th:nth-child(4){width:7%}
 table.wide th:nth-child(5){width:13%}
-table.wide th:nth-child(6){width:21%}
+table.wide th:nth-child(6){width:20%}
 table.wide th:nth-child(7){width:13%}
 table.wide th:nth-child(8){width:9%}
 table.wide th:nth-child(9){width:7%}
