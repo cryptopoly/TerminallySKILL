@@ -146,6 +146,97 @@ export function stripWorkflowMarkerEcho(data: string): string {
   return data.replace(/[^\r\n]*printf '\\033\]7337;workflow-step;[^\r\n]*(\r?\n)?/g, '')
 }
 
+const ECHO_ESCAPE_RE = /\x1b(?:\[[0-?]*[ -/]*[@-~]|[()][A-Z0-9]|[@-Z\\-_=>])/y
+
+/**
+ * Removes the shell's echo of a typed-ahead step marker. A line editor (zsh ZLE, readline) that
+ * picks up typed-ahead text redraws it a few characters per PTY chunk, so a per-chunk replace never
+ * sees the whole line. Armed only while a marker is expected. Text that could be the marker is held
+ * back until it matches or stops matching; the caller flushes it after a short wait so a program's
+ * output or a user's typing is never lost.
+ */
+export class MarkerEchoFilter {
+  private expected: string | null = null
+  private matched = 0
+  private held = ''
+  private swallowingLineEnd = false
+  private promptsSinceArmed = 0
+
+  arm(markerCommand: string): void {
+    this.expected = markerCommand
+    this.matched = 0
+    this.promptsSinceArmed = 0
+  }
+
+  /** The marker's own prompt is the second one after it was written; past that it was flushed (Ctrl+C, sudo). */
+  notePromptReady(): void {
+    if (!this.expected) return
+    this.promptsSinceArmed += 1
+    if (this.promptsSinceArmed >= 2) this.expected = null
+  }
+
+  get hasHeld(): boolean {
+    return this.held.length > 0
+  }
+
+  flush(): string {
+    const held = this.held
+    this.held = ''
+    this.matched = 0
+    return held
+  }
+
+  push(data: string): string {
+    if (!this.expected && !this.swallowingLineEnd && !this.held) return data
+    let out = ''
+    let i = 0
+    while (i < data.length) {
+      if (this.swallowingLineEnd) {
+        const newline = data.indexOf('\n', i)
+        if (newline === -1) return out
+        this.swallowingLineEnd = false
+        i = newline + 1
+        continue
+      }
+      if (!this.expected) {
+        out += this.flush() + data.slice(i)
+        return out
+      }
+      const char = data[i]
+      if (this.matched > 0 && char === '\x1b') {
+        ECHO_ESCAPE_RE.lastIndex = i
+        const escape = ECHO_ESCAPE_RE.exec(data)
+        if (escape) {
+          this.held += escape[0]
+          i += escape[0].length
+          continue
+        }
+      }
+      if (char === this.expected[this.matched]) {
+        this.held += char
+        this.matched += 1
+        i += 1
+        if (this.matched === this.expected.length) {
+          // Erase the prompt the marker was drawn after; the shell draws a new one once it has run
+          out += '\r\x1b[K'
+          this.held = ''
+          this.matched = 0
+          this.expected = null
+          this.swallowingLineEnd = true
+        }
+        continue
+      }
+      if (this.matched > 0) {
+        out += this.flush()
+        continue
+      }
+      out += char
+      i += 1
+    }
+    return out
+  }
+}
+
 export function extractWorkflowStepResults(data: string): {
   data: string
   results: Array<{

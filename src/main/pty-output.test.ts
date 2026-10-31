@@ -10,6 +10,7 @@ import {
   splitIncompleteMarker,
   stripAnsi,
   stripWorkflowMarkerEcho,
+  MarkerEchoFilter
 } from './pty-output'
 
 describe('pty-output', () => {
@@ -139,5 +140,55 @@ describe('pty-output', () => {
   it('removes the echoed workflow step marker command line', () => {
     const echoed = "npm test\r\nprintf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-1' 'step-1' $?\r\nok\r\n"
     expect(stripWorkflowMarkerEcho(echoed)).toBe('npm test\r\nok\r\n')
+  })
+})
+
+describe('MarkerEchoFilter', () => {
+  const marker = "printf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-1' 'st-1' $?"
+  // Chunks captured from zsh picking up a typed-ahead marker after a command ended
+  const zleChunks = ['\rP% \x1b[?2004hp', 'r', 'i', 'n', 't', "f '", '\\', '03', '3', ']', '7', '3', '3', '7', ';w', 'o', 'rk', 'fl', 'o', 'w-', 'st', 'e', 'p', ';%', "s;%s;%d\\007' 'wf-1' 'st", "-1'", ' $?', '\x1b[?2004l\r\r\n', '\rP% ']
+
+  it('removes an echo drawn a few characters per chunk', () => {
+    const filter = new MarkerEchoFilter()
+    filter.arm(marker)
+    const out = zleChunks.map((chunk) => filter.push(chunk)).join('')
+    expect(out).not.toContain('workflow-step')
+    expect(out).not.toContain('printf')
+    expect(out).toBe('\rP% \x1b[?2004h\r\x1b[K\rP% ')
+  })
+
+  it('passes everything through when not armed', () => {
+    const filter = new MarkerEchoFilter()
+    expect(filter.push('printf hello\r\n')).toBe('printf hello\r\n')
+    expect(filter.hasHeld).toBe(false)
+  })
+
+  it('gives back text that stops matching', () => {
+    const filter = new MarkerEchoFilter()
+    filter.arm(marker)
+    expect(filter.push('pri')).toBe('')
+    expect(filter.push('ce: 3\r\n')).toBe('price: 3\r\n')
+  })
+
+  it('lets the caller flush a held prefix so typing is not lost', () => {
+    const filter = new MarkerEchoFilter()
+    filter.arm(marker)
+    expect(filter.push('p')).toBe('')
+    expect(filter.hasHeld).toBe(true)
+    expect(filter.flush()).toBe('p')
+  })
+
+  it('tolerates colour codes inside the echo', () => {
+    const filter = new MarkerEchoFilter()
+    filter.arm('printf x')
+    expect(filter.push('pri\x1b[32mntf\x1b[0m x\r\nnext')).toBe('\r\x1b[Knext')
+  })
+
+  it('disarms at the second prompt when the marker was flushed by Ctrl+C', () => {
+    const filter = new MarkerEchoFilter()
+    filter.arm(marker)
+    filter.notePromptReady()
+    filter.notePromptReady()
+    expect(filter.push('p')).toBe('p')
   })
 })
