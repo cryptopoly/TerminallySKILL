@@ -259,7 +259,8 @@ def render_table(rows: list[str], ctx: Ctx) -> str:
         style = f' style="text-align:{align[n]}"' if n < len(align) and align[n] else ""
         return f"<{tag}{style}>{content}</{tag}>"
 
-    out = ['<div class="tablewrap"><table>', "<thead><tr>" + "".join(cell("th", c, n) for n, c in enumerate(head)) + "</tr></thead><tbody>"]
+    wide = ' class="wide"' if len(head) >= 8 else ""
+    out = [f'<div class="tablewrap"><table{wide}>', "<thead><tr>" + "".join(cell("th", c, n) for n, c in enumerate(head)) + "</tr></thead><tbody>"]
     for r in body:
         cells = split_row(r)
         out.append("<tr>" + "".join(cell("td", c, n) for n, c in enumerate(cells)) + "</tr>")
@@ -700,6 +701,14 @@ table{border-collapse:collapse;width:100%;font-size:.93rem}
 th,td{padding:8px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
 th{background:var(--panel);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 tr:last-child td{border-bottom:0}
+table.wide{width:auto;min-width:100%;border-collapse:separate;border-spacing:0}
+table.wide th,table.wide td{min-width:6.5rem;font-size:.85rem}
+table.wide td:nth-child(2){min-width:11rem}
+table.wide td:nth-child(5),table.wide td:nth-child(7),table.wide td:nth-child(8),table.wide td:nth-child(9){min-width:15rem}
+table.wide td:nth-child(6){min-width:34rem}
+table.wide td:nth-child(11){min-width:9rem}
+table.wide th:first-child,table.wide td:first-child{position:sticky;left:0;background:var(--card);z-index:1;min-width:3.2rem}
+table.wide th:first-child{background:var(--panel)}
 blockquote{margin:1em 0;padding:.4em 1em;border-left:4px solid var(--line);color:var(--muted)}
 blockquote.callout{border-radius:0 10px 10px 0;color:var(--text);background:var(--note);border-left-color:var(--p3)}
 blockquote.warning{background:var(--warn);border-left-color:var(--p2)}
