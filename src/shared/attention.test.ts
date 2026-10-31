@@ -3,6 +3,7 @@ import {
   attentionKindForExit,
   normalizeAttentionMinSeconds,
   pickNextAttentionSession,
+  resolveTabDotState,
   shouldRaiseCommandAttention
 } from './attention'
 
@@ -53,5 +54,28 @@ describe('pickNextAttentionSession', () => {
   it('skips closed terminals and returns null when nothing is waiting', () => {
     expect(pickNextAttentionSession({ gone: entry(1), b: entry(9) }, ['b'])).toBe('b')
     expect(pickNextAttentionSession({}, ['a'])).toBeNull()
+  })
+})
+
+describe('resolveTabDotState', () => {
+  const entry = (kind: 'finished' | 'failed' | 'approval') => ({ kind, detail: 'x', at: start })
+
+  it('shows nothing for an idle terminal', () => {
+    expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: null })).toBeNull()
+  })
+
+  it('shows running while the shell is busy', () => {
+    expect(resolveTabDotState({ entry: undefined, shellBusy: true, agentActivity: undefined })).toBe('running')
+  })
+
+  it('lets finished, failed and needs-you win over running', () => {
+    for (const kind of ['finished', 'failed', 'approval'] as const) {
+      expect(resolveTabDotState({ entry: entry(kind), shellBusy: true, agentActivity: 'working' })).toBe(kind)
+    }
+  })
+
+  it('follows the state an agent reports over the shell', () => {
+    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: 'idle' })).toBeNull()
+    expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: 'working' })).toBe('running')
   })
 })

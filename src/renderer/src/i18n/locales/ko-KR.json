@@ -1176,7 +1176,15 @@
     "attention.agentNotify": "확인이 필요합니다",
     "attention.agentBlocked": "입력을 기다리는 중",
     "attention.agentDone": "완료",
-    "attention.agentError": "오류로 중지됨"
+    "attention.agentError": "오류로 중지됨",
+    "dot.running": "실행 중",
+    "dot.needsYou": "확인 필요",
+    "dot.finished": "완료",
+    "dot.failed": "실패",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "터미널 최대화",
+    "panel.restore": "터미널 크기 복원",
+    "panel.maximiseDescription": "프로젝트 화면을 숨겨 터미널이 창 전체를 채우게 합니다. 다시 클릭하면 이전 크기로 돌아갑니다."
   },
   "onboarding": {
     "subtitle": "시각적 명령 빌더, 터미널 작업공간, 워크플로, 로그, AI 도구",
@@ -1381,7 +1389,20 @@
     "tour.steps.terminal.title": "터미널",
     "tour.steps.terminal.body": "여기에서 현재 프로젝트의 터미널을 엽니다. 터미널을 분할하고, 명령을 대기열에 넣고, 명령이 실패하면 도움을 받을 수 있습니다.",
     "tour.steps.helpSettings.title": "도움말과 설정",
-    "tour.steps.helpSettings.body": "도움말 가이드는 모든 기능을 설명하며 이 둘러보기를 다시 볼 수 있습니다. 설정에는 테마, 언어, AI 제공자, 개인정보 보호 탭이 있습니다."
+    "tour.steps.helpSettings.body": "도움말 가이드는 모든 기능을 설명하며 이 둘러보기를 다시 볼 수 있습니다. 설정에는 테마, 언어, AI 제공자, 개인정보 보호 탭이 있습니다.",
+    "sections.statusDots.title": "터미널 탭 점",
+    "sections.statusDots.steps.running.label": "실행 중",
+    "sections.statusDots.steps.running.desc": "회전하는 주황색 고리: 그 터미널에서 명령이나 에이전트가 작업 중입니다.",
+    "sections.statusDots.steps.needsYou.label": "확인 필요",
+    "sections.statusDots.steps.needsYou.desc": "깜박이는 노란색 점: 워크플로나 에이전트가 승인이나 답변을 기다립니다.",
+    "sections.statusDots.steps.finished.label": "완료",
+    "sections.statusDots.steps.finished.desc": "초록색 점: 보지 않는 동안 오래 걸린 명령이나 워크플로가 끝났습니다.",
+    "sections.statusDots.steps.failed.label": "실패",
+    "sections.statusDots.steps.failed.desc": "X 표시가 있는 빨간색 점: 명령, 워크플로 또는 에이전트가 오류로 멈췄습니다.",
+    "sections.statusDots.steps.idle.label": "대기 중인 에이전트",
+    "sections.statusDots.steps.idle.desc": "회색 고리: 에이전트가 열려 있지만 조용히 다음 작업을 기다립니다. 에이전트 알림과 함께 제공될 예정입니다.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "터미널을 창 전체로 최대화하거나 복원합니다. Windows와 Linux에서는 Ctrl+Shift+M."
   },
   "ai": {
     "explain.label": "AI로 설명",

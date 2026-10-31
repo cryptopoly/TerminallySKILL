@@ -1109,7 +1109,15 @@
     "attention.agentNotify": "Requiert votre attention",
     "attention.agentBlocked": "Vous attend",
     "attention.agentDone": "Terminé",
-    "attention.agentError": "Arrêté sur une erreur"
+    "attention.agentError": "Arrêté sur une erreur",
+    "dot.running": "En cours",
+    "dot.needsYou": "Vous attend",
+    "dot.finished": "Terminé",
+    "dot.failed": "Échec",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Agrandir le terminal",
+    "panel.restore": "Restaurer la taille du terminal",
+    "panel.maximiseDescription": "Masque la vue du projet pour que le terminal occupe toute la fenêtre. Cliquez à nouveau pour revenir à la taille précédente."
   },
   "onboarding": {
     "subtitle": "Builder de commandes visuel, espace de travail de terminal, workflows, journaux et outils IA",
@@ -1318,7 +1326,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Ouvrez ici un terminal dans le projet en cours. Vous pouvez le diviser, mettre des commandes en file d’attente et demander de l’aide quand une commande échoue.",
     "tour.steps.helpSettings.title": "Aide et paramètres",
-    "tour.steps.helpSettings.body": "Le guide explique chaque fonction et peut relancer cette visite. Les paramètres regroupent thèmes, langue, fournisseurs d’IA et l’onglet Confidentialité."
+    "tour.steps.helpSettings.body": "Le guide explique chaque fonction et peut relancer cette visite. Les paramètres regroupent thèmes, langue, fournisseurs d’IA et l’onglet Confidentialité.",
+    "sections.statusDots.title": "Points des onglets de terminal",
+    "sections.statusDots.steps.running.label": "En cours",
+    "sections.statusDots.steps.running.desc": "Anneau orange qui tourne : une commande ou un agent travaille dans ce terminal.",
+    "sections.statusDots.steps.needsYou.label": "Vous attend",
+    "sections.statusDots.steps.needsYou.desc": "Point jaune qui pulse : un workflow ou un agent attend votre approbation ou votre réponse.",
+    "sections.statusDots.steps.finished.label": "Terminé",
+    "sections.statusDots.steps.finished.desc": "Point vert : une longue commande ou un workflow s’est terminé pendant que vous regardiez ailleurs.",
+    "sections.statusDots.steps.failed.label": "Échec",
+    "sections.statusDots.steps.failed.desc": "Point rouge avec une croix : une commande, un workflow ou un agent s’est arrêté sur une erreur.",
+    "sections.statusDots.steps.idle.label": "Agent inactif",
+    "sections.statusDots.steps.idle.desc": "Anneau gris : un agent est ouvert mais calme, en attente de sa prochaine tâche. Arrive avec les notifications d’agent.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Agrandir le terminal pour qu’il occupe toute la fenêtre, ou le restaurer. Ctrl+Shift+M sous Windows et Linux."
   },
   "ai": {
     "explain.label": "Expliquer avec l’IA",

@@ -3,11 +3,13 @@ import { i18n } from '../i18n'
 import {
   OSC_7501_SUPPORT_REPLY,
   parseOsc7501,
+  parseOsc7501Activity,
   parseOsc777,
   parseOsc9,
   type AgentSignal
 } from '../../../shared/agent-status'
 import { useSettingsStore } from '../store/settings-store'
+import { useTerminalStore } from '../store/terminal-store'
 import { raiseAttention } from './attention'
 
 /** A program printing these in a loop must not flood the notification centre. */
@@ -54,6 +56,9 @@ export function registerAgentAttention(term: Terminal, sessionId: string): IDisp
       return true
     }),
     term.parser.registerOscHandler(7501, (data) => {
+      // Working or not drives the running dot only; it never notifies or counts on the dock badge.
+      const activity = parseOsc7501Activity(data)
+      if (activity) useTerminalStore.getState().setAgentActivity(sessionId, activity)
       handleSignal(sessionId, parseOsc7501(data))
       return true
     }),

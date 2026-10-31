@@ -1174,7 +1174,15 @@
     "attention.agentNotify": "İlginizi bekliyor",
     "attention.agentBlocked": "Sizi bekliyor",
     "attention.agentDone": "Bitti",
-    "attention.agentError": "Bir hatayla durdu"
+    "attention.agentError": "Bir hatayla durdu",
+    "dot.running": "Çalışıyor",
+    "dot.needsYou": "Seni bekliyor",
+    "dot.finished": "Tamamlandı",
+    "dot.failed": "Başarısız",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Terminali büyüt",
+    "panel.restore": "Terminal boyutunu geri al",
+    "panel.maximiseDescription": "Proje görünümünü gizler, böylece terminal tüm pencereyi kaplar. Önceki boyuta dönmek için yeniden tıkla."
   },
   "onboarding": {
     "subtitle": "Görsel komut oluşturucu, terminal çalışma alanı, workflow'lar, günlükler ve AI araçları",
@@ -1379,7 +1387,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Geçerli projede buradan bir terminal açın. Terminali bölebilir, komutları sıraya alabilir ve bir komut başarısız olduğunda yardım isteyebilirsiniz.",
     "tour.steps.helpSettings.title": "Yardım ve ayarlar",
-    "tour.steps.helpSettings.body": "Yardım kılavuzu her özelliği açıklar ve bu turu yeniden başlatabilir. Ayarlarda temalar, dil, yapay zekâ sağlayıcıları ve Gizlilik sekmesi bulunur."
+    "tour.steps.helpSettings.body": "Yardım kılavuzu her özelliği açıklar ve bu turu yeniden başlatabilir. Ayarlarda temalar, dil, yapay zekâ sağlayıcıları ve Gizlilik sekmesi bulunur.",
+    "sections.statusDots.title": "Terminal sekmesi noktaları",
+    "sections.statusDots.steps.running.label": "Çalışıyor",
+    "sections.statusDots.steps.running.desc": "Dönen turuncu halka: o terminalde bir komut veya ajan çalışıyor.",
+    "sections.statusDots.steps.needsYou.label": "Seni bekliyor",
+    "sections.statusDots.steps.needsYou.desc": "Yanıp sönen sarı nokta: bir workflow veya ajan onayını ya da yanıtını bekliyor.",
+    "sections.statusDots.steps.finished.label": "Tamamlandı",
+    "sections.statusDots.steps.finished.desc": "Yeşil nokta: sen bakmıyorken uzun bir komut veya workflow tamamlandı.",
+    "sections.statusDots.steps.failed.label": "Başarısız",
+    "sections.statusDots.steps.failed.desc": "Çarpılı kırmızı nokta: bir komut, workflow veya ajan bir hatayla durdu.",
+    "sections.statusDots.steps.idle.label": "Boşta ajan",
+    "sections.statusDots.steps.idle.desc": "Gri halka: bir ajan açık ama sessiz, sıradaki görevi bekliyor. Ajan bildirimleriyle birlikte gelecek.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Terminali pencereyi kaplayacak şekilde büyüt veya geri al. Windows ve Linux’ta Ctrl+Shift+M."
   },
   "ai": {
     "explain.label": "AI ile açıkla",

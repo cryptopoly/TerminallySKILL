@@ -1120,7 +1120,15 @@
     "attention.agentNotify": "Требует вашего внимания",
     "attention.agentBlocked": "Ждёт вас",
     "attention.agentDone": "Готово",
-    "attention.agentError": "Остановлено с ошибкой"
+    "attention.agentError": "Остановлено с ошибкой",
+    "dot.running": "Выполняется",
+    "dot.needsYou": "Ждёт вас",
+    "dot.finished": "Завершено",
+    "dot.failed": "Ошибка",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Развернуть терминал",
+    "panel.restore": "Вернуть размер терминала",
+    "panel.maximiseDescription": "Скрывает вид проекта, чтобы терминал занял всё окно. Нажмите ещё раз, чтобы вернуть прежний размер."
   },
   "onboarding": {
     "subtitle": "Визуальный конструктор команд, терминальное рабочее пространство, workflow, логи и инструменты ИИ",
@@ -1331,7 +1339,20 @@
     "tour.steps.terminal.title": "Терминал",
     "tour.steps.terminal.body": "Здесь открывается терминал в текущем проекте. Его можно разделить, ставить команды в очередь и просить помощи, если команда завершилась ошибкой.",
     "tour.steps.helpSettings.title": "Справка и настройки",
-    "tour.steps.helpSettings.body": "Справка описывает каждую функцию и позволяет повторить этот тур. В настройках — темы, язык, поставщики ИИ и вкладка «Приватность»."
+    "tour.steps.helpSettings.body": "Справка описывает каждую функцию и позволяет повторить этот тур. В настройках — темы, язык, поставщики ИИ и вкладка «Приватность».",
+    "sections.statusDots.title": "Точки на вкладках терминала",
+    "sections.statusDots.steps.running.label": "Выполняется",
+    "sections.statusDots.steps.running.desc": "Оранжевое вращающееся кольцо: в этом терминале работает команда или агент.",
+    "sections.statusDots.steps.needsYou.label": "Ждёт вас",
+    "sections.statusDots.steps.needsYou.desc": "Пульсирующая жёлтая точка: workflow или агент ждёт вашего подтверждения или ответа.",
+    "sections.statusDots.steps.finished.label": "Завершено",
+    "sections.statusDots.steps.finished.desc": "Зелёная точка: долгая команда или workflow завершились, пока вы не смотрели.",
+    "sections.statusDots.steps.failed.label": "Ошибка",
+    "sections.statusDots.steps.failed.desc": "Красная точка с крестиком: команда, workflow или агент остановились с ошибкой.",
+    "sections.statusDots.steps.idle.label": "Агент простаивает",
+    "sections.statusDots.steps.idle.desc": "Серое кольцо: агент открыт, но бездействует и ждёт следующей задачи. Появится вместе с уведомлениями агентов.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Развернуть терминал на всё окно или вернуть прежний размер. Ctrl+Shift+M в Windows и Linux."
   },
   "ai": {
     "explain.label": "Объяснить с помощью ИИ",

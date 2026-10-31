@@ -66,8 +66,8 @@ test('agent escape sequences in background tabs raise dots, and the shortcut jum
     // Tab 3: the one being watched.
     await openNewTab(page, 3)
 
-    const notifyDot = page.locator('[role="status"][aria-label="Needs your attention: Agent needs you"]')
-    const statusDot = page.locator('[role="status"][aria-label="Stopped with an error: tests failed"]')
+    const notifyDot = page.locator('[role="status"][aria-label="Needs you · Needs your attention: Agent needs you"]')
+    const statusDot = page.locator('[role="status"][aria-label="Failed · Stopped with an error: tests failed"]')
     await expect(notifyDot).toHaveCount(1, { timeout: 20_000 })
     await expect(statusDot).toHaveCount(1, { timeout: 20_000 })
 

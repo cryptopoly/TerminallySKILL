@@ -1051,7 +1051,15 @@
     "attention.agentNotify": "対応が必要です",
     "attention.agentBlocked": "あなたを待っています",
     "attention.agentDone": "完了",
-    "attention.agentError": "エラーで停止しました"
+    "attention.agentError": "エラーで停止しました",
+    "dot.running": "実行中",
+    "dot.needsYou": "対応待ち",
+    "dot.finished": "完了",
+    "dot.failed": "失敗",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "ターミナルを最大化",
+    "panel.restore": "ターミナルのサイズを戻す",
+    "panel.maximiseDescription": "プロジェクト表示を隠し、ターミナルをウィンドウ全体に広げます。もう一度クリックすると元のサイズに戻ります。"
   },
   "onboarding": {
     "subtitle": "ビジュアルコマンドビルダー、ターミナルワークスペース、ワークフロー、ログ、AI ツール",
@@ -1256,7 +1264,20 @@
     "tour.steps.terminal.title": "ターミナル",
     "tour.steps.terminal.body": "ここから現在のプロジェクトでターミナルを開きます。分割したり、コマンドをキューに入れたり、コマンドが失敗したときに助けを求めたりできます。",
     "tour.steps.helpSettings.title": "ヘルプと設定",
-    "tour.steps.helpSettings.body": "ヘルプガイドではすべての機能を説明しており、このツアーをもう一度見ることもできます。設定にはテーマ、言語、AI プロバイダー、「プライバシー」タブがあります。"
+    "tour.steps.helpSettings.body": "ヘルプガイドではすべての機能を説明しており、このツアーをもう一度見ることもできます。設定にはテーマ、言語、AI プロバイダー、「プライバシー」タブがあります。",
+    "sections.statusDots.title": "ターミナルタブのドット",
+    "sections.statusDots.steps.running.label": "実行中",
+    "sections.statusDots.steps.running.desc": "回転するオレンジのリング：そのターミナルでコマンドまたはエージェントが動作中です。",
+    "sections.statusDots.steps.needsYou.label": "対応待ち",
+    "sections.statusDots.steps.needsYou.desc": "点滅する黄色のドット：ワークフローまたはエージェントがあなたの承認や回答を待っています。",
+    "sections.statusDots.steps.finished.label": "完了",
+    "sections.statusDots.steps.finished.desc": "緑のドット：見ていない間に長いコマンドまたはワークフローが完了しました。",
+    "sections.statusDots.steps.failed.label": "失敗",
+    "sections.statusDots.steps.failed.desc": "×印付きの赤いドット：コマンド、ワークフロー、またはエージェントがエラーで停止しました。",
+    "sections.statusDots.steps.idle.label": "待機中のエージェント",
+    "sections.statusDots.steps.idle.desc": "灰色のリング：エージェントは開いていますが、次の作業を待って静かにしています。エージェント通知と一緒に提供予定です。",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "ターミナルをウィンドウ全体に最大化、または元に戻します。Windows と Linux では Ctrl+Shift+M。"
   },
   "ai": {
     "explain.label": "AI で説明",

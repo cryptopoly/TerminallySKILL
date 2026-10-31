@@ -2,8 +2,18 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   X, FolderOpen, Star, ScrollText, TerminalSquare, FileText, Zap,
-  Camera, Keyboard, Code2, Settings, Columns2, Search, Monitor, Compass
+  Camera, Keyboard, Code2, Settings, Columns2, Search, Monitor, Compass, CircleDot
 } from 'lucide-react'
+import { TabStatusDot, type DotStyle } from '../terminal/AttentionDot'
+
+/** Legend rows in the status-dots section show the real dot before the label. */
+const STATUS_DOT_BY_STEP: Record<string, DotStyle> = {
+  running: 'running',
+  needsYou: 'approval',
+  finished: 'finished',
+  failed: 'failed',
+  idle: 'idle'
+}
 
 interface Section {
   id: string
@@ -11,7 +21,7 @@ interface Section {
   title: string
   color: string
   keywords?: string[]
-  steps: { label: string; desc: string }[]
+  steps: { label: string; desc: string; dot?: DotStyle }[]
 }
 
 interface GuideSection extends Section {
@@ -109,6 +119,13 @@ const SECTION_TEMPLATES = [
     steps: ['open', 'editorPrompt', 'aiReview', 'splits', 'queue', 'pathFix', 'promote', 'sshShell', 'vnc']
   },
   {
+    id: 'statusDots',
+    icon: <CircleDot size={16} />,
+    color: 'text-accent-light',
+    keywords: ['dot', 'dots', 'legend', 'status', 'running', 'attention', 'notification', 'approval', 'tab'],
+    steps: ['running', 'needsYou', 'finished', 'failed', 'idle']
+  },
+  {
     id: 'runsLogs',
     icon: <Columns2 size={16} />,
     color: 'text-amber-300',
@@ -155,7 +172,7 @@ const SECTION_TEMPLATES = [
     icon: <Keyboard size={16} />,
     color: 'text-gray-500',
     keywords: ['shortcuts', 'keys', 'hotkeys'],
-    steps: ['terminal', 'palette', 'projectSwitcher', 'splitVertical', 'splitHorizontal', 'focusPane', 'terminalSearch', 'findFiles', 'closeFile', 'snapshot', 'help', 'newTerminal', 'jumpAttention', 'cycleProjects']
+    steps: ['terminal', 'palette', 'projectSwitcher', 'splitVertical', 'splitHorizontal', 'focusPane', 'terminalSearch', 'findFiles', 'closeFile', 'snapshot', 'help', 'newTerminal', 'jumpAttention', 'cycleProjects', 'maximise']
   },
 ] as const
 
@@ -179,6 +196,7 @@ export function InfoPanel({
       keywords: [...section.keywords],
       title: t(`sections.${section.id}.title`),
       steps: section.steps.map((step) => ({
+        dot: section.id === 'statusDots' ? STATUS_DOT_BY_STEP[step] : undefined,
         label: t(`sections.${section.id}.steps.${step}.label`),
         desc: t(`sections.${section.id}.steps.${step}.desc`, {
           placeholderSyntax: '{{placeholders}}',
@@ -289,6 +307,11 @@ export function InfoPanel({
                   {section.visibleSteps.map((step) => (
                     <div key={step.label} className="flex gap-3">
                       <span className="text-xs font-medium text-gray-300 shrink-0 mt-0.5 w-40">
+                        {step.dot && (
+                          <span className="inline-flex w-4 align-middle" data-testid={`legend-dot-${step.dot}`}>
+                            <TabStatusDot state={step.dot} />
+                          </span>
+                        )}
                         {highlightGuideText(step.label, searchQuery)}
                       </span>
                       <span className="text-xs text-gray-500 leading-relaxed">

@@ -1177,7 +1177,15 @@
     "attention.agentNotify": "Perlu perhatian Anda",
     "attention.agentBlocked": "Menunggu Anda",
     "attention.agentDone": "Selesai",
-    "attention.agentError": "Berhenti karena galat"
+    "attention.agentError": "Berhenti karena galat",
+    "dot.running": "Berjalan",
+    "dot.needsYou": "Butuh Anda",
+    "dot.finished": "Selesai",
+    "dot.failed": "Gagal",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Maksimalkan terminal",
+    "panel.restore": "Kembalikan ukuran terminal",
+    "panel.maximiseDescription": "Menyembunyikan tampilan proyek sehingga terminal memenuhi jendela. Klik lagi untuk kembali ke ukuran sebelumnya."
   },
   "onboarding": {
     "subtitle": "Command builder visual, workspace terminal, workflow, log, dan alat AI",
@@ -1382,7 +1390,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Buka terminal di proyek saat ini dari sini. Anda dapat membaginya, mengantrekan perintah, dan meminta bantuan saat perintah gagal.",
     "tour.steps.helpSettings.title": "Bantuan dan pengaturan",
-    "tour.steps.helpSettings.body": "Panduan bantuan menjelaskan setiap fitur dan dapat memutar ulang tur ini. Pengaturan berisi tema, bahasa, penyedia AI, dan tab Privasi."
+    "tour.steps.helpSettings.body": "Panduan bantuan menjelaskan setiap fitur dan dapat memutar ulang tur ini. Pengaturan berisi tema, bahasa, penyedia AI, dan tab Privasi.",
+    "sections.statusDots.title": "Titik pada tab terminal",
+    "sections.statusDots.steps.running.label": "Berjalan",
+    "sections.statusDots.steps.running.desc": "Cincin oranye berputar: perintah atau agen sedang bekerja di terminal itu.",
+    "sections.statusDots.steps.needsYou.label": "Butuh Anda",
+    "sections.statusDots.steps.needsYou.desc": "Titik kuning berdenyut: workflow atau agen menunggu persetujuan atau jawaban Anda.",
+    "sections.statusDots.steps.finished.label": "Selesai",
+    "sections.statusDots.steps.finished.desc": "Titik hijau: perintah panjang atau workflow selesai saat Anda tidak melihat.",
+    "sections.statusDots.steps.failed.label": "Gagal",
+    "sections.statusDots.steps.failed.desc": "Titik merah bersilang: perintah, workflow, atau agen berhenti dengan galat.",
+    "sections.statusDots.steps.idle.label": "Agen menganggur",
+    "sections.statusDots.steps.idle.desc": "Cincin abu-abu: agen terbuka tetapi diam, menunggu tugas berikutnya. Hadir bersama notifikasi agen.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Maksimalkan terminal agar memenuhi jendela, atau kembalikan. Ctrl+Shift+M di Windows dan Linux."
   },
   "ai": {
     "explain.label": "Jelaskan dengan AI",

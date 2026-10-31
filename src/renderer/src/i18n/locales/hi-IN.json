@@ -1173,7 +1173,15 @@
     "attention.agentNotify": "आपका ध्यान चाहिए",
     "attention.agentBlocked": "आपका इंतज़ार कर रहा है",
     "attention.agentDone": "पूरा हुआ",
-    "attention.agentError": "त्रुटि के साथ रुका"
+    "attention.agentError": "त्रुटि के साथ रुका",
+    "dot.running": "चल रहा है",
+    "dot.needsYou": "आपकी ज़रूरत है",
+    "dot.finished": "पूरा हुआ",
+    "dot.failed": "विफल",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "टर्मिनल बड़ा करें",
+    "panel.restore": "टर्मिनल का आकार वापस लाएँ",
+    "panel.maximiseDescription": "प्रोजेक्ट व्यू छिपाता है ताकि टर्मिनल पूरी विंडो भर दे। पिछले आकार पर लौटने के लिए फिर से क्लिक करें।"
   },
   "onboarding": {
     "subtitle": "विज़ुअल कमांड बिल्डर, टर्मिनल वर्कस्पेस, वर्कफ़्लो, लॉग और AI टूल",
@@ -1379,7 +1387,20 @@
     "tour.steps.terminal.title": "टर्मिनल",
     "tour.steps.terminal.body": "यहां से मौजूदा प्रोजेक्ट में टर्मिनल खोलें। आप इसे बांट सकते हैं, कमांड कतार में लगा सकते हैं और कमांड विफल होने पर मदद मांग सकते हैं।",
     "tour.steps.helpSettings.title": "मदद और सेटिंग्स",
-    "tour.steps.helpSettings.body": "मदद गाइड हर फ़ीचर समझाती है और यह टूर दोबारा चला सकती है। सेटिंग्स में थीम, भाषा, AI प्रदाता और गोपनीयता टैब हैं।"
+    "tour.steps.helpSettings.body": "मदद गाइड हर फ़ीचर समझाती है और यह टूर दोबारा चला सकती है। सेटिंग्स में थीम, भाषा, AI प्रदाता और गोपनीयता टैब हैं।",
+    "sections.statusDots.title": "टर्मिनल टैब के बिंदु",
+    "sections.statusDots.steps.running.label": "चल रहा है",
+    "sections.statusDots.steps.running.desc": "घूमता नारंगी छल्ला: उस टर्मिनल में कोई कमांड या एजेंट काम कर रहा है।",
+    "sections.statusDots.steps.needsYou.label": "आपकी ज़रूरत है",
+    "sections.statusDots.steps.needsYou.desc": "धड़कता पीला बिंदु: कोई वर्कफ़्लो या एजेंट आपकी मंज़ूरी या जवाब का इंतज़ार कर रहा है।",
+    "sections.statusDots.steps.finished.label": "पूरा हुआ",
+    "sections.statusDots.steps.finished.desc": "हरा बिंदु: आपके न देखते समय कोई लंबी कमांड या वर्कफ़्लो पूरा हुआ।",
+    "sections.statusDots.steps.failed.label": "विफल",
+    "sections.statusDots.steps.failed.desc": "क्रॉस वाला लाल बिंदु: कोई कमांड, वर्कफ़्लो या एजेंट त्रुटि के साथ रुक गया।",
+    "sections.statusDots.steps.idle.label": "निष्क्रिय एजेंट",
+    "sections.statusDots.steps.idle.desc": "धूसर छल्ला: एजेंट खुला है पर शांत है, अगले काम का इंतज़ार कर रहा है। एजेंट सूचनाओं के साथ आएगा।",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "टर्मिनल को पूरी विंडो में बड़ा करें, या वापस लाएँ। Windows और Linux पर Ctrl+Shift+M।"
   },
   "ai": {
     "explain.label": "AI से समझाएं",

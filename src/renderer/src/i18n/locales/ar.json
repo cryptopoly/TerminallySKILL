@@ -1309,7 +1309,15 @@
     "attention.agentNotify": "يحتاج إلى انتباهك",
     "attention.agentBlocked": "بانتظارك",
     "attention.agentDone": "تم",
-    "attention.agentError": "توقف بسبب خطأ"
+    "attention.agentError": "توقف بسبب خطأ",
+    "dot.running": "قيد التشغيل",
+    "dot.needsYou": "بحاجة إليك",
+    "dot.finished": "انتهى",
+    "dot.failed": "فشل",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "تكبير الطرفية",
+    "panel.restore": "استعادة حجم الطرفية",
+    "panel.maximiseDescription": "يخفي عرض المشروع لتملأ الطرفية النافذة. انقر مرة أخرى للعودة إلى الحجم السابق."
   },
   "onboarding": {
     "subtitle": "منشئ أوامر مرئي ومساحة عمل طرفية وسير عمل وسجلات وأدوات ذكاء اصطناعي",
@@ -1526,7 +1534,20 @@
     "tour.steps.terminal.title": "الطرفية",
     "tour.steps.terminal.body": "افتح من هنا طرفية في المشروع الحالي. يمكنك تقسيمها، ووضع الأوامر في قائمة انتظار، وطلب المساعدة عند فشل أمر.",
     "tour.steps.helpSettings.title": "المساعدة والإعدادات",
-    "tour.steps.helpSettings.body": "يشرح دليل المساعدة كل ميزة ويمكنه إعادة تشغيل هذه الجولة. وتضم الإعدادات السمات واللغة ومزوّدي الذكاء الاصطناعي وتبويب الخصوصية."
+    "tour.steps.helpSettings.body": "يشرح دليل المساعدة كل ميزة ويمكنه إعادة تشغيل هذه الجولة. وتضم الإعدادات السمات واللغة ومزوّدي الذكاء الاصطناعي وتبويب الخصوصية.",
+    "sections.statusDots.title": "نقاط تبويبات الطرفية",
+    "sections.statusDots.steps.running.label": "قيد التشغيل",
+    "sections.statusDots.steps.running.desc": "حلقة برتقالية دوّارة: يعمل أمر أو وكيل في هذه الطرفية.",
+    "sections.statusDots.steps.needsYou.label": "بحاجة إليك",
+    "sections.statusDots.steps.needsYou.desc": "نقطة صفراء نابضة: سير عمل أو وكيل ينتظر موافقتك أو ردك.",
+    "sections.statusDots.steps.finished.label": "انتهى",
+    "sections.statusDots.steps.finished.desc": "نقطة خضراء: انتهى أمر طويل أو سير عمل بينما لم تكن تنظر.",
+    "sections.statusDots.steps.failed.label": "فشل",
+    "sections.statusDots.steps.failed.desc": "نقطة حمراء عليها علامة ×: توقف أمر أو سير عمل أو وكيل بسبب خطأ.",
+    "sections.statusDots.steps.idle.label": "وكيل خامل",
+    "sections.statusDots.steps.idle.desc": "حلقة رمادية: الوكيل مفتوح لكنه هادئ وينتظر مهمته التالية. ستتوفر مع إشعارات الوكلاء.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "تكبير الطرفية لتملأ النافذة أو استعادتها. Ctrl+Shift+M على Windows وLinux."
   },
   "ai": {
     "explain.label": "اشرح بالذكاء الاصطناعي",
