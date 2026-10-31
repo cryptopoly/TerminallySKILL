@@ -215,7 +215,8 @@
     "privacy.masking.kind.password": "密碼",
     "privacy.masking.kind.token": "權杖",
     "privacy.masking.kind.secret": "機密",
-    "privacy.masking.kind.api-key": "API 金鑰"
+    "privacy.masking.kind.api-key": "API 金鑰",
+    "general.attention.agentHint": "程式設計代理程式（Claude Code、Codex、Gemini CLI 等）也可以在這裡提醒你。如果沒有提醒，請查看代理程式本身的通知設定。"
   },
   "commands": {
     "addDialog.title": "新增命令",
@@ -1177,7 +1178,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "最大化終端機",
     "panel.restore": "還原終端機大小",
-    "panel.maximiseDescription": "隱藏專案檢視，讓終端機占滿視窗。再按一次可還原先前的大小。"
+    "panel.maximiseDescription": "隱藏專案檢視，讓終端機占滿視窗。再按一次可還原先前的大小。",
+    "dot.idle": "閒置",
+    "attention.waitingForYes": "等待你的確認",
+    "attention.bell": "響了終端機鈴聲",
+    "attention.stillWaiting": "仍在等你（{{duration}}）"
   },
   "onboarding": {
     "subtitle": "視覺化命令建構器、終端機工作區、工作流程、日誌與 AI 工具",
@@ -1392,8 +1397,8 @@
     "sections.statusDots.steps.finished.desc": "綠色圓點：在你沒看的時候，一個耗時較長的命令或工作流程已完成。",
     "sections.statusDots.steps.failed.label": "失敗",
     "sections.statusDots.steps.failed.desc": "帶叉號的紅色圓點：命令、工作流程或代理程式因錯誤而停止。",
-    "sections.statusDots.steps.idle.label": "閒置的代理程式",
-    "sections.statusDots.steps.idle.desc": "灰色圓環：代理程式已開啟但處於閒置，正在等待下一個工作。將隨代理程式通知一起推出。",
+    "sections.statusDots.steps.idle.label": "閒置",
+    "sections.statusDots.steps.idle.desc": "灰色圓環：程式已開啟，但一段時間沒有輸出，例如等待下一個任務的代理程式。只顯示圓點，不發通知。",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "將終端機最大化以占滿視窗，或還原。在 Windows 和 Linux 上為 Ctrl+Shift+M。"
   },

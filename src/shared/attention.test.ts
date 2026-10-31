@@ -4,7 +4,9 @@ import {
   normalizeAttentionMinSeconds,
   pickNextAttentionSession,
   resolveTabDotState,
-  shouldRaiseCommandAttention
+  shouldRaiseCommandAttention,
+  isUserAway,
+  isUserStopExitCode
 } from './attention'
 
 const start = '2026-10-29T10:00:00.000Z'
@@ -75,7 +77,26 @@ describe('resolveTabDotState', () => {
   })
 
   it('follows the state an agent reports over the shell', () => {
-    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: 'idle' })).toBeNull()
+    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: 'idle' })).toBe('idle')
     expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: 'working' })).toBe('running')
+    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: 'working', quiet: true })).toBe('running')
+  })
+
+  it('shows idle for a busy terminal that went quiet, and nothing once the command ended', () => {
+    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: null, quiet: true })).toBe('idle')
+    expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: null, quiet: true })).toBeNull()
+    expect(resolveTabDotState({ entry: entry('approval'), shellBusy: true, agentActivity: null, quiet: true })).toBe('approval')
+  })
+})
+
+describe('user stops and being away', () => {
+  it('treats only signal exits as user stops', () => {
+    for (const code of [129, 130, 143]) expect(isUserStopExitCode(code)).toBe(true)
+    for (const code of [0, 1, 2, 127, 137, null]) expect(isUserStopExitCode(code)).toBe(false)
+  })
+
+  it('counts two minutes without input as away', () => {
+    expect(isUserAway(119)).toBe(false)
+    expect(isUserAway(120)).toBe(true)
   })
 })

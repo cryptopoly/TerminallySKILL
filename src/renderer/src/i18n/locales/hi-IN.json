@@ -218,7 +218,8 @@
     "privacy.masking.kind.password": "पासवर्ड",
     "privacy.masking.kind.token": "टोकन",
     "privacy.masking.kind.secret": "सीक्रेट",
-    "privacy.masking.kind.api-key": "API कुंजी"
+    "privacy.masking.kind.api-key": "API कुंजी",
+    "general.attention.agentHint": "कोडिंग एजेंट (Claude Code, Codex, Gemini CLI और अन्य) भी यहाँ आपको सूचित कर सकते हैं। अगर आपका एजेंट चुप रहता है, तो उसकी सूचना सेटिंग देखें।"
   },
   "commands": {
     "addDialog.title": "कमांड जोड़ें",
@@ -1181,7 +1182,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "टर्मिनल बड़ा करें",
     "panel.restore": "टर्मिनल का आकार वापस लाएँ",
-    "panel.maximiseDescription": "प्रोजेक्ट व्यू छिपाता है ताकि टर्मिनल पूरी विंडो भर दे। पिछले आकार पर लौटने के लिए फिर से क्लिक करें।"
+    "panel.maximiseDescription": "प्रोजेक्ट व्यू छिपाता है ताकि टर्मिनल पूरी विंडो भर दे। पिछले आकार पर लौटने के लिए फिर से क्लिक करें।",
+    "dot.idle": "निष्क्रिय",
+    "attention.waitingForYes": "आपकी हाँ की प्रतीक्षा",
+    "attention.bell": "टर्मिनल की घंटी बजाई",
+    "attention.stillWaiting": "अब भी आपकी प्रतीक्षा ({{duration}})"
   },
   "onboarding": {
     "subtitle": "विज़ुअल कमांड बिल्डर, टर्मिनल वर्कस्पेस, वर्कफ़्लो, लॉग और AI टूल",
@@ -1397,8 +1402,8 @@
     "sections.statusDots.steps.finished.desc": "हरा बिंदु: आपके न देखते समय कोई लंबी कमांड या वर्कफ़्लो पूरा हुआ।",
     "sections.statusDots.steps.failed.label": "विफल",
     "sections.statusDots.steps.failed.desc": "क्रॉस वाला लाल बिंदु: कोई कमांड, वर्कफ़्लो या एजेंट त्रुटि के साथ रुक गया।",
-    "sections.statusDots.steps.idle.label": "निष्क्रिय एजेंट",
-    "sections.statusDots.steps.idle.desc": "धूसर छल्ला: एजेंट खुला है पर शांत है, अगले काम का इंतज़ार कर रहा है। एजेंट सूचनाओं के साथ आएगा।",
+    "sections.statusDots.steps.idle.label": "निष्क्रिय",
+    "sections.statusDots.steps.idle.desc": "धूसर घेरा: कोई प्रोग्राम खुला है पर कुछ देर से उसने कुछ नहीं दिखाया, जैसे अगले काम की प्रतीक्षा करता एजेंट। केवल बिंदु, कोई सूचना नहीं।",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "टर्मिनल को पूरी विंडो में बड़ा करें, या वापस लाएँ। Windows और Linux पर Ctrl+Shift+M।"
   },

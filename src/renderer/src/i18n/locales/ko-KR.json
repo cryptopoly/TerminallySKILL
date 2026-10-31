@@ -220,7 +220,8 @@
     "privacy.masking.kind.password": "비밀번호",
     "privacy.masking.kind.token": "토큰",
     "privacy.masking.kind.secret": "비밀 값",
-    "privacy.masking.kind.api-key": "API 키"
+    "privacy.masking.kind.api-key": "API 키",
+    "general.attention.agentHint": "코딩 에이전트(Claude Code, Codex, Gemini CLI 등)도 여기서 알려 줄 수 있습니다. 알림이 오지 않으면 에이전트의 알림 설정을 확인하세요."
   },
   "commands": {
     "addDialog.title": "명령 추가",
@@ -1184,7 +1185,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "터미널 최대화",
     "panel.restore": "터미널 크기 복원",
-    "panel.maximiseDescription": "프로젝트 화면을 숨겨 터미널이 창 전체를 채우게 합니다. 다시 클릭하면 이전 크기로 돌아갑니다."
+    "panel.maximiseDescription": "프로젝트 화면을 숨겨 터미널이 창 전체를 채우게 합니다. 다시 클릭하면 이전 크기로 돌아갑니다.",
+    "dot.idle": "대기",
+    "attention.waitingForYes": "승인을 기다리는 중",
+    "attention.bell": "터미널 벨을 울렸습니다",
+    "attention.stillWaiting": "아직 기다리는 중 ({{duration}})"
   },
   "onboarding": {
     "subtitle": "시각적 명령 빌더, 터미널 작업공간, 워크플로, 로그, AI 도구",
@@ -1399,8 +1404,8 @@
     "sections.statusDots.steps.finished.desc": "초록색 점: 보지 않는 동안 오래 걸린 명령이나 워크플로가 끝났습니다.",
     "sections.statusDots.steps.failed.label": "실패",
     "sections.statusDots.steps.failed.desc": "X 표시가 있는 빨간색 점: 명령, 워크플로 또는 에이전트가 오류로 멈췄습니다.",
-    "sections.statusDots.steps.idle.label": "대기 중인 에이전트",
-    "sections.statusDots.steps.idle.desc": "회색 고리: 에이전트가 열려 있지만 조용히 다음 작업을 기다립니다. 에이전트 알림과 함께 제공될 예정입니다.",
+    "sections.statusDots.steps.idle.label": "대기",
+    "sections.statusDots.steps.idle.desc": "회색 고리: 프로그램이 열려 있지만 한동안 아무것도 출력하지 않았습니다. 예: 다음 작업을 기다리는 에이전트. 점만 표시하고 알림은 없습니다.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "터미널을 창 전체로 최대화하거나 복원합니다. Windows와 Linux에서는 Ctrl+Shift+M."
   },

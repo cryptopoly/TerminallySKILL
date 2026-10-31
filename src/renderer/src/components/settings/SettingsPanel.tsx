@@ -960,6 +960,11 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
             </select>
           </label>
         )}
+        {settings.attentionAlerts && (
+          <p className="px-4 text-xs text-gray-500" data-testid="attention-agent-hint">
+            {t('general.attention.agentHint', { ns: 'settings' })}
+          </p>
+        )}
 
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
           <div className="mb-3">

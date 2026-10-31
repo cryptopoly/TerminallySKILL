@@ -16,6 +16,7 @@ import {
   extractWorkflowStepResults,
   prepareLogContent,
   splitIncompleteMarker,
+  MarkerEchoFilter,
   stripWorkflowMarkerEcho
 } from './pty-output'
 import type { TerminalSessionInfo } from '../shared/run-schema'
@@ -47,9 +48,14 @@ interface PtySession {
   startupFlushed: boolean
   /** Timestamp (ms) until which SSH command echo lines should be stripped from output. */
   sshEchoFilterUntil: number
+  markerEcho: MarkerEchoFilter
+  markerEchoTimer: ReturnType<typeof setTimeout> | null
 }
 
 const sessions = new Map<string, PtySession>()
+const STEP_MARKER_COMMAND_RE = /printf '\\033\]7337;workflow-step;[^\r\n]*/
+/** A line editor redraws typed-ahead text in one burst, so held text older than this was not the marker. */
+const MARKER_ECHO_HOLD_MS = 100
 let nextId = 1
 let ptyRuntimePromise: Promise<typeof import('node-pty')> | null = null
 const nodeRequire = createRequire(import.meta.url)
@@ -260,6 +266,13 @@ function setupShellIntegration(
   // When the app is launched from Apple Terminal, zsh can emit banners like
   // "Restored session: ..." for the parent shell session unless we clear them.
   delete env.TERM_SESSION_ID
+  // Say which terminal this is rather than inheriting whatever launched the app: agents pick their
+  // notification channel from these and would otherwise believe they run in iTerm2.
+  delete env.LC_TERMINAL
+  delete env.LC_TERMINAL_VERSION
+  delete env.ITERM_SESSION_ID
+  env.TERM_PROGRAM = 'TerminallySKILL'
+  env.TERM_PROGRAM_VERSION = app.getVersion()
   delete env.SHELL_SESSION_FILE
   delete env.SHELL_SESSION_DID_INIT
   delete env.PREFIX
@@ -417,7 +430,9 @@ export async function createTerminal(
     // Shells without integration (e.g. PowerShell on Windows) never emit a
     // prompt-ready event, so we skip startup buffering entirely for them.
     startupFlushed: !hasIntegration,
-    sshEchoFilterUntil: 0
+    sshEchoFilterUntil: 0,
+    markerEcho: new MarkerEchoFilter(),
+    markerEchoTimer: null
   }
   sessions.set(sessionId, session)
   registerTerminalSession(sessionId)
@@ -505,6 +520,19 @@ export async function createTerminal(
       }
     }
     data = stripWorkflowMarkerEcho(extracted.data)
+    if (promptReadyEvent) session.markerEcho.notePromptReady()
+    data = session.markerEcho.push(data)
+    if (session.markerEchoTimer) clearTimeout(session.markerEchoTimer)
+    session.markerEchoTimer = null
+    if (session.markerEcho.hasHeld) {
+      session.markerEchoTimer = setTimeout(() => {
+        session.markerEchoTimer = null
+        const held = session.markerEcho.flush()
+        if (!held) return
+        bufferForLog(session, held)
+        if (!window.isDestroyed()) window.webContents.send(IPC_CHANNELS.PTY_DATA, sessionId, held)
+      }, MARKER_ECHO_HOLD_MS)
+    }
     if (!session.startupFlushed) {
       session.startupBuffer += data
 
@@ -575,6 +603,8 @@ export function writeToTerminal(sessionId: string, data: string): void {
   if (data.trimStart().startsWith("'ssh'")) {
     session.sshEchoFilterUntil = Date.now() + 5000
   }
+  const stepMarker = data.match(STEP_MARKER_COMMAND_RE)
+  if (stepMarker) session.markerEcho.arm(stepMarker[0])
 
   // In a PTY the Enter key sends \r, which the shell interprets as "execute".
   // Bare \n works in bash/zsh by coincidence but PowerShell treats it as a

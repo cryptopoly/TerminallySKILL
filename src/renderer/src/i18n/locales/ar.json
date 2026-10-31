@@ -219,7 +219,8 @@
     "privacy.masking.kind.password": "كلمة مرور",
     "privacy.masking.kind.token": "رمز مميز",
     "privacy.masking.kind.secret": "سر",
-    "privacy.masking.kind.api-key": "مفتاح API"
+    "privacy.masking.kind.api-key": "مفتاح API",
+    "general.attention.agentHint": "يمكن لوكلاء البرمجة (Claude Code وCodex وGemini CLI وغيرها) تنبيهك هنا أيضًا. إذا بقي وكيلك صامتًا، فراجع إعداد الإشعارات الخاص به."
   },
   "commands": {
     "addDialog.title": "إضافة أمر",
@@ -1317,7 +1318,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "تكبير الطرفية",
     "panel.restore": "استعادة حجم الطرفية",
-    "panel.maximiseDescription": "يخفي عرض المشروع لتملأ الطرفية النافذة. انقر مرة أخرى للعودة إلى الحجم السابق."
+    "panel.maximiseDescription": "يخفي عرض المشروع لتملأ الطرفية النافذة. انقر مرة أخرى للعودة إلى الحجم السابق.",
+    "dot.idle": "خامل",
+    "attention.waitingForYes": "بانتظار موافقتك",
+    "attention.bell": "أطلق جرس الطرفية",
+    "attention.stillWaiting": "لا يزال بانتظارك ({{duration}})"
   },
   "onboarding": {
     "subtitle": "منشئ أوامر مرئي ومساحة عمل طرفية وسير عمل وسجلات وأدوات ذكاء اصطناعي",
@@ -1544,8 +1549,8 @@
     "sections.statusDots.steps.finished.desc": "نقطة خضراء: انتهى أمر طويل أو سير عمل بينما لم تكن تنظر.",
     "sections.statusDots.steps.failed.label": "فشل",
     "sections.statusDots.steps.failed.desc": "نقطة حمراء عليها علامة ×: توقف أمر أو سير عمل أو وكيل بسبب خطأ.",
-    "sections.statusDots.steps.idle.label": "وكيل خامل",
-    "sections.statusDots.steps.idle.desc": "حلقة رمادية: الوكيل مفتوح لكنه هادئ وينتظر مهمته التالية. ستتوفر مع إشعارات الوكلاء.",
+    "sections.statusDots.steps.idle.label": "خامل",
+    "sections.statusDots.steps.idle.desc": "حلقة رمادية: برنامج مفتوح لكنه لم يطبع شيئًا منذ مدة، مثل وكيل ينتظر مهمته التالية. نقطة فقط، بلا إشعار.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "تكبير الطرفية لتملأ النافذة أو استعادتها. Ctrl+Shift+M على Windows وLinux."
   },

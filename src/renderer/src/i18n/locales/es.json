@@ -143,7 +143,8 @@
     "privacy.masking.kind.password": "Contraseña",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Secreto",
-    "privacy.masking.kind.api-key": "Clave de API"
+    "privacy.masking.kind.api-key": "Clave de API",
+    "general.attention.agentHint": "Los agentes de programación (Claude Code, Codex, Gemini CLI y otros) también pueden avisarte aquí. Si el tuyo no dice nada, revisa la configuración de notificaciones de tu agente."
   },
   "commands": {
     "addDialog.title": "Añadir comando",
@@ -1092,7 +1093,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Maximizar terminal",
     "panel.restore": "Restaurar tamaño de la terminal",
-    "panel.maximiseDescription": "Oculta la vista del proyecto para que la terminal ocupe toda la ventana. Haz clic de nuevo para volver al tamaño anterior."
+    "panel.maximiseDescription": "Oculta la vista del proyecto para que la terminal ocupe toda la ventana. Haz clic de nuevo para volver al tamaño anterior.",
+    "dot.idle": "Inactivo",
+    "attention.waitingForYes": "Esperando tu sí",
+    "attention.bell": "Hizo sonar la campana del terminal",
+    "attention.stillWaiting": "Sigue esperándote ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Constructor visual de comandos, espacio de trabajo de terminal, workflows, registros y herramientas de IA",
@@ -1307,8 +1312,8 @@
     "sections.statusDots.steps.finished.desc": "Punto verde: un comando largo o un workflow terminó mientras no mirabas.",
     "sections.statusDots.steps.failed.label": "Con error",
     "sections.statusDots.steps.failed.desc": "Punto rojo con una cruz: un comando, workflow o agente se detuvo con un error.",
-    "sections.statusDots.steps.idle.label": "Agente inactivo",
-    "sections.statusDots.steps.idle.desc": "Anillo gris: un agente está abierto pero en silencio, esperando su próxima tarea. Llegará con las notificaciones de agentes.",
+    "sections.statusDots.steps.idle.label": "Inactivo",
+    "sections.statusDots.steps.idle.desc": "Anillo gris: un programa está abierto pero lleva un rato sin mostrar nada, por ejemplo un agente que espera su siguiente tarea. Solo el punto, sin notificación.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Maximiza la terminal para que ocupe toda la ventana, o restáurala. Ctrl+Shift+M en Windows y Linux."
   },

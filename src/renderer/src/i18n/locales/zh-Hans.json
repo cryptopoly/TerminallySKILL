@@ -68,7 +68,8 @@
     "privacy.masking.kind.password": "密码",
     "privacy.masking.kind.token": "令牌",
     "privacy.masking.kind.secret": "机密",
-    "privacy.masking.kind.api-key": "API 密钥"
+    "privacy.masking.kind.api-key": "API 密钥",
+    "general.attention.agentHint": "编程智能体（Claude Code、Codex、Gemini CLI 等）也可以在这里提醒你。如果没有提醒，请查看智能体自己的通知设置。"
   },
   "commandBuilder": {
     "referenceHelp.aiProviderFallback": "AI",
@@ -197,7 +198,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "最大化终端",
     "panel.restore": "恢复终端大小",
-    "panel.maximiseDescription": "隐藏项目视图，让终端占满窗口。再次点击可恢复之前的大小。"
+    "panel.maximiseDescription": "隐藏项目视图，让终端占满窗口。再次点击可恢复之前的大小。",
+    "dot.idle": "空闲",
+    "attention.waitingForYes": "等待你的确认",
+    "attention.bell": "响了终端铃声",
+    "attention.stillWaiting": "仍在等你（{{duration}}）"
   },
   "native": {
     "menu.file": "文件",
@@ -359,8 +364,8 @@
     "sections.statusDots.steps.finished.desc": "绿色圆点：在你没看的时候，一个耗时较长的命令或工作流已完成。",
     "sections.statusDots.steps.failed.label": "失败",
     "sections.statusDots.steps.failed.desc": "带叉号的红色圆点：命令、工作流或智能体因错误而停止。",
-    "sections.statusDots.steps.idle.label": "空闲的智能体",
-    "sections.statusDots.steps.idle.desc": "灰色圆环：智能体已打开但处于空闲，正在等待下一个任务。将随智能体通知一起推出。",
+    "sections.statusDots.steps.idle.label": "空闲",
+    "sections.statusDots.steps.idle.desc": "灰色圆环：程序已打开，但一段时间没有输出，例如等待下一个任务的智能体。只显示圆点，不发通知。",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "将终端最大化以占满窗口，或恢复原样。在 Windows 和 Linux 上为 Ctrl+Shift+M。"
   }

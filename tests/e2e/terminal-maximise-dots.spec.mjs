@@ -38,7 +38,7 @@ async function openNewTab(page, expectedCount) {
   await page.waitForTimeout(1500)
 }
 
-test('a running command shows the running dot at once, and an agent reporting idle hides it', async ({}, testInfo) => {
+test('a running command shows the running dot at once, and an agent reporting idle shows the idle dot', async ({}, testInfo) => {
   test.setTimeout(60_000)
   const { app, page } = await launchTerminallySkill(testInfo)
   try {
@@ -61,8 +61,11 @@ test('a running command shows the running dot at once, and an agent reporting id
     )
     await expect(running).toHaveCount(1, { timeout: 2_000 })
     await expect(running).toHaveCount(0, { timeout: 6_000 })
-    // Command still running, but the agent said idle, so no dot; and none after the command ends.
-    await page.waitForTimeout(5_000)
+    // Command still running, but the agent said idle: the grey idle dot, gone once the command ends.
+    const idle = page.locator('[data-dot-state="idle"]')
+    await expect(idle).toHaveCount(1)
+    await expect(idle).toHaveAttribute('title', 'Idle')
+    await expect(idle).toHaveCount(0, { timeout: 8_000 })
     await expect(running).toHaveCount(0)
   } finally {
     await app.close()

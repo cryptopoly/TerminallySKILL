@@ -217,7 +217,8 @@
     "privacy.masking.kind.password": "Пароль",
     "privacy.masking.kind.token": "Токен",
     "privacy.masking.kind.secret": "Секрет",
-    "privacy.masking.kind.api-key": "Ключ API"
+    "privacy.masking.kind.api-key": "Ключ API",
+    "general.attention.agentHint": "Агенти для програмування (Claude Code, Codex, Gemini CLI та інші) теж можуть сповіщати вас тут. Якщо ваш мовчить, перевірте налаштування сповіщень агента."
   },
   "commands": {
     "addDialog.title": "Додати команду",
@@ -1247,7 +1248,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Розгорнути термінал",
     "panel.restore": "Повернути розмір термінала",
-    "panel.maximiseDescription": "Ховає вигляд проєкту, щоб термінал зайняв усе вікно. Натисніть ще раз, щоб повернути попередній розмір."
+    "panel.maximiseDescription": "Ховає вигляд проєкту, щоб термінал зайняв усе вікно. Натисніть ще раз, щоб повернути попередній розмір.",
+    "dot.idle": "Простій",
+    "attention.waitingForYes": "Чекає на вашу згоду",
+    "attention.bell": "Подав звуковий сигнал термінала",
+    "attention.stillWaiting": "Досі чекає на вас ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Візуальний конструктор команд, термінальний робочий простір, workflow, логи та інструменти ШІ",
@@ -1468,8 +1473,8 @@
     "sections.statusDots.steps.finished.desc": "Зелена крапка: довга команда або workflow завершилися, поки ви не дивилися.",
     "sections.statusDots.steps.failed.label": "Помилка",
     "sections.statusDots.steps.failed.desc": "Червона крапка з хрестиком: команда, workflow або агент зупинилися з помилкою.",
-    "sections.statusDots.steps.idle.label": "Агент простоює",
-    "sections.statusDots.steps.idle.desc": "Сіре кільце: агент відкритий, але бездіяльний і чекає на наступне завдання. З’явиться разом зі сповіщеннями агентів.",
+    "sections.statusDots.steps.idle.label": "Простій",
+    "sections.statusDots.steps.idle.desc": "Сіре кільце: програма відкрита, але давно нічого не виводить, наприклад агент чекає на наступне завдання. Лише крапка, без сповіщення.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Розгорнути термінал на все вікно або повернути попередній розмір. Ctrl+Shift+M у Windows і Linux."
   },

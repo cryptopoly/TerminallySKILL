@@ -220,7 +220,8 @@
     "privacy.masking.kind.password": "Kata sandi",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Rahasia",
-    "privacy.masking.kind.api-key": "Kunci API"
+    "privacy.masking.kind.api-key": "Kunci API",
+    "general.attention.agentHint": "Agen coding (Claude Code, Codex, Gemini CLI, dan lainnya) juga bisa memberi tahu Anda di sini. Jika agen Anda tetap diam, lihat pengaturan notifikasi agen Anda."
   },
   "commands": {
     "addDialog.title": "Tambah perintah",
@@ -1185,7 +1186,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Maksimalkan terminal",
     "panel.restore": "Kembalikan ukuran terminal",
-    "panel.maximiseDescription": "Menyembunyikan tampilan proyek sehingga terminal memenuhi jendela. Klik lagi untuk kembali ke ukuran sebelumnya."
+    "panel.maximiseDescription": "Menyembunyikan tampilan proyek sehingga terminal memenuhi jendela. Klik lagi untuk kembali ke ukuran sebelumnya.",
+    "dot.idle": "Diam",
+    "attention.waitingForYes": "Menunggu persetujuan Anda",
+    "attention.bell": "Membunyikan bel terminal",
+    "attention.stillWaiting": "Masih menunggu Anda ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Command builder visual, workspace terminal, workflow, log, dan alat AI",
@@ -1400,8 +1405,8 @@
     "sections.statusDots.steps.finished.desc": "Titik hijau: perintah panjang atau workflow selesai saat Anda tidak melihat.",
     "sections.statusDots.steps.failed.label": "Gagal",
     "sections.statusDots.steps.failed.desc": "Titik merah bersilang: perintah, workflow, atau agen berhenti dengan galat.",
-    "sections.statusDots.steps.idle.label": "Agen menganggur",
-    "sections.statusDots.steps.idle.desc": "Cincin abu-abu: agen terbuka tetapi diam, menunggu tugas berikutnya. Hadir bersama notifikasi agen.",
+    "sections.statusDots.steps.idle.label": "Diam",
+    "sections.statusDots.steps.idle.desc": "Cincin abu-abu: program terbuka tetapi sudah lama tidak menampilkan apa pun, misalnya agen yang menunggu tugas berikutnya. Hanya titik, tanpa notifikasi.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Maksimalkan terminal agar memenuhi jendela, atau kembalikan. Ctrl+Shift+M di Windows dan Linux."
   },

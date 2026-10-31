@@ -89,7 +89,8 @@
     "privacy.masking.kind.password": "Passwort",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Geheimnis",
-    "privacy.masking.kind.api-key": "API-Schlüssel"
+    "privacy.masking.kind.api-key": "API-Schlüssel",
+    "general.attention.agentHint": "Coding-Agenten (Claude Code, Codex, Gemini CLI und andere) können dich auch hier benachrichtigen. Bleibt deiner stumm, sieh in die Benachrichtigungseinstellung deines Agenten."
   },
   "commands": {
     "addDialog.title": "Befehl hinzufügen",
@@ -989,7 +990,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Terminal maximieren",
     "panel.restore": "Terminalgröße wiederherstellen",
-    "panel.maximiseDescription": "Blendet die Projektansicht aus, sodass das Terminal das Fenster füllt. Erneut klicken stellt die vorherige Größe wieder her."
+    "panel.maximiseDescription": "Blendet die Projektansicht aus, sodass das Terminal das Fenster füllt. Erneut klicken stellt die vorherige Größe wieder her.",
+    "dot.idle": "Ruhig",
+    "attention.waitingForYes": "Wartet auf dein Ja",
+    "attention.bell": "Hat die Terminalglocke geläutet",
+    "attention.stillWaiting": "Wartet noch auf dich ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Visueller Befehls-Builder, Terminal-Workspace, Workflows, Protokolle und KI-Tools",
@@ -1205,8 +1210,8 @@
     "sections.statusDots.steps.finished.desc": "Grüner Punkt: Ein langer Befehl oder Workflow ist fertig geworden, während du nicht hingesehen hast.",
     "sections.statusDots.steps.failed.label": "Fehlgeschlagen",
     "sections.statusDots.steps.failed.desc": "Roter Punkt mit Kreuz: Ein Befehl, Workflow oder Agent wurde mit einem Fehler beendet.",
-    "sections.statusDots.steps.idle.label": "Agent im Leerlauf",
-    "sections.statusDots.steps.idle.desc": "Grauer Ring: Ein Agent ist offen, aber ruhig und wartet auf die nächste Aufgabe. Kommt mit den Agent-Benachrichtigungen.",
+    "sections.statusDots.steps.idle.label": "Ruhig",
+    "sections.statusDots.steps.idle.desc": "Grauer Ring: Ein Programm ist offen, hat aber eine Weile nichts ausgegeben, zum Beispiel ein Agent, der auf die nächste Aufgabe wartet. Nur der Punkt, keine Benachrichtigung.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Das Terminal maximieren, sodass es das Fenster füllt, oder wiederherstellen. Ctrl+Shift+M unter Windows und Linux."
   },

@@ -142,7 +142,8 @@
     "privacy.masking.kind.password": "Hasło",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Sekret",
-    "privacy.masking.kind.api-key": "Klucz API"
+    "privacy.masking.kind.api-key": "Klucz API",
+    "general.attention.agentHint": "Agenci programistyczni (Claude Code, Codex, Gemini CLI i inni) też mogą Cię tu powiadamiać. Jeśli Twój milczy, sprawdź ustawienie powiadomień swojego agenta."
   },
   "commands": {
     "addDialog.title": "Dodaj polecenie",
@@ -1146,7 +1147,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Maksymalizuj terminal",
     "panel.restore": "Przywróć rozmiar terminala",
-    "panel.maximiseDescription": "Ukrywa widok projektu, aby terminal wypełnił całe okno. Kliknij ponownie, aby wrócić do poprzedniego rozmiaru."
+    "panel.maximiseDescription": "Ukrywa widok projektu, aby terminal wypełnił całe okno. Kliknij ponownie, aby wrócić do poprzedniego rozmiaru.",
+    "dot.idle": "Bezczynny",
+    "attention.waitingForYes": "Czeka na Twoją zgodę",
+    "attention.bell": "Użył dzwonka terminala",
+    "attention.stillWaiting": "Nadal na Ciebie czeka ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Wizualny builder poleceń, obszar roboczy terminala, workflow, logi i narzędzia AI",
@@ -1367,8 +1372,8 @@
     "sections.statusDots.steps.finished.desc": "Zielona kropka: długie polecenie lub workflow zakończyło się pod Twoją nieobecność.",
     "sections.statusDots.steps.failed.label": "Błąd",
     "sections.statusDots.steps.failed.desc": "Czerwona kropka z krzyżykiem: polecenie, workflow lub agent zatrzymał się z błędem.",
-    "sections.statusDots.steps.idle.label": "Bezczynny agent",
-    "sections.statusDots.steps.idle.desc": "Szary pierścień: agent jest otwarty, ale bezczynny i czeka na kolejne zadanie. Pojawi się razem z powiadomieniami agentów.",
+    "sections.statusDots.steps.idle.label": "Bezczynny",
+    "sections.statusDots.steps.idle.desc": "Szary pierścień: program jest otwarty, ale od pewnego czasu nic nie wypisał, na przykład agent czekający na kolejne zadanie. Tylko kropka, bez powiadomienia.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Maksymalizuj terminal, aby wypełnił okno, albo przywróć go. Ctrl+Shift+M w systemach Windows i Linux."
   },
