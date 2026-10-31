@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   X, FolderOpen, Star, ScrollText, TerminalSquare, FileText, Zap,
-  Camera, Keyboard, Code2, Settings, Columns2, Search, Monitor
+  Camera, Keyboard, Code2, Settings, Columns2, Search, Monitor, Compass
 } from 'lucide-react'
 
 interface Section {
@@ -159,7 +159,15 @@ const SECTION_TEMPLATES = [
   },
 ] as const
 
-export function InfoPanel({ onClose, initialSection }: { onClose: () => void; initialSection?: string }): JSX.Element {
+export function InfoPanel({
+  onClose,
+  initialSection,
+  onShowTour
+}: {
+  onClose: () => void
+  initialSection?: string
+  onShowTour?: () => void
+}): JSX.Element {
   const { t } = useTranslation('onboarding')
   const [searchQuery, setSearchQuery] = useState(initialSection ?? '')
   const normalizedQuery = searchQuery.trim().toLowerCase()
@@ -297,12 +305,24 @@ export function InfoPanel({ onClose, initialSection }: { onClose: () => void; in
         {/* Footer */}
         <div className="px-5 py-3 border-t border-surface-border shrink-0 flex items-center justify-between">
           <span className="text-xs text-gray-600">{t('footer')}</span>
-          <button
-            onClick={onClose}
-            className="px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-light text-white text-xs font-medium transition-colors"
-          >
-            {t('gotIt')}
-          </button>
+          <div className="flex items-center gap-2">
+            {onShowTour && (
+              <button
+                onClick={onShowTour}
+                data-testid="show-welcome-tour"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface-border text-gray-400 hover:text-accent-light hover:border-accent/40 text-xs transition-colors"
+              >
+                <Compass size={13} />
+                {t('tour.show')}
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-light text-white text-xs font-medium transition-colors"
+            >
+              {t('gotIt')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

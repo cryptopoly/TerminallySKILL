@@ -116,8 +116,20 @@ export function backfillSettings(raw: Partial<AppSettings>): AppSettings {
       typeof raw.attentionAlerts === 'boolean' ? raw.attentionAlerts : DEFAULT_SETTINGS.attentionAlerts,
     attentionMinSeconds: normalizeAttentionMinSeconds(raw.attentionMinSeconds),
     maskSecrets: typeof raw.maskSecrets === 'boolean' ? raw.maskSecrets : DEFAULT_SETTINGS.maskSecrets,
+    // A settings file written before the tour existed belongs to an upgrading user: never show it to them
+    hasSeenWelcomeTour:
+      typeof raw.hasSeenWelcomeTour === 'boolean' ? raw.hasSeenWelcomeTour : true,
     aiProviders: providers
   }
+}
+
+/**
+ * Settings used when there is no settings.json. The welcome tour is only due when the data
+ * folder holds nothing else either: an older install may never have written settings.json
+ * but still has projects, runs or snippets.
+ */
+export function createInitialSettings(hasExistingData: boolean): AppSettings {
+  return { ...structuredClone(DEFAULT_SETTINGS), hasSeenWelcomeTour: hasExistingData }
 }
 
 export function extractProviderApiKeys(settings: AppSettings): Record<string, string> {
