@@ -52,7 +52,8 @@ import { registerAgentAttention } from '../../lib/agent-attention'
 import type { ShellIntegrationEvent } from '../../../../shared/shell-integration'
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
-  ArrowDown, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor
+  ArrowDown, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor,
+  Maximize2, Minimize2
 } from 'lucide-react'
 import { VncPanel } from './VncPanel'
 
@@ -76,7 +77,9 @@ export function TerminalPanel({
     setTerminalVisible,
     splitTerminal,
     closeSplitPane,
-    setFocusedPane
+    setFocusedPane,
+    terminalMaximised,
+    setTerminalMaximised
   } = useTerminalStore()
   const activeProject = useProjectStore((s) => s.activeProject)
   const projects = useProjectStore((s) => s.projects)
@@ -435,6 +438,23 @@ export function TerminalPanel({
                   }`}
                 >
                   <Rows2 size={13} />
+                </button>
+              </HelpTip>
+              <HelpTip
+                label={terminalMaximised ? t('panel.restore') : t('panel.maximise')}
+                description={t('panel.maximiseDescription')}
+                shortcut={navigator.platform.toLowerCase().includes('mac') ? '⌘⇧M' : 'Ctrl+Shift+M'}
+              >
+                <button
+                  onClick={() => setTerminalMaximised(!terminalMaximised)}
+                  aria-label={terminalMaximised ? t('panel.restore') : t('panel.maximise')}
+                  aria-pressed={terminalMaximised}
+                  data-testid="terminal-maximise"
+                  className={`p-1.5 transition-colors ${
+                    terminalMaximised ? 'text-accent-light' : 'text-gray-500 hover:text-accent-light'
+                  }`}
+                >
+                  {terminalMaximised ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                 </button>
               </HelpTip>
 

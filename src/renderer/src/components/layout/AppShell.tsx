@@ -120,12 +120,26 @@ export function AppShell(): JSX.Element {
   )
   const showDockedTerminal = terminalVisible
   const showCollapsedTerminalBar = !showDockedTerminal && projectSessions.length > 0
+  const terminalMaximised = useTerminalStore((s) => s.terminalMaximised)
+  const setTerminalMaximised = useTerminalStore((s) => s.setTerminalMaximised)
+  const workspacePanelRef = useRef<ImperativePanelHandle | null>(null)
+  const maximised = terminalMaximised && showDockedTerminal
+
+  // Maximise collapses the project view; restoring expands it to the size it had before.
+  // Runs before the terminal effect below, so hiding a maximised terminal never leaves both at 0.
+  useEffect(() => {
+    const workspacePanel = workspacePanelRef.current
+    if (!workspacePanel) return
+    if (maximised && !workspacePanel.isCollapsed()) workspacePanel.collapse()
+    else if (!maximised && workspacePanel.isCollapsed()) workspacePanel.expand()
+  }, [maximised])
 
   useEffect(() => {
     const terminalPanel = terminalDockPanelRef.current
     if (!terminalPanel) return
 
     if (showDockedTerminal) {
+      if (maximised) return
       const targetSize = activeProject?.workspaceLayout.terminalSize ?? 35
       if (terminalPanel.isCollapsed()) {
         terminalPanel.expand(targetSize)
@@ -138,7 +152,7 @@ export function AppShell(): JSX.Element {
     if (!terminalPanel.isCollapsed()) {
       terminalPanel.collapse()
     }
-  }, [activeProject?.workspaceLayout.terminalSize, showDockedTerminal])
+  }, [activeProject?.workspaceLayout.terminalSize, maximised, showDockedTerminal])
 
   // Keep window title in sync with active project
   useEffect(() => {
@@ -411,6 +425,40 @@ export function AppShell(): JSX.Element {
     window.addEventListener('keydown', handler, true)
     return () => window.removeEventListener('keydown', handler, true)
   }, [isMac])
+
+  // Maximise the terminal (or restore it). Shows a hidden terminal first; does nothing without one.
+  const toggleTerminalMaximised = useCallback(() => {
+    const state = useTerminalStore.getState()
+    if (state.terminalVisible && state.terminalMaximised) {
+      state.setTerminalMaximised(false)
+      return
+    }
+    const { projectSessions: openSessions } = resolveProjectTerminalContext(
+      state.sessions,
+      activeProject?.id ?? null,
+      state.activeSessionId,
+      state.splitSessionId
+    )
+    if (openSessions.length === 0) return
+    state.setTerminalVisible(true)
+    state.setTerminalMaximised(true)
+  }, [activeProject?.id])
+
+  // Cmd+Shift+M (macOS) / Ctrl+Shift+M — maximise or restore the terminal. Capture phase, like the
+  // jump shortcut, so the focused terminal does not also receive it.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent): void => {
+      const modifier = isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey
+      if (!modifier || !e.shiftKey || e.altKey) return
+      const isM = /^[a-z]$/i.test(e.key) ? e.key.toLowerCase() === 'm' : e.code === 'KeyM'
+      if (!isM) return
+      e.preventDefault()
+      e.stopPropagation()
+      toggleTerminalMaximised()
+    }
+    window.addEventListener('keydown', handler, true)
+    return () => window.removeEventListener('keydown', handler, true)
+  }, [isMac, toggleTerminalMaximised])
 
   useEffect(() => {
     if (!activeProject) {
@@ -866,6 +914,8 @@ export function AppShell(): JSX.Element {
         className="flex-1"
         onLayout={(sizes) => {
           if (!activeProject || !showDockedTerminal || sizes.length < 2) return
+          // A maximised terminal is temporary: keep the saved split for when it is restored.
+          if (sizes[0] === 0) return
           const nextTerminalSize = sizes[1]
           if (nextTerminalSize === activeProject.workspaceLayout.terminalSize) return
           queueWorkspaceLayoutSave({
@@ -875,9 +925,16 @@ export function AppShell(): JSX.Element {
         }}
       >
         <Panel
+          ref={workspacePanelRef}
           defaultSize={showDockedTerminal ? 100 - (activeProject?.workspaceLayout.terminalSize ?? 35) : 100}
           minSize={30}
+          collapsible
+          collapsedSize={0}
+          // Dragging the divider out of a maximised terminal restores it; dragging all the way up maximises.
+          onCollapse={() => setTerminalMaximised(true)}
+          onExpand={() => setTerminalMaximised(false)}
           className="min-h-0"
+          data-testid="workspace-panel"
         >
           <PanelGroup
             key={`workspace-horizontal-${activeProject?.id ?? 'global'}`}
@@ -1037,6 +1094,7 @@ export function AppShell(): JSX.Element {
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenInfo={() => setInfoOpen(true)}
           onOpenTour={openWelcomeTour}
+          onToggleMaximise={toggleTerminalMaximised}
           onCreateProject={handleCreateNew}
         />
       )}
