@@ -11,3 +11,4 @@ One file per work stream, named for the stream (`deps.md`, `attention-layer.md`)
 | Stream | File | Status | Owner |
 |---|---|---|---|
 | Dependency security update | [deps.md](deps.md) | done, pending merge | Claude |
+| First-run welcome tour (0.9.104) | [first-run-tour.md](first-run-tour.md) | built, PR open into staging | Claude |
