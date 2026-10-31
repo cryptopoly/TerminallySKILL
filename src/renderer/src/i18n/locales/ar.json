@@ -500,7 +500,11 @@
     "updates.installing": "جارٍ تثبيت التحديث",
     "updates.opening": "جارٍ فتح التحديث",
     "palette.actions.jumpAttention": "الانتقال إلى الطرفية التي تحتاجك",
-    "palette.actions.jumpAttentionDescription": "افتح الطرفية التي تنتظرك منذ أطول وقت، في أي مشروع"
+    "palette.actions.jumpAttentionDescription": "افتح الطرفية التي تنتظرك منذ أطول وقت، في أي مشروع",
+    "palette.actions.nextProject": "المشروع التالي",
+    "palette.actions.nextProjectDescription": "التبديل إلى المشروع التالي في محدد المشاريع ({{shortcut}})",
+    "palette.actions.previousProject": "المشروع السابق",
+    "palette.actions.previousProjectDescription": "التبديل إلى المشروع السابق في محدد المشاريع ({{shortcut}})"
   },
   "projects": {
     "selector.none": "لا يوجد مشروع",
@@ -1507,6 +1511,8 @@
     "sections.keyboard.steps.newTerminal.desc": "افتح تبويب طرفية جديدًا.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "الانتقال إلى الطرفية التي تنتظرك منذ أطول وقت (تبويب عليه نقطة)، في أي مشروع. Ctrl+Shift+J على Windows وLinux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "التبديل إلى المشروع التالي أو السابق بحسب ترتيب محدد المشاريع. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp على Windows وLinux.",
     "tour.show": "عرض جولة الترحيب",
     "tour.showDescription": "جولة قصيرة في كل أجزاء التطبيق",
     "tour.stepOf": "الخطوة {{current}} من {{total}}",

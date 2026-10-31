@@ -288,11 +288,17 @@
   },
   "layout": {
     "palette.actions.jumpAttention": "Jump to the terminal that needs you",
-    "palette.actions.jumpAttentionDescription": "Open the terminal that has waited longest for you, in any project"
+    "palette.actions.jumpAttentionDescription": "Open the terminal that has waited longest for you, in any project",
+    "palette.actions.nextProject": "Next project",
+    "palette.actions.nextProjectDescription": "Switch to the next project in the project picker ({{shortcut}})",
+    "palette.actions.previousProject": "Previous project",
+    "palette.actions.previousProjectDescription": "Switch to the previous project in the project picker ({{shortcut}})"
   },
   "onboarding": {
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Jump to the terminal that has waited longest for you (a tab with a dot), in any project. Ctrl+Shift+J on Windows and Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Switch to the next or previous project, in the order the project picker shows. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp on Windows and Linux.",
     "tour.show": "Show welcome tour",
     "tour.showDescription": "A short walk through each part of the app",
     "tour.stepOf": "Step {{current}} of {{total}}",

@@ -403,7 +403,11 @@
     "empty.createProject": "Utwórz projekt",
     "empty.howItWorks": "Jak to działa",
     "palette.actions.jumpAttention": "Przejdź do terminala, który Cię potrzebuje",
-    "palette.actions.jumpAttentionDescription": "Otwórz terminal, który najdłużej na Ciebie czeka, w dowolnym projekcie"
+    "palette.actions.jumpAttentionDescription": "Otwórz terminal, który najdłużej na Ciebie czeka, w dowolnym projekcie",
+    "palette.actions.nextProject": "Następny projekt",
+    "palette.actions.nextProjectDescription": "Przełącz na następny projekt w selektorze projektów ({{shortcut}})",
+    "palette.actions.previousProject": "Poprzedni projekt",
+    "palette.actions.previousProjectDescription": "Przełącz na poprzedni projekt w selektorze projektów ({{shortcut}})"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1330,6 +1334,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Otwórz nową kartę terminala.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Przejdź do terminala, który najdłużej na Ciebie czeka (karta z kropką), w dowolnym projekcie. Ctrl+Shift+J w systemach Windows i Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Przełącza na następny lub poprzedni projekt, w kolejności selektora projektów. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp w systemach Windows i Linux.",
     "tour.show": "Pokaż przewodnik powitalny",
     "tour.showDescription": "Krótki spacer po wszystkich częściach aplikacji",
     "tour.stepOf": "Krok {{current}} z {{total}}",

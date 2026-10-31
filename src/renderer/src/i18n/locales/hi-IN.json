@@ -464,7 +464,11 @@
     "updates.opening": "अपडेट खुल रहा है",
     "sidebar.tabs.files": "फ़ाइलें",
     "palette.actions.jumpAttention": "उस टर्मिनल पर जाएँ जिसे आपकी ज़रूरत है",
-    "palette.actions.jumpAttentionDescription": "किसी भी प्रोजेक्ट में वह टर्मिनल खोलें जो सबसे लंबे समय से आपका इंतज़ार कर रहा है"
+    "palette.actions.jumpAttentionDescription": "किसी भी प्रोजेक्ट में वह टर्मिनल खोलें जो सबसे लंबे समय से आपका इंतज़ार कर रहा है",
+    "palette.actions.nextProject": "अगला प्रोजेक्ट",
+    "palette.actions.nextProjectDescription": "प्रोजेक्ट चयनकर्ता में अगले प्रोजेक्ट पर जाएँ ({{shortcut}})",
+    "palette.actions.previousProject": "पिछला प्रोजेक्ट",
+    "palette.actions.previousProjectDescription": "प्रोजेक्ट चयनकर्ता में पिछले प्रोजेक्ट पर जाएँ ({{shortcut}})"
   },
   "projects": {
     "selector.none": "कोई प्रोजेक्ट नहीं",
@@ -1360,6 +1364,8 @@
     "sections.files.title": "फ़ाइलें",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "उस टर्मिनल पर जाएँ जो सबसे लंबे समय से आपका इंतज़ार कर रहा है (बिंदु वाला टैब), किसी भी प्रोजेक्ट में। Windows और Linux पर Ctrl+Shift+J।",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "प्रोजेक्ट चयनकर्ता के क्रम में अगले या पिछले प्रोजेक्ट पर जाएँ। Windows और Linux पर Ctrl+Alt+PageDown / Ctrl+Alt+PageUp।",
     "tour.show": "स्वागत टूर दिखाएं",
     "tour.showDescription": "ऐप के हर हिस्से की छोटी सैर",
     "tour.stepOf": "चरण {{current}} / {{total}}",

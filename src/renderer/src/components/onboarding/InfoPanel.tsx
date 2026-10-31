@@ -172,7 +172,7 @@ const SECTION_TEMPLATES = [
     icon: <Keyboard size={16} />,
     color: 'text-gray-500',
     keywords: ['shortcuts', 'keys', 'hotkeys'],
-    steps: ['terminal', 'palette', 'projectSwitcher', 'splitVertical', 'splitHorizontal', 'focusPane', 'terminalSearch', 'findFiles', 'closeFile', 'snapshot', 'help', 'newTerminal', 'jumpAttention', 'maximise']
+    steps: ['terminal', 'palette', 'projectSwitcher', 'splitVertical', 'splitHorizontal', 'focusPane', 'terminalSearch', 'findFiles', 'closeFile', 'snapshot', 'help', 'newTerminal', 'jumpAttention', 'cycleProjects', 'maximise']
   },
 ] as const
 

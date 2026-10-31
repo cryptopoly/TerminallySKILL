@@ -467,7 +467,11 @@
     "sidebar.tabs.logs": "Logs",
     "sidebar.starterPack.scripts": "Scripts",
     "palette.actions.jumpAttention": "Naar de terminal die je nodig heeft",
-    "palette.actions.jumpAttentionDescription": "Open de terminal die het langst op je wacht, in elk project"
+    "palette.actions.jumpAttentionDescription": "Open de terminal die het langst op je wacht, in elk project",
+    "palette.actions.nextProject": "Volgend project",
+    "palette.actions.nextProjectDescription": "Naar het volgende project in de projectkiezer gaan ({{shortcut}})",
+    "palette.actions.previousProject": "Vorig project",
+    "palette.actions.previousProjectDescription": "Naar het vorige project in de projectkiezer gaan ({{shortcut}})"
   },
   "projects": {
     "selector.none": "Geen project",
@@ -1365,6 +1369,8 @@
     "sections.scripts.title": "Scripts",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Spring naar de terminal die het langst op je wacht (een tab met een stip), in elk project. Ctrl+Shift+J op Windows en Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Ga naar het volgende of vorige project, in de volgorde van de projectkiezer. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp op Windows en Linux.",
     "tour.show": "Welkomsttour tonen",
     "tour.showDescription": "Een korte rondleiding langs elk onderdeel van de app",
     "tour.stepOf": "Stap {{current}} van {{total}}",

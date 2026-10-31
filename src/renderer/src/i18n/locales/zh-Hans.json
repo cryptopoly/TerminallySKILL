@@ -79,7 +79,11 @@
     "topbar.github": "GitHub",
     "topbar.websiteDescription": "terminallyskill.com",
     "palette.actions.jumpAttention": "跳到需要你的终端",
-    "palette.actions.jumpAttentionDescription": "在任意项目中打开等你最久的终端"
+    "palette.actions.jumpAttentionDescription": "在任意项目中打开等你最久的终端",
+    "palette.actions.nextProject": "下一个项目",
+    "palette.actions.nextProjectDescription": "切换到项目选择器中的下一个项目（{{shortcut}}）",
+    "palette.actions.previousProject": "上一个项目",
+    "palette.actions.previousProjectDescription": "切换到项目选择器中的上一个项目（{{shortcut}}）"
   },
   "projects": {
     "dialog.workingDirectoryPlaceholder": "/path/to/your/project",
@@ -322,6 +326,8 @@
     "sections.settings.steps.themes.desc": "从标题栏齿轮图标打开设置。可在 8 个主题中选择：虚空、余烬、黄昏、森林、粉笔、拿铁、鼠尾草或薄雾。",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "跳到等你最久的终端（带圆点的标签页），适用于任意项目。在 Windows 和 Linux 上为 Ctrl+Shift+J。",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "按项目选择器的顺序切换到下一个或上一个项目。在 Windows 和 Linux 上为 Ctrl+Alt+PageDown / Ctrl+Alt+PageUp。",
     "tour.show": "显示欢迎导览",
     "tour.showDescription": "快速浏览应用的各个部分",
     "tour.stepOf": "第 {{current}} 步，共 {{total}} 步",

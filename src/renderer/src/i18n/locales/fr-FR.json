@@ -399,7 +399,11 @@
     "empty.createProject": "Créer un projet",
     "empty.howItWorks": "Comment ça marche",
     "palette.actions.jumpAttention": "Aller au terminal qui vous attend",
-    "palette.actions.jumpAttentionDescription": "Ouvrir le terminal qui vous attend depuis le plus longtemps, dans n’importe quel projet"
+    "palette.actions.jumpAttentionDescription": "Ouvrir le terminal qui vous attend depuis le plus longtemps, dans n’importe quel projet",
+    "palette.actions.nextProject": "Projet suivant",
+    "palette.actions.nextProjectDescription": "Passer au projet suivant du sélecteur de projets ({{shortcut}})",
+    "palette.actions.previousProject": "Projet précédent",
+    "palette.actions.previousProjectDescription": "Passer au projet précédent du sélecteur de projets ({{shortcut}})"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1299,6 +1303,8 @@
     "sections.scripts.title": "Scripts",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Aller au terminal qui vous attend depuis le plus longtemps (un onglet avec un point), dans n’importe quel projet. Ctrl+Shift+J sous Windows et Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Passe au projet suivant ou précédent, dans l’ordre du sélecteur de projets. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp sous Windows et Linux.",
     "tour.show": "Afficher la visite guidée",
     "tour.showDescription": "Un court tour de chaque partie de l’application",
     "tour.stepOf": "Étape {{current}} sur {{total}}",

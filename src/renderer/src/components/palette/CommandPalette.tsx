@@ -19,6 +19,8 @@ import { useBuilderStore } from '../../store/builder-store'
 import { useSettingsStore } from '../../store/settings-store'
 import { useAttentionStore } from '../../store/attention-store'
 import { jumpToNextAttention } from '../../lib/attention'
+import { cycleActiveProject } from '../../hooks/useProjectCycleShortcut'
+import { formatProjectCycleShortcut } from '../../lib/project-order'
 import {
   buildProjectExecutionCommand,
   createProjectTerminalSession,
@@ -97,6 +99,21 @@ export function CommandPalette({
         action: () => { onClose(); jumpToNextAttention() }
       })
     }
+    const isMac = navigator.platform.toLowerCase().includes('mac')
+    items.push({
+      id: 'action:next-project',
+      type: 'action',
+      label: t('palette.actions.nextProject'),
+      detail: t('palette.actions.nextProjectDescription', { shortcut: formatProjectCycleShortcut(isMac, 1) }),
+      action: () => { onClose(); cycleActiveProject(1) }
+    })
+    items.push({
+      id: 'action:previous-project',
+      type: 'action',
+      label: t('palette.actions.previousProject'),
+      detail: t('palette.actions.previousProjectDescription', { shortcut: formatProjectCycleShortcut(isMac, -1) }),
+      action: () => { onClose(); cycleActiveProject(-1) }
+    })
     items.push({
       id: 'action:terminal',
       type: 'action',
