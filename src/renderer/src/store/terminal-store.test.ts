@@ -17,6 +17,7 @@ function resetTerminalStore(): void {
     focusedPane: 'primary',
     busySessionIds: {},
     agentActivityBySession: {},
+    quietSessionIds: {},
     terminalMaximised: false
   })
 }
@@ -102,6 +103,28 @@ describe('terminal-store', () => {
     // A report for a terminal that is already closed is ignored
     store.setAgentActivity('term-2', 'working')
     expect(useTerminalStore.getState().agentActivityBySession).toEqual({})
+  })
+
+  it('clears the quiet flag on request, when the command ends and when the tab closes', () => {
+    const store = useTerminalStore.getState()
+    store.addSession('term-1', 'project-a')
+    store.addSession('term-2', 'project-a')
+
+    store.setSessionBusy('term-1', true)
+    store.setSessionQuiet('term-1', true)
+    expect(useTerminalStore.getState().quietSessionIds).toEqual({ 'term-1': true })
+    store.setSessionQuiet('term-1', false)
+    expect(useTerminalStore.getState().quietSessionIds).toEqual({})
+
+    store.setSessionQuiet('term-1', true)
+    store.setSessionBusy('term-1', false)
+    expect(useTerminalStore.getState().quietSessionIds).toEqual({})
+
+    store.setSessionQuiet('term-2', true)
+    store.removeSession('term-2')
+    expect(useTerminalStore.getState().quietSessionIds).toEqual({})
+    store.setSessionQuiet('term-2', true)
+    expect(useTerminalStore.getState().quietSessionIds).toEqual({})
   })
 
   it('ends maximise when the terminal is hidden or the last terminal closes', () => {

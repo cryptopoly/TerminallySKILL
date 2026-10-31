@@ -67,7 +67,8 @@
     "privacy.masking.kind.password": "Password",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Secret",
-    "privacy.masking.kind.api-key": "API key"
+    "privacy.masking.kind.api-key": "API key",
+    "general.attention.agentHint": "Coding agents (Claude Code, Codex, Gemini CLI and others) can alert you here too. If yours stays silent, see your agent's notification setting."
   },
   "logs": {
     "diagnostics.suspect.exit1a": "The command ran but hit a generic failure, so the real cause is usually in the command output just above this error.",
@@ -129,7 +130,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Maximise terminal",
     "panel.restore": "Restore terminal size",
-    "panel.maximiseDescription": "Hide the project view so the terminal fills the window. Click again to go back to the previous size."
+    "panel.maximiseDescription": "Hide the project view so the terminal fills the window. Click again to go back to the previous size.",
+    "dot.idle": "Idle",
+    "attention.waitingForYes": "Waiting for your yes",
+    "attention.bell": "Rang the terminal bell",
+    "attention.stillWaiting": "Still waiting for you ({{duration}})"
   },
   "native": {
     "menu.file": "File",
@@ -324,8 +329,8 @@
     "sections.statusDots.steps.finished.desc": "Green dot: a long command or workflow finished while you were not looking.",
     "sections.statusDots.steps.failed.label": "Failed",
     "sections.statusDots.steps.failed.desc": "Red dot with a cross: a command, workflow or agent stopped with an error.",
-    "sections.statusDots.steps.idle.label": "Idle agent",
-    "sections.statusDots.steps.idle.desc": "Grey ring: an agent is open but quiet, waiting for its next task. Arrives with agent notifications.",
+    "sections.statusDots.steps.idle.label": "Idle",
+    "sections.statusDots.steps.idle.desc": "Grey ring: a program is open but has printed nothing for a while, for example an agent waiting for its next task. Dot only, no notification.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Maximise the terminal so it fills the window, or restore it. Ctrl+Shift+M on Windows and Linux."
   }

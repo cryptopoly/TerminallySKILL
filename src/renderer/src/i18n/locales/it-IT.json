@@ -138,7 +138,8 @@
     "privacy.masking.kind.password": "Password",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Segreto",
-    "privacy.masking.kind.api-key": "Chiave API"
+    "privacy.masking.kind.api-key": "Chiave API",
+    "general.attention.agentHint": "Anche gli agenti di programmazione (Claude Code, Codex, Gemini CLI e altri) possono avvisarti qui. Se il tuo resta muto, controlla l'impostazione delle notifiche del tuo agente."
   },
   "commands": {
     "addDialog.title": "Aggiungi comando",
@@ -1061,7 +1062,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Massimizza terminale",
     "panel.restore": "Ripristina dimensione del terminale",
-    "panel.maximiseDescription": "Nasconde la vista del progetto così il terminale occupa tutta la finestra. Fai clic di nuovo per tornare alla dimensione precedente."
+    "panel.maximiseDescription": "Nasconde la vista del progetto così il terminale occupa tutta la finestra. Fai clic di nuovo per tornare alla dimensione precedente.",
+    "dot.idle": "Inattivo",
+    "attention.waitingForYes": "In attesa del tuo sì",
+    "attention.bell": "Ha suonato il campanello del terminale",
+    "attention.stillWaiting": "Ti sta ancora aspettando ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Builder visuale di comandi, workspace terminale, workflow, log e strumenti IA",
@@ -1275,8 +1280,8 @@
     "sections.statusDots.steps.finished.desc": "Punto verde: un comando lungo o un workflow è terminato mentre non guardavi.",
     "sections.statusDots.steps.failed.label": "Non riuscito",
     "sections.statusDots.steps.failed.desc": "Punto rosso con una croce: un comando, un workflow o un agente si è fermato con un errore.",
-    "sections.statusDots.steps.idle.label": "Agente inattivo",
-    "sections.statusDots.steps.idle.desc": "Anello grigio: un agente è aperto ma fermo, in attesa del prossimo compito. Arriverà con le notifiche degli agenti.",
+    "sections.statusDots.steps.idle.label": "Inattivo",
+    "sections.statusDots.steps.idle.desc": "Anello grigio: un programma è aperto ma da un po' non stampa nulla, per esempio un agente in attesa del prossimo compito. Solo il punto, nessuna notifica.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Massimizza il terminale perché occupi tutta la finestra, o ripristinalo. Ctrl+Shift+M su Windows e Linux."
   },

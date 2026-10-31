@@ -138,7 +138,8 @@
     "privacy.masking.kind.password": "Пароль",
     "privacy.masking.kind.token": "Токен",
     "privacy.masking.kind.secret": "Секрет",
-    "privacy.masking.kind.api-key": "Ключ API"
+    "privacy.masking.kind.api-key": "Ключ API",
+    "general.attention.agentHint": "Агенты для программирования (Claude Code, Codex, Gemini CLI и другие) тоже могут оповещать вас здесь. Если ваш молчит, проверьте настройку уведомлений агента."
   },
   "commands": {
     "addDialog.title": "Добавить команду",
@@ -1124,7 +1125,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Развернуть терминал",
     "panel.restore": "Вернуть размер терминала",
-    "panel.maximiseDescription": "Скрывает вид проекта, чтобы терминал занял всё окно. Нажмите ещё раз, чтобы вернуть прежний размер."
+    "panel.maximiseDescription": "Скрывает вид проекта, чтобы терминал занял всё окно. Нажмите ещё раз, чтобы вернуть прежний размер.",
+    "dot.idle": "Простой",
+    "attention.waitingForYes": "Ждёт вашего согласия",
+    "attention.bell": "Подал звуковой сигнал терминала",
+    "attention.stillWaiting": "Всё ещё ждёт вас ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Визуальный конструктор команд, терминальное рабочее пространство, workflow, логи и инструменты ИИ",
@@ -1343,8 +1348,8 @@
     "sections.statusDots.steps.finished.desc": "Зелёная точка: долгая команда или workflow завершились, пока вы не смотрели.",
     "sections.statusDots.steps.failed.label": "Ошибка",
     "sections.statusDots.steps.failed.desc": "Красная точка с крестиком: команда, workflow или агент остановились с ошибкой.",
-    "sections.statusDots.steps.idle.label": "Агент простаивает",
-    "sections.statusDots.steps.idle.desc": "Серое кольцо: агент открыт, но бездействует и ждёт следующей задачи. Появится вместе с уведомлениями агентов.",
+    "sections.statusDots.steps.idle.label": "Простой",
+    "sections.statusDots.steps.idle.desc": "Серое кольцо: программа открыта, но давно ничего не выводит, например агент ждёт следующую задачу. Только точка, без уведомления.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Развернуть терминал на всё окно или вернуть прежний размер. Ctrl+Shift+M в Windows и Linux."
   },

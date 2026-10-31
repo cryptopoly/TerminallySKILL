@@ -142,7 +142,8 @@
     "privacy.masking.kind.password": "Senha",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Segredo",
-    "privacy.masking.kind.api-key": "Chave de API"
+    "privacy.masking.kind.api-key": "Chave de API",
+    "general.attention.agentHint": "Agentes de programação (Claude Code, Codex, Gemini CLI e outros) também podem avisar você aqui. Se o seu ficar em silêncio, veja a configuração de notificações do seu agente."
   },
   "commands": {
     "addDialog.title": "Adicionar comando",
@@ -1076,7 +1077,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Maximizar terminal",
     "panel.restore": "Restaurar tamanho do terminal",
-    "panel.maximiseDescription": "Oculta a visão do projeto para que o terminal ocupe a janela inteira. Clique de novo para voltar ao tamanho anterior."
+    "panel.maximiseDescription": "Oculta a visão do projeto para que o terminal ocupe a janela inteira. Clique de novo para voltar ao tamanho anterior.",
+    "dot.idle": "Ocioso",
+    "attention.waitingForYes": "Aguardando seu sim",
+    "attention.bell": "Tocou o sino do terminal",
+    "attention.stillWaiting": "Ainda aguardando você ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Builder visual de comandos, workspace de terminal, workflows, logs e ferramentas de IA",
@@ -1291,8 +1296,8 @@
     "sections.statusDots.steps.finished.desc": "Ponto verde: um comando longo ou workflow terminou enquanto você não estava olhando.",
     "sections.statusDots.steps.failed.label": "Falhou",
     "sections.statusDots.steps.failed.desc": "Ponto vermelho com um X: um comando, workflow ou agente parou com um erro.",
-    "sections.statusDots.steps.idle.label": "Agente ocioso",
-    "sections.statusDots.steps.idle.desc": "Anel cinza: um agente está aberto, mas quieto, esperando a próxima tarefa. Chega com as notificações de agentes.",
+    "sections.statusDots.steps.idle.label": "Ocioso",
+    "sections.statusDots.steps.idle.desc": "Anel cinza: um programa está aberto, mas não mostra nada há algum tempo, por exemplo um agente esperando a próxima tarefa. Só o ponto, sem notificação.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Maximize o terminal para ocupar a janela inteira, ou restaure-o. Ctrl+Shift+M no Windows e no Linux."
   },

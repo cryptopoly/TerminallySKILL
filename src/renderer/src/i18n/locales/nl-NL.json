@@ -217,7 +217,8 @@
     "privacy.masking.kind.password": "Wachtwoord",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Geheim",
-    "privacy.masking.kind.api-key": "API-sleutel"
+    "privacy.masking.kind.api-key": "API-sleutel",
+    "general.attention.agentHint": "Codeeragents (Claude Code, Codex, Gemini CLI en andere) kunnen je hier ook waarschuwen. Blijft die van jou stil, kijk dan bij de meldingsinstelling van je agent."
   },
   "commands": {
     "addDialog.title": "Opdracht toevoegen",
@@ -1182,7 +1183,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Terminal maximaliseren",
     "panel.restore": "Terminalgrootte herstellen",
-    "panel.maximiseDescription": "Verbergt de projectweergave zodat de terminal het hele venster vult. Klik nogmaals om terug te gaan naar de vorige grootte."
+    "panel.maximiseDescription": "Verbergt de projectweergave zodat de terminal het hele venster vult. Klik nogmaals om terug te gaan naar de vorige grootte.",
+    "dot.idle": "Stil",
+    "attention.waitingForYes": "Wacht op je ja",
+    "attention.bell": "Liet de terminalbel klinken",
+    "attention.stillWaiting": "Wacht nog steeds op je ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Visuele opdrachtbuilder, terminalwerkruimte, workflows, logs en AI-tools",
@@ -1396,8 +1401,8 @@
     "sections.statusDots.steps.finished.desc": "Groene stip: een lange opdracht of workflow is klaar terwijl je niet keek.",
     "sections.statusDots.steps.failed.label": "Mislukt",
     "sections.statusDots.steps.failed.desc": "Rode stip met een kruisje: een opdracht, workflow of agent is gestopt met een fout.",
-    "sections.statusDots.steps.idle.label": "Inactieve agent",
-    "sections.statusDots.steps.idle.desc": "Grijze ring: een agent is open maar stil en wacht op de volgende taak. Komt met de agentmeldingen.",
+    "sections.statusDots.steps.idle.label": "Stil",
+    "sections.statusDots.steps.idle.desc": "Grijze ring: een programma is open maar heeft al een tijdje niets getoond, bijvoorbeeld een agent die op de volgende taak wacht. Alleen de stip, geen melding.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "De terminal maximaliseren zodat hij het venster vult, of herstellen. Ctrl+Shift+M op Windows en Linux."
   },

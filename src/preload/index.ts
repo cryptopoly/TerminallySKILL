@@ -493,7 +493,10 @@ export const electronAPI = {
   },
 
   // Attention layer
-  notifyAttention: (request: AttentionNotifyRequest): Promise<void> =>
+  /** Test-only: the e2e suite shortens the quiet-terminal wait. Unset in normal use. */
+  attentionQuietMsOverride: process.env.TSK_E2E_ATTENTION_QUIET_MS ?? null,
+
+  notifyAttention:(request: AttentionNotifyRequest): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.ATTENTION_NOTIFY, request),
 
   setAttentionBadge: (count: number): Promise<void> =>

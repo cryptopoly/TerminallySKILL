@@ -28,6 +28,9 @@ interface TerminalStore {
   /** What an agent in the session last reported through OSC 7501 (cleared when its command ends) */
   agentActivityBySession: Record<string, AgentActivity>
   setAgentActivity: (id: string, activity: AgentActivity) => void
+  /** Busy sessions that printed nothing for a while (quiet-terminal check); cleared by new output */
+  quietSessionIds: Record<string, true>
+  setSessionQuiet: (id: string, quiet: boolean) => void
   /** Terminal fills the window (project content collapsed). Not saved: resets on restart. */
   terminalMaximised: boolean
   setTerminalMaximised: (maximised: boolean) => void
@@ -117,16 +120,28 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
   focusedPane: 'primary',
   busySessionIds: {},
   agentActivityBySession: {},
+  quietSessionIds: {},
   terminalMaximised: false,
   setSessionBusy: (id, busy) =>
     set((state) => {
       // The command ended, so any agent it started is gone too: drop what it last reported.
-      const hasAgent = id in state.agentActivityBySession
+      const hasAgent = id in state.agentActivityBySession || id in state.quietSessionIds
       if (Boolean(state.busySessionIds[id]) === busy && (busy || !hasAgent)) return state
       const { [id]: _removed, ...rest } = state.busySessionIds
       if (busy) return { busySessionIds: { ...rest, [id]: true as const } }
       const { [id]: _agent, ...agentActivityBySession } = state.agentActivityBySession
-      return { busySessionIds: rest, agentActivityBySession }
+      const { [id]: _quiet, ...quietSessionIds } = state.quietSessionIds
+      return { busySessionIds: rest, agentActivityBySession, quietSessionIds }
+    }),
+  setSessionQuiet: (id, quiet) =>
+    set((state) => {
+      if (Boolean(state.quietSessionIds[id]) === quiet) return state
+      if (!quiet) {
+        const { [id]: _removed, ...rest } = state.quietSessionIds
+        return { quietSessionIds: rest }
+      }
+      if (!state.sessions.some((session) => session.id === id)) return state
+      return { quietSessionIds: { ...state.quietSessionIds, [id]: true as const } }
     }),
   setAgentActivity: (id, activity) =>
     set((state) => {
@@ -165,12 +180,14 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
       }
       const { [id]: _closed, ...busySessionIds } = state.busySessionIds
       const { [id]: _closedAgent, ...agentActivityBySession } = state.agentActivityBySession
+      const { [id]: _closedQuiet, ...quietSessionIds } = state.quietSessionIds
       return {
         sessions,
         activeSessionId,
         splitSessionId,
         busySessionIds,
         agentActivityBySession,
+        quietSessionIds,
         focusedPane: 'primary',
         terminalVisible: sessions.length > 0,
         terminalMaximised: sessions.length > 0 && state.terminalMaximised

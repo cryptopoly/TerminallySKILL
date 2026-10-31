@@ -9,13 +9,11 @@ const LABEL_KEYS: Record<TabDotState, string> = {
   running: 'dot.running',
   approval: 'dot.needsYou',
   finished: 'dot.finished',
-  failed: 'dot.failed'
+  failed: 'dot.failed',
+  idle: 'dot.idle'
 }
 
-/**
- * `idle` (agent open but quiet) has its look and legend row reserved; nothing sets it yet.
- */
-export type DotStyle = TabDotState | 'idle'
+export type DotStyle = TabDotState
 
 /** The dot itself, shared by the tab and the legend in the help guide. Shape differs per state. */
 export function TabStatusDot({ state }: { state: DotStyle }): JSX.Element {
@@ -43,16 +41,23 @@ export function TabStatusDot({ state }: { state: DotStyle }): JSX.Element {
 
 /**
  * Status dot on a terminal tab: orange spinning ring while running, pulsing yellow when it needs
- * you, solid green finished, red with a cross failed. Waiting states always win over running.
+ * you, solid green finished, red with a cross failed, still grey ring when a program is open but
+ * quiet. Waiting states always win over running and idle.
  */
 export function AttentionDot({ sessionId }: { sessionId: string }): JSX.Element | null {
   const { t } = useTranslation('terminal')
   const entry = useAttentionStore((state) => state.entries[sessionId])
   const shellBusy = useTerminalStore((state) => Boolean(state.busySessionIds[sessionId]))
   const agentActivity = useTerminalStore((state) => state.agentActivityBySession[sessionId])
+  const quiet = useTerminalStore((state) => Boolean(state.quietSessionIds[sessionId]))
   const alertsOn = useSettingsStore((state) => state.settings.attentionAlerts)
 
-  const dotState = resolveTabDotState({ entry, shellBusy: alertsOn && shellBusy, agentActivity: alertsOn ? agentActivity : null })
+  const dotState = resolveTabDotState({
+    entry,
+    shellBusy: alertsOn && shellBusy,
+    agentActivity: alertsOn ? agentActivity : null,
+    quiet
+  })
   if (!dotState) return null
 
   const stateLabel = t(LABEL_KEYS[dotState])
@@ -60,8 +65,8 @@ export function AttentionDot({ sessionId }: { sessionId: string }): JSX.Element 
 
   return (
     <span
-      // Running changes with every command, so it is not a live region; the waiting states are.
-      role={dotState === 'running' ? 'img' : 'status'}
+      // Running and idle change with every command, so they are not live regions; the waiting states are.
+      role={dotState === 'running' || dotState === 'idle' ? 'img' : 'status'}
       data-dot-state={dotState}
       title={label}
       aria-label={label}

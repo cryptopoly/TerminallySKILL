@@ -136,7 +136,8 @@
     "privacy.masking.kind.password": "パスワード",
     "privacy.masking.kind.token": "トークン",
     "privacy.masking.kind.secret": "シークレット",
-    "privacy.masking.kind.api-key": "API キー"
+    "privacy.masking.kind.api-key": "API キー",
+    "general.attention.agentHint": "コーディングエージェント (Claude Code、Codex、Gemini CLI など) もここで通知できます。通知が来ない場合は、エージェント側の通知設定を確認してください。"
   },
   "commands": {
     "addDialog.title": "コマンドを追加",
@@ -1055,7 +1056,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "ターミナルを最大化",
     "panel.restore": "ターミナルのサイズを戻す",
-    "panel.maximiseDescription": "プロジェクト表示を隠し、ターミナルをウィンドウ全体に広げます。もう一度クリックすると元のサイズに戻ります。"
+    "panel.maximiseDescription": "プロジェクト表示を隠し、ターミナルをウィンドウ全体に広げます。もう一度クリックすると元のサイズに戻ります。",
+    "dot.idle": "待機中",
+    "attention.waitingForYes": "承認を待っています",
+    "attention.bell": "ターミナルのベルを鳴らしました",
+    "attention.stillWaiting": "まだ待っています ({{duration}})"
   },
   "onboarding": {
     "subtitle": "ビジュアルコマンドビルダー、ターミナルワークスペース、ワークフロー、ログ、AI ツール",
@@ -1268,8 +1273,8 @@
     "sections.statusDots.steps.finished.desc": "緑のドット：見ていない間に長いコマンドまたはワークフローが完了しました。",
     "sections.statusDots.steps.failed.label": "失敗",
     "sections.statusDots.steps.failed.desc": "×印付きの赤いドット：コマンド、ワークフロー、またはエージェントがエラーで停止しました。",
-    "sections.statusDots.steps.idle.label": "待機中のエージェント",
-    "sections.statusDots.steps.idle.desc": "灰色のリング：エージェントは開いていますが、次の作業を待って静かにしています。エージェント通知と一緒に提供予定です。",
+    "sections.statusDots.steps.idle.label": "待機中",
+    "sections.statusDots.steps.idle.desc": "グレーの輪: プログラムは開いているものの、しばらく何も出力していません (次のタスクを待つエージェントなど)。点のみで、通知はしません。",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "ターミナルをウィンドウ全体に最大化、または元に戻します。Windows と Linux では Ctrl+Shift+M。"
   },

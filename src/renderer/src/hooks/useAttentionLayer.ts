@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import { createReminderScheduler } from '../../../shared/attention-reminders'
+import { i18n, resolveFormatLocale } from '../i18n'
 import {
   describeWorkflowAttention,
   focusAttentionSession,
@@ -7,8 +9,25 @@ import {
 } from '../lib/attention'
 import { useAttentionStore } from '../store/attention-store'
 import { useProjectStore } from '../store/project-store'
+import { useSettingsStore } from '../store/settings-store'
 import { useTerminalStore } from '../store/terminal-store'
 import { useWorkflowRunnerStore, type WorkflowRunStatus } from '../store/workflow-runner-store'
+
+function sendReminder(sessionId: string, minutes: number): void {
+  const entry = useAttentionStore.getState().entries[sessionId]
+  if (!entry) return
+  const settings = useSettingsStore.getState().settings
+  const duration = new Intl.NumberFormat(resolveFormatLocale(settings), {
+    style: 'unit',
+    unit: 'minute',
+    unitDisplay: 'long'
+  }).format(minutes)
+  void window.electronAPI.notifyAttention({
+    sessionId,
+    title: i18n.t('attention.stillWaiting', { ns: 'terminal', duration }),
+    body: entry.detail
+  })
+}
 
 const ALERT_STATUSES: WorkflowRunStatus[] = ['awaiting_approval', 'completed', 'failed']
 
@@ -52,6 +71,35 @@ export function useAttentionLayer(): void {
       unsubscribeTerminals()
       unsubscribeProject()
       window.removeEventListener('focus', clearWatchedEntries)
+    }
+  }, [])
+
+  // Still waiting for a yes: remind at 10 and 30 minutes while the window is not in front
+  useEffect(() => {
+    const reminders = createReminderScheduler({
+      shouldRemind: (sessionId, at) => {
+        const entry = useAttentionStore.getState().entries[sessionId]
+        return (
+          entry?.kind === 'approval' &&
+          entry.at === at &&
+          !document.hasFocus() &&
+          useSettingsStore.getState().settings.attentionAlerts
+        )
+      },
+      remind: sendReminder
+    })
+    const unsubscribe = useAttentionStore.subscribe((state, previous) => {
+      for (const sessionId of Object.keys(previous.entries)) {
+        if (!(sessionId in state.entries)) reminders.cancel(sessionId)
+      }
+      for (const [sessionId, entry] of Object.entries(state.entries)) {
+        if (entry.kind === 'approval') reminders.schedule(sessionId, entry.at)
+        else reminders.cancel(sessionId)
+      }
+    })
+    return () => {
+      unsubscribe()
+      reminders.cancelAll()
     }
   }, [])
 

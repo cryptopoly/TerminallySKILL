@@ -142,7 +142,8 @@
     "privacy.masking.kind.password": "Mot de passe",
     "privacy.masking.kind.token": "Jeton",
     "privacy.masking.kind.secret": "Secret",
-    "privacy.masking.kind.api-key": "Clé API"
+    "privacy.masking.kind.api-key": "Clé API",
+    "general.attention.agentHint": "Les agents de code (Claude Code, Codex, Gemini CLI et d'autres) peuvent aussi vous alerter ici. Si le vôtre reste muet, consultez le réglage des notifications de votre agent."
   },
   "commands": {
     "addDialog.title": "Ajouter une commande",
@@ -1113,7 +1114,11 @@
     "dot.tooltip": "{{state}} · {{detail}}",
     "panel.maximise": "Agrandir le terminal",
     "panel.restore": "Restaurer la taille du terminal",
-    "panel.maximiseDescription": "Masque la vue du projet pour que le terminal occupe toute la fenêtre. Cliquez à nouveau pour revenir à la taille précédente."
+    "panel.maximiseDescription": "Masque la vue du projet pour que le terminal occupe toute la fenêtre. Cliquez à nouveau pour revenir à la taille précédente.",
+    "dot.idle": "Inactif",
+    "attention.waitingForYes": "Attend votre accord",
+    "attention.bell": "A fait sonner la cloche du terminal",
+    "attention.stillWaiting": "Vous attend toujours ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Builder de commandes visuel, espace de travail de terminal, workflows, journaux et outils IA",
@@ -1330,8 +1335,8 @@
     "sections.statusDots.steps.finished.desc": "Point vert : une longue commande ou un workflow s’est terminé pendant que vous regardiez ailleurs.",
     "sections.statusDots.steps.failed.label": "Échec",
     "sections.statusDots.steps.failed.desc": "Point rouge avec une croix : une commande, un workflow ou un agent s’est arrêté sur une erreur.",
-    "sections.statusDots.steps.idle.label": "Agent inactif",
-    "sections.statusDots.steps.idle.desc": "Anneau gris : un agent est ouvert mais calme, en attente de sa prochaine tâche. Arrive avec les notifications d’agent.",
+    "sections.statusDots.steps.idle.label": "Inactif",
+    "sections.statusDots.steps.idle.desc": "Anneau gris : un programme est ouvert mais n'a rien affiché depuis un moment, par exemple un agent qui attend sa prochaine tâche. Point seulement, sans notification.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
     "sections.keyboard.steps.maximise.desc": "Agrandir le terminal pour qu’il occupe toute la fenêtre, ou le restaurer. Ctrl+Shift+M sous Windows et Linux."
   },
