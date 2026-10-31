@@ -50,10 +50,16 @@ jobs:
             dist/*.zip
 
   build-linux:
-    runs-on: ubuntu-latest
+    # Build each architecture on a runner of that architecture: node-pty has no Linux prebuilds, so
+    # it is compiled on the build machine and an arm64 package built on x64 would ship an x86 pty.node.
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        arch: [x64, arm64]
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v6
 
@@ -72,6 +78,15 @@ jobs:
 
       - name: Build and package
         run: npm run package:linux:${{ matrix.arch }}
+
+      - name: Check the native terminal module matches the target architecture
+        run: |
+          pty=dist/linux-${{ matrix.arch == 'arm64' && 'arm64-' || '' }}unpacked/resources/app.asar.unpacked/node_modules/node-pty/build/Release/pty.node
+          file "$pty"
+          case "${{ matrix.arch }}" in
+            arm64) file "$pty" | grep -q 'ARM aarch64' ;;
+            x64) file "$pty" | grep -q 'x86-64' ;;
+          esac
 
       - uses: actions/upload-artifact@v7
         with:

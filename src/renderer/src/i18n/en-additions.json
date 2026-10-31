@@ -284,6 +284,28 @@
   },
   "onboarding": {
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
-    "sections.keyboard.steps.jumpAttention.desc": "Jump to the terminal that has waited longest for you (a tab with a dot), in any project. Ctrl+Shift+J on Windows and Linux."
+    "sections.keyboard.steps.jumpAttention.desc": "Jump to the terminal that has waited longest for you (a tab with a dot), in any project. Ctrl+Shift+J on Windows and Linux.",
+    "tour.show": "Show welcome tour",
+    "tour.showDescription": "A short walk through each part of the app",
+    "tour.stepOf": "Step {{current}} of {{total}}",
+    "tour.progress": "Tour progress",
+    "tour.next": "Next",
+    "tour.back": "Back",
+    "tour.skip": "Skip tour",
+    "tour.done": "Get started",
+    "tour.steps.welcome.title": "Welcome to TerminallySKILL",
+    "tour.steps.welcome.body": "Start by creating a project. A project is a workspace: a folder on this computer, and optionally an SSH server or VNC desktop you want to work on.",
+    "tour.steps.commands.title": "Commands",
+    "tour.steps.commands.body": "Browse the command-line tools installed on your computer. Pick flags and arguments in a form, check the preview, then run it.",
+    "tour.steps.scripts.title": "Scripts",
+    "tour.steps.scripts.body": "Save a series of commands as a script and run every step with one click. Scripts can ask for inputs, wait for your approval and run on a schedule.",
+    "tour.steps.snippetsFiles.title": "Snippets and files",
+    "tour.steps.snippetsFiles.body": "Snippets are reusable command templates with blanks to fill in. Files lets you browse and edit what is in the project folder.",
+    "tour.steps.logsSearch.title": "Logs and search",
+    "tour.steps.logsSearch.body": "Logs keeps a record of every run, so you can look back, compare runs and see what failed. Search finds text across the project's files.",
+    "tour.steps.terminal.title": "Terminal",
+    "tour.steps.terminal.body": "Open a terminal in the current project here. You can split it, queue commands and ask for help when a command fails.",
+    "tour.steps.helpSettings.title": "Help and settings",
+    "tour.steps.helpSettings.body": "The guide explains every feature and can replay this tour. Settings holds themes, language, AI providers and the Privacy tab."
   }
 }

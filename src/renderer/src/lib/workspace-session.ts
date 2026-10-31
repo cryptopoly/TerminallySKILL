@@ -23,7 +23,8 @@ export async function createProjectTerminalSession(
     resolvedCwd,
     project?.id,
     project?.name,
-    resolvedProjectWorkingDirectory,
+    // No project means null here, but the IPC contract only accepts a string or undefined.
+    resolvedProjectWorkingDirectory ?? undefined,
     launchPlan.envOverrides
   )
 

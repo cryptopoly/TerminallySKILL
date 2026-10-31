@@ -47,6 +47,7 @@ interface CommandPaletteProps {
   onNewTerminal: () => void
   onOpenSettings: () => void
   onOpenInfo: () => void
+  onOpenTour: () => void
   onCreateProject: () => void
 }
 
@@ -55,6 +56,7 @@ export function CommandPalette({
   onNewTerminal,
   onOpenSettings,
   onOpenInfo,
+  onOpenTour,
   onCreateProject
 }: CommandPaletteProps): JSX.Element {
   const { t } = useTranslation('layout')
@@ -122,6 +124,13 @@ export function CommandPalette({
       label: t('palette.actions.info'),
       detail: t('palette.actions.infoDescription'),
       action: () => { onOpenInfo(); onClose() }
+    })
+    items.push({
+      id: 'action:tour',
+      type: 'action',
+      label: t('tour.show', { ns: 'onboarding' }),
+      detail: t('tour.showDescription', { ns: 'onboarding' }),
+      action: () => { onClose(); onOpenTour() }
     })
     items.push({
       id: 'action:project',
@@ -203,7 +212,7 @@ export function CommandPalette({
     }
 
     return items
-  }, [commands, scripts, snippets, history, activeProject, hasAttention, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onCreateProject, resetValues, setActiveCommand, setActiveScript, setActiveSnippet, t])
+  }, [commands, scripts, snippets, history, activeProject, hasAttention, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onOpenTour, onCreateProject, resetValues, setActiveCommand, setActiveScript, setActiveSnippet, t])
 
   const runHistoryCommand = useCallback(async (cmd: string) => {
     const envOverrides = useProjectStore.getState().getActiveEnvOverrides()

@@ -26,6 +26,15 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 8. **Opus review of translations (approved by Dan, done 2026-10-29, merged).** 77 strings fixed in 18 locales (plural-safe unit labels for ru/uk/pl, neutral "Interval:" labels where "Every" broke, meaning errors in tr/nl/ja/zh). Open: the settings card is titled "Notifications" in 17 locales but "Attention alerts" in English; recommend renaming English to "Notifications" for consistency. Native speakers still to confirm items listed in the review hand-back; Arabic needs a visual right-to-left check (letter-spacing on headings, `ml-2` in PrivacyTab). **Team recommendation:** yes, run one Opus pass over the 66 new 0.9.103 strings in the 18 locale files (not the whole app), then fix the Russian, Ukrainian and Polish plural forms. **Why:** Sonnet wrote them, so a stronger second model catches wrong terms and plural errors cheaply (small token cost). It does not replace native speakers, so keep item 3 open and keep the "machine-assisted" note in the release notes.
 
 
+10. **First-run welcome tour for 0.9.104 (built, PR open from `feat/first-run-tour`, not merged).** Seven steps: Create Project (with a button that opens the real dialog, tour carries on after), Commands, Scripts, Snippets and files, Logs and search, Terminal, Help and settings. Progress: [first-run tour](progress/first-run-tour.md). Points for Dan to confirm, each with the team recommendation:
+    - **Who sees it.** Only a brand-new data folder: no `settings.json` and nothing else in the data folder. A `settings.json` without the new flag (everyone on 0.9.103), or any other data file, counts as "seen". **Recommend: keep.** Why: upgraders must never get a tour; an older install that never wrote settings still has projects or runs.
+    - **When it is marked seen.** Only on Finish, Skip, Esc or the close button. Quitting mid-tour shows it again next launch. **Recommend: keep.** Why: a crash or quit is not a decision to skip.
+    - **Re-open.** From the help guide footer ("Show welcome tour") and the command palette. There is no native Help menu today (only File, Edit, Window). **Recommend: no native Help menu for now.** Why: it needs a new main-to-renderer message and 18 more menu strings for little gain; add it if users ask.
+    - **Highlight only.** The tour lights the real tabs and buttons but does not switch tabs or open panels. **Recommend: keep.** Why: switching tabs saves layout per project and could surprise users; highlighting is enough at this length.
+    - **Modal.** While open, app shortcuts (Cmd/Ctrl+T, K, S, I) wait. **Recommend: keep.**
+    - **Translations.** 22 new strings in 18 locales, machine-written, Arabic checked visually in right-to-left (screenshots). Add to item 3 (native review).
+
+
 ### P3: later
 
 
@@ -36,8 +45,14 @@ Priority: P1 blocks the next release; P2 is needed before the next milestone; P3
 <details>
 <summary>Decision log (made decisions, newest section last)</summary>
 
+## 2026-10-31
+
+- **Linux and Windows smoke tests are part of every release (Dan asked):** see [release checklist](release-checklist.md). Linux: `tools/vm-release-smoke.sh <version>` on the draft release files. Windows: manual on `W11 Testing`, best effort. Lesson: the GitHub-built arm64 `.deb` shipped an x86 `pty.node`, so no terminal could start; a local build hid it. Also found: Run Script with no project threw "Invalid projectWorkingDir: expected string" (renderer sent null). Both fixed in PRs; draft release to be rebuilt before publishing.
+
 ## 2026-10-30
 
+- **`test (macos-latest)` is now a required check on `staging` and `main` (Dan said yes).** It passes since PR 4. Windows stays non-blocking.
+- **Website wallets (Dan):** the other wallets (BTC, ETH, SOL, LTC, DOGE, ZEC) are believed to still be his; no action. Low traffic so far.
 - **Linux arm64 ships as `.deb` only (Dan decided):** electron-builder's arm64 AppImage runtime links `libz.so` and does not start on stock Ubuntu; a `patchelf` fix was proven but needs a double build, so it is banked. x64 keeps AppImage and `.deb`. Both architectures stay supported. PR `chore/linux-arm64-deb-only`.
 - **Lightning on the website (Dan's LNbits was a paid instance, now decommissioned):** card stays removed. Self-hosting needs a Lightning node with channels and backups, more upkeep than a donation jar; revisit with a hosted Lightning address if wanted.
 - **Branch protection on `staging` and `main` (Dan said yes):** applied with the GitHub API. Force-push and deletion blocked, a pull request required (0 approvals), CI check `test` required, admin bypass left on. The new macOS and Windows jobs are not required.

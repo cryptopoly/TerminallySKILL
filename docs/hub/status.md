@@ -9,6 +9,10 @@ summary: Read this first in every new session.
 
 Branch flow: feature branches go into `staging` (default branch), `staging` is promoted to `main`, tags are cut from the release commit. Release builds run from the GitHub `Release` workflow (macOS jobs are pinned to `macos-15`).
 
+## Update 2026-10-31 (0.9.104 work)
+
+First-run welcome tour built on `feat/first-run-tour`, PR open into `staging` (not merged). Shows only on a brand-new data folder; upgraders never see it. See [progress](progress/first-run-tour.md) and [decisions](decisions.md) item 10 for points to confirm.
+
 ## Update 2026-10-29, night (final scope built)
 
 All four extra features are merged on `feat/0.9.103-attention-schedule-privacy` and verified there: `test:ci` 427 unit tests, e2e 15 passed (6 skipped by design), local OpenSSH e2e 4 passed, packaged mac arm64 smoke test passed (Electron 45.1.0). **Left:** Dan starts the Docker daemon so the Docker SSH test can run; Claude then does the version bump to 0.9.103, `docs/releases/v0.9.103.md` (lead with "No telemetry. No analytics. No account."), one PR into `staging`; Dan hand-tests the [UAT list](uat-0.9.103.md) in a packaged build (secrets after update, real Claude Code dots), merges, promotes, releases, tweets. Housekeeping awaiting Dan's OK: delete old agent worktrees and merged branches.
