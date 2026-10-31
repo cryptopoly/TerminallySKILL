@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useSta
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 import { ChevronLeft, ChevronRight, FolderOpen, X } from 'lucide-react'
-import { getTourRect, placeTourCard, type TourRect } from './welcome-tour-layout'
+import { getTourRect, mergeTouchingRects, placeTourCard, type TourRect } from './welcome-tour-layout'
 
 export interface WelcomeTourStep {
   id: string
@@ -37,7 +37,24 @@ const STEP_TARGETS: Record<(typeof WELCOME_TOUR_STEP_IDS)[number], string[][]> =
 
 const SPOTLIGHT_PADDING = 6
 
-function findTarget(groups: string[][]): { rect: TourRect; elements: HTMLElement[] } | null {
+function pad(rect: TourRect): TourRect {
+  return {
+    left: rect.left - SPOTLIGHT_PADDING,
+    top: rect.top - SPOTLIGHT_PADDING,
+    width: rect.width + SPOTLIGHT_PADDING * 2,
+    height: rect.height + SPOTLIGHT_PADDING * 2
+  }
+}
+
+interface TourTarget {
+  /** One lit hole per element */
+  holes: TourRect[]
+  /** All holes together, used to place the card */
+  bounds: TourRect
+  elements: HTMLElement[]
+}
+
+function findTarget(groups: string[][]): TourTarget | null {
   for (const group of groups) {
     const elements = group
       .flatMap((id) => Array.from(document.querySelectorAll<HTMLElement>(`[data-tour="${id}"]`)))
@@ -46,7 +63,12 @@ function findTarget(groups: string[][]): { rect: TourRect; elements: HTMLElement
         return box.width > 0 && box.height > 0
       })
     if (elements.length > 0) {
-      return { rect: getTourRect(elements.map((element) => element.getBoundingClientRect())), elements }
+      const boxes = elements.map((element) => element.getBoundingClientRect())
+      return {
+        holes: mergeTouchingRects(boxes.map((box) => pad(getTourRect([box])))),
+        bounds: pad(getTourRect(boxes)),
+        elements
+      }
     }
   }
   return null
@@ -72,7 +94,8 @@ export function WelcomeTour({
   const bodyId = useId()
   const cardRef = useRef<HTMLDivElement | null>(null)
   const primaryRef = useRef<HTMLButtonElement | null>(null)
-  const [target, setTarget] = useState<TourRect | null>(null)
+  const [target, setTarget] = useState<Omit<TourTarget, 'elements'> | null>(null)
+  const maskId = `welcome-tour-mask-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight })
   const [cardSize, setCardSize] = useState({ width: 360, height: 220 })
 
@@ -94,7 +117,7 @@ export function WelcomeTour({
   const measure = useCallback(() => {
     setViewport({ width: window.innerWidth, height: window.innerHeight })
     const found = findTarget(current.targets)
-    setTarget(found?.rect ?? null)
+    setTarget(found ? { holes: found.holes, bounds: found.bounds } : null)
   }, [current.targets])
 
   // Bring the target into view (e.g. a sidebar tab scrolled out of a narrow tab strip), then measure
@@ -185,28 +208,39 @@ export function WelcomeTour({
     return () => window.removeEventListener('keydown', handler, true)
   }, [goBack, index, isLast, onClose, onStepChange])
 
-  const spotlight = target
-    ? {
-        left: target.left - SPOTLIGHT_PADDING,
-        top: target.top - SPOTLIGHT_PADDING,
-        width: target.width + SPOTLIGHT_PADDING * 2,
-        height: target.height + SPOTLIGHT_PADDING * 2
-      }
-    : null
-  const position = placeTourCard(spotlight, cardSize, viewport)
+  const position = placeTourCard(target?.bounds ?? null, cardSize, viewport)
 
   return (
     <div className="fixed inset-0 z-[70]" data-testid="welcome-tour">
-      {spotlight ? (
-        <div
-          aria-hidden="true"
-          data-testid="welcome-tour-spotlight"
-          className="pointer-events-none fixed rounded-xl ring-2 ring-accent transition-all duration-200"
-          style={{ ...spotlight, boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)' }}
-        />
-      ) : (
-        <div aria-hidden="true" className="fixed inset-0 bg-black/60" />
-      )}
+      {/* Dimmed backdrop with a hole per target; an SVG mask lets several separate holes share one dim layer */}
+      <svg aria-hidden="true" className="pointer-events-none fixed inset-0 h-full w-full">
+        <defs>
+          <mask id={maskId}>
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            {target?.holes.map((hole, holeIndex) => (
+              <rect key={holeIndex} x={hole.left} y={hole.top} width={hole.width} height={hole.height} rx="10" fill="black" />
+            ))}
+          </mask>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="rgba(0, 0, 0, 0.6)" mask={`url(#${maskId})`} />
+        {target && (
+          <g data-testid="welcome-tour-spotlight">
+            {target.holes.map((hole, holeIndex) => (
+              <rect
+                key={holeIndex}
+                x={hole.left}
+                y={hole.top}
+                width={hole.width}
+                height={hole.height}
+                rx="10"
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth="2"
+              />
+            ))}
+          </g>
+        )}
+      </svg>
 
       <div
         ref={cardRef}
@@ -253,33 +287,34 @@ export function WelcomeTour({
           </button>
         )}
 
-        <div className="mt-4 flex items-center gap-3">
-          <ol className="flex flex-1 items-center gap-1.5" aria-label={t('tour.progress')}>
-            {steps.map((item, dotIndex) => (
-              <li
-                key={item.id}
-                aria-current={dotIndex === index ? 'step' : undefined}
-                className={clsx(
-                  'h-1.5 rounded-full transition-all',
-                  dotIndex === index ? 'w-4 bg-accent' : 'w-1.5 bg-surface-border'
-                )}
-              >
-                <span className="sr-only">{item.title}</span>
-              </li>
-            ))}
-          </ol>
+        <ol className="mt-4 flex items-center gap-1.5" aria-label={t('tour.progress')}>
+          {steps.map((item, dotIndex) => (
+            <li
+              key={item.id}
+              aria-current={dotIndex === index ? 'step' : undefined}
+              className={clsx(
+                'h-1.5 rounded-full transition-all',
+                dotIndex === index ? 'w-4 bg-accent' : 'w-1.5 bg-surface-border'
+              )}
+            >
+              <span className="sr-only">{item.title}</span>
+            </li>
+          ))}
+        </ol>
 
+        {/* Wraps instead of overflowing when a translation is long */}
+        <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
           {!isLast && (
             <button
               type="button"
               onClick={onClose}
-              className="text-xs text-gray-500 transition-colors hover:text-gray-300"
+              className="me-auto whitespace-nowrap text-xs text-gray-500 transition-colors hover:text-gray-300"
             >
               {t('tour.skip')}
             </button>
           )}
           {!isFirst && (
-            <button type="button" onClick={goBack} className="tv-btn-secondary">
+            <button type="button" onClick={goBack} className="tv-btn-secondary whitespace-nowrap">
               <ChevronLeft size={13} className="rtl:rotate-180" />
               {t('tour.back')}
             </button>
@@ -289,7 +324,7 @@ export function WelcomeTour({
             type="button"
             onClick={goNext}
             data-testid="welcome-tour-next"
-            className="inline-flex items-center gap-1 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-light"
+            className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-light"
           >
             {isLast ? t('tour.done') : t('tour.next')}
             {!isLast && <ChevronRight size={13} className="rtl:rotate-180" />}

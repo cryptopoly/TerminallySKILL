@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getTourRect, placeTourCard } from './welcome-tour-layout'
+import { getTourRect, mergeTouchingRects, placeTourCard } from './welcome-tour-layout'
 
 const viewport = { width: 1024, height: 700 }
 const card = { width: 360, height: 220 }
@@ -39,5 +39,12 @@ describe('welcome tour layout', () => {
     const position = placeTourCard({ left: 0, top: 0, width: 400, height: 300 }, card, tiny)
     expect(position.left).toBeGreaterThanOrEqual(16)
     expect(position.top).toBeGreaterThanOrEqual(16)
+  })
+
+  it('joins touching lit areas and keeps separate ones apart', () => {
+    const tabA = { left: 0, top: 0, width: 50, height: 30 }
+    const tabB = { left: 48, top: 0, width: 50, height: 30 }
+    const far = { left: 300, top: 0, width: 40, height: 30 }
+    expect(mergeTouchingRects([tabA, tabB, far])).toEqual([{ left: 0, top: 0, width: 98, height: 30 }, far])
   })
 })

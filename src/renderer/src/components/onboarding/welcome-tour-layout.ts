@@ -22,6 +22,29 @@ export function getTourRect(boxes: Array<{ left: number; top: number; right: num
   return { left, top, width: right - left, height: bottom - top }
 }
 
+function overlaps(a: TourRect, b: TourRect): boolean {
+  return a.left <= b.left + b.width && b.left <= a.left + a.width && a.top <= b.top + b.height && b.top <= a.top + a.height
+}
+
+/** Joins lit areas that touch (e.g. two neighbouring tabs) so their outlines do not cross. */
+export function mergeTouchingRects(rects: TourRect[]): TourRect[] {
+  const merged = [...rects]
+  for (let i = 0; i < merged.length; i += 1) {
+    for (let j = i + 1; j < merged.length; j += 1) {
+      if (!overlaps(merged[i], merged[j])) continue
+      const a = merged[i]
+      const b = merged[j]
+      merged[i] = getTourRect([
+        { left: a.left, top: a.top, right: a.left + a.width, bottom: a.top + a.height },
+        { left: b.left, top: b.top, right: b.left + b.width, bottom: b.top + b.height }
+      ])
+      merged.splice(j, 1)
+      j = i
+    }
+  }
+  return merged
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(value, Math.max(min, max)))
 }
