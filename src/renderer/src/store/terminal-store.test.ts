@@ -15,7 +15,9 @@ function resetTerminalStore(): void {
     splitSessionId: null,
     splitDirection: 'vertical',
     focusedPane: 'primary',
-    busySessionIds: {}
+    busySessionIds: {},
+    agentActivityBySession: {},
+    terminalMaximised: false
   })
 }
 
@@ -76,6 +78,45 @@ describe('terminal-store', () => {
     store.setSessionBusy('term-2', true)
     store.removeSession('term-2')
     expect(useTerminalStore.getState().busySessionIds).toEqual({})
+  })
+
+  it('forgets what an agent reported when its command ends, the shell exits or the tab closes', () => {
+    const store = useTerminalStore.getState()
+    store.addSession('term-1', 'project-a')
+    store.addSession('term-2', 'project-a')
+
+    store.setSessionBusy('term-1', true)
+    store.setAgentActivity('term-1', 'working')
+    expect(useTerminalStore.getState().agentActivityBySession).toEqual({ 'term-1': 'working' })
+    // Command end (and shell exit, which uses the same call) clears it even when not marked busy
+    store.setSessionBusy('term-1', false)
+    expect(useTerminalStore.getState().agentActivityBySession).toEqual({})
+    store.setAgentActivity('term-1', 'idle')
+    store.setSessionBusy('term-1', false)
+    expect(useTerminalStore.getState().agentActivityBySession).toEqual({})
+
+    store.setAgentActivity('term-2', 'working')
+    store.removeSession('term-2')
+    expect(useTerminalStore.getState().agentActivityBySession).toEqual({})
+
+    // A report for a terminal that is already closed is ignored
+    store.setAgentActivity('term-2', 'working')
+    expect(useTerminalStore.getState().agentActivityBySession).toEqual({})
+  })
+
+  it('ends maximise when the terminal is hidden or the last terminal closes', () => {
+    const store = useTerminalStore.getState()
+    store.addSession('term-1', 'project-a')
+    store.setTerminalMaximised(true)
+    store.setTerminalVisible(true)
+    expect(useTerminalStore.getState().terminalMaximised).toBe(true)
+    store.setTerminalVisible(false)
+    expect(useTerminalStore.getState().terminalMaximised).toBe(false)
+
+    store.setTerminalVisible(true)
+    store.setTerminalMaximised(true)
+    store.removeSession('term-1')
+    expect(useTerminalStore.getState().terminalMaximised).toBe(false)
   })
 
   it('counts only the focused pane of a split as watched', () => {

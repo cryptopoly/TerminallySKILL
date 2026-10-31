@@ -56,3 +56,24 @@ export function pickNextAttentionSession(
 export function attentionKindForExit(exitCode: number | null): AttentionKind {
   return exitCode !== null && exitCode !== 0 ? 'failed' : 'finished'
 }
+
+/** What a program reported about itself through OSC 7501: busy, or open but not working. */
+export type AgentActivity = 'working' | 'idle'
+
+/** The tab dot: one of the attention kinds, or `running` while a command or agent is busy. */
+export type TabDotState = AttentionKind | 'running'
+
+/**
+ * Finished, failed and needs-you entries always win, since they wait for the user. Otherwise the
+ * dot shows `running` while the terminal is busy. An agent that reports its own state overrides
+ * the shell, so an open but quiet agent does not look busy.
+ */
+export function resolveTabDotState(params: {
+  entry: AttentionEntry | null | undefined
+  shellBusy: boolean
+  agentActivity: AgentActivity | null | undefined
+}): TabDotState | null {
+  if (params.entry) return params.entry.kind
+  if (params.agentActivity) return params.agentActivity === 'working' ? 'running' : null
+  return params.shellBusy ? 'running' : null
+}

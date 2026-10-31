@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { AgentActivity } from '../../../shared/attention'
 
 export interface TerminalSession {
   id: string
@@ -24,6 +25,12 @@ interface TerminalStore {
   /** Sessions with a command currently running (from shell integration) */
   busySessionIds: Record<string, true>
   setSessionBusy: (id: string, busy: boolean) => void
+  /** What an agent in the session last reported through OSC 7501 (cleared when its command ends) */
+  agentActivityBySession: Record<string, AgentActivity>
+  setAgentActivity: (id: string, activity: AgentActivity) => void
+  /** Terminal fills the window (project content collapsed). Not saved: resets on restart. */
+  terminalMaximised: boolean
+  setTerminalMaximised: (maximised: boolean) => void
   addSession: (id: string, projectId?: string | null, mode?: TerminalSessionMode, vncWsPort?: number, vncToken?: string) => void
   removeSession: (id: string) => void
   setActiveSession: (id: string) => void
@@ -109,12 +116,25 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
   splitDirection: 'vertical',
   focusedPane: 'primary',
   busySessionIds: {},
+  agentActivityBySession: {},
+  terminalMaximised: false,
   setSessionBusy: (id, busy) =>
     set((state) => {
-      if (Boolean(state.busySessionIds[id]) === busy) return state
+      // The command ended, so any agent it started is gone too: drop what it last reported.
+      const hasAgent = id in state.agentActivityBySession
+      if (Boolean(state.busySessionIds[id]) === busy && (busy || !hasAgent)) return state
       const { [id]: _removed, ...rest } = state.busySessionIds
-      return { busySessionIds: busy ? { ...rest, [id]: true as const } : rest }
+      if (busy) return { busySessionIds: { ...rest, [id]: true as const } }
+      const { [id]: _agent, ...agentActivityBySession } = state.agentActivityBySession
+      return { busySessionIds: rest, agentActivityBySession }
     }),
+  setAgentActivity: (id, activity) =>
+    set((state) => {
+      if (state.agentActivityBySession[id] === activity) return state
+      if (!state.sessions.some((session) => session.id === id)) return state
+      return { agentActivityBySession: { ...state.agentActivityBySession, [id]: activity } }
+    }),
+  setTerminalMaximised: (maximised) => set({ terminalMaximised: maximised }),
   addSession: (id, projectId = null, mode = 'workspace-shell', vncWsPort, vncToken) =>
     set((state) => ({
       sessions: [
@@ -144,13 +164,16 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
         activeSessionId = sessions[0]?.id ?? null
       }
       const { [id]: _closed, ...busySessionIds } = state.busySessionIds
+      const { [id]: _closedAgent, ...agentActivityBySession } = state.agentActivityBySession
       return {
         sessions,
         activeSessionId,
         splitSessionId,
         busySessionIds,
+        agentActivityBySession,
         focusedPane: 'primary',
         terminalVisible: sessions.length > 0,
+        terminalMaximised: sessions.length > 0 && state.terminalMaximised
       }
     }),
   setActiveSession: (id) =>
@@ -172,7 +195,9 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
         focusedPane: 'primary'
       }
     }),
-  setTerminalVisible: (visible) => set({ terminalVisible: visible }),
+  // Hiding the terminal (minimise) also ends maximise, so showing it again restores the old split.
+  setTerminalVisible: (visible) =>
+    set(visible ? { terminalVisible: true } : { terminalVisible: false, terminalMaximised: false }),
   setSplitDirection: (direction) => set({ splitDirection: direction }),
   addToHistory: (command) =>
     set((state) => ({
