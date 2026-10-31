@@ -1185,7 +1185,15 @@
     "attention.agentNotify": "Precisa da sua atenção",
     "attention.agentBlocked": "À sua espera",
     "attention.agentDone": "Concluído",
-    "attention.agentError": "Parou com um erro"
+    "attention.agentError": "Parou com um erro",
+    "dot.running": "A executar",
+    "dot.needsYou": "Precisa de si",
+    "dot.finished": "Concluído",
+    "dot.failed": "Falhou",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Maximizar terminal",
+    "panel.restore": "Repor tamanho do terminal",
+    "panel.maximiseDescription": "Oculta a vista do projeto para que o terminal ocupe a janela inteira. Clique novamente para voltar ao tamanho anterior."
   },
   "onboarding": {
     "subtitle": "Construtor visual de comandos, workspace de terminal, workflows, registos e ferramentas de IA",
@@ -1390,7 +1398,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Abra aqui um terminal no projeto atual. Pode dividi-lo, colocar comandos em fila e pedir ajuda quando um comando falha.",
     "tour.steps.helpSettings.title": "Ajuda e definições",
-    "tour.steps.helpSettings.body": "O guia explica cada funcionalidade e pode repetir esta visita. As definições reúnem temas, idioma, fornecedores de IA e o separador Privacidade."
+    "tour.steps.helpSettings.body": "O guia explica cada funcionalidade e pode repetir esta visita. As definições reúnem temas, idioma, fornecedores de IA e o separador Privacidade.",
+    "sections.statusDots.title": "Pontos nos separadores do terminal",
+    "sections.statusDots.steps.running.label": "A executar",
+    "sections.statusDots.steps.running.desc": "Anel laranja a rodar: um comando ou agente está a trabalhar nesse terminal.",
+    "sections.statusDots.steps.needsYou.label": "Precisa de si",
+    "sections.statusDots.steps.needsYou.desc": "Ponto amarelo a pulsar: um workflow ou agente está à espera da sua aprovação ou resposta.",
+    "sections.statusDots.steps.finished.label": "Concluído",
+    "sections.statusDots.steps.finished.desc": "Ponto verde: um comando longo ou workflow terminou enquanto não estava a ver.",
+    "sections.statusDots.steps.failed.label": "Falhou",
+    "sections.statusDots.steps.failed.desc": "Ponto vermelho com um X: um comando, workflow ou agente parou com um erro.",
+    "sections.statusDots.steps.idle.label": "Agente inativo",
+    "sections.statusDots.steps.idle.desc": "Anel cinzento: um agente está aberto, mas parado, à espera da próxima tarefa. Chega com as notificações de agentes.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Maximizar o terminal para ocupar a janela inteira, ou repô-lo. Ctrl+Shift+M no Windows e no Linux."
   },
   "ai": {
     "explain.label": "Explicar com IA",

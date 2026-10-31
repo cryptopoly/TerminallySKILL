@@ -1235,7 +1235,15 @@
     "attention.agentNotify": "Потребує вашої уваги",
     "attention.agentBlocked": "Чекає на вас",
     "attention.agentDone": "Готово",
-    "attention.agentError": "Зупинено з помилкою"
+    "attention.agentError": "Зупинено з помилкою",
+    "dot.running": "Виконується",
+    "dot.needsYou": "Чекає на вас",
+    "dot.finished": "Завершено",
+    "dot.failed": "Помилка",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Розгорнути термінал",
+    "panel.restore": "Повернути розмір термінала",
+    "panel.maximiseDescription": "Ховає вигляд проєкту, щоб термінал зайняв усе вікно. Натисніть ще раз, щоб повернути попередній розмір."
   },
   "onboarding": {
     "subtitle": "Візуальний конструктор команд, термінальний робочий простір, workflow, логи та інструменти ШІ",
@@ -1444,7 +1452,20 @@
     "tour.steps.terminal.title": "Термінал",
     "tour.steps.terminal.body": "Тут відкривається термінал у поточному проєкті. Його можна розділити, ставити команди в чергу та просити допомоги, коли команда завершилася помилкою.",
     "tour.steps.helpSettings.title": "Довідка та налаштування",
-    "tour.steps.helpSettings.body": "Довідка описує кожну функцію і дає змогу повторити цей тур. У налаштуваннях — теми, мова, постачальники ШІ та вкладка «Приватність»."
+    "tour.steps.helpSettings.body": "Довідка описує кожну функцію і дає змогу повторити цей тур. У налаштуваннях — теми, мова, постачальники ШІ та вкладка «Приватність».",
+    "sections.statusDots.title": "Крапки на вкладках термінала",
+    "sections.statusDots.steps.running.label": "Виконується",
+    "sections.statusDots.steps.running.desc": "Помаранчеве кільце, що обертається: у цьому терміналі працює команда або агент.",
+    "sections.statusDots.steps.needsYou.label": "Чекає на вас",
+    "sections.statusDots.steps.needsYou.desc": "Пульсуюча жовта крапка: workflow або агент чекає на ваше підтвердження чи відповідь.",
+    "sections.statusDots.steps.finished.label": "Завершено",
+    "sections.statusDots.steps.finished.desc": "Зелена крапка: довга команда або workflow завершилися, поки ви не дивилися.",
+    "sections.statusDots.steps.failed.label": "Помилка",
+    "sections.statusDots.steps.failed.desc": "Червона крапка з хрестиком: команда, workflow або агент зупинилися з помилкою.",
+    "sections.statusDots.steps.idle.label": "Агент простоює",
+    "sections.statusDots.steps.idle.desc": "Сіре кільце: агент відкритий, але бездіяльний і чекає на наступне завдання. З’явиться разом зі сповіщеннями агентів.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Розгорнути термінал на все вікно або повернути попередній розмір. Ctrl+Shift+M у Windows і Linux."
   },
   "ai": {
     "explain.label": "Пояснити за допомогою ШІ",

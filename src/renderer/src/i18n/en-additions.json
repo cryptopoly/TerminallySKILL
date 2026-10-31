@@ -121,7 +121,15 @@
     "attention.agentNotify": "Needs your attention",
     "attention.agentBlocked": "Waiting for you",
     "attention.agentDone": "Done",
-    "attention.agentError": "Stopped with an error"
+    "attention.agentError": "Stopped with an error",
+    "dot.running": "Running",
+    "dot.needsYou": "Needs you",
+    "dot.finished": "Finished",
+    "dot.failed": "Failed",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Maximise terminal",
+    "panel.restore": "Restore terminal size",
+    "panel.maximiseDescription": "Hide the project view so the terminal fills the window. Click again to go back to the previous size."
   },
   "native": {
     "menu.file": "File",
@@ -306,6 +314,19 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Open a terminal in the current project here. You can split it, queue commands and ask for help when a command fails.",
     "tour.steps.helpSettings.title": "Help and settings",
-    "tour.steps.helpSettings.body": "The guide explains every feature and can replay this tour. Settings holds themes, language, AI providers and the Privacy tab."
+    "tour.steps.helpSettings.body": "The guide explains every feature and can replay this tour. Settings holds themes, language, AI providers and the Privacy tab.",
+    "sections.statusDots.title": "Terminal tab dots",
+    "sections.statusDots.steps.running.label": "Running",
+    "sections.statusDots.steps.running.desc": "Orange spinning ring: a command or agent is working in that terminal.",
+    "sections.statusDots.steps.needsYou.label": "Needs you",
+    "sections.statusDots.steps.needsYou.desc": "Pulsing yellow dot: a workflow or agent is waiting for your approval or answer.",
+    "sections.statusDots.steps.finished.label": "Finished",
+    "sections.statusDots.steps.finished.desc": "Green dot: a long command or workflow finished while you were not looking.",
+    "sections.statusDots.steps.failed.label": "Failed",
+    "sections.statusDots.steps.failed.desc": "Red dot with a cross: a command, workflow or agent stopped with an error.",
+    "sections.statusDots.steps.idle.label": "Idle agent",
+    "sections.statusDots.steps.idle.desc": "Grey ring: an agent is open but quiet, waiting for its next task. Arrives with agent notifications.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Maximise the terminal so it fills the window, or restore it. Ctrl+Shift+M on Windows and Linux."
   }
 }

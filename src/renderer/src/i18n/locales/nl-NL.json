@@ -1174,7 +1174,15 @@
     "attention.agentNotify": "Heeft je aandacht nodig",
     "attention.agentBlocked": "Wacht op jou",
     "attention.agentDone": "Klaar",
-    "attention.agentError": "Gestopt met een fout"
+    "attention.agentError": "Gestopt met een fout",
+    "dot.running": "Actief",
+    "dot.needsYou": "Wacht op jou",
+    "dot.finished": "Klaar",
+    "dot.failed": "Mislukt",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Terminal maximaliseren",
+    "panel.restore": "Terminalgrootte herstellen",
+    "panel.maximiseDescription": "Verbergt de projectweergave zodat de terminal het hele venster vult. Klik nogmaals om terug te gaan naar de vorige grootte."
   },
   "onboarding": {
     "subtitle": "Visuele opdrachtbuilder, terminalwerkruimte, workflows, logs en AI-tools",
@@ -1378,7 +1386,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Open hier een terminal in het huidige project. Je kunt hem splitsen, opdrachten in de wachtrij zetten en hulp vragen als een opdracht mislukt.",
     "tour.steps.helpSettings.title": "Help en instellingen",
-    "tour.steps.helpSettings.body": "De help-gids legt elke functie uit en kan deze tour opnieuw starten. In de instellingen vind je thema's, taal, AI-aanbieders en het tabblad Privacy."
+    "tour.steps.helpSettings.body": "De help-gids legt elke functie uit en kan deze tour opnieuw starten. In de instellingen vind je thema's, taal, AI-aanbieders en het tabblad Privacy.",
+    "sections.statusDots.title": "Stippen op terminaltabbladen",
+    "sections.statusDots.steps.running.label": "Actief",
+    "sections.statusDots.steps.running.desc": "Oranje draaiende ring: er werkt een opdracht of agent in die terminal.",
+    "sections.statusDots.steps.needsYou.label": "Wacht op jou",
+    "sections.statusDots.steps.needsYou.desc": "Pulserende gele stip: een workflow of agent wacht op je goedkeuring of antwoord.",
+    "sections.statusDots.steps.finished.label": "Klaar",
+    "sections.statusDots.steps.finished.desc": "Groene stip: een lange opdracht of workflow is klaar terwijl je niet keek.",
+    "sections.statusDots.steps.failed.label": "Mislukt",
+    "sections.statusDots.steps.failed.desc": "Rode stip met een kruisje: een opdracht, workflow of agent is gestopt met een fout.",
+    "sections.statusDots.steps.idle.label": "Inactieve agent",
+    "sections.statusDots.steps.idle.desc": "Grijze ring: een agent is open maar stil en wacht op de volgende taak. Komt met de agentmeldingen.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "De terminal maximaliseren zodat hij het venster vult, of herstellen. Ctrl+Shift+M op Windows en Linux."
   },
   "ai": {
     "explain.label": "Uitleggen met AI",

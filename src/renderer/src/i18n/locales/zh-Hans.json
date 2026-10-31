@@ -185,7 +185,15 @@
     "attention.agentNotify": "需要你处理",
     "attention.agentBlocked": "正在等你",
     "attention.agentDone": "已完成",
-    "attention.agentError": "因错误停止"
+    "attention.agentError": "因错误停止",
+    "dot.running": "运行中",
+    "dot.needsYou": "需要你",
+    "dot.finished": "已完成",
+    "dot.failed": "失败",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "最大化终端",
+    "panel.restore": "恢复终端大小",
+    "panel.maximiseDescription": "隐藏项目视图，让终端占满窗口。再次点击可恢复之前的大小。"
   },
   "native": {
     "menu.file": "文件",
@@ -335,6 +343,19 @@
     "tour.steps.terminal.title": "终端",
     "tour.steps.terminal.body": "在这里为当前项目打开终端。你可以拆分终端、排队执行命令，命令失败时还可以寻求帮助。",
     "tour.steps.helpSettings.title": "帮助和设置",
-    "tour.steps.helpSettings.body": "帮助指南介绍每项功能，并可重新播放本导览。设置中包括主题、语言、AI 提供商和“隐私”标签页。"
+    "tour.steps.helpSettings.body": "帮助指南介绍每项功能，并可重新播放本导览。设置中包括主题、语言、AI 提供商和“隐私”标签页。",
+    "sections.statusDots.title": "终端标签页上的圆点",
+    "sections.statusDots.steps.running.label": "运行中",
+    "sections.statusDots.steps.running.desc": "旋转的橙色圆环：该终端中有命令或智能体正在运行。",
+    "sections.statusDots.steps.needsYou.label": "需要你",
+    "sections.statusDots.steps.needsYou.desc": "闪烁的黄色圆点：工作流或智能体正在等待你的批准或回复。",
+    "sections.statusDots.steps.finished.label": "已完成",
+    "sections.statusDots.steps.finished.desc": "绿色圆点：在你没看的时候，一个耗时较长的命令或工作流已完成。",
+    "sections.statusDots.steps.failed.label": "失败",
+    "sections.statusDots.steps.failed.desc": "带叉号的红色圆点：命令、工作流或智能体因错误而停止。",
+    "sections.statusDots.steps.idle.label": "空闲的智能体",
+    "sections.statusDots.steps.idle.desc": "灰色圆环：智能体已打开但处于空闲，正在等待下一个任务。将随智能体通知一起推出。",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "将终端最大化以占满窗口，或恢复原样。在 Windows 和 Linux 上为 Ctrl+Shift+M。"
   }
 }

@@ -1165,7 +1165,15 @@
     "attention.agentNotify": "需要你處理",
     "attention.agentBlocked": "正在等你",
     "attention.agentDone": "已完成",
-    "attention.agentError": "因錯誤停止"
+    "attention.agentError": "因錯誤停止",
+    "dot.running": "執行中",
+    "dot.needsYou": "需要你",
+    "dot.finished": "已完成",
+    "dot.failed": "失敗",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "最大化終端機",
+    "panel.restore": "還原終端機大小",
+    "panel.maximiseDescription": "隱藏專案檢視，讓終端機占滿視窗。再按一次可還原先前的大小。"
   },
   "onboarding": {
     "subtitle": "視覺化命令建構器、終端機工作區、工作流程、日誌與 AI 工具",
@@ -1368,7 +1376,20 @@
     "tour.steps.terminal.title": "終端機",
     "tour.steps.terminal.body": "在這裡為目前的專案開啟終端機。你可以分割終端機、排入命令，命令失敗時也能尋求協助。",
     "tour.steps.helpSettings.title": "說明和設定",
-    "tour.steps.helpSettings.body": "說明指南介紹每項功能，也能重新播放這個導覽。設定中包含主題、語言、AI 提供者和「隱私」分頁。"
+    "tour.steps.helpSettings.body": "說明指南介紹每項功能，也能重新播放這個導覽。設定中包含主題、語言、AI 提供者和「隱私」分頁。",
+    "sections.statusDots.title": "終端機分頁上的圓點",
+    "sections.statusDots.steps.running.label": "執行中",
+    "sections.statusDots.steps.running.desc": "旋轉的橘色圓環：該終端機中有命令或代理程式正在執行。",
+    "sections.statusDots.steps.needsYou.label": "需要你",
+    "sections.statusDots.steps.needsYou.desc": "閃爍的黃色圓點：工作流程或代理程式正在等待你的核准或回覆。",
+    "sections.statusDots.steps.finished.label": "已完成",
+    "sections.statusDots.steps.finished.desc": "綠色圓點：在你沒看的時候，一個耗時較長的命令或工作流程已完成。",
+    "sections.statusDots.steps.failed.label": "失敗",
+    "sections.statusDots.steps.failed.desc": "帶叉號的紅色圓點：命令、工作流程或代理程式因錯誤而停止。",
+    "sections.statusDots.steps.idle.label": "閒置的代理程式",
+    "sections.statusDots.steps.idle.desc": "灰色圓環：代理程式已開啟但處於閒置，正在等待下一個工作。將隨代理程式通知一起推出。",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "將終端機最大化以占滿視窗，或還原。在 Windows 和 Linux 上為 Ctrl+Shift+M。"
   },
   "ai": {
     "explain.label": "以 AI 說明",

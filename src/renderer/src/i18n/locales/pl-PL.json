@@ -1134,7 +1134,15 @@
     "attention.agentNotify": "Wymaga Twojej uwagi",
     "attention.agentBlocked": "Czeka na Ciebie",
     "attention.agentDone": "Gotowe",
-    "attention.agentError": "Zatrzymano z błędem"
+    "attention.agentError": "Zatrzymano z błędem",
+    "dot.running": "Działa",
+    "dot.needsYou": "Czeka na Ciebie",
+    "dot.finished": "Zakończono",
+    "dot.failed": "Błąd",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Maksymalizuj terminal",
+    "panel.restore": "Przywróć rozmiar terminala",
+    "panel.maximiseDescription": "Ukrywa widok projektu, aby terminal wypełnił całe okno. Kliknij ponownie, aby wrócić do poprzedniego rozmiaru."
   },
   "onboarding": {
     "subtitle": "Wizualny builder poleceń, obszar roboczy terminala, workflow, logi i narzędzia AI",
@@ -1343,7 +1351,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Tutaj otworzysz terminal w bieżącym projekcie. Możesz go podzielić, kolejkować polecenia i poprosić o pomoc, gdy polecenie się nie powiedzie.",
     "tour.steps.helpSettings.title": "Pomoc i ustawienia",
-    "tour.steps.helpSettings.body": "Przewodnik pomocy opisuje każdą funkcję i pozwala powtórzyć ten przewodnik. W ustawieniach są motywy, język, dostawcy AI i karta Prywatność."
+    "tour.steps.helpSettings.body": "Przewodnik pomocy opisuje każdą funkcję i pozwala powtórzyć ten przewodnik. W ustawieniach są motywy, język, dostawcy AI i karta Prywatność.",
+    "sections.statusDots.title": "Kropki na kartach terminala",
+    "sections.statusDots.steps.running.label": "Działa",
+    "sections.statusDots.steps.running.desc": "Pomarańczowy obracający się pierścień: w tym terminalu pracuje polecenie lub agent.",
+    "sections.statusDots.steps.needsYou.label": "Czeka na Ciebie",
+    "sections.statusDots.steps.needsYou.desc": "Pulsująca żółta kropka: workflow lub agent czeka na Twoją zgodę lub odpowiedź.",
+    "sections.statusDots.steps.finished.label": "Zakończono",
+    "sections.statusDots.steps.finished.desc": "Zielona kropka: długie polecenie lub workflow zakończyło się pod Twoją nieobecność.",
+    "sections.statusDots.steps.failed.label": "Błąd",
+    "sections.statusDots.steps.failed.desc": "Czerwona kropka z krzyżykiem: polecenie, workflow lub agent zatrzymał się z błędem.",
+    "sections.statusDots.steps.idle.label": "Bezczynny agent",
+    "sections.statusDots.steps.idle.desc": "Szary pierścień: agent jest otwarty, ale bezczynny i czeka na kolejne zadanie. Pojawi się razem z powiadomieniami agentów.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Maksymalizuj terminal, aby wypełnił okno, albo przywróć go. Ctrl+Shift+M w systemach Windows i Linux."
   },
   "ai": {
     "explain.label": "Wyjaśnij z AI",

@@ -977,7 +977,15 @@
     "attention.agentNotify": "Braucht deine Aufmerksamkeit",
     "attention.agentBlocked": "Wartet auf dich",
     "attention.agentDone": "Fertig",
-    "attention.agentError": "Mit Fehler beendet"
+    "attention.agentError": "Mit Fehler beendet",
+    "dot.running": "Läuft",
+    "dot.needsYou": "Braucht dich",
+    "dot.finished": "Fertig",
+    "dot.failed": "Fehlgeschlagen",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Terminal maximieren",
+    "panel.restore": "Terminalgröße wiederherstellen",
+    "panel.maximiseDescription": "Blendet die Projektansicht aus, sodass das Terminal das Fenster füllt. Erneut klicken stellt die vorherige Größe wieder her."
   },
   "onboarding": {
     "subtitle": "Visueller Befehls-Builder, Terminal-Workspace, Workflows, Protokolle und KI-Tools",
@@ -1181,7 +1189,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Hier öffnest du ein Terminal im aktuellen Projekt. Du kannst es teilen, Befehle einreihen und Hilfe holen, wenn ein Befehl fehlschlägt.",
     "tour.steps.helpSettings.title": "Hilfe und Einstellungen",
-    "tour.steps.helpSettings.body": "Die Hilfeseite erklärt jede Funktion und startet diese Tour erneut. In den Einstellungen findest du Designs, Sprache, KI-Anbieter und den Tab Datenschutz."
+    "tour.steps.helpSettings.body": "Die Hilfeseite erklärt jede Funktion und startet diese Tour erneut. In den Einstellungen findest du Designs, Sprache, KI-Anbieter und den Tab Datenschutz.",
+    "sections.statusDots.title": "Punkte auf Terminal-Tabs",
+    "sections.statusDots.steps.running.label": "Läuft",
+    "sections.statusDots.steps.running.desc": "Oranger, drehender Ring: In diesem Terminal arbeitet ein Befehl oder Agent.",
+    "sections.statusDots.steps.needsYou.label": "Braucht dich",
+    "sections.statusDots.steps.needsYou.desc": "Pulsierender gelber Punkt: Ein Workflow oder Agent wartet auf deine Freigabe oder Antwort.",
+    "sections.statusDots.steps.finished.label": "Fertig",
+    "sections.statusDots.steps.finished.desc": "Grüner Punkt: Ein langer Befehl oder Workflow ist fertig geworden, während du nicht hingesehen hast.",
+    "sections.statusDots.steps.failed.label": "Fehlgeschlagen",
+    "sections.statusDots.steps.failed.desc": "Roter Punkt mit Kreuz: Ein Befehl, Workflow oder Agent wurde mit einem Fehler beendet.",
+    "sections.statusDots.steps.idle.label": "Agent im Leerlauf",
+    "sections.statusDots.steps.idle.desc": "Grauer Ring: Ein Agent ist offen, aber ruhig und wartet auf die nächste Aufgabe. Kommt mit den Agent-Benachrichtigungen.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Das Terminal maximieren, sodass es das Fenster füllt, oder wiederherstellen. Ctrl+Shift+M unter Windows und Linux."
   },
   "ai": {
     "explain.label": "Mit KI erklären",
