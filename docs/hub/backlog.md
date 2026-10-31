@@ -11,10 +11,11 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 
 - [ ] **Monthly, first week: dependency and security review.** Update the packages we use and check for security issues, so we ship the newest, safest software we can. Run `npm audit`, `npm outdated`, check Electron's release notes and security advisories, bump, then run `npm run test:ci`, `npm run test:e2e` and `npm run test:package:mac:arm64`. A monthly GitHub issue is opened automatically by `.github/workflows/dependency-review.yml` as the prompt. Next due: **2026-11-02**.
 - [ ] **Also review immediately** when a serious advisory is in the news (Electron, node-pty, ws, electron-updater are the shipped runtime packages).
-- [ ] **Release tweet / notes for 0.9.103:** lead with the privacy line "No telemetry. No analytics. No account." (verified 2026-10-29: no telemetry, analytics or crash-reporting code in the app; the only network use is the update check, AI providers and SSH/VNC the user chooses).
-- [ ] Hand-test the 0.9.103 features in a packaged build (attention alert, one schedule, Privacy tab) before release.
+- [x] **Release tweet / notes for 0.9.103 (released 2026-10-31):** lead with the privacy line "No telemetry. No analytics. No account." (verified 2026-10-29: no telemetry, analytics or crash-reporting code in the app; the only network use is the update check, AI providers and SSH/VNC the user chooses).
+- [x] Hand-test the 0.9.103 features in a packaged build before release (done 2026-10-31, UAT passed).
 - [ ] Hand-test the packaged v0.9.102: `python3` typing, Explain & fix, language switch, Arabic layout.
-- [ ] Ask a few native speakers to review translations (see [decisions](decisions.md) item 2).
+- [ ] Ask a few native speakers to review translations, including the 22 welcome-tour strings (see [decisions](decisions.md) item 3).
+- [ ] Check whether 0.9.102 arm64 Linux has the dead-terminal bug (x86 `pty.node`); if so, say so in the next release notes.
 
 ## Backlog
 
@@ -26,7 +27,7 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [x] **P1, done on branch.** Upgrade Electron 42 to 45 (42 is out of support since 2026-10-21): now part of 0.9.103 (branch `feat/electron-45`).
 - [x] **P1, done on branch.** Four extra features for 0.9.103: agent-aware attention (14), jump-to-next-terminal (6), schedule history and catch-up (7), secret masking (15). See [ideas](ideas.md).
 - [x] **P1, done on branch.** Local OpenSSH remote-session e2e (branch `test/local-ssh-e2e`).
-- [ ] **P1, in progress.** Release 0.9.103: version bumped, notes written, PR #2 open into `staging`. Dan: hand-test UAT, merge, promote to `main`, run the Release workflow, tweet.
+- [x] **P1, done (published 2026-10-31).** Release 0.9.103: version bumped, notes written, PR #2 open into `staging`. Dan: hand-test UAT, merge, promote to `main`, run the Release workflow, tweet.
 - [x] **P2, started.** Ubuntu 26.04 ARM64 VM is set up (snapshot `fresh-install-2026-10-30`, Node 22, Xvfb, repo clone in `~/tsk`); test:ci and e2e pass there. Still todo: `prlctl` script, GitHub Actions matrix, Windows VMs. Original item: GitHub Actions matrix plus a Parallels `prlctl` script (see [decisions](decisions.md)).
 - [ ] **P2, todo.** Multi-host SSH run.
 - [ ] **P2, todo.** Command blocks lite.
