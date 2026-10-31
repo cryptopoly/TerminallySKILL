@@ -1,25 +1,25 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { Script } from '../../../shared/script-schema'
+import type { Script, ScriptCommandStep } from '../../../shared/script-schema'
 import { useWorkflowRunnerStore } from './workflow-runner-store'
+
+const baseCommandStep: ScriptCommandStep = {
+  id: 'step-1',
+  type: 'command',
+  label: 'Build',
+  enabled: true,
+  commandString: 'npm run build',
+  commandId: null,
+  continueOnError: false,
+  delayMs: 0,
+  retryCount: 0
+}
 
 const baseScript: Script = {
   id: 'script-1',
   name: 'Deploy',
   description: 'deploy the app',
   inputs: [],
-  steps: [
-    {
-      id: 'step-1',
-      type: 'command',
-      label: 'Build',
-      enabled: true,
-      commandString: 'npm run build',
-      commandId: null,
-      continueOnError: false,
-      delayMs: 0,
-      retryCount: 0
-    }
-  ],
+  steps: [baseCommandStep],
   projectId: null,
   sourceScriptId: null,
   tags: [],
@@ -75,7 +75,7 @@ describe('workflow-runner-store', () => {
         ...baseScript,
         steps: [
           {
-            ...baseScript.steps[0],
+            ...baseCommandStep,
             retryCount: 1
           }
         ]

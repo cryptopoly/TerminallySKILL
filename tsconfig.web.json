@@ -20,6 +20,5 @@
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.json",
     "src/shared/**/*"
-  ],
-  "exclude": ["src/**/*.test.ts"]
+  ]
 }

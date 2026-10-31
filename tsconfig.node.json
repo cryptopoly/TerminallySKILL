@@ -21,6 +21,5 @@
     "src/renderer/src/i18n/*.json",
     "src/renderer/src/i18n/locales/*.json",
     "electron.vite.config.ts"
-  ],
-  "exclude": ["src/**/*.test.ts"]
+  ]
 }

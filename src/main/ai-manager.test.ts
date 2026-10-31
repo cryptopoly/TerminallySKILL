@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { CommandDefinition } from '../shared/command-schema'
 
 vi.mock('./settings-manager', () => ({
   getSettings: vi.fn()
@@ -406,7 +407,7 @@ describe('ai-manager helpers', () => {
   })
 
   it('coerces and parses generated command values against the command schema', () => {
-    const command = {
+    const command: CommandDefinition = {
       id: 'cmd-1',
       name: 'deploy',
       executable: 'deployctl',
@@ -451,7 +452,7 @@ describe('ai-manager helpers', () => {
           position: 0
         }
       ]
-    } as const
+    }
 
     expect(
       coerceGeneratedCommandValues(command, {
