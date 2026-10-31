@@ -85,3 +85,11 @@ Dev builds (`npm run dev`): the dot works, but macOS notifications and the dock 
 ## Not covered by automated tests
 
 Packaged-app launch, macOS notification permission, dock badge, notification click focus, real translations on screen, Windows and Linux behaviour.
+
+## Welcome tour and scripts without a project
+
+- [ ] Fresh data folder (or a new user): the tour starts on Create Project; Next, Back, Esc and Skip work; the Create Project button opens the dialog and the tour continues.
+- [ ] Existing install (your real data): no tour on launch.
+- [ ] Help → How to use TerminallySKILL → "Show welcome tour" reopens it.
+- [ ] With no project open, create a script and press Run: a terminal opens in the home folder and the script runs.
+- [ ] Linux: install the `.deb` from the draft (`tools/vm-release-smoke.sh 0.9.103` passes), a terminal opens.
