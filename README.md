@@ -42,7 +42,9 @@ TerminallySKILL is a **free, open-source desktop app** that replaces your scatte
 - ✅ **SSH + encrypted VNC** — remote terminals and full graphical desktops through SSH tunnels
 - ✅ **Clipboard paste into VNC** — Ctrl+V pastes directly into remote desktops
 - ✅ **Windows support (beta)** — PowerShell integration, command detection, and script execution — work in progress
-- ✅ **Local-first** — your data stays on your machine, always
+- ✅ **Attention alerts** — dots, dock badge and notifications when a long command, a workflow or a coding agent (Claude Code, Codex) needs you
+- ✅ **Scheduled workflows** — run on an interval or daily, with run history and optional catch-up
+- ✅ **Local-first and private** — no telemetry, no analytics, no account; your data stays on your machine, always
 
 ---
 
@@ -82,6 +84,20 @@ Full shell sessions powered by node-pty and xterm.js:
 - **In-terminal search** — regex, case-sensitive, and whole-word matching
 - **PATH fix** — detects missing commands and offers one-click binary location + shell config update
 
+### 🔔 Attention Alerts
+Start a long command, switch to another tab or app, and get a green dot when it succeeds or a red dot when it fails — plus a dock badge and a desktop notification when the window is not in front.
+- **Works with coding agents** — terminals running Claude Code, Codex and similar tools raise the same dots through standard terminal notifications (OSC 9, OSC 777, OSC 7501)
+- **Jump to the terminal that needs you** — `Cmd+Shift+J` (`Ctrl+Shift+J` on Windows and Linux) opens the one that has waited longest, in any project
+- **Workflows** report when they finish, fail, or wait for your approval
+
+### ⏰ Scheduled Workflows
+Run a workflow on an interval, or daily at a set time on chosen weekdays. Each schedule keeps a history of its last 20 runs with a link to the run, and an optional "run once on launch if a run was missed" catch-up. Schedules run while the app is open.
+
+### 🔒 Privacy
+- **No telemetry, no analytics, no account.** The only network use is the update check and the AI providers, SSH and VNC hosts you choose.
+- **Privacy tab** (Settings → Privacy) lists what can leave your computer and the hosts contacted this session
+- **Secret masking** — well-known secret formats (GitHub, AWS, Anthropic and OpenAI-style keys, JWTs, private keys, passwords after flags) are hidden in saved logs, run records and AI requests. The live terminal is never altered. This reduces accidental leaks; it is not a guarantee.
+
 ### 🌐 SSH & Remote Access
 Projects can target remote SSH hosts as naturally as local directories. Configure host, user, port, and identity file — then every terminal session, script run, and workflow step executes on the remote machine transparently.
 
@@ -114,7 +130,7 @@ Organise work into named projects with their own working directory (local or SSH
 Browse your project directory with syntax highlighting, line numbers, and a code-editor layout for any file type. Open files directly in the terminal or send to AI for review.
 
 ### 🎨 Themes
-Eight built-in themes:
+Twelve built-in themes, with a live preview in Settings → Theme:
 
 | Dark | Light |
 |------|-------|
@@ -122,6 +138,8 @@ Eight built-in themes:
 | Ember (amber) | Latte (espresso) |
 | Dusk (indigo) | Sage (olive) |
 | Forest (green) | Mist (cool paper) |
+
+Plus four in-between themes: Slate, Plum, Dove and Clay.
 
 ### ⚙️ Settings & Customisation
 - AI provider configuration with live connection testing and fallback routing
@@ -131,6 +149,8 @@ Eight built-in themes:
 - Rich help tooltips (togglable) with descriptions and keyboard shortcuts
 - Command palette (`Cmd+K` / `Ctrl+K`) for instant access to any action
 - Auto-update with configurable channel
+- Interface in 19 languages, loaded on demand (only your language is read at start-up)
+- Welcome tour on first launch; reopen it any time from Help → How to use TerminallySKILL
 
 ---
 

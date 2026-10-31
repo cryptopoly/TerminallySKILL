@@ -167,9 +167,13 @@ install_linux_appimage() {
   local arch="$1" json="$2"
   local url
   url=$(find_asset "$json" "${APP_NAME}-.*-${arch}\\.AppImage")
+  # The x64 AppImage is named x86_64
+  if [ -z "$url" ] && [ "$arch" = "x64" ]; then
+    url=$(find_asset "$json" "${APP_NAME}-.*-x86_64\\.AppImage")
+  fi
 
   if [ -z "$url" ]; then
-    fail "Could not find Linux ${arch} AppImage in the latest release. Check https://github.com/$REPO/releases"
+    fail "Could not find a Linux ${arch} AppImage in the latest release (arm64 is released as a .deb only). Check https://github.com/$REPO/releases"
   fi
 
   local install_dir="$HOME/.local/bin"
