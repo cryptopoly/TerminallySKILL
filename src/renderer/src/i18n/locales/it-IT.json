@@ -378,7 +378,11 @@
     "sidebar.tabs.scripts": "Script",
     "sidebar.starterPack.scripts": "Script",
     "palette.actions.jumpAttention": "Vai al terminale che ha bisogno di te",
-    "palette.actions.jumpAttentionDescription": "Apri il terminale che ti aspetta da più tempo, in qualsiasi progetto"
+    "palette.actions.jumpAttentionDescription": "Apri il terminale che ti aspetta da più tempo, in qualsiasi progetto",
+    "palette.actions.nextProject": "Progetto successivo",
+    "palette.actions.nextProjectDescription": "Passa al progetto successivo nel selettore dei progetti ({{shortcut}})",
+    "palette.actions.previousProject": "Progetto precedente",
+    "palette.actions.previousProjectDescription": "Passa al progetto precedente nel selettore dei progetti ({{shortcut}})"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminale",
@@ -1236,6 +1240,8 @@
     "sections.scripts.title": "Script",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Vai al terminale che ti aspetta da più tempo (una scheda con un punto), in qualsiasi progetto. Ctrl+Shift+J su Windows e Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Passa al progetto successivo o precedente, nell’ordine del selettore dei progetti. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp su Windows e Linux.",
     "tour.show": "Mostra il tour di benvenuto",
     "tour.showDescription": "Un breve giro di ogni parte dell’app",
     "tour.stepOf": "Passo {{current}} di {{total}}",

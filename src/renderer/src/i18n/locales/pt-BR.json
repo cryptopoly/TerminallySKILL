@@ -388,7 +388,11 @@
     "topbar.sshShellDescription": "Abrir um novo shell SSH interativo para este workspace",
     "palette.actions.openSshShellDescription": "Abrir um novo shell SSH interativo para este workspace",
     "palette.actions.jumpAttention": "Ir para o terminal que precisa de você",
-    "palette.actions.jumpAttentionDescription": "Abre o terminal que está esperando há mais tempo, em qualquer projeto"
+    "palette.actions.jumpAttentionDescription": "Abre o terminal que está esperando há mais tempo, em qualquer projeto",
+    "palette.actions.nextProject": "Próximo projeto",
+    "palette.actions.nextProjectDescription": "Alternar para o próximo projeto no seletor de projetos ({{shortcut}})",
+    "palette.actions.previousProject": "Projeto anterior",
+    "palette.actions.previousProjectDescription": "Alternar para o projeto anterior no seletor de projetos ({{shortcut}})"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1252,6 +1256,8 @@
     "sections.snippets.title": "Snippets",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Vai para o terminal que está esperando por você há mais tempo (uma aba com um ponto), em qualquer projeto. Ctrl+Shift+J no Windows e Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Alterna para o próximo projeto ou o anterior, na ordem do seletor de projetos. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp no Windows e Linux.",
     "tour.show": "Mostrar tour de boas-vindas",
     "tour.showDescription": "Um passeio rápido por cada parte do app",
     "tour.stepOf": "Etapa {{current}} de {{total}}",

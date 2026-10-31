@@ -466,7 +466,11 @@
     "updates.opening": "Membuka pembaruan",
     "sidebar.tabs.logs": "Log",
     "palette.actions.jumpAttention": "Lompat ke terminal yang membutuhkan Anda",
-    "palette.actions.jumpAttentionDescription": "Buka terminal yang paling lama menunggu Anda, di proyek mana pun"
+    "palette.actions.jumpAttentionDescription": "Buka terminal yang paling lama menunggu Anda, di proyek mana pun",
+    "palette.actions.nextProject": "Proyek berikutnya",
+    "palette.actions.nextProjectDescription": "Beralih ke proyek berikutnya di pemilih proyek ({{shortcut}})",
+    "palette.actions.previousProject": "Proyek sebelumnya",
+    "palette.actions.previousProjectDescription": "Beralih ke proyek sebelumnya di pemilih proyek ({{shortcut}})"
   },
   "projects": {
     "selector.none": "Tidak ada proyek",
@@ -1355,6 +1359,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Buka tab terminal baru.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Lompat ke terminal yang paling lama menunggu Anda (tab dengan titik), di proyek mana pun. Ctrl+Shift+J di Windows dan Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Beralih ke proyek berikutnya atau sebelumnya, sesuai urutan pemilih proyek. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp di Windows dan Linux.",
     "tour.show": "Tampilkan tur sambutan",
     "tour.showDescription": "Jalan-jalan singkat ke setiap bagian aplikasi",
     "tour.stepOf": "Langkah {{current}} dari {{total}}",
