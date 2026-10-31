@@ -19,6 +19,7 @@ import { buildEnvOverrides } from '../../../../shared/project-schema'
 import type { RunRecord, RunStepRecord, TerminalSessionInfo } from '../../../../shared/run-schema'
 import { buildProjectWorkspaceCommandString } from '../../../../shared/workspace-target'
 import { formatWorkflowRunError } from '../../lib/workflow-run-errors'
+import { isStillWaiting, snapshotWaitingStep, STEP_MARKER_GRACE_MS } from '../../lib/workflow-step-fallback'
 import { buildWorkflowStepMarkerCommand, shellSupportsWorkflowStepMarkers } from '../../../../shared/workflow-shell'
 
 type ScriptTranslator = (key: string, options?: Record<string, unknown>) => string
@@ -50,6 +51,7 @@ export function WorkflowRunnerEngine(): JSX.Element {
   const { markSessionReady, markSessionExecuting, markSessionClosed, handleStepResult } = useWorkflowRunnerStore()
 
   useEffect(() => {
+    const fallbackTimers = new Set<number>()
     const unsubReady = window.electronAPI.onShellReady((sessionId) => {
       markSessionReady(sessionId)
     })
@@ -65,8 +67,21 @@ export function WorkflowRunnerEngine(): JSX.Element {
       const run = useWorkflowRunnerStore.getState().runsBySession[sessionId]
       if (!run || isTerminalRunStatus(run.status) || run.status !== 'running_command') return
       // Tagged step markers carry the result when the shell supports them; the next
-      // prompt's exit code can belong to any command and is only a fallback.
-      if (run.stepMarkers) return
+      // prompt's exit code can belong to any command and is only a fallback. Commands that
+      // flush the terminal input (sudo, apt) discard the typed-ahead marker, so if it has not
+      // arrived shortly after the prompt, fall back to the prompt's exit code.
+      if (run.stepMarkers) {
+        const waiting = snapshotWaitingStep(run)
+        if (!waiting) return
+        const exitCode = promptEvent.exitCode
+        const timeoutId = window.setTimeout(() => {
+          fallbackTimers.delete(timeoutId)
+          if (!isStillWaiting(useWorkflowRunnerStore.getState().runsBySession[sessionId], waiting)) return
+          handleStepResult(sessionId, { runId: waiting.runId, stepId: waiting.stepId, exitCode })
+        }, STEP_MARKER_GRACE_MS)
+        fallbackTimers.add(timeoutId)
+        return
+      }
 
       const currentStep = run.steps[run.currentStepIndex]
       if (!currentStep || currentStep.type !== 'command') return
@@ -83,6 +98,7 @@ export function WorkflowRunnerEngine(): JSX.Element {
     })
 
     return () => {
+      fallbackTimers.forEach((timeoutId) => window.clearTimeout(timeoutId))
       unsubReady()
       unsubExit()
       unsubShellEvent()
