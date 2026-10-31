@@ -460,7 +460,11 @@
     "updates.installing": "正在安裝更新",
     "updates.opening": "正在開啟更新",
     "palette.actions.jumpAttention": "跳到需要你的終端機",
-    "palette.actions.jumpAttentionDescription": "在任何專案中開啟等你最久的終端機"
+    "palette.actions.jumpAttentionDescription": "在任何專案中開啟等你最久的終端機",
+    "palette.actions.nextProject": "下一個專案",
+    "palette.actions.nextProjectDescription": "切換到專案選擇器中的下一個專案（{{shortcut}}）",
+    "palette.actions.previousProject": "上一個專案",
+    "palette.actions.previousProjectDescription": "切換到專案選擇器中的上一個專案（{{shortcut}}）"
   },
   "projects": {
     "selector.none": "無專案",
@@ -1347,6 +1351,8 @@
     "sections.keyboard.steps.newTerminal.desc": "開啟新的終端機分頁。",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "跳到等你最久的終端機（帶圓點的分頁），適用於任何專案。在 Windows 和 Linux 上為 Ctrl+Shift+J。",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "依專案選擇器的順序切換到下一個或上一個專案。在 Windows 和 Linux 上為 Ctrl+Alt+PageDown / Ctrl+Alt+PageUp。",
     "tour.show": "顯示歡迎導覽",
     "tour.showDescription": "快速瀏覽應用程式的各個部分",
     "tour.stepOf": "第 {{current}} 步，共 {{total}} 步",
