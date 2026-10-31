@@ -13,6 +13,7 @@ import { ProjectSelector } from '../projects/ProjectSelector'
 import { ProjectDialog } from '../projects/ProjectDialog'
 import { SettingsPanel } from '../settings/SettingsPanel'
 import { InfoPanel } from '../onboarding/InfoPanel'
+import { WelcomeTour } from '../onboarding/WelcomeTour'
 import { CommandPalette } from '../palette/CommandPalette'
 import { Dashboard } from '../dashboard/Dashboard'
 import { WorkflowRunnerEngine } from '../scripts/WorkflowRunnerHost'
@@ -94,6 +95,10 @@ export function AppShell(): JSX.Element {
   const [infoOpen, setInfoOpen] = useState(false)
   const [infoInitialSection, setInfoInitialSection] = useState<string | undefined>(undefined)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  // Welcome tour: null = closed. Paused while the create-project dialog it opened is showing.
+  const [tourStep, setTourStep] = useState<number | null>(null)
+  const [tourPaused, setTourPaused] = useState(false)
+  const tourAutoStartedRef = useRef(false)
   const [startupUpdateCheck, setStartupUpdateCheck] = useState<AppUpdateCheckResult | null>(null)
   const [startupUpdateInstalling, setStartupUpdateInstalling] = useState(false)
   const [startupUpdateMessage, setStartupUpdateMessage] = useState<string | null>(null)
@@ -606,6 +611,42 @@ export function AppShell(): JSX.Element {
     setDialogOpen(true)
   }
 
+  const openWelcomeTour = useCallback((): void => {
+    setInfoOpen(false)
+    setInfoInitialSection(undefined)
+    setPaletteOpen(false)
+    setTourPaused(false)
+    setTourStep(0)
+  }, [])
+
+  const closeWelcomeTour = useCallback((): void => {
+    setTourStep(null)
+    setTourPaused(false)
+    if (useSettingsStore.getState().settings.hasSeenWelcomeTour) return
+    void window.electronAPI
+      .updateSettings({ hasSeenWelcomeTour: true })
+      .then((saved) => useSettingsStore.getState().setSettings(saved))
+      .catch((error) => console.error('Failed to save welcome tour state', error))
+  }, [])
+
+  const handleTourCreateProject = (): void => {
+    setTourPaused(true)
+    setTourStep(1)
+    handleCreateNew()
+  }
+
+  // First launch on a brand-new data folder: show the tour once
+  useEffect(() => {
+    if (!settingsHydrated || tourAutoStartedRef.current) return
+    tourAutoStartedRef.current = true
+    if (!settings.hasSeenWelcomeTour) setTourStep(0)
+  }, [settings.hasSeenWelcomeTour, settingsHydrated])
+
+  // Carry on with the tour once the create-project dialog it opened is closed
+  useEffect(() => {
+    if (tourPaused && !dialogOpen) setTourPaused(false)
+  }, [dialogOpen, tourPaused])
+
   const handleEditProject = (project: Project): void => {
     setEditingProject(project)
     setDialogOpen(true)
@@ -680,7 +721,9 @@ export function AppShell(): JSX.Element {
 
         {/* Centre: Project selector */}
         <div className="flex-1 flex justify-center min-w-0" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-          <ProjectSelector onCreateNew={handleCreateNew} onEditProject={handleEditProject} />
+          <div data-tour="project-selector" className="min-w-0">
+            <ProjectSelector onCreateNew={handleCreateNew} onEditProject={handleEditProject} />
+          </div>
         </div>
 
         {/* Right: icons + workspace label */}
@@ -712,6 +755,8 @@ export function AppShell(): JSX.Element {
             <button
               onClick={handleNewTerminal}
               className="tv-btn-icon"
+              data-tour="new-terminal"
+              aria-label={t('topbar.newTerminal')}
             >
               <TerminalSquare size={15} />
             </button>
@@ -720,6 +765,8 @@ export function AppShell(): JSX.Element {
             <button
               onClick={() => setInfoOpen(true)}
               className="tv-btn-icon"
+              data-tour="help-guide"
+              aria-label={t('topbar.helpGuide')}
             >
               <Info size={15} />
             </button>
@@ -744,6 +791,8 @@ export function AppShell(): JSX.Element {
             <button
               onClick={() => setSettingsOpen(true)}
               className="tv-btn-icon"
+              data-tour="settings"
+              aria-label={t('topbar.settings')}
             >
               <Settings size={15} />
             </button>
@@ -962,7 +1011,23 @@ export function AppShell(): JSX.Element {
       )}
 
       {/* Info / onboarding modal */}
-      {infoOpen && <InfoPanel onClose={() => { setInfoOpen(false); setInfoInitialSection(undefined) }} initialSection={infoInitialSection} />}
+      {infoOpen && (
+        <InfoPanel
+          onClose={() => { setInfoOpen(false); setInfoInitialSection(undefined) }}
+          initialSection={infoInitialSection}
+          onShowTour={openWelcomeTour}
+        />
+      )}
+
+      {/* First-run welcome tour */}
+      {tourStep !== null && !tourPaused && (
+        <WelcomeTour
+          step={tourStep}
+          onStepChange={setTourStep}
+          onClose={closeWelcomeTour}
+          onCreateProject={handleTourCreateProject}
+        />
+      )}
 
       {/* Command palette */}
       {paletteOpen && (
@@ -971,6 +1036,7 @@ export function AppShell(): JSX.Element {
           onNewTerminal={handleNewTerminal}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenInfo={() => setInfoOpen(true)}
+          onOpenTour={openWelcomeTour}
           onCreateProject={handleCreateNew}
         />
       )}
@@ -1027,6 +1093,7 @@ function EmptyState({
         <div className="mt-4 flex items-center justify-center gap-2">
           <button
             onClick={onCreateProject}
+            data-tour="create-project"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent hover:bg-accent-light text-white text-sm font-medium transition-colors"
           >
             <FolderOpen size={14} />

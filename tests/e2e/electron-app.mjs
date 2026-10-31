@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { dirname, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { _electron as electron } from '@playwright/test'
 
@@ -16,7 +16,8 @@ async function launchElectronExecutable({
   testInfo,
   userDataDir,
   env = {},
-  missingMessage
+  missingMessage,
+  firstLaunch = false
 }) {
   if (!existsSync(executablePath)) {
     throw new Error(missingMessage ?? `Missing Electron executable: ${executablePath}`)
@@ -24,6 +25,7 @@ async function launchElectronExecutable({
 
   const resolvedUserDataDir = userDataDir ?? testInfo.outputPath('user-data')
   await mkdir(resolvedUserDataDir, { recursive: true })
+  if (!firstLaunch) await markWelcomeTourSeen(resolvedUserDataDir)
 
   const app = await electron.launch({
     executablePath,
@@ -42,6 +44,20 @@ async function launchElectronExecutable({
   await page.waitForFunction(() => Boolean(window.electronAPI?.getAppVersion))
 
   return { app, page, userDataDir: resolvedUserDataDir }
+}
+
+/**
+ * A fresh user data dir counts as a first launch, which shows the welcome tour over the app.
+ * Specs that are not about the tour start like an existing install: seed settings.json with the
+ * tour marked as seen, unless the spec already wrote its own settings (then the app treats the
+ * file as an upgrade and skips the tour anyway).
+ */
+async function markWelcomeTourSeen(userDataDir) {
+  const dataDir = join(userDataDir, 'data')
+  const settingsPath = join(dataDir, 'settings.json')
+  if (existsSync(settingsPath)) return
+  await mkdir(dataDir, { recursive: true })
+  await writeFile(settingsPath, JSON.stringify({ hasSeenWelcomeTour: true }, null, 2))
 }
 
 export function resolvePackagedExecutablePath() {
@@ -73,7 +89,8 @@ export function resolvePackagedExecutablePath() {
   return resolve(rootDir, 'dist', 'TerminallySKILL')
 }
 
-export async function launchTerminallySkill(testInfo, env = {}) {
+/** Pass `{ firstLaunch: true }` to start like a brand-new install (welcome tour shows). */
+export async function launchTerminallySkill(testInfo, env = {}, { firstLaunch = false } = {}) {
   if (!existsSync(mainPath)) {
     throw new Error('Missing out/main/index.js. Run npm run build before Playwright E2E tests.')
   }
@@ -83,7 +100,8 @@ export async function launchTerminallySkill(testInfo, env = {}) {
     // Fake key store: unpackaged Electron would otherwise ask the real macOS Keychain for "Electron Key".
     args: ['--use-mock-keychain', mainPath],
     testInfo,
-    env
+    env,
+    firstLaunch
   })
 }
 
@@ -95,6 +113,7 @@ export async function launchPackagedTerminallySkill(testInfo, options = {}) {
     testInfo,
     userDataDir: options.userDataDir,
     env: options.env,
+    firstLaunch: options.firstLaunch,
     missingMessage:
       `Missing packaged app executable: ${executablePath}. ` +
       'Run the matching package script before the packaged smoke test.'

@@ -727,6 +727,7 @@ export function Sidebar(): JSX.Element {
               }}
               onDragEnd={() => { setDragTabId(null); setDragOverTabId(null) }}
               title={label}
+              data-tour={`sidebar-tab-${id}`}
               className={clsx(
                 'flex items-center justify-center gap-1 shrink-0 border-b-2 px-2 py-2 text-[12px] font-medium leading-none transition-colors',
                 narrow ? 'min-w-[2.5rem]' : 'flex-1 basis-0 min-w-0',
