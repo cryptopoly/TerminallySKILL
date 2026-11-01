@@ -31,6 +31,9 @@ const config = {
   appId: 'com.terminallyskill.app',
   productName,
   icon: 'build/icon.png',
+  // Only the build output; production dependencies are added by electron-builder. Without this,
+  // everything in the checkout ships, including .claude/ (agent worktrees, local settings).
+  files: ['out/**/*', 'package.json'],
   extraResources: [
     {
       from: 'commands',

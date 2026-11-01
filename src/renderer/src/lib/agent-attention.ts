@@ -99,8 +99,7 @@ function handleBell(term: Terminal, sessionId: string): void {
 
 /**
  * Quiet-terminal check for any program: busy, unwatched and silent for 20 seconds. A prompt on
- * screen asking for a yes raises "needs you" (dot and notification); anything else only turns the
- * tab dot grey (idle), with no notification and no dock badge.
+ * screen asking for a yes raises "needs you" (dot and notification); anything else raises nothing.
  */
 function watchForQuiet(term: Terminal, sessionId: string): IDisposable[] {
   const quietMs = resolveQuietMs(window.electronAPI.attentionQuietMsOverride)

@@ -79,13 +79,12 @@ describe('resolveTabDotState', () => {
   it('follows the state an agent reports over the shell', () => {
     expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: 'idle' })).toBe('idle')
     expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: 'working' })).toBe('running')
-    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: 'working', quiet: true })).toBe('running')
   })
 
-  it('shows idle for a busy terminal that went quiet, and nothing once the command ended', () => {
-    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: null, quiet: true })).toBe('idle')
-    expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: null, quiet: true })).toBeNull()
-    expect(resolveTabDotState({ entry: entry('approval'), shellBusy: true, agentActivity: null, quiet: true })).toBe('approval')
+  it('keeps a plain command running, and shows nothing once it ended', () => {
+    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: null })).toBe('running')
+    expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: null })).toBeNull()
+    expect(resolveTabDotState({ entry: entry('approval'), shellBusy: true, agentActivity: null })).toBe('approval')
   })
 })
 

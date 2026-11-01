@@ -38,7 +38,7 @@ async function openNewTab(page, expectedCount) {
   await page.waitForTimeout(1500)
 }
 
-test('a quiet prompt, a bell and a silent command in background tabs: needs-you, needs-you and idle', async ({}, testInfo) => {
+test('a quiet prompt, a bell and a silent command in background tabs: needs-you, needs-you and running', async ({}, testInfo) => {
   test.setTimeout(90_000)
   const { app, page } = await launchTerminallySkill(testInfo, QUIET_ENV)
   try {
@@ -57,15 +57,16 @@ test('a quiet prompt, a bell and a silent command in background tabs: needs-you,
 
     const approval = page.locator('[data-dot-state="approval"][title="Needs you · Waiting for your yes: Do you want to proceed? (y/n)"]')
     const bell = page.locator('[data-dot-state="approval"][title="Needs you · Needs your attention: Rang the terminal bell"]')
-    const idle = page.locator('[data-dot-state="idle"]')
+    const running = page.locator('[data-dot-state="running"]')
     await expect(approval).toHaveCount(1, { timeout: 20_000 })
     await expect(bell).toHaveCount(1, { timeout: 20_000 })
-    await expect(idle).toHaveCount(1, { timeout: 20_000 })
-    await expect(idle).toHaveAttribute('title', 'Idle')
-    // Idle is not an attention entry: two live "needs you" regions, the idle dot is not one.
+    await expect(running).toHaveCount(1, { timeout: 20_000 })
+    // A silent plain command never turns grey, whatever the quiet wait.
+    await expect(page.locator('[data-dot-state="idle"]')).toHaveCount(0)
+    // Running is not an attention entry: two live "needs you" regions, the running dot is not one.
     await expect(page.getByRole('status')).toHaveCount(2)
 
-    const tabBar = idle.locator('xpath=ancestor::div[contains(@class,"overflow-x-auto")][1]/..')
+    const tabBar = running.locator('xpath=ancestor::div[contains(@class,"overflow-x-auto")][1]/..')
     for (const theme of ['void', 'chalk']) {
       await page.evaluate((name) => document.documentElement.setAttribute('data-theme', name), theme)
       await page.waitForTimeout(200)
@@ -73,12 +74,12 @@ test('a quiet prompt, a bell and a silent command in background tabs: needs-you,
     }
     await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'void'))
 
-    // Looking at the needs-you tab answers it; the idle dot is information, not an alert.
+    // Looking at the needs-you tab answers it; the running dot is information, not an alert.
     await approval.click()
     await expect(approval).toHaveCount(0, { timeout: 5_000 })
     await expect(bell).toHaveCount(1)
-    // The answered tab is still quiet (its prompt is still there), so it now shows idle too.
-    await expect(idle).toHaveCount(2)
+    // The answered tab is still running its command.
+    await expect(running).toHaveCount(2)
   } finally {
     await app.close()
   }
@@ -89,7 +90,7 @@ test('a quiet command in the watched tab raises nothing', async ({}, testInfo) =
   const { app, page } = await launchTerminallySkill(testInfo, QUIET_ENV)
   try {
     await openProject(page, testInfo, 'E2E Not Waiting')
-    // Watched tab, silent command: no idle dot and no alert, however long it is quiet.
+    // Watched tab, silent command: no alert, however long it is quiet.
     await typeInVisibleTerminal(page, 'sleep 8')
     await page.waitForTimeout(4_000)
     await expect(page.locator('[data-dot-state="idle"]')).toHaveCount(0)
