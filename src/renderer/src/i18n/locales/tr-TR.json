@@ -221,7 +221,11 @@
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Gizli anahtar",
     "privacy.masking.kind.api-key": "API anahtarı",
-    "general.attention.agentHint": "Kodlama ajanları (Claude Code, Codex, Gemini CLI ve diğerleri) de sizi burada uyarabilir. Sizinki sessiz kalırsa ajanınızın bildirim ayarına bakın."
+    "general.attention.agentHint": "Kodlama ajanları (Claude Code, Codex, Gemini CLI ve diğerleri) de sizi burada uyarabilir. Sizinki sessiz kalırsa ajanınızın bildirim ayarına bakın.",
+    "general.attention.keep.title": "Bildirimleri kapatılana kadar göster",
+    "general.attention.keep.description": "Bildirimler siz kapatana kadar ekranda kalır. Tam davranış masaüstünüze bağlıdır.",
+    "general.attention.keep.macDescription": "Bunu macOS belirler. Sistem Ayarları'nda TerminallySKILL için kapatılana kadar kalan stili seçin.",
+    "general.attention.keep.openSettings": "Sistem Ayarları'nı aç"
   },
   "commands": {
     "addDialog.title": "Komut ekle",

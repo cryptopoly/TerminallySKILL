@@ -90,7 +90,11 @@
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Geheimnis",
     "privacy.masking.kind.api-key": "API-Schlüssel",
-    "general.attention.agentHint": "Coding-Agenten (Claude Code, Codex, Gemini CLI und andere) können dich auch hier benachrichtigen. Bleibt deiner stumm, sieh in die Benachrichtigungseinstellung deines Agenten."
+    "general.attention.agentHint": "Coding-Agenten (Claude Code, Codex, Gemini CLI und andere) können dich auch hier benachrichtigen. Bleibt deiner stumm, sieh in die Benachrichtigungseinstellung deines Agenten.",
+    "general.attention.keep.title": "Benachrichtigungen bis zum Schließen anzeigen",
+    "general.attention.keep.description": "Benachrichtigungen bleiben sichtbar, bis du sie schließt. Das genaue Verhalten hängt von deinem Desktop ab.",
+    "general.attention.keep.macDescription": "Das entscheidet macOS. Wähle in den Systemeinstellungen für TerminallySKILL den Stil, der sichtbar bleibt, bis du ihn schließt.",
+    "general.attention.keep.openSettings": "Systemeinstellungen öffnen"
   },
   "commands": {
     "addDialog.title": "Befehl hinzufügen",

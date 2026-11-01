@@ -137,7 +137,11 @@
     "privacy.masking.kind.token": "トークン",
     "privacy.masking.kind.secret": "シークレット",
     "privacy.masking.kind.api-key": "API キー",
-    "general.attention.agentHint": "コーディングエージェント (Claude Code、Codex、Gemini CLI など) もここで通知できます。通知が来ない場合は、エージェント側の通知設定を確認してください。"
+    "general.attention.agentHint": "コーディングエージェント (Claude Code、Codex、Gemini CLI など) もここで通知できます。通知が来ない場合は、エージェント側の通知設定を確認してください。",
+    "general.attention.keep.title": "閉じるまで通知を表示",
+    "general.attention.keep.description": "通知は閉じるまで画面に表示されます。実際の動作はデスクトップ環境によって異なります。",
+    "general.attention.keep.macDescription": "これは macOS が制御します。システム設定で、TerminallySKILL に閉じるまで表示されるスタイルを選択してください。",
+    "general.attention.keep.openSettings": "システム設定を開く"
   },
   "commands": {
     "addDialog.title": "コマンドを追加",

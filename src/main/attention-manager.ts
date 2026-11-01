@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Notification } from 'electron'
+import { app, BrowserWindow, Notification, shell } from 'electron'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
 import type { AttentionNotifyRequest } from '../shared/attention'
 
@@ -31,7 +31,13 @@ export function notifyAttention(win: BrowserWindow, request: AttentionNotifyRequ
   if (appQuitting || !Notification.isSupported() || win.isDestroyed()) return
 
   // Not silent and no custom sound: the system's default notification sound plays (if the user allows sounds).
-  const notification = new Notification({ title: request.title, body: request.body, silent: false })
+  // timeoutType has no effect on macOS, where the user's alert style in System Settings decides.
+  const notification = new Notification({
+    title: request.title,
+    body: request.body,
+    silent: false,
+    timeoutType: request.keepUntilDismissed ? 'never' : 'default'
+  })
   notification.on('click', () => {
     if (win.isDestroyed()) return
     if (win.isMinimized()) win.restore()
@@ -40,4 +46,9 @@ export function notifyAttention(win: BrowserWindow, request: AttentionNotifyRequ
     win.webContents.send(IPC_CHANNELS.ATTENTION_FOCUS_SESSION, request.sessionId)
   })
   notification.show()
+}
+
+export async function openSystemNotificationSettings(): Promise<void> {
+  if (process.platform !== 'darwin') return
+  await shell.openExternal('x-apple.systempreferences:com.apple.Notifications-Settings.extension')
 }

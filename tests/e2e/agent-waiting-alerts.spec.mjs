@@ -114,3 +114,24 @@ test('the Notifications card points to the agent notification setting', async ({
     await app.close()
   }
 })
+
+test('the Notifications card offers to keep notifications until dismissed', async ({}, testInfo) => {
+  test.setTimeout(60_000)
+  const { app, page } = await launchTerminallySkill(testInfo)
+  try {
+    await openProject(page, testInfo, 'E2E Keep')
+    await page.locator('button:has(svg.lucide-settings)').first().click()
+    const macCard = page.getByTestId('attention-keep-mac')
+    if (process.platform === 'darwin') {
+      await expect(macCard).toContainText('set TerminallySKILL to Alerts')
+      await expect(macCard.getByRole('button', { name: 'Open System Settings' })).toBeVisible()
+      await macCard.scrollIntoViewIfNeeded()
+      await macCard.screenshot({ path: shotPath(testInfo, 'settings-keep-notifications.png') })
+    } else {
+      await expect(macCard).toHaveCount(0)
+      await expect(page.getByText('Keep notifications until dismissed')).toBeVisible()
+    }
+  } finally {
+    await app.close()
+  }
+})

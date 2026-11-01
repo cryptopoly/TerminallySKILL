@@ -139,7 +139,11 @@
     "privacy.masking.kind.token": "Токен",
     "privacy.masking.kind.secret": "Секрет",
     "privacy.masking.kind.api-key": "Ключ API",
-    "general.attention.agentHint": "Агенты для программирования (Claude Code, Codex, Gemini CLI и другие) тоже могут оповещать вас здесь. Если ваш молчит, проверьте настройку уведомлений агента."
+    "general.attention.agentHint": "Агенты для программирования (Claude Code, Codex, Gemini CLI и другие) тоже могут оповещать вас здесь. Если ваш молчит, проверьте настройку уведомлений агента.",
+    "general.attention.keep.title": "Показывать уведомления до закрытия",
+    "general.attention.keep.description": "Уведомления остаются на экране, пока вы их не закроете. Точное поведение зависит от рабочего стола.",
+    "general.attention.keep.macDescription": "Это определяет macOS. В Системных настройках выберите для TerminallySKILL стиль, который остаётся до закрытия.",
+    "general.attention.keep.openSettings": "Открыть Системные настройки"
   },
   "commands": {
     "addDialog.title": "Добавить команду",
