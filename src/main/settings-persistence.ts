@@ -115,6 +115,7 @@ export function backfillSettings(raw: Partial<AppSettings>): AppSettings {
     attentionAlerts:
       typeof raw.attentionAlerts === 'boolean' ? raw.attentionAlerts : DEFAULT_SETTINGS.attentionAlerts,
     attentionMinSeconds: normalizeAttentionMinSeconds(raw.attentionMinSeconds),
+    attentionKeepUntilDismissed: raw.attentionKeepUntilDismissed === true,
     maskSecrets: typeof raw.maskSecrets === 'boolean' ? raw.maskSecrets : DEFAULT_SETTINGS.maskSecrets,
     // A settings file written before the tour existed belongs to an upgrading user: never show it to them
     hasSeenWelcomeTour:

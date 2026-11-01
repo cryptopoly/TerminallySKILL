@@ -143,7 +143,11 @@
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Sekret",
     "privacy.masking.kind.api-key": "Klucz API",
-    "general.attention.agentHint": "Agenci programistyczni (Claude Code, Codex, Gemini CLI i inni) też mogą Cię tu powiadamiać. Jeśli Twój milczy, sprawdź ustawienie powiadomień swojego agenta."
+    "general.attention.agentHint": "Agenci programistyczni (Claude Code, Codex, Gemini CLI i inni) też mogą Cię tu powiadamiać. Jeśli Twój milczy, sprawdź ustawienie powiadomień swojego agenta.",
+    "general.attention.keep.title": "Pokazuj powiadomienia do zamknięcia",
+    "general.attention.keep.description": "Powiadomienia pozostają na ekranie, dopóki ich nie zamkniesz. Dokładne działanie zależy od środowiska pulpitu.",
+    "general.attention.keep.macDescription": "Decyduje o tym macOS. W Ustawieniach systemowych wybierz dla TerminallySKILL styl, który pozostaje do zamknięcia.",
+    "general.attention.keep.openSettings": "Otwórz Ustawienia systemowe"
   },
   "commands": {
     "addDialog.title": "Dodaj polecenie",

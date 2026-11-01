@@ -57,7 +57,12 @@ export function raiseAttention(
 
   // Inside the app the tab dot is enough. The OS notification is for when nobody is looking at it.
   if (options.notify !== false && !isUserAttending()) {
-    void window.electronAPI.notifyAttention({ sessionId, title, body })
+    void window.electronAPI.notifyAttention({
+      sessionId,
+      title,
+      body,
+      keepUntilDismissed: useSettingsStore.getState().settings.attentionKeepUntilDismissed
+    })
   }
 }
 

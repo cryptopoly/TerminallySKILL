@@ -11,6 +11,7 @@ export interface AttentionNotifyRequest {
   sessionId: string
   title: string
   body: string
+  keepUntilDismissed?: boolean
 }
 
 export const ATTENTION_MIN_SECONDS_OPTIONS = [5, 15, 30, 60, 300] as const

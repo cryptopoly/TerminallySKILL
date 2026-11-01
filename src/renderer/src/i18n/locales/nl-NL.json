@@ -218,7 +218,11 @@
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Geheim",
     "privacy.masking.kind.api-key": "API-sleutel",
-    "general.attention.agentHint": "Codeeragents (Claude Code, Codex, Gemini CLI en andere) kunnen je hier ook waarschuwen. Blijft die van jou stil, kijk dan bij de meldingsinstelling van je agent."
+    "general.attention.agentHint": "Codeeragents (Claude Code, Codex, Gemini CLI en andere) kunnen je hier ook waarschuwen. Blijft die van jou stil, kijk dan bij de meldingsinstelling van je agent.",
+    "general.attention.keep.title": "Meldingen tonen tot je ze sluit",
+    "general.attention.keep.description": "Meldingen blijven op het scherm tot je ze sluit. Het precieze gedrag hangt af van je bureaublad.",
+    "general.attention.keep.macDescription": "macOS bepaalt dit. Kies in Systeeminstellingen voor TerminallySKILL de stijl die blijft staan tot je hem sluit.",
+    "general.attention.keep.openSettings": "Systeeminstellingen openen"
   },
   "commands": {
     "addDialog.title": "Opdracht toevoegen",
