@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { chmod, mkdir, mkdtemp, rm, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import type { RunRecord, RunsData } from '../shared/run-schema'
+import type { RunCommandStepRecord, RunRecord, RunsData } from '../shared/run-schema'
 import type { RunStatusFilter } from '../shared/run-history'
 import { registerTerminalSession, resetTerminalSessionRegistry } from './terminal-session-registry'
 
@@ -26,6 +26,13 @@ vi.mock('./settings-manager', () => ({
 
 import { attachLogToRuns, getRunIndex, resetRunManagerCache, searchRuns, upsertRunRecord } from './run-manager'
 import { getSecretMaskStats, resetSecretMaskStats } from './secret-mask-stats'
+
+
+function firstCommandStep(run: RunRecord): RunCommandStepRecord {
+  const step = run.steps[0]
+  if (step?.type !== 'command') throw new Error('fixture: expected a command step first')
+  return step
+}
 
 describe('run-manager', () => {
   let tempDir: string
@@ -198,7 +205,7 @@ describe('run-manager', () => {
       startedAt: '2026-03-08T18:05:00.000Z',
       steps: [
         {
-          ...base.steps[0],
+          ...firstCommandStep(base),
           status: 'failed',
           exitCode: 1,
           commandString: 'npm run smoke'

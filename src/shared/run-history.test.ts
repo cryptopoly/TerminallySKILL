@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import type { RunRecord } from './run-schema'
+import type { RunCommandStepRecord, RunRecord } from './run-schema'
 import {
   buildRunComparisonRows,
   buildRunComparisonSummary,
   filterRuns,
   findPreviousComparableRun
 } from './run-history'
+
+function firstCommandStep(run: RunRecord): RunCommandStepRecord {
+  const step = run.steps[0]
+  if (step?.type !== 'command') throw new Error('fixture: expected a command step first')
+  return step
+}
 
 function createRun(overrides: Partial<RunRecord> = {}): RunRecord {
   return {
@@ -53,7 +59,7 @@ describe('run-history', () => {
       error: 'Smoke failed',
       steps: [
         {
-          ...completed.steps[0],
+          ...firstCommandStep(completed),
           label: 'Smoke',
           status: 'failed',
           exitCode: 1,
@@ -82,12 +88,12 @@ describe('run-history', () => {
       runId: 'run-2',
       steps: [
         {
-          ...baseline.steps[0],
+          ...firstCommandStep(baseline),
           status: 'failed',
           exitCode: 1
         },
         {
-          ...baseline.steps[0],
+          ...firstCommandStep(baseline),
           stepId: 'step-2',
           sourceIndex: 1,
           label: 'Smoke',
@@ -107,7 +113,7 @@ describe('run-history', () => {
       endedAt: '2026-03-08T10:01:00.000Z',
       steps: [
         {
-          ...createRun().steps[0],
+          ...firstCommandStep(createRun()),
           status: 'failed',
           exitCode: 1
         }
@@ -118,12 +124,12 @@ describe('run-history', () => {
       endedAt: '2026-03-08T10:03:00.000Z',
       steps: [
         {
-          ...createRun().steps[0],
+          ...firstCommandStep(createRun()),
           status: 'completed',
           exitCode: 0
         },
         {
-          ...createRun().steps[0],
+          ...firstCommandStep(createRun()),
           stepId: 'step-2',
           sourceIndex: 1,
           label: 'Smoke',

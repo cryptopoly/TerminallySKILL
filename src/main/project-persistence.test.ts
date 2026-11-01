@@ -10,6 +10,7 @@ import {
   getProjectWorkspaceTargetSummary,
   resolveProjectWorkingDirectory
 } from '../shared/project-schema'
+import type { Project } from '../shared/project-schema'
 import { backfillProject, backfillProjectsData } from './project-persistence'
 
 describe('project-persistence', () => {
@@ -85,7 +86,7 @@ describe('project-persistence', () => {
             },
             color: '#ffffff',
             createdAt: '2026-03-01T00:00:00.000Z'
-          }
+          } as Project // deliberately omits lastOpenedAt to exercise the backfill
         ],
         activeProjectId: 'proj-1'
       },
@@ -184,7 +185,7 @@ describe('project-persistence', () => {
           sidebarTab: 'logs',
           openFilePaths: ['/repo/src/app.tsx', '', 123 as never],
           activeFilePath: '/repo/src/app.tsx'
-        }
+        } as Project['workspaceLayout'] // deliberately partial plus bad entries
       },
       0,
       '2026-03-08T16:30:00.000Z'
