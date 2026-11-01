@@ -23,7 +23,7 @@ Jump to: [shortlist for 0.9.103](#shortlist-a-feature-for-09103-about-a-week) ·
 
 | # | Idea | Size | Priority | Status |
 |---|---|---|---|---|
-| 1 | Command blocks lite | M | P2 | banked, planned 0.9.104+ |
+| 1 | Command blocks lite | M | P2 | planned 0.9.105, first (decisions item 19) |
 | 2 | Multi-host SSH run | M | P2 | banked |
 | 3 | Private tab ("don't record this tab") | S–M | P3 | banked, not recommended now |
 | 4 | Fig-spec completions for the command builder | M | P3 | banked |
@@ -35,7 +35,7 @@ Jump to: [shortlist for 0.9.103](#shortlist-a-feature-for-09103-about-a-week) ·
 | 10 | Searchable shell history (local, Atuin-style) | M | P3 | banked |
 | 11 | Port-forward UI; SFTP pane | S–M / L | P3 | banked |
 | 12 | Lazy-load locale bundles | S | P3 | **in progress** (other stream) |
-| 13 | Built-in session restore | M | P3 | banked |
+| 13 | Built-in session restore | M | P2 | planned 0.9.105, opt-in, layout and folders first (decisions item 19) |
 | 14 | **New:** Agent-aware attention (OSC 7501 status, OSC 9/777 notifications) | S | P2 | proposed, **shortlist #1** |
 | 15 | **New:** Secret masking in logs and AI requests | S–M | P2 | proposed, shortlist #2 |
 | 16 | **New:** Save recent commands as a workflow | S–M | P2 | proposed |
