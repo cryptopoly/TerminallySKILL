@@ -41,7 +41,6 @@ Electron 45; attention alerts and agent-aware dots (Claude Code, Codex); jump-to
 
 1. Dependency and security review, due **2026-11-02** (see backlog reminders).
 2. Backlog Issues table: Windows tests and installer, terminal panel squeezed on small windows, no error shown when a terminal cannot open, 0.9.102 arm64 Linux probably had the dead-terminal bug.
-3. Native-speaker review of translations (now including the 22 tour strings).
-4. Pick the 0.9.104 headline feature (decisions item 5).
+3. Pick the 0.9.104 headline feature (decisions item 5).
 
 History of the 0.9.103 build: [status history](progress/status-history-0.9.103.md).
