@@ -52,3 +52,35 @@ test('the step marker never shows in the terminal or in shell history', async ({
     await app.close()
   }
 })
+
+// A step's marker draws its own prompt, which can arrive after the next step has started.
+test('a long step is not marked done by the prompt of the step before it', async ({}, testInfo) => {
+  test.setTimeout(90_000)
+  const { app, page } = await launchTerminallySkill(testInfo)
+  try {
+    await page.evaluate(async () => {
+      await window.electronAPI.updateSettings({ terminalInputMode: 'classic' })
+      const script = await window.electronAPI.createScript('Long step test', null)
+      await window.electronAPI.addStepToScript(script.id, 'echo first-$((1+1))', null)
+      await window.electronAPI.addStepToScript(script.id, 'sleep 6; echo long-$((1+1))', null)
+      await window.electronAPI.addStepToScript(script.id, 'echo third-$((1+1))', null)
+    })
+    await page.reload()
+    await page.locator('.xterm-helper-textarea').first().waitFor({ state: 'attached', timeout: 20_000 }).catch(() => {})
+    await page.getByText('Long step test').first().click()
+    await page.getByRole('button', { name: /Run Script/ }).click()
+
+    const rows = page.locator('.xterm-rows:visible')
+    await expect(rows).toContainText('first-2', { timeout: 30_000 })
+    // The third step's command line must not be typed while the long step is still running
+    await page.waitForTimeout(3_000)
+    await expect(rows).not.toContainText('long-2')
+    await expect(rows).not.toContainText('third-$')
+
+    await expect(rows).toContainText('third-2', { timeout: 30_000 })
+    await expect(rows).toContainText('long-2')
+    await expect(rows).not.toContainText('7337')
+  } finally {
+    await app.close()
+  }
+})

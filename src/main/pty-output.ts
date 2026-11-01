@@ -146,6 +146,7 @@ export function stripWorkflowMarkerEcho(data: string): string {
   return data.replace(/[^\r\n]*printf '\\033\]7337;workflow-step;[^\r\n]*(\r?\n)?/g, '')
 }
 
+const MARKER_ECHO_UNIQUE = 'workflow-step;'
 const ECHO_ESCAPE_RE = /\x1b(?:\[[0-?]*[ -/]*[@-~]|[()][A-Z0-9]|[@-Z\\-_=>])/y
 
 /**
@@ -161,16 +162,30 @@ export class MarkerEchoFilter {
   private held = ''
   private swallowingLineEnd = false
   private promptsSinceArmed = 0
+  private commandStarted = false
 
+  /**
+   * Only the start of the marker is matched: it cannot be anything else, and a long marker wraps at the
+   * window edge, where the line editor redraws characters. The rest of the line is dropped unread.
+   */
   arm(markerCommand: string): void {
-    this.expected = markerCommand
+    const unique = markerCommand.indexOf(MARKER_ECHO_UNIQUE)
+    this.expected = unique === -1 ? markerCommand : markerCommand.slice(0, unique + MARKER_ECHO_UNIQUE.length)
     this.matched = 0
     this.promptsSinceArmed = 0
+    this.commandStarted = false
   }
 
-  /** The marker's own prompt is the second one after it was written; past that it was flushed (Ctrl+C, sudo). */
+  noteCommandStart(): void {
+    this.commandStarted = true
+  }
+
+  /**
+   * The marker's own prompt is the second one after its step started; past that it was flushed (Ctrl+C,
+   * sudo). A prompt before the step starts belongs to the previous step's marker and does not count.
+   */
   notePromptReady(): void {
-    if (!this.expected) return
+    if (!this.expected || !this.commandStarted) return
     this.promptsSinceArmed += 1
     if (this.promptsSinceArmed >= 2) this.expected = null
   }
@@ -217,12 +232,16 @@ export class MarkerEchoFilter {
         this.matched += 1
         i += 1
         if (this.matched === this.expected.length) {
-          // Erase the prompt the marker was drawn after; the shell draws a new one once it has run
-          out += '\r\x1b[K'
           this.held = ''
           this.matched = 0
-          this.expected = null
           this.swallowingLineEnd = true
+          // Typed while a step runs, the terminal echoes the marker and the line editor draws it again at
+          // the prompt, so stay armed. Only the prompt's copy has a prompt in front of it to erase; the shell
+          // draws a new one once the marker has run.
+          if (this.promptsSinceArmed > 0) {
+            out += '\r\x1b[K'
+            this.expected = null
+          }
         }
         continue
       }
