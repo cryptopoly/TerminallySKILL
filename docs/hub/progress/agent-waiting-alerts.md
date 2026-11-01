@@ -98,10 +98,10 @@ Everything below is agent-neutral: there is no tool-specific gate anywhere. A Cl
    - A program that reports OSC 7501 `working` is trusted and never flagged.
    - Then the last 10 non-empty screen lines go through the prompt table (`src/shared/agent-prompts.ts`, one row per tool and pattern, a unit test per row):
      - **Approval match:** needs-you dot plus OS notification ("Waiting for your yes", with the prompt line as the body). The body is masked with `maskSecrets`, cleaned with `sanitizeAgentText`, and limited to 140 characters.
-     - **No match:** the grey **idle** dot only. No notification and no dock badge, because "quiet" alone also covers a dev server or a long `sleep`, and notifying for those would be noise.
-   - Any new output clears idle. The screen is read only to match, and is never logged or sent anywhere except the local notification body.
+     - **No match:** nothing is raised. A plain command stays orange (decision 16, 2026-11-01), because "quiet" alone also covers a dev server or a long build.
+   - The screen is read only to match, and is never logged or sent anywhere except the local notification body.
 3. **Idle dot is wired.**
-   - Shown for a quiet busy terminal and for a program that reports OSC 7501 `idle`. Before, an idle report hid the dot.
+   - Shown only for a program that reports OSC 7501 `idle`. An agent without OSC 7501 (Codex, for example) stays orange. Before, an idle report hid the dot.
    - Legend text is now real: "a program is open but has printed nothing for a while … Dot only, no notification."
    - Not a live region. It never counts on the dock badge (it is not an attention entry).
 4. **Repeat reminders** (`createReminderScheduler`).

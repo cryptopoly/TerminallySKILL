@@ -74,23 +74,21 @@ export type AgentActivity = 'working' | 'idle'
 
 /**
  * The tab dot: one of the attention kinds, `running` while a command or agent is busy, or `idle`
- * while a program is open but quiet (it said so through OSC 7501, or printed nothing for a while).
+ * while an agent reports through OSC 7501 that it is open but not working.
  */
 export type TabDotState = AttentionKind | 'running' | 'idle'
 
 /**
  * Finished, failed and needs-you entries always win, since they wait for the user. An agent that
  * reports its own state overrides the shell, so an open but quiet agent shows idle, not running.
- * Otherwise a busy terminal that went quiet shows idle, and a busy one shows running.
+ * A plain command stays running however long it prints nothing: silence does not mean it stopped.
  */
 export function resolveTabDotState(params: {
   entry: AttentionEntry | null | undefined
   shellBusy: boolean
   agentActivity: AgentActivity | null | undefined
-  quiet?: boolean
 }): TabDotState | null {
   if (params.entry) return params.entry.kind
   if (params.agentActivity) return params.agentActivity === 'working' ? 'running' : 'idle'
-  if (!params.shellBusy) return null
-  return params.quiet ? 'idle' : 'running'
+  return params.shellBusy ? 'running' : null
 }

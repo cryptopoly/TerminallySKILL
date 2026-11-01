@@ -41,22 +41,20 @@ export function TabStatusDot({ state }: { state: DotStyle }): JSX.Element {
 
 /**
  * Status dot on a terminal tab: orange spinning ring while running, pulsing yellow when it needs
- * you, solid green finished, red with a cross failed, still grey ring when a program is open but
- * quiet. Waiting states always win over running and idle.
+ * you, solid green finished, red with a cross failed, still grey ring when an agent reports it is
+ * open but not working. Waiting states always win over running and idle.
  */
 export function AttentionDot({ sessionId }: { sessionId: string }): JSX.Element | null {
   const { t } = useTranslation('terminal')
   const entry = useAttentionStore((state) => state.entries[sessionId])
   const shellBusy = useTerminalStore((state) => Boolean(state.busySessionIds[sessionId]))
   const agentActivity = useTerminalStore((state) => state.agentActivityBySession[sessionId])
-  const quiet = useTerminalStore((state) => Boolean(state.quietSessionIds[sessionId]))
   const alertsOn = useSettingsStore((state) => state.settings.attentionAlerts)
 
   const dotState = resolveTabDotState({
     entry,
     shellBusy: alertsOn && shellBusy,
-    agentActivity: alertsOn ? agentActivity : null,
-    quiet
+    agentActivity: alertsOn ? agentActivity : null
   })
   if (!dotState) return null
 
