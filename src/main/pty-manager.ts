@@ -520,7 +520,10 @@ export async function createTerminal(
       }
     }
     data = stripWorkflowMarkerEcho(extracted.data)
-    if (promptReadyEvent) session.markerEcho.notePromptReady()
+    for (const event of shellIntegration.events) {
+      if (event.type === 'command-start') session.markerEcho.noteCommandStart()
+      else session.markerEcho.notePromptReady()
+    }
     data = session.markerEcho.push(data)
     if (session.markerEchoTimer) clearTimeout(session.markerEchoTimer)
     session.markerEchoTimer = null

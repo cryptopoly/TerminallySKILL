@@ -151,6 +151,8 @@ describe('MarkerEchoFilter', () => {
   it('removes an echo drawn a few characters per chunk', () => {
     const filter = new MarkerEchoFilter()
     filter.arm(marker)
+    filter.noteCommandStart()
+    filter.notePromptReady()
     const out = zleChunks.map((chunk) => filter.push(chunk)).join('')
     expect(out).not.toContain('workflow-step')
     expect(out).not.toContain('printf')
@@ -181,14 +183,46 @@ describe('MarkerEchoFilter', () => {
   it('tolerates colour codes inside the echo', () => {
     const filter = new MarkerEchoFilter()
     filter.arm('printf x')
+    filter.noteCommandStart()
+    filter.notePromptReady()
     expect(filter.push('pri\x1b[32mntf\x1b[0m x\r\nnext')).toBe('\r\x1b[Knext')
   })
 
   it('disarms at the second prompt when the marker was flushed by Ctrl+C', () => {
     const filter = new MarkerEchoFilter()
     filter.arm(marker)
+    filter.noteCommandStart()
     filter.notePromptReady()
     filter.notePromptReady()
     expect(filter.push('p')).toBe('p')
+  })
+
+  it('stays armed through the previous marker prompt that arrives before the step starts', () => {
+    const filter = new MarkerEchoFilter()
+    filter.arm(marker)
+    filter.notePromptReady()
+    filter.noteCommandStart()
+    filter.notePromptReady()
+    expect(filter.push(marker)).toBe('\r\x1b[K')
+  })
+
+  it('removes an echo that wraps at the window edge', () => {
+    const filter = new MarkerEchoFilter()
+    filter.arm(marker)
+    filter.noteCommandStart()
+    filter.notePromptReady()
+    const wrapped = `${marker.slice(0, 60)} \r\x1b[K${marker[60]}\r${marker.slice(60)}\x1b[?2004l\r\r\n`
+    expect(filter.push(wrapped)).toBe('\r\x1b[K')
+    expect(filter.push('next')).toBe('next')
+  })
+
+  it('removes both the terminal echo during a step and the prompt echo after it', () => {
+    const filter = new MarkerEchoFilter()
+    filter.arm(marker)
+    filter.noteCommandStart()
+    expect(filter.push(`output ${marker}\r\nmore\r\n`)).toBe('output more\r\n')
+    filter.notePromptReady()
+    expect(filter.push(marker)).toBe('\r\x1b[K')
+    expect(filter.push('\r\nnext')).toBe('next')
   })
 })
