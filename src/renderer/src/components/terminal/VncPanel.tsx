@@ -29,6 +29,8 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
   const outerRef = useRef<HTMLDivElement>(null)
   const hasSavedPassword = useRef(false)
   const triedEmptyPassword = useRef(false)
+  const passwordRejected = useRef(false)
+  const askForPassword = useRef(false)
 
   const reconnect = useCallback(() => {
     rfbRef.current?.disconnect()
@@ -129,7 +131,11 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
     setErrorMessage(null)
     setPasswordPrompt(false)
     hasSavedPassword.current = false
-    triedEmptyPassword.current = false
+    // After a rejected password, go straight to the prompt rather than repeat the attempt.
+    const askFirst = askForPassword.current
+    askForPassword.current = false
+    passwordRejected.current = false
+    triedEmptyPassword.current = askFirst
 
     let rfb: InstanceType<typeof RFB>
 
@@ -138,7 +144,7 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
 
       // Check for a saved password before connecting
       const saved = await window.electronAPI.getVncPassword(storageKey)
-      hasSavedPassword.current = !!saved
+      hasSavedPassword.current = !!saved && !askFirst
 
       rfb = new RFB(
         containerRef.current,
@@ -153,8 +159,16 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
         setStatus('connected')
       })
 
+      rfb.addEventListener('securityfailure', () => {
+        passwordRejected.current = true
+      })
+
       rfb.addEventListener('disconnect', (e: CustomEvent) => {
-        if (e.detail?.clean) {
+        // A server ends the connection when it rejects a password, so asking again needs a new one.
+        if (passwordRejected.current) {
+          askForPassword.current = true
+          setConnectKey((k) => k + 1)
+        } else if (e.detail?.clean) {
           setStatus('disconnected')
         } else {
           setStatus('error')
@@ -267,7 +281,7 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
             <div className="flex gap-2 justify-end">
               <button
                 type="button"
-                onClick={() => { setPasswordPrompt(false); setPasswordInput('') }}
+                onClick={() => { setPasswordPrompt(false); setPasswordInput(''); rfbRef.current?.disconnect() }}
                 className="px-3 py-1.5 rounded-lg text-sm text-gray-400 hover:text-gray-200 transition-colors"
               >
                 {t('common:actions.cancel')}

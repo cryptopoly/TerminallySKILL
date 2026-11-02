@@ -46,6 +46,6 @@ Run on a packaged build, not `npm run dev`: dev does not show notification banne
 
 ## 7. Dependency update
 
-- [ ] Open a VNC session, if you have a host to hand. noVNC stays on 1.6.0, but Electron changed.
+- [ ] Open a VNC session with a real server, if you have a host to hand. An automatic test now covers the viewer, tunnel and password prompt with a stand-in server, so this is the only check against a real one.
 - [ ] An SSH terminal connects.
 - [ ] Settings → About shows 0.9.104.
