@@ -88,6 +88,8 @@ Full shell sessions powered by node-pty and xterm.js:
 Start a long command, switch to another tab or app, and get a green dot when it succeeds or a red dot when it fails — plus a dock badge and a desktop notification when the window is not in front.
 - **Works with coding agents** — terminals running Claude Code, Codex and similar tools raise the same dots through standard terminal notifications (OSC 9, OSC 777, OSC 7501)
 - **Jump to the terminal that needs you** — `Cmd+Shift+J` (`Ctrl+Shift+J` on Windows and Linux) opens the one that has waited longest, in any project
+- **Knows when an agent is waiting** — the terminal bell and a quiet approval prompt raise "needs you", with reminders if you stay away
+- **Notifications that stay** — keep them on screen until you close them (Settings → General → Notifications; System Settings on macOS)
 - **Workflows** report when they finish, fail, or wait for your approval
 
 ### ⏰ Scheduled Workflows
