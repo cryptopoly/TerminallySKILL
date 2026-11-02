@@ -217,6 +217,8 @@
     "privacy.masking.kind.secret": "機密",
     "privacy.masking.kind.api-key": "API 金鑰",
     "general.attention.agentHint": "程式設計代理程式（Claude Code、Codex、Gemini CLI 等）也可以在這裡提醒你。如果沒有提醒，請查看代理程式本身的通知設定。",
+    "general.attention.keep.tip.turnOn": "開啟",
+    "general.attention.keep.tip.notNow": "暫不",
     "general.attention.keep.title": "保留通知直到關閉",
     "general.attention.keep.description": "通知會一直顯示在螢幕上，直到你關閉它們。實際行為取決於你的桌面環境。",
     "general.attention.keep.macDescription": "這由 macOS 決定。請在系統設定中為 TerminallySKILL 選擇會一直顯示到關閉的樣式。",

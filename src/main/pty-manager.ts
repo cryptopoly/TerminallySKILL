@@ -278,6 +278,8 @@ function setupShellIntegration(
   delete env.PREFIX
   delete env.NPM_CONFIG_PREFIX
   delete env.npm_config_prefix
+  // npm sets EDITOR=vi for anything it starts, and zsh then switches to vi keys, where Ctrl+R is not history search
+  if (env.npm_execpath && env.EDITOR === 'vi') delete env.EDITOR
 
   // Remove Electron/Node vars that break Python venvs and other language runtimes
   delete env.PYTHONHOME

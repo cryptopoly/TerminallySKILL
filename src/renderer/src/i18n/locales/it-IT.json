@@ -140,6 +140,8 @@
     "privacy.masking.kind.secret": "Segreto",
     "privacy.masking.kind.api-key": "Chiave API",
     "general.attention.agentHint": "Anche gli agenti di programmazione (Claude Code, Codex, Gemini CLI e altri) possono avvisarti qui. Se il tuo resta muto, controlla l'impostazione delle notifiche del tuo agente.",
+    "general.attention.keep.tip.turnOn": "Attiva",
+    "general.attention.keep.tip.notNow": "Non ora",
     "general.attention.keep.title": "Mantieni le notifiche finché non le chiudi",
     "general.attention.keep.description": "Le notifiche restano sullo schermo finché non le chiudi. Il comportamento esatto dipende dal tuo desktop.",
     "general.attention.keep.macDescription": "Lo decide macOS. In Impostazioni di Sistema, scegli per TerminallySKILL lo stile che resta finché non lo chiudi.",

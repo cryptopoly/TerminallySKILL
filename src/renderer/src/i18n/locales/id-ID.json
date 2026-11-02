@@ -222,6 +222,8 @@
     "privacy.masking.kind.secret": "Rahasia",
     "privacy.masking.kind.api-key": "Kunci API",
     "general.attention.agentHint": "Agen coding (Claude Code, Codex, Gemini CLI, dan lainnya) juga bisa memberi tahu Anda di sini. Jika agen Anda tetap diam, lihat pengaturan notifikasi agen Anda.",
+    "general.attention.keep.tip.turnOn": "Aktifkan",
+    "general.attention.keep.tip.notNow": "Nanti saja",
     "general.attention.keep.title": "Pertahankan notifikasi sampai ditutup",
     "general.attention.keep.description": "Notifikasi tetap di layar sampai Anda menutupnya. Perilaku pastinya bergantung pada desktop Anda.",
     "general.attention.keep.macDescription": "macOS yang menentukan ini. Di Pengaturan Sistem, pilih gaya untuk TerminallySKILL yang tetap tampil sampai ditutup.",

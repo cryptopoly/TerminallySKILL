@@ -39,8 +39,9 @@ Electron 45; attention alerts and agent-aware dots (Claude Code, Codex); jump-to
 
 ## Next up
 
-1. Dan's UAT of 0.9.104, then the [release checklist](release-checklist.md). Next dependency review due **2026-12-02**.
-2. Backlog Issues table: Windows tests and installer, terminal panel squeezed on small windows, no error shown when a terminal cannot open, 0.9.102 arm64 Linux probably had the dead-terminal bug.
-3. 0.9.105: command blocks lite, then session restore (decisions item 19).
+1. Dan: UAT 0.9.104 on a build that includes the Ctrl+R, tip and VNC password changes.
+2. VM test, PR `staging` to `main`, Release workflow, draft smoke tests, publish, announce (see the [release checklist](release-checklist.md)).
+3. 0.9.105: command blocks lite, then session restore (see the [backlog](backlog.md)).
+4. Next dependency review: 2026-12-02.
 
 History of the 0.9.103 build: [status history](progress/status-history-0.9.103.md).

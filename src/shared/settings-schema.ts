@@ -84,6 +84,7 @@ export interface AppSettings {
   attentionMinSeconds: number
   /** Windows and Linux: notifications stay until closed. macOS leaves this to System Settings. */
   attentionKeepUntilDismissed: boolean
+  attentionKeepTipSeen: boolean
   /** Replace well-known secret shapes before text is saved to logs/run history or sent to AI */
   maskSecrets: boolean
   /**
@@ -119,6 +120,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   attentionAlerts: true,
   attentionMinSeconds: DEFAULT_ATTENTION_MIN_SECONDS,
   attentionKeepUntilDismissed: false,
+  attentionKeepTipSeen: false,
   maskSecrets: true,
   hasSeenWelcomeTour: false,
   aiProviders: [

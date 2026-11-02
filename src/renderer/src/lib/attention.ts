@@ -39,6 +39,15 @@ export function isUserWatchingSession(sessionId: string): boolean {
   return sessionId === resolveWatchedSessionId(sessions, projectId, activeSessionId, splitSessionId, focusedPane)
 }
 
+/** After the first notification, mention once that notifications can stay on screen. */
+function offerKeepNotificationsTip(): void {
+  const { settings } = useSettingsStore.getState()
+  if (settings.attentionKeepTipSeen || settings.attentionKeepUntilDismissed) return
+  useSettingsStore.setState({ settings: { ...settings, attentionKeepTipSeen: true } })
+  void window.electronAPI.updateSettings({ attentionKeepTipSeen: true })
+  useAttentionStore.getState().setKeepTipVisible(true)
+}
+
 export function raiseAttention(
   sessionId: string,
   kind: AttentionKind,
@@ -63,6 +72,7 @@ export function raiseAttention(
       body,
       keepUntilDismissed: useSettingsStore.getState().settings.attentionKeepUntilDismissed
     })
+    offerKeepNotificationsTip()
   }
 }
 
