@@ -222,6 +222,8 @@
     "privacy.masking.kind.secret": "비밀 값",
     "privacy.masking.kind.api-key": "API 키",
     "general.attention.agentHint": "코딩 에이전트(Claude Code, Codex, Gemini CLI 등)도 여기서 알려 줄 수 있습니다. 알림이 오지 않으면 에이전트의 알림 설정을 확인하세요.",
+    "general.attention.keep.tip.turnOn": "켜기",
+    "general.attention.keep.tip.notNow": "나중에",
     "general.attention.keep.title": "닫을 때까지 알림 유지",
     "general.attention.keep.description": "알림을 닫을 때까지 화면에 표시합니다. 정확한 동작은 데스크톱 환경에 따라 다릅니다.",
     "general.attention.keep.macDescription": "macOS에서 결정합니다. 시스템 설정에서 TerminallySKILL에 닫을 때까지 표시되는 스타일을 선택하세요.",

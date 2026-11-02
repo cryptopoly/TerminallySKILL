@@ -902,6 +902,7 @@ function XTermInstance({
   const secureInputActiveRef = useRef(false)
   const commandBlockCounterRef = useRef(0)
   const editorInputRef = useRef<HTMLInputElement>(null)
+  const shellHasKeyboardRef = useRef(false)
   const editorSelectionRef = useRef({ start: 0, end: 0 })
   const pendingEditorSelectionRef = useRef<{ start: number; end: number } | null>(null)
   const historyDraftRef = useRef('')
@@ -1621,6 +1622,19 @@ function XTermInstance({
     const selectionStart = event.currentTarget.selectionStart ?? 0
     const selectionEnd = event.currentTarget.selectionEnd ?? selectionStart
 
+    // Ctrl+R belongs to the shell (history search, or fzf and Atuin when bound to it). Hand over the
+    // typed text and the keyboard until the next prompt.
+    if (event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'r') {
+      event.preventDefault()
+      window.electronAPI.writeToTerminal(sessionId, `${editorCommand}\x12`)
+      resetEditorComposer()
+      shellHasKeyboardRef.current = true
+      shellStateRef.current = 'executing'
+      setShellState('executing')
+      termRef.current?.focus()
+      return
+    }
+
     if (editorSuggestions.length > 1) {
       if (event.shiftKey && event.key === 'Tab') {
         event.preventDefault()
@@ -1683,10 +1697,11 @@ function XTermInstance({
     acceptEditorSuggestion,
     activeEditorSuggestion,
     cycleEditorSuggestion,
-    editorCommand.length,
+    editorCommand,
     editorSuggestions.length,
     navigateEditorHistory,
     resetEditorComposer,
+    sessionId,
     submitEditorCommand
   ])
 
@@ -1794,6 +1809,7 @@ function XTermInstance({
     setShellCwd(nextCwd)
     setPromptCount((count) => count + 1)
     completeActiveCommandBlock(event.receivedAt, nextCwd, promptLine, event.exitCode)
+    shellHasKeyboardRef.current = false
     shellStateRef.current = 'idle'
     setShellState('idle')
     setTimeout(() => processQueue(), 50)
@@ -2054,6 +2070,11 @@ function XTermInstance({
           if (safePasteModeRef.current && maybeStartPasteConfirmationRef.current(data, pasteTarget)) {
             return
           }
+        }
+
+        if (shellHasKeyboardRef.current) {
+          sendTerminalInputDirectRef.current(data)
+          return
         }
 
         if (secureInputActiveRef.current && state === 'executing') {

@@ -69,6 +69,8 @@
     "privacy.masking.kind.secret": "Secret",
     "privacy.masking.kind.api-key": "API key",
     "general.attention.agentHint": "Coding agents (Claude Code, Codex, Gemini CLI and others) can alert you here too. If yours stays silent, see your agent's notification setting.",
+    "general.attention.keep.tip.turnOn": "Turn on",
+    "general.attention.keep.tip.notNow": "Not now",
     "general.attention.keep.title": "Keep notifications until dismissed",
     "general.attention.keep.description": "Notifications stay on screen until you close them. The exact behaviour depends on your desktop.",
     "general.attention.keep.macDescription": "macOS decides this. In System Settings, set TerminallySKILL to Alerts to keep notifications until you close them.",

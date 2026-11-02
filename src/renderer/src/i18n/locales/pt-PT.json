@@ -222,6 +222,8 @@
     "privacy.masking.kind.secret": "Segredo",
     "privacy.masking.kind.api-key": "Chave de API",
     "general.attention.agentHint": "Os agentes de programação (Claude Code, Codex, Gemini CLI e outros) também o podem avisar aqui. Se o seu ficar em silêncio, veja a definição de notificações do seu agente.",
+    "general.attention.keep.tip.turnOn": "Ativar",
+    "general.attention.keep.tip.notNow": "Agora não",
     "general.attention.keep.title": "Manter as notificações até as fechar",
     "general.attention.keep.description": "As notificações ficam no ecrã até as fechar. O comportamento exato depende do seu ambiente de trabalho.",
     "general.attention.keep.macDescription": "O macOS decide isto. Nas Definições do Sistema, escolha para o TerminallySKILL o estilo que fica até o fechar.",

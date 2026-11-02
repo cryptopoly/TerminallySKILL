@@ -6,6 +6,12 @@ import { promisify } from 'node:util'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
 import {
+  FAKE_VNC_COLOR,
+  FAKE_VNC_HEIGHT,
+  FAKE_VNC_WIDTH,
+  startFakeVncServer
+} from './fake-vnc-server.mjs'
+import {
   createSshIsolationShim,
   isLocalSshdAvailable,
   startLocalOpenSshFixture
@@ -170,6 +176,97 @@ test.describe('local OpenSSH (user-space sshd)', () => {
       })
     } finally {
       await closeApp(app, page)
+    }
+  })
+
+  async function openVncProject(page, vncPort) {
+    await page.evaluate(
+      (target) =>
+        window.electronAPI.createProject('E2E VNC', target.cwd, '#14b8a6', target, 'disabled', true),
+      sshTarget({ vncPort })
+    )
+    await page.reload()
+    await page.waitForFunction(() => Boolean(window.electronAPI?.getAppVersion))
+    await page.locator('button.p-2:has(svg.lucide-monitor)').click()
+  }
+
+  // The colour noVNC drew in the middle of its canvas, or null before it has drawn.
+  function vncCentrePixel(page) {
+    return page.evaluate(
+      ({ width, height }) => {
+        const canvas = Array.from(document.querySelectorAll('canvas')).find(
+          (candidate) => candidate.width === width && candidate.height === height
+        )
+        if (!canvas) return null
+        return Array.from(canvas.getContext('2d').getImageData(width / 2, height / 2, 1, 1).data).slice(0, 3)
+      },
+      { width: FAKE_VNC_WIDTH, height: FAKE_VNC_HEIGHT }
+    )
+  }
+
+  test('VNC viewer shows the remote screen through the SSH tunnel and sends input back', async ({}, testInfo) => {
+    const vnc = await startFakeVncServer()
+    const { app, page } = await launchApp(testInfo)
+
+    try {
+      await openVncProject(page, vnc.port)
+      await expect.poll(() => vncCentrePixel(page), { timeout: 30000 }).toEqual(FAKE_VNC_COLOR)
+
+      const canvas = page.locator(`canvas[width="${FAKE_VNC_WIDTH}"]`)
+      await canvas.click()
+      await expect.poll(() => vnc.clicks.length).toBeGreaterThan(0)
+      await page.keyboard.press('a')
+      await expect.poll(() => vnc.keysDown).toContain('a'.charCodeAt(0))
+
+      // Only the app's own token opens the local WebSocket bridge.
+      const closeCode = await page.evaluate(async (target) => {
+        const { wsPort } = await window.electronAPI.startVncSession(target, target.vncPort)
+        return new Promise((resolvePromise) => {
+          const socket = new WebSocket(`ws://127.0.0.1:${wsPort}?token=wrong`)
+          socket.addEventListener('close', (event) => resolvePromise(event.code))
+        })
+      }, sshTarget({ vncPort: vnc.port }))
+      expect(closeCode).toBe(1008)
+    } finally {
+      await closeApp(app, page)
+    }
+
+    // Quitting the app ends the tunnel, so the server sees its client leave.
+    await expect.poll(() => vnc.openConnections(), { timeout: 15000 }).toBe(0)
+    await vnc.stop()
+  })
+
+  test('VNC viewer asks for the password when the server needs one', async ({}, testInfo) => {
+    const vnc = await startFakeVncServer({ password: 'secret12' })
+    const { app, page } = await launchApp(testInfo)
+
+    try {
+      await openVncProject(page, vnc.port)
+
+      // The silent empty-password attempt fails, then the viewer asks.
+      const passwordInput = page.locator('input[type="password"]')
+      await expect(passwordInput).toBeVisible({ timeout: 30000 })
+      expect(vnc.authAttempts).toEqual([false])
+
+      // A wrong password asks again.
+      await passwordInput.fill('wrong')
+      await passwordInput.press('Enter')
+      await expect.poll(() => vnc.authAttempts.length, { timeout: 15000 }).toBe(2)
+      await expect(passwordInput).toBeVisible({ timeout: 15000 })
+
+      // Cancel leaves a way back in, not an endless spinner.
+      await page.getByRole('button', { name: 'Cancel' }).click()
+      await page.getByRole('button', { name: 'Reconnect' }).click()
+      await expect(passwordInput).toBeVisible({ timeout: 30000 })
+
+      await passwordInput.fill('secret12')
+      await passwordInput.press('Enter')
+
+      await expect.poll(() => vncCentrePixel(page), { timeout: 30000 }).toEqual(FAKE_VNC_COLOR)
+      expect(vnc.authAttempts.at(-1)).toBe(true)
+    } finally {
+      await closeApp(app, page)
+      await vnc.stop()
     }
   })
 

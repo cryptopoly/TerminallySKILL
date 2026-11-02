@@ -221,6 +221,8 @@
     "privacy.masking.kind.secret": "سر",
     "privacy.masking.kind.api-key": "مفتاح API",
     "general.attention.agentHint": "يمكن لوكلاء البرمجة (Claude Code وCodex وGemini CLI وغيرها) تنبيهك هنا أيضًا. إذا بقي وكيلك صامتًا، فراجع إعداد الإشعارات الخاص به.",
+    "general.attention.keep.tip.turnOn": "تشغيل",
+    "general.attention.keep.tip.notNow": "ليس الآن",
     "general.attention.keep.title": "إبقاء الإشعارات حتى إغلاقها",
     "general.attention.keep.description": "تبقى الإشعارات على الشاشة حتى تغلقها. يعتمد السلوك الدقيق على سطح المكتب لديك.",
     "general.attention.keep.macDescription": "يتحكم macOS في ذلك. في إعدادات النظام، اختر لـ TerminallySKILL نمط الإشعار الذي يبقى حتى تغلقه.",

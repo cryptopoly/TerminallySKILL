@@ -14,6 +14,7 @@ import { ProjectDialog } from '../projects/ProjectDialog'
 import { SettingsPanel } from '../settings/SettingsPanel'
 import { InfoPanel } from '../onboarding/InfoPanel'
 import { WelcomeTour } from '../onboarding/WelcomeTour'
+import { KeepNotificationsTip } from '../onboarding/KeepNotificationsTip'
 import { CommandPalette } from '../palette/CommandPalette'
 import { Dashboard } from '../dashboard/Dashboard'
 import { WorkflowRunnerEngine } from '../scripts/WorkflowRunnerHost'
@@ -1077,6 +1078,8 @@ export function AppShell(): JSX.Element {
           onShowTour={openWelcomeTour}
         />
       )}
+
+      <KeepNotificationsTip />
 
       {/* First-run welcome tour */}
       {tourStep !== null && !tourPaused && (

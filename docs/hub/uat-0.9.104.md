@@ -17,6 +17,10 @@ Run on a packaged build, not `npm run dev`: dev does not show notification banne
 
 ## 2. Notification choice
 
+- [ ] Use a fresh data folder (`TERMINALLYSKILL_USER_DATA_DIR`). First notification: one tip shows at the bottom right when you return. macOS: its button opens System Settings. No tip after that, including after a restart.
+- [ ] Editor prompt on, Ctrl+R: the shell's search opens. Type part of an old command and press Enter: it runs, and the editor prompt returns.
+- [ ] Editor prompt off, Ctrl+R: the same search opens, in the packaged app and in `npm run dev`.
+- [ ] In search, press Ctrl+C twice: the editor prompt returns.
 - [ ] Settings → General → Notifications: the "Keep notifications until dismissed" card shows.
 - [ ] Open System Settings: the Notifications pane opens.
 - [ ] Set TerminallySKILL to Alerts: a notification stays until closed.
@@ -46,6 +50,6 @@ Run on a packaged build, not `npm run dev`: dev does not show notification banne
 
 ## 7. Dependency update
 
-- [ ] Open a VNC session, if you have a host to hand. noVNC stays on 1.6.0, but Electron changed.
+- [ ] Open a VNC session with a real server, if you have a host to hand. An automatic test now covers the viewer, tunnel and password prompt with a stand-in server, so this is the only check against a real one. Include a server with a password if you have one.
 - [ ] An SSH terminal connects.
 - [ ] Settings → About shows 0.9.104.

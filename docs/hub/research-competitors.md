@@ -5,7 +5,7 @@ summary: What rivals offer and what we could add next.
 ---
 # Competitor research
 
-Two passes so far. The newest is first; the first pass (2026-10-28) follows unchanged. Ideas that came out of this are numbered in [ideas](ideas.md).
+Two passes so far. The newest is first; the first pass (2026-10-28) follows unchanged. Ideas that came out of this are numbered in [backlog](backlog.md).
 
 ## Update 2026-10-29: second pass
 
@@ -48,7 +48,7 @@ Method: web searches and a few page fetches on 2026-10-29. Each claim carries it
 
 ### What one developer can do in one to two weeks that looks impressive
 
-Ranked in [ideas](ideas.md#shortlist-a-feature-for-09103-about-a-week): idea 14 (agent-aware attention, about 3–4 days with the jump shortcut), idea 15 (secret masking, about a week), idea 16 (save recent commands as a workflow), idea 18 (Markdown runbooks), idea 17 (paste a command into the builder).
+Ranked in [backlog](backlog.md): idea 14 (agent-aware attention, about 3–4 days with the jump shortcut), idea 15 (secret masking, about a week), idea 16 (save recent commands as a workflow), idea 18 (Markdown runbooks), idea 17 (paste a command into the builder).
 
 ### Gaps in this pass
 

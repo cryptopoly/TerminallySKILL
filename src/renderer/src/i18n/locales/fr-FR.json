@@ -144,6 +144,8 @@
     "privacy.masking.kind.secret": "Secret",
     "privacy.masking.kind.api-key": "Clé API",
     "general.attention.agentHint": "Les agents de code (Claude Code, Codex, Gemini CLI et d'autres) peuvent aussi vous alerter ici. Si le vôtre reste muet, consultez le réglage des notifications de votre agent.",
+    "general.attention.keep.tip.turnOn": "Activer",
+    "general.attention.keep.tip.notNow": "Pas maintenant",
     "general.attention.keep.title": "Garder les notifications jusqu'à leur fermeture",
     "general.attention.keep.description": "Les notifications restent à l'écran jusqu'à ce que vous les fermiez. Le comportement exact dépend de votre bureau.",
     "general.attention.keep.macDescription": "macOS en décide. Dans Réglages Système, choisissez pour TerminallySKILL le style qui reste jusqu'à sa fermeture.",

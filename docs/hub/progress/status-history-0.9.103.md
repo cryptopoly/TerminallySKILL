@@ -24,7 +24,7 @@ Electron 45, lazy locales and the local SSH test are merged and verified (test:c
 
 ## Update 2026-10-29, night
 
-**Scope of 0.9.103 grew (Dan):** Electron 45, lazy-loaded locales and one more headline feature join the release. Four agents are working in separate worktrees: `feat/electron-45`, `feat/lazy-locales`, `test/local-ssh-e2e`, `docs/ideas-expansion`. Merged into `integ/0.9.103` (verified: test:ci 271 unit tests, e2e 11 passed 2 skipped): lazy locales, ideas expansion. Waiting: Electron 45, local SSH e2e. NOTE: agent worktrees branched from older commits (main or earlier), so merge into `integ/0.9.103` and re-test. Next: Dan picks the extra feature from the expanded [ideas](../ideas.md); then build, merge, full test run, packaged smoke test, version bump, notes, PR.
+**Scope of 0.9.103 grew (Dan):** Electron 45, lazy-loaded locales and one more headline feature join the release. Four agents are working in separate worktrees: `feat/electron-45`, `feat/lazy-locales`, `test/local-ssh-e2e`, `docs/ideas-expansion`. Merged into `integ/0.9.103` (verified: test:ci 271 unit tests, e2e 11 passed 2 skipped): lazy locales, ideas expansion. Waiting: Electron 45, local SSH e2e. NOTE: agent worktrees branched from older commits (main or earlier), so merge into `integ/0.9.103` and re-test. Next: Dan picks the extra feature from the expanded [backlog](../backlog.md); then build, merge, full test run, packaged smoke test, version bump, notes, PR.
 
 ## Update 2026-10-29, late
 
@@ -47,7 +47,7 @@ Electron 45, lazy locales and the local SSH test are merged and verified (test:c
 - **Scheduled workflows.** Clock icon in the workflow header opens one dialog (interval or daily, weekday chips). Main process timer, runs in a background tab.
 - **Privacy tab.** Statement, what can leave the computer, host-only request list for this session.
 - Translations for all 18 locales (machine-assisted, not native-reviewed). 263 unit tests, type-check, i18n check, build and 6 Electron E2E tests pass, including new ones for a scheduled run and the approval alert.
-- Ideas bank and the "no-logs" verdict added: [ideas](../ideas.md).
+- Ideas bank and the "no-logs" verdict added: [backlog](../backlog.md).
 
 **Open for Dan**
 

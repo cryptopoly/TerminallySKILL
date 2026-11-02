@@ -135,3 +135,50 @@ test('the Notifications card offers to keep notifications until dismissed', asyn
     await app.close()
   }
 })
+
+test('the first notification brings one tip about keeping notifications on screen', async ({}, testInfo) => {
+  test.setTimeout(60_000)
+  const { app, page } = await launchTerminallySkill(testInfo)
+  try {
+    // No real banners from a test run.
+    await app.evaluate(({ Notification }) => {
+      Notification.prototype.show = () => {}
+    })
+    await openProject(page, testInfo, 'E2E Tip')
+    const tip = page.getByTestId('keep-notifications-tip')
+    await expect(tip).toHaveCount(0)
+
+    const notifyWhileAway = async (message) => {
+      await page.evaluate(() => {
+        document.hasFocus = () => false
+      })
+      await typeInVisibleTerminal(page, `printf '\\033]9;${message}\\007'`)
+    }
+
+    await notifyWhileAway('first')
+    await expect(tip).toBeVisible({ timeout: 15_000 })
+    const isMac = await page.evaluate(() => navigator.platform.toLowerCase().includes('mac'))
+    if (isMac) {
+      // The other button would open the real System Settings.
+      await expect(tip.getByRole('button', { name: 'Open System Settings' })).toBeVisible()
+      await tip.getByRole('button', { name: 'Not now' }).click()
+    } else {
+      await tip.getByRole('button', { name: 'Turn on' }).click()
+    }
+    await expect(tip).toHaveCount(0)
+
+    const saved = await page.evaluate(() => window.electronAPI.getSettings())
+    expect(saved.attentionKeepTipSeen).toBe(true)
+    expect(saved.attentionKeepUntilDismissed).toBe(!isMac)
+
+    // Never again, including after a restart of the page.
+    await notifyWhileAway('second')
+    await page.waitForTimeout(1500)
+    await expect(tip).toHaveCount(0)
+    await page.reload()
+    await page.locator('.xterm-helper-textarea').first().waitFor({ state: 'attached', timeout: 20_000 })
+    await expect(tip).toHaveCount(0)
+  } finally {
+    await app.close()
+  }
+})

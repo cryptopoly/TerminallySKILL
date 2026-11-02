@@ -220,6 +220,8 @@
     "privacy.masking.kind.secret": "सीक्रेट",
     "privacy.masking.kind.api-key": "API कुंजी",
     "general.attention.agentHint": "कोडिंग एजेंट (Claude Code, Codex, Gemini CLI और अन्य) भी यहाँ आपको सूचित कर सकते हैं। अगर आपका एजेंट चुप रहता है, तो उसकी सूचना सेटिंग देखें।",
+    "general.attention.keep.tip.turnOn": "चालू करें",
+    "general.attention.keep.tip.notNow": "अभी नहीं",
     "general.attention.keep.title": "सूचनाएँ बंद करने तक दिखाएँ",
     "general.attention.keep.description": "सूचनाएँ तब तक स्क्रीन पर रहती हैं जब तक आप उन्हें बंद नहीं करते। सटीक व्यवहार आपके डेस्कटॉप पर निर्भर करता है।",
     "general.attention.keep.macDescription": "यह macOS तय करता है। सिस्टम सेटिंग्स में TerminallySKILL के लिए वह शैली चुनें जो बंद करने तक बनी रहती है।",
