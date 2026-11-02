@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, session } from 'electron'
 import { join, resolve } from 'path'
 import { readFileSync, existsSync } from 'fs'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { electronApp, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc-handlers'
 import { initTerminalPath, killSessionsForWindow, killAllTerminals, getActiveSessionCountForWindow, getSessionCountForWindow } from './pty-manager'
 import { stopVncSessionsForWindow, stopAllVncSessions } from './vnc-manager'
@@ -214,6 +214,28 @@ async function buildMenu(): Promise<void> {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
+// Same rules as optimizer.watchWindowShortcuts from @electron-toolkit/utils, except that its Ctrl+R block
+// is limited to Cmd+R. In a release build it stopped Ctrl+R reaching the terminal, so no history search.
+function watchWindowShortcuts(window: BrowserWindow): void {
+  const { webContents } = window
+  webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown') return
+    if (is.dev) {
+      if (input.code === 'F12') {
+        if (webContents.isDevToolsOpened()) webContents.closeDevTools()
+        else webContents.openDevTools({ mode: 'undocked' })
+      }
+    } else {
+      if (input.code === 'KeyR' && input.meta) event.preventDefault()
+      if (input.code === 'KeyI' && ((input.alt && input.meta) || (input.control && input.shift))) {
+        event.preventDefault()
+      }
+    }
+    if (input.code === 'Minus' && (input.control || input.meta)) event.preventDefault()
+    if (input.code === 'Equal' && input.shift && (input.control || input.meta)) event.preventDefault()
+  })
+}
+
 app.whenReady().then(() => {
   app.setName(APP_DISPLAY_NAME)
   electronApp.setAppUserModelId('com.terminallyskill.app')
@@ -224,7 +246,7 @@ app.whenReady().then(() => {
   }
 
   app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
+    watchWindowShortcuts(window)
   })
 
   // Bootstrap: check if a custom data directory is configured
