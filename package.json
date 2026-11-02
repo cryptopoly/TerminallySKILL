@@ -1,6 +1,6 @@
 {
   "name": "terminallyskill",
-  "version": "0.9.103",
+  "version": "0.9.104",
   "description": "TerminallySKILL prompt-aware command builder and workspace",
   "desktopName": "terminallyskill.desktop",
   "author": {
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
-    "@novnc/novnc": "^1.6.0",
+    "@novnc/novnc": "1.6.0",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-search": "^0.16.0",
     "@xterm/addon-serialize": "^0.14.0",

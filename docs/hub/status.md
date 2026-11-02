@@ -5,7 +5,7 @@ summary: Read this first in every new session.
 ---
 # Status and handover
 
-> **Read first.** TerminallySKILL is an Electron + React terminal workspace (public repo `cryptopoly/TerminallySKILL`, site `terminallyskill.com`). **v0.9.103 is released (2026-10-31)** and the site is updated. Nothing is in flight. Next release is 0.9.104.
+> **Read first.** TerminallySKILL is an Electron + React terminal workspace (public repo `cryptopoly/TerminallySKILL`, site `terminallyskill.com`). **v0.9.103 is released (2026-10-31)** and the site is updated. **0.9.104 is bumped on `chore/release-0.9.104`** (2026-11-02); Dan's UAT is next, using [the checklist](uat-0.9.104.md). 0.9.105 is planned: command blocks lite, then session restore.
 
 Branch flow: feature branches into `staging` (default, protected) by pull request; `staging` promoted to `main` by pull request; the GitHub **Release** workflow is run on `staging` or `main` with the version and creates a **draft** release; Dan publishes it. Required checks on both branches: `test` and `test (macos-latest)`. Windows CI is non-blocking.
 
@@ -39,8 +39,8 @@ Electron 45; attention alerts and agent-aware dots (Claude Code, Codex); jump-to
 
 ## Next up
 
-1. Dependency and security review, due **2026-11-02** (see backlog reminders).
+1. Dan's UAT of 0.9.104, then the [release checklist](release-checklist.md). Next dependency review due **2026-12-02**.
 2. Backlog Issues table: Windows tests and installer, terminal panel squeezed on small windows, no error shown when a terminal cannot open, 0.9.102 arm64 Linux probably had the dead-terminal bug.
-3. Pick the 0.9.104 headline feature (decisions item 5).
+3. 0.9.105: command blocks lite, then session restore (decisions item 19).
 
 History of the 0.9.103 build: [status history](progress/status-history-0.9.103.md).
