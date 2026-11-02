@@ -9,7 +9,7 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 
 ## Reminders for Dan
 
-- [ ] **Monthly, first week: dependency and security review.** Update the packages we use and check for security issues, so we ship the newest, safest software we can. Run `npm audit`, `npm outdated`, check Electron's release notes and security advisories, bump, then run `npm run test:ci`, `npm run test:e2e` and `npm run test:package:mac:arm64`. A monthly GitHub issue is opened automatically by `.github/workflows/dependency-review.yml` as the prompt. Next due: **2026-11-02**.
+- [ ] **Monthly, first week: dependency and security review.** Update the packages we use and check for security issues, so we ship the newest, safest software we can. Run `npm audit`, `npm outdated`, check Electron's release notes and security advisories, bump, then run `npm run test:ci`, `npm run test:e2e` and `npm run test:package:mac:arm64`. A monthly GitHub issue is opened automatically by `.github/workflows/dependency-review.yml` as the prompt. Next due: **2026-12-02**. Last done 2026-11-02 (see [decisions](decisions.md) item 21).
 - [ ] **Also review immediately** when a serious advisory is in the news (Electron, node-pty, ws, electron-updater are the shipped runtime packages).
 - [x] **Release tweet / notes for 0.9.103 (released 2026-10-31):** lead with the privacy line "No telemetry. No analytics. No account." (verified 2026-10-29: no telemetry, analytics or crash-reporting code in the app; the only network use is the update check, AI providers and SSH/VNC the user chooses).
 - [x] Hand-test the 0.9.103 features in a packaged build before release (done 2026-10-31, UAT passed).
@@ -49,7 +49,7 @@ Pulled together after 0.9.103 shipped. Details for each are in the Issues table 
 - [ ] **P2.** Terminal panel keeps at least a few rows on small windows (about 1024x700) when the Editor Prompt is on. Found by CI screenshots; a small laptop screen can hit it.
 - [ ] **P2.** Show an error message when a terminal cannot open (Run Script did nothing and said nothing when no terminal could start). The failure is swallowed in `executeScript` (`ScriptList.tsx`).
 - [ ] **P2.** Check whether 0.9.102 arm64 Linux has the dead-terminal bug (x86 `pty.node`); if so, say so in the 0.9.104 release notes.
-- [ ] **P2.** Monthly dependency and security review, due **2026-11-02** (see Reminders).
+- [x] **P2, done 2026-11-02.** Monthly dependency and security review.
 - [x] **P2, dropped.** Native-speaker review: act on wording feedback if a user raises it (decisions item 3).
 - [ ] **P3.** Windows: the three unit tests that assume POSIX paths, and the installer that writes no `.exe` or `.dll` on the Windows 11 ARM64 VM (Windows has no known users; decide before promising support).
 - [ ] **P3.** Linux arm64 AppImage: ship it again only with the `libz.so` runtime fix (patched runtime proven, needs a double build); `.deb` only for now.
