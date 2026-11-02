@@ -12,6 +12,12 @@ import {
   startFakeVncServer
 } from './fake-vnc-server.mjs'
 import {
+  REAL_VNC_COLOR,
+  REAL_VNC_HEIGHT,
+  REAL_VNC_WIDTH,
+  startRealVncServer
+} from './real-vnc-server.mjs'
+import {
   createSshIsolationShim,
   isLocalSshdAvailable,
   startLocalOpenSshFixture
@@ -191,7 +197,7 @@ test.describe('local OpenSSH (user-space sshd)', () => {
   }
 
   // The colour noVNC drew in the middle of its canvas, or null before it has drawn.
-  function vncCentrePixel(page) {
+  function vncCentrePixel(page, width = FAKE_VNC_WIDTH, height = FAKE_VNC_HEIGHT) {
     return page.evaluate(
       ({ width, height }) => {
         const canvas = Array.from(document.querySelectorAll('canvas')).find(
@@ -200,7 +206,7 @@ test.describe('local OpenSSH (user-space sshd)', () => {
         if (!canvas) return null
         return Array.from(canvas.getContext('2d').getImageData(width / 2, height / 2, 1, 1).data).slice(0, 3)
       },
-      { width: FAKE_VNC_WIDTH, height: FAKE_VNC_HEIGHT }
+      { width, height }
     )
   }
 
@@ -267,6 +273,47 @@ test.describe('local OpenSSH (user-space sshd)', () => {
     } finally {
       await closeApp(app, page)
       await vnc.stop()
+    }
+  })
+
+  test('VNC viewer works with a real x11vnc server', async ({}, testInfo) => {
+    test.skip(process.env.RUN_REAL_VNC_E2E !== '1', 'Set RUN_REAL_VNC_E2E=1 (Linux, needs Xvfb, x11vnc, xterm, xsetroot).')
+    const baseDir = testInfo.outputPath('real-vnc')
+    await mkdir(baseDir, { recursive: true })
+    const vnc = await startRealVncServer(baseDir, 'secret12')
+    const { app, page } = await launchApp(testInfo)
+
+    try {
+      await openVncProject(page, vnc.port)
+
+      // The silent empty-password attempt fails, so the viewer asks. A wrong password asks again.
+      const passwordInput = page.locator('input[type="password"]')
+      await expect(passwordInput).toBeVisible({ timeout: 30000 })
+      await passwordInput.fill('wrong')
+      await passwordInput.press('Enter')
+      await expect(passwordInput).toHaveValue('', { timeout: 15000 })
+      await expect(passwordInput).toBeVisible({ timeout: 15000 })
+      await passwordInput.fill('secret12')
+      await passwordInput.press('Enter')
+
+      // The desktop colour, from the server's own screen.
+      await expect
+        .poll(() => vncCentrePixel(page, REAL_VNC_WIDTH, REAL_VNC_HEIGHT), { timeout: 30000 })
+        .toEqual(REAL_VNC_COLOR)
+
+      // Click into the xterm at the top left, and type a line that the server's xterm writes to a file.
+      const canvas = page.locator(`canvas[width="${REAL_VNC_WIDTH}"]`)
+      const box = await canvas.boundingBox()
+      await canvas.click({ position: { x: box.width * 0.1, y: box.height * 0.1 } })
+      await page.waitForTimeout(500)
+      await page.keyboard.type('hello vnc')
+      await page.keyboard.press('Enter')
+      await expect
+        .poll(() => readFile(vnc.typedFile, 'utf8').catch(() => ''), { timeout: 15000 })
+        .toBe('hello vnc\n')
+    } finally {
+      await closeApp(app, page)
+      vnc.stop()
     }
   })
 

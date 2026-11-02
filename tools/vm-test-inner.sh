@@ -26,7 +26,7 @@ step() {
 step "npm ci" npm ci --silent
 step "test:ci (lint, typecheck, unit, build)" npm run test:ci
 step "test:e2e" xvfb-run -a npm run test:e2e
-step "test:e2e:ssh-local" xvfb-run -a npm run test:e2e:ssh-local
+step "test:e2e:ssh-local" env RUN_REAL_VNC_E2E=1 xvfb-run -a npm run test:e2e:ssh-local
 if docker info >/dev/null 2>&1; then
   step "test:e2e:ssh-docker" env REQUIRE_DOCKER_E2E=1 xvfb-run -a npm run test:e2e:ssh-docker
 else

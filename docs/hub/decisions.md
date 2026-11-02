@@ -51,6 +51,7 @@ Where the old list had sub-items, each now has its own row. **Item 11** is the 0
 
 ## 2026-11-02
 
+- **Real VNC server in tests (Dan asked):** `x11vnc`, `xterm` and `x11-xserver-utils` installed in the Ubuntu VM after a snapshot, and added to CI's Linux job.
 - **Backlog and decisions split (Dan decided):** the Ideas bank is now the Backlog, merged with the old backlog and issues. Decisions holds only questions. Moved out: private tab (backlog 3), major upgrades (C1), real VNC server test (C2).
 - **Next headline feature (Dan decided):** split into its two features, command blocks (1, with 16) and multi-host SSH run (2). They are backlog items; 0.9.105 still leads with command blocks (item 19). This was an uncommitted row 13 in the main checkout, along with ideas 19 to 23.
 - **Native-speaker review (3) (Dan decided):** closed; maybe if the app gets real users (backlog C4).
