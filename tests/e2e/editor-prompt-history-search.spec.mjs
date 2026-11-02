@@ -12,9 +12,14 @@ test('Ctrl+R in the editor prompt opens the shell history search', async ({}, te
   try {
     const workspaceDir = testInfo.outputPath('workspace')
     await mkdir(workspaceDir, { recursive: true })
+    // The size of a CI runner's screen, with a tall terminal panel: the default leaves the terminal one visible row.
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1024, 677))
     await page.evaluate(async (cwd) => {
       await window.electronAPI.updateSettings({ terminalInputMode: 'editor' })
-      await window.electronAPI.createProject('E2E Search', cwd, '#14b8a6', undefined, 'disabled', true)
+      const created = await window.electronAPI.createProject('E2E Search', cwd, '#14b8a6', undefined, 'disabled', true)
+      await window.electronAPI.updateProject(created.id, {
+        workspaceLayout: { ...created.workspaceLayout, terminalSize: 75 }
+      })
     }, workspaceDir)
     await page.reload()
     await page.locator('.xterm-helper-textarea').first().waitFor({ state: 'attached', timeout: 20_000 })
@@ -40,13 +45,13 @@ test('Ctrl+R in the editor prompt opens the shell history search', async ({}, te
     expect((await readFile(join(workspaceDir, 'ran.txt'), 'utf8')).trim().split('\n')).toHaveLength(2)
     await expect(editor).toBeFocused({ timeout: 15_000 })
 
-    // Ctrl+C leaves the search, and the next prompt gives the editor prompt back. zsh stays on the same
-    // line after the first Ctrl+C, so it takes a second one to reach a new prompt.
+    // Ctrl+C leaves the search, and the next prompt gives the editor prompt back. bash prints a new prompt
+    // at once; zsh stays on the same line, so it takes a second Ctrl+C.
     await page.keyboard.press('Control+r')
     await expect(rows).toContainText(SEARCH_PROMPT, { timeout: 10_000 })
     await page.keyboard.press('Control+c')
-    await expect(rows).not.toContainText(SEARCH_PROMPT, { timeout: 10_000 })
-    await page.keyboard.press('Control+c')
+    await page.waitForTimeout(1000)
+    if (!(await editor.isVisible())) await page.keyboard.press('Control+c')
     await expect(editor).toBeFocused({ timeout: 15_000 })
   } finally {
     await app.close()
