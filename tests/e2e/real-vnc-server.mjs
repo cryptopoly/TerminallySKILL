@@ -51,7 +51,7 @@ export async function startRealVncServer(baseDir, password) {
 
   try {
     children.push(
-      spawn('Xvfb', [display, '-screen', '0', `${REAL_VNC_WIDTH}x${REAL_VNC_HEIGHT}x24`, '-nolisten', 'tcp'], {
+      spawn('Xvfb', [display, '-screen', '0', `${REAL_VNC_WIDTH}x${REAL_VNC_HEIGHT}x24`, '-nolisten', 'tcp', '-noreset'], {
         stdio: 'ignore'
       })
     )
