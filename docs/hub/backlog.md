@@ -32,7 +32,8 @@ Priority: P1 urgent, P2 next, P3 later. Status: todo, in progress, done. Done it
 - [ ] **P2, todo (from 0.9.103 feedback, see [decisions](decisions.md) item 11).** Maximise terminal toggle (11a); running/needs-you/idle dots with legend (11b); agent-waiting notifications: BEL, quiet-terminal check, repeat reminder, verify Claude Code output first (11c, headline candidate); cycle-projects shortcut (11d); masking gaps: empty-user URL password, `DB_PASS`/`PWD`, `_KEY` names (11e).
 - [ ] **P2, todo (decisions item 12).** zsh history: HISTFILE points into the temp ZDOTDIR so history is lost per tab (12c); no OS alert for user stops, exit 130/143/129 (12a); workflow step marker `printf` leaking to the display (12b, P3).
 - [ ] **P2, todo.** Multi-host SSH run.
-- [ ] **P2, todo.** Command blocks lite.
+- [ ] **P2, todo, 0.9.105 first.** Command blocks lite: copy a command or its output without dragging through the terminal.
+- [ ] **P2, todo, 0.9.105 second.** Session restore: opt-in, layout and folders first. No SSH reconnect unprompted. Prove masking on saved scrollback before restoring it.
 - [ ] **P3, banked.** Private tab ("don't record this tab"): see [ideas](ideas.md).
 - [ ] **P3, banked.** Attention dots for other projects' tabs; "jump to next terminal that needs me" shortcut.
 - [ ] **P3, banked.** Background schedules: today a schedule needs an open window (closing the last window on macOS skips runs). Options: keep a hidden window alive, launch at login, menu-bar item. Decide after real use.
