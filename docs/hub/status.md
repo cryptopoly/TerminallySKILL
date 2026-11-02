@@ -21,7 +21,7 @@ Branch flow: feature branches into `staging` (default, protected) by pull reques
 - No `Co-Authored-By` or attribution lines in commits or PR text. Replies short; style is terse.
 
 **Test machines (Parallels)**
-- `Ubuntu 26.04 ARM64`: Node 22, Xvfb, Docker, sshd, repo clone `~/tsk`, passwordless sudo for `parallels`. Snapshots `fresh-install-2026-10-30`, `tools-ready-2026-10-30`. It has the 0.9.103 `.deb` installed and is Dan's general test VM. `prlctl exec` takes ONE string argument (it re-parses), runs as root; use `su - parallels -c '...'` for the user; umask there is 007 (scripts set 022). The Mac home is at `/media/psf/Home` inside it.
+- `Ubuntu 26.04 ARM64`: Node 22, Xvfb, Docker, sshd, repo clone `~/tsk`, passwordless sudo for `parallels`. Snapshots `fresh-install-2026-10-30`, `tools-ready-2026-10-30`, `before-x11vnc-2026-11-02`. Also has `x11vnc` for the real VNC test. It has the 0.9.103 `.deb` installed and is Dan's general test VM. `prlctl exec` takes ONE string argument (it re-parses), runs as root; use `su - parallels -c '...'` for the user; umask there is 007 (scripts set 022). The Mac home is at `/media/psf/Home` inside it.
 - `W11 Testing` (Windows 11 ARM64): snapshot `pre-test-2026-10-30`; Node and MinGit in `C:\tools`; the silent installer leaves out all `.exe`/`.dll` files (backlog). Other Windows VMs untouched.
 - Tools: `tools/vm-test.sh` (full suite on Linux), `tools/vm-release-smoke.sh <version>` (release `.deb` from the draft), `tools/vm-release-smoke-windows.sh`, `tools/linux-package-smoke.sh`. CI also runs e2e on macOS and Windows.
 

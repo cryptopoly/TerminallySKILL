@@ -50,6 +50,6 @@ Run on a packaged build, not `npm run dev`: dev does not show notification banne
 
 ## 7. Dependency update
 
-- [ ] Open a VNC session with a real server, if you have a host to hand. An automatic test now covers the viewer, tunnel and password prompt with a stand-in server, so this is the only check against a real one. Include a server with a password if you have one.
+- [ ] Open a VNC session with a real server, if you have a host to hand. Automatic tests cover the viewer, tunnel and password prompt, including real x11vnc on Linux. Optional: try your own server.
 - [ ] An SSH terminal connects.
 - [ ] Settings → About shows 0.9.104.
