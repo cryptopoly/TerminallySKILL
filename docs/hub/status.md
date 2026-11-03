@@ -5,13 +5,13 @@ summary: Read this first in every new session.
 ---
 # Status and handover
 
-> **Read first.** TerminallySKILL is an Electron + React terminal workspace (public repo `cryptopoly/TerminallySKILL`, site `terminallyskill.com`). **v0.9.103 is released (2026-10-31)** and the site is updated. **0.9.104 is on `staging` and passed Dan's UAT** ([checklist](uat-0.9.104.md)), and is on its way to release. 0.9.105 leads with command blocks, then session restore.
+> **Read first.** TerminallySKILL is an Electron + React terminal workspace (public repo `cryptopoly/TerminallySKILL`, site `terminallyskill.com`). **v0.9.104 is released (2026-11-03)** after Dan's UAT ([checklist](uat-0.9.104.md)). Site update is on branch `release/0.9.104` of the site repo, waiting for Dan's OK to push to `main`. 0.9.105 leads with command blocks, then session restore.
 
-Branch flow: feature branches into `staging` (default, protected) by pull request; `staging` promoted to `main` by pull request; the GitHub **Release** workflow is run on `staging` or `main` with the version and creates a **draft** release; Dan publishes it. Required checks on both branches: `test` and `test (macos-latest)`. Windows CI is non-blocking.
+Branch flow: work stays on a feature branch with no pull request until it is ready (full local macOS suite and `tools/vm-test.sh` pass first), then one pull request into `staging` (default, protected); `staging` promoted to `main` by pull request; the GitHub **Release** workflow is run on `staging` or `main` with the version and creates a **draft** release; Dan publishes it. Required checks on both branches: `test` and `test (macos-latest)`. Windows CI is non-blocking.
 
 ## Handover for a fresh session (2026-10-31)
 
-**State:** `staging` and `main` hold 0.9.103; the release is published; the website (`~/TerminallySKILLSite/TerminallySKILLSite`, repo `cryptopoly/TerminallySKILLSite`, GitHub Pages from `main`) is updated. Open PR: the hub checklist PR into `staging` (docs only). No other work in flight; no agent worktrees; local branches are just `staging` and `main`.
+**State (2026-11-03):** `staging` and `main` hold 0.9.104; the release is published. Website (`~/TerminallySKILLSite/TerminallySKILLSite`, repo `cryptopoly/TerminallySKILLSite`, GitHub Pages from `main`): 0.9.104 change on branch `release/0.9.104`, not on `main` yet. Work in progress: branch `chore/after-0.9.104` (release smoke check fix, this status page, announcement draft), no PR yet. Windows arm64 release smoke still hits backlog B5.
 
 **Rules that matter**
 - `staging` and `main` are protected: changes go by pull request; required checks are `test` and `test (macos-latest)`; Windows CI failures are expected and non-blocking. Dan merges PRs himself (my permission mode blocks merging without review) and publishes releases.
