@@ -271,6 +271,9 @@ From web searches and a code check on 2026-11-01. The evidence is mostly vendor 
 |---|---|
 | Mandatory accounts, cloud sync, default telemetry | The trust complaint against rivals; our main selling point is the opposite. |
 | Cloud agents (Warp "Oz" style) | Needs servers; contradicts local-first. |
+| C11 | `agent-waiting-alerts` e2e test is flaky on macOS | Chore | S | P2 | Todo | Found 2026-11-03: the background-tabs test failed in 2 of 3 full local runs, including its retry, and passed every time alone. CI passed it. Find the race before 0.9.105. |
+| C12 | Step marker echo shows in bash 3.2 | Bug | S | P3 | Todo | Found 2026-11-03 in a macOS CI log: with `/bin/bash` 3.2 the workflow marker command (`... ' $?`) is visible in the terminal. zsh and newer bash hide it. |
+| C13 | `secret-mask` timing test flakes under load | Chore | S | P3 | Todo | The 200 ms local limit failed once while the Linux VM tests ran at the same time. |
 | Webhook-triggered workflows | Needs a listening port or a relay service; security cost is high for a desktop app. Revisit only with a local-only trigger design. |
 | Saving the network log to disk | Would create exactly the kind of record the Privacy tab promises we do not keep. |
 | Whole-app "incognito mode" | See the verdict below. |
