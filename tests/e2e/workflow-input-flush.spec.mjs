@@ -67,18 +67,28 @@ test('a long step is not marked done by the prompt of the step before it', async
     })
     await page.reload()
     await page.locator('.xterm-helper-textarea').first().waitFor({ state: 'attached', timeout: 20_000 }).catch(() => {})
+    // Keep all output: on a small screen the long step's line scrolls out of the visible rows.
+    await page.evaluate(() => {
+      window.__output = ''
+      window.electronAPI.onTerminalData((_sessionId, data) => {
+        window.__output += data
+      })
+    })
+    const output = () => page.evaluate(() => window.__output)
     await page.getByText('Long step test').first().click()
     await page.getByRole('button', { name: /Run Script/ }).click()
 
     const rows = page.locator('.xterm-rows:visible')
-    await expect(rows).toContainText('first-2', { timeout: 30_000 })
+    await expect.poll(output, { timeout: 30_000 }).toContain('first-2')
     // The third step's command line must not be typed while the long step is still running
     await page.waitForTimeout(3_000)
-    await expect(rows).not.toContainText('long-2')
-    await expect(rows).not.toContainText('third-$')
+    expect(await output()).not.toContain('long-2')
+    expect(await output()).not.toContain('third-$')
 
-    await expect(rows).toContainText('third-2', { timeout: 30_000 })
-    await expect(rows).toContainText('long-2')
+    await expect.poll(output, { timeout: 30_000 }).toContain('third-2')
+    const done = await output()
+    expect(done).toContain('long-2')
+    expect(done.indexOf('long-2')).toBeLessThan(done.lastIndexOf('third-$'))
     await expect(rows).not.toContainText('7337')
   } finally {
     await app.close()
