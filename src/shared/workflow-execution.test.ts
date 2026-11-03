@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Script } from './script-schema'
+import type { WorkflowDefinition } from './workflow-schema'
 import {
   buildScriptExecutionPlan,
   buildScriptPreparationSteps,
@@ -60,7 +61,7 @@ describe('workflow-execution', () => {
   })
 
   it('supports running a single step or remaining tail of a workflow', () => {
-    const workflow = {
+    const workflow: WorkflowDefinition = {
       name: 'Release',
       description: 'workflow',
       tags: [],
@@ -91,7 +92,7 @@ describe('workflow-execution', () => {
           retryCount: 1
         }
       ]
-    } as const
+    }
 
     expect(buildWorkflowExecutionPlan(workflow, { singleOnly: true, fromIndex: 1 })).toEqual({
       steps: [

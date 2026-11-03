@@ -142,7 +142,14 @@
     "privacy.masking.kind.password": "Hasło",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Sekret",
-    "privacy.masking.kind.api-key": "Klucz API"
+    "privacy.masking.kind.api-key": "Klucz API",
+    "general.attention.agentHint": "Agenci programistyczni (Claude Code, Codex, Gemini CLI i inni) też mogą Cię tu powiadamiać. Jeśli Twój milczy, sprawdź ustawienie powiadomień swojego agenta.",
+    "general.attention.keep.tip.turnOn": "Włącz",
+    "general.attention.keep.tip.notNow": "Nie teraz",
+    "general.attention.keep.title": "Pokazuj powiadomienia do zamknięcia",
+    "general.attention.keep.description": "Powiadomienia pozostają na ekranie, dopóki ich nie zamkniesz. Dokładne działanie zależy od środowiska pulpitu.",
+    "general.attention.keep.macDescription": "Decyduje o tym macOS. W Ustawieniach systemowych wybierz dla TerminallySKILL styl, który pozostaje do zamknięcia.",
+    "general.attention.keep.openSettings": "Otwórz Ustawienia systemowe"
   },
   "commands": {
     "addDialog.title": "Dodaj polecenie",
@@ -403,7 +410,11 @@
     "empty.createProject": "Utwórz projekt",
     "empty.howItWorks": "Jak to działa",
     "palette.actions.jumpAttention": "Przejdź do terminala, który Cię potrzebuje",
-    "palette.actions.jumpAttentionDescription": "Otwórz terminal, który najdłużej na Ciebie czeka, w dowolnym projekcie"
+    "palette.actions.jumpAttentionDescription": "Otwórz terminal, który najdłużej na Ciebie czeka, w dowolnym projekcie",
+    "palette.actions.nextProject": "Następny projekt",
+    "palette.actions.nextProjectDescription": "Przełącz na następny projekt w selektorze projektów ({{shortcut}})",
+    "palette.actions.previousProject": "Poprzedni projekt",
+    "palette.actions.previousProjectDescription": "Przełącz na poprzedni projekt w selektorze projektów ({{shortcut}})"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1134,7 +1145,19 @@
     "attention.agentNotify": "Wymaga Twojej uwagi",
     "attention.agentBlocked": "Czeka na Ciebie",
     "attention.agentDone": "Gotowe",
-    "attention.agentError": "Zatrzymano z błędem"
+    "attention.agentError": "Zatrzymano z błędem",
+    "dot.running": "Działa",
+    "dot.needsYou": "Czeka na Ciebie",
+    "dot.finished": "Zakończono",
+    "dot.failed": "Błąd",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Maksymalizuj terminal",
+    "panel.restore": "Przywróć rozmiar terminala",
+    "panel.maximiseDescription": "Ukrywa widok projektu, aby terminal wypełnił całe okno. Kliknij ponownie, aby wrócić do poprzedniego rozmiaru.",
+    "dot.idle": "Bezczynny",
+    "attention.waitingForYes": "Czeka na Twoją zgodę",
+    "attention.bell": "Użył dzwonka terminala",
+    "attention.stillWaiting": "Nadal na Ciebie czeka ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Wizualny builder poleceń, obszar roboczy terminala, workflow, logi i narzędzia AI",
@@ -1322,6 +1345,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Otwórz nową kartę terminala.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Przejdź do terminala, który najdłużej na Ciebie czeka (karta z kropką), w dowolnym projekcie. Ctrl+Shift+J w systemach Windows i Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Przełącza na następny lub poprzedni projekt, w kolejności selektora projektów. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp w systemach Windows i Linux.",
     "tour.show": "Pokaż przewodnik powitalny",
     "tour.showDescription": "Krótki spacer po wszystkich częściach aplikacji",
     "tour.stepOf": "Krok {{current}} z {{total}}",
@@ -1343,7 +1368,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Tutaj otworzysz terminal w bieżącym projekcie. Możesz go podzielić, kolejkować polecenia i poprosić o pomoc, gdy polecenie się nie powiedzie.",
     "tour.steps.helpSettings.title": "Pomoc i ustawienia",
-    "tour.steps.helpSettings.body": "Przewodnik pomocy opisuje każdą funkcję i pozwala powtórzyć ten przewodnik. W ustawieniach są motywy, język, dostawcy AI i karta Prywatność."
+    "tour.steps.helpSettings.body": "Przewodnik pomocy opisuje każdą funkcję i pozwala powtórzyć ten przewodnik. W ustawieniach są motywy, język, dostawcy AI i karta Prywatność.",
+    "sections.statusDots.title": "Kropki na kartach terminala",
+    "sections.statusDots.steps.running.label": "Działa",
+    "sections.statusDots.steps.running.desc": "Pomarańczowy obracający się pierścień: w tym terminalu pracuje polecenie lub agent.",
+    "sections.statusDots.steps.needsYou.label": "Czeka na Ciebie",
+    "sections.statusDots.steps.needsYou.desc": "Pulsująca żółta kropka: workflow lub agent czeka na Twoją zgodę lub odpowiedź.",
+    "sections.statusDots.steps.finished.label": "Zakończono",
+    "sections.statusDots.steps.finished.desc": "Zielona kropka: długie polecenie lub workflow zakończyło się pod Twoją nieobecność.",
+    "sections.statusDots.steps.failed.label": "Błąd",
+    "sections.statusDots.steps.failed.desc": "Czerwona kropka z krzyżykiem: polecenie, workflow lub agent zatrzymał się z błędem.",
+    "sections.statusDots.steps.idle.label": "Bezczynny",
+    "sections.statusDots.steps.idle.desc": "Szary pierścień: program jest otwarty, ale od pewnego czasu nic nie wypisał, na przykład agent czekający na kolejne zadanie. Tylko kropka, bez powiadomienia.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Maksymalizuj terminal, aby wypełnił okno, albo przywróć go. Ctrl+Shift+M w systemach Windows i Linux."
   },
   "ai": {
     "explain.label": "Wyjaśnij z AI",

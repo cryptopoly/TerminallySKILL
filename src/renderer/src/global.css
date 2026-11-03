@@ -436,6 +436,125 @@
   padding: 0 0.75rem 0.75rem;
 }
 
+/* ── Terminal tab status dots ──
+   Semantic colours, tuned per theme so each stays readable on the tab bar (3:1 or more) and
+   away from the theme accent, with orange, yellow and red kept apart. Shapes differ too, so
+   colour is never the only cue: running = spinning ring, needs you = pulsing dot with a halo,
+   finished = solid dot, failed = dot with a cross, idle = still grey ring.
+   Measured contrast and colour distances: docs/hub/progress/terminal-maximise-dots.md. */
+:root,
+[data-theme="void"], [data-theme="dusk"] {
+  --dot-running: #fb923c;
+  --dot-needs-you: #facc15;
+  --dot-needs-you-edge: transparent;
+  --dot-finished: #22c55e;
+  --dot-failed: #ef4444;
+  --dot-idle: #94a3b8;
+}
+[data-theme="ember"] {
+  /* Amber accent: push running towards red-orange and needs-you towards lemon */
+  --dot-running: #ff6a3d;
+  --dot-needs-you: #fde047;
+  --dot-needs-you-edge: transparent;
+  --dot-finished: #22c55e;
+  --dot-failed: #fb7185;
+  --dot-idle: #94a3b8;
+}
+[data-theme="forest"] {
+  /* Green accent: finished becomes a pale mint */
+  --dot-running: #fb923c;
+  --dot-needs-you: #facc15;
+  --dot-needs-you-edge: transparent;
+  --dot-finished: #d1fae5;
+  --dot-failed: #ef4444;
+  --dot-idle: #94a3b8;
+}
+[data-theme="slate"] {
+  --dot-running: #fb923c;
+  --dot-needs-you: #facc15;
+  --dot-needs-you-edge: transparent;
+  --dot-finished: #4ade80;
+  --dot-failed: #fb7185;
+  --dot-idle: #cbd5e1;
+}
+[data-theme="plum"] {
+  --dot-running: #fb923c;
+  --dot-needs-you: #facc15;
+  --dot-needs-you-edge: transparent;
+  --dot-finished: #4ade80;
+  --dot-failed: #ff6b6b;
+  --dot-idle: #cbd5e1;
+}
+/* Light themes: yellow cannot reach 3:1 on a pale background, so needs-you gets a dark edge */
+[data-theme="chalk"], [data-theme="sand"], [data-theme="stone"], [data-theme="mist"] {
+  --dot-running: #c2410c;
+  --dot-needs-you: #facc15;
+  --dot-needs-you-edge: #713f12;
+  --dot-finished: #15803d;
+  --dot-failed: #be123c;
+  --dot-idle: #64748b;
+}
+[data-theme="chalk"] {
+  /* Copper accent: running moves towards amber */
+  --dot-running: #c56a06;
+}
+[data-theme="stone"] {
+  /* Olive accent: finished moves towards emerald */
+  --dot-finished: #047857;
+}
+[data-theme="dove"], [data-theme="clay"] {
+  --dot-running: #9a3412;
+  --dot-needs-you: #facc15;
+  --dot-needs-you-edge: #713f12;
+  --dot-finished: #166534;
+  --dot-failed: #9d174d;
+  --dot-idle: #334155;
+}
+[data-theme="clay"] {
+  /* Emerald accent: finished moves towards olive green */
+  --dot-finished: #3f6212;
+  --dot-idle: #3f3f46;
+}
+
+.tv-dot-finished {
+  background-color: var(--dot-finished);
+}
+
+.tv-dot-running {
+  border: 2px solid var(--dot-running);
+  border-top-color: transparent;
+  animation: tv-dot-spin 1.2s linear infinite;
+}
+
+.tv-dot-idle {
+  border: 1.5px solid var(--dot-idle);
+}
+
+.tv-dot-needs-you {
+  background-color: var(--dot-needs-you);
+  box-shadow: 0 0 0 1px var(--dot-needs-you-edge), 0 0 0 3px color-mix(in srgb, var(--dot-needs-you) 35%, transparent);
+  animation: tv-dot-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes tv-dot-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes tv-dot-pulse {
+  50% {
+    box-shadow: 0 0 0 1px var(--dot-needs-you-edge), 0 0 0 4px color-mix(in srgb, var(--dot-needs-you) 10%, transparent);
+    opacity: 0.7;
+  }
+}
+
+/* Without motion the ring and the halo still tell the states apart. */
+@media (prefers-reduced-motion: reduce) {
+  .tv-dot-running,
+  .tv-dot-needs-you {
+    animation: none;
+  }
+}
+
 /* ── Utility: hide scrollbar but keep scrollability ── */
 .scrollbar-none {
   scrollbar-width: none; /* Firefox */

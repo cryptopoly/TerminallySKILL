@@ -175,7 +175,7 @@ test('a scheduled workflow waiting for approval raises a tab alert', async ({}, 
     const seeded = await seedScheduledScript(page, testInfo, { withApproval: true })
     await fireDueSchedule(app, page, seeded)
 
-    const dot = page.locator('[role="status"][aria-label^="Approval needed"]')
+    const dot = page.locator('[role="status"][aria-label*="Approval needed"]')
     await expect(dot.first()).toBeVisible({ timeout: 30_000 })
   } finally {
     await app.close()

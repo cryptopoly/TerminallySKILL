@@ -4,7 +4,7 @@
  * OSC 7501 Program Status Protocol. Everything here is terminal output, so it is untrusted:
  * the text is cleaned, shortened and only ever shown as plain text.
  */
-import type { AttentionKind } from './attention'
+import type { AgentActivity, AttentionKind } from './attention'
 
 export const AGENT_TEXT_MAX_LENGTH = 140
 /** OSC payloads longer than this are dropped before any parsing. */
@@ -78,6 +78,30 @@ function decodeBase64Utf8(value: string): string | null {
   }
 }
 
+function parseOsc7501Pairs(trimmed: string): Map<string, string> {
+  const pairs = new Map<string, string>()
+  for (const raw of trimmed.split(':')) {
+    const eq = raw.indexOf('=')
+    if (eq <= 0) continue
+    const key = raw.slice(0, eq).trim()
+    const value = raw.slice(eq + 1).trim()
+    if (!/^[a-z]{1,16}$/.test(key) || !VALUE_RE.test(value)) continue
+    pairs.set(key, value)
+  }
+  return pairs
+}
+
+/**
+ * Whether an OSC 7501 report says the program is working. Every other known state (idle, done,
+ * blocked, error, clear) means it is not; queries and malformed reports give null.
+ */
+export function parseOsc7501Activity(data: string): AgentActivity | null {
+  if (data.length > OSC_PAYLOAD_MAX_LENGTH) return null
+  const state = parseOsc7501Pairs(data.trim()).get('state')
+  if (!state || !STATUS_STATES.has(state)) return null
+  return state === 'working' ? 'working' : 'idle'
+}
+
 /**
  * OSC 7501 ; key=value:key=value ST (Program Status Protocol). Returns a query for `?`, an alert
  * for the states that need the user (blocked, done, error), and null for everything else,
@@ -88,16 +112,7 @@ export function parseOsc7501(data: string): AgentSignal | null {
   const trimmed = data.trim()
   if (trimmed === '?' || trimmed.startsWith('?:')) return { type: 'query' }
 
-  const pairs = new Map<string, string>()
-  for (const raw of trimmed.split(':')) {
-    const eq = raw.indexOf('=')
-    if (eq <= 0) continue
-    const key = raw.slice(0, eq).trim()
-    const value = raw.slice(eq + 1).trim()
-    if (!/^[a-z]{1,16}$/.test(key) || !VALUE_RE.test(value)) continue
-    pairs.set(key, value)
-  }
-
+  const pairs = parseOsc7501Pairs(trimmed)
   const state = pairs.get('state')
   if (!state || !STATUS_STATES.has(state)) return null
 

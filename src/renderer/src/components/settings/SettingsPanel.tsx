@@ -371,6 +371,7 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
     setShowHelpTooltips,
     setAttentionAlerts,
     setAttentionMinSeconds,
+    setAttentionKeepUntilDismissed,
     setTerminalInputMode,
     setSafePasteMode,
     setSaveTerminalLogs,
@@ -959,6 +960,37 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
               ))}
             </select>
           </label>
+        )}
+        {settings.attentionAlerts && !isMac && (
+          <SettingToggleCard
+            title={t('general.attention.keep.title', { ns: 'settings' })}
+            description={t('general.attention.keep.description', { ns: 'settings' })}
+            enabled={settings.attentionKeepUntilDismissed}
+            onToggle={async () => {
+              const next = !settings.attentionKeepUntilDismissed
+              setAttentionKeepUntilDismissed(next)
+              await window.electronAPI.updateSettings({ attentionKeepUntilDismissed: next })
+            }}
+          />
+        )}
+        {settings.attentionAlerts && isMac && (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-border bg-surface-light p-4" data-testid="attention-keep-mac">
+            <div>
+              <div className="text-sm font-medium text-gray-200">{t('general.attention.keep.title', { ns: 'settings' })}</div>
+              <div className="text-xs text-gray-500 mt-1">{t('general.attention.keep.macDescription', { ns: 'settings' })}</div>
+            </div>
+            <button
+              onClick={() => void window.electronAPI.openSystemNotificationSettings()}
+              className="shrink-0 rounded-lg border border-surface-border px-3 py-1.5 text-xs text-gray-300 transition-colors hover:bg-surface"
+            >
+              {t('general.attention.keep.openSettings', { ns: 'settings' })}
+            </button>
+          </div>
+        )}
+        {settings.attentionAlerts && (
+          <p className="px-4 text-xs text-gray-500" data-testid="attention-agent-hint">
+            {t('general.attention.agentHint', { ns: 'settings' })}
+          </p>
         )}
 
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">

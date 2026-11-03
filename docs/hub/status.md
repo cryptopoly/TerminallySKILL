@@ -5,80 +5,43 @@ summary: Read this first in every new session.
 ---
 # Status and handover
 
-> **Read first.** TerminallySKILL is an Electron + React terminal workspace. v0.9.102 is released (2026-10-28). Now: **v0.9.103**, a dependency-security update plus three new features (attention alerts, scheduled workflows, Privacy tab) and, added late, Electron 45, lazy-loaded locales and one more headline feature (in progress). Then read [decisions](decisions.md) and [backlog](backlog.md).
+> **Read first.** TerminallySKILL is an Electron + React terminal workspace (public repo `cryptopoly/TerminallySKILL`, site `terminallyskill.com`). **v0.9.103 is released (2026-10-31)** and the site is updated. **0.9.104 is on `staging` and passed Dan's UAT** ([checklist](uat-0.9.104.md)), and is on its way to release. 0.9.105 leads with command blocks, then session restore.
 
-Branch flow: feature branches go into `staging` (default branch), `staging` is promoted to `main`, tags are cut from the release commit. Release builds run from the GitHub `Release` workflow (macOS jobs are pinned to `macos-15`).
+Branch flow: feature branches into `staging` (default, protected) by pull request; `staging` promoted to `main` by pull request; the GitHub **Release** workflow is run on `staging` or `main` with the version and creates a **draft** release; Dan publishes it. Required checks on both branches: `test` and `test (macos-latest)`. Windows CI is non-blocking.
 
-## Update 2026-10-31 (0.9.104 work)
+## Handover for a fresh session (2026-10-31)
 
-First-run welcome tour built on `feat/first-run-tour`, PR open into `staging` (not merged). Shows only on a brand-new data folder; upgraders never see it. See [progress](progress/first-run-tour.md) and [decisions](decisions.md) item 10 for points to confirm.
+**State:** `staging` and `main` hold 0.9.103; the release is published; the website (`~/TerminallySKILLSite/TerminallySKILLSite`, repo `cryptopoly/TerminallySKILLSite`, GitHub Pages from `main`) is updated. Open PR: the hub checklist PR into `staging` (docs only). No other work in flight; no agent worktrees; local branches are just `staging` and `main`.
 
-## Update 2026-10-29, night (final scope built)
+**Rules that matter**
+- `staging` and `main` are protected: changes go by pull request; required checks are `test` and `test (macos-latest)`; Windows CI failures are expected and non-blocking. Dan merges PRs himself (my permission mode blocks merging without review) and publishes releases.
+- The site repo has no branch protection: pushing to its `main` publishes at once. Prepare site changes on a branch, push to `main` only after the release is published.
+- Claude Code permission rules live in `.claude/settings.local.json` (local only; includes `gh workflow run Release*`, `gh release view/edit/upload`). Only Dan edits them.
+- Run the Release workflow with `gh workflow run Release --ref staging -f version=X`. If a macOS job fails at "staple" with a network error (Apple), `gh run rerun <id> --failed`.
+- No `Co-Authored-By` or attribution lines in commits or PR text. Replies short; style is terse.
 
-All four extra features are merged on `feat/0.9.103-attention-schedule-privacy` and verified there: `test:ci` 427 unit tests, e2e 15 passed (6 skipped by design), local OpenSSH e2e 4 passed, packaged mac arm64 smoke test passed (Electron 45.1.0). **Left:** Dan starts the Docker daemon so the Docker SSH test can run; Claude then does the version bump to 0.9.103, `docs/releases/v0.9.103.md` (lead with "No telemetry. No analytics. No account."), one PR into `staging`; Dan hand-tests the [UAT list](uat-0.9.103.md) in a packaged build (secrets after update, real Claude Code dots), merges, promotes, releases, tweets. Housekeeping awaiting Dan's OK: delete old agent worktrees and merged branches.
+**Test machines (Parallels)**
+- `Ubuntu 26.04 ARM64`: Node 22, Xvfb, Docker, sshd, repo clone `~/tsk`, passwordless sudo for `parallels`. Snapshots `fresh-install-2026-10-30`, `tools-ready-2026-10-30`, `before-x11vnc-2026-11-02`. Also has `x11vnc` for the real VNC test. It has the 0.9.103 `.deb` installed and is Dan's general test VM. `prlctl exec` takes ONE string argument (it re-parses), runs as root; use `su - parallels -c '...'` for the user; umask there is 007 (scripts set 022). The Mac home is at `/media/psf/Home` inside it.
+- `W11 Testing` (Windows 11 ARM64): snapshot `pre-test-2026-10-30`; Node and MinGit in `C:\tools`; the silent installer leaves out all `.exe`/`.dll` files (backlog). Other Windows VMs untouched.
+- Tools: `tools/vm-test.sh` (full suite on Linux), `tools/vm-release-smoke.sh <version>` (release `.deb` from the draft), `tools/vm-release-smoke-windows.sh`, `tools/linux-package-smoke.sh`. CI also runs e2e on macOS and Windows.
 
-## Update 2026-10-29, night (later)
+**Lessons from 0.9.103:** test the files users download (the CI-built arm64 `.deb` had an x86 `pty.node`); commands like `sudo`/`apt` flush typed-ahead terminal input (step markers can be lost, now has a fallback); CI runner screens are about 1024x768 so e2e tests must not rely on a big window; node-pty has no Linux prebuilds, so build each Linux arch on its own runner.
 
-Electron 45, lazy locales and the local SSH test are merged and verified (test:ci 271 unit tests, e2e 11 passed, packaged mac arm64 smoke test passed). The main folder now sits on that merged code (run `npm ci` done). Dan chose four extra features: ideas 6, 7, 14, 15; three agents are building them from `origin/integ/0.9.103`. After they report: merge, full tests, packaged smoke test, UAT list update, version bump, notes, PR.
+**Dan's data on this Mac:** the packaged app and the dev app share `~/Library/Application Support/TerminallySKILL` (see memory). Never kill his running Electron.
 
-## Update 2026-10-29, night
+## What 0.9.103 shipped
 
-**Scope of 0.9.103 grew (Dan):** Electron 45, lazy-loaded locales and one more headline feature join the release. Four agents are working in separate worktrees: `feat/electron-45`, `feat/lazy-locales`, `test/local-ssh-e2e`, `docs/ideas-expansion`. Merged into `integ/0.9.103` (verified: test:ci 271 unit tests, e2e 11 passed 2 skipped): lazy locales, ideas expansion. Waiting: Electron 45, local SSH e2e. NOTE: agent worktrees branched from older commits (main or earlier), so merge into `integ/0.9.103` and re-test. Next: Dan picks the extra feature from the expanded [ideas](ideas.md); then build, merge, full test run, packaged smoke test, version bump, notes, PR.
+Electron 45; attention alerts and agent-aware dots (Claude Code, Codex); jump-to-next-terminal (`Cmd+Shift+J`); scheduled workflows with history and catch-up; Privacy tab and secret masking; lazy-loaded languages and four more themes (12); first-run welcome tour; fixes found during testing: scripts with no project open, Linux arm64 terminal (native arm64 build), workflows hanging after `sudo` or `apt`. Linux arm64 ships as a `.deb` only. Notes: `docs/releases/v0.9.103.md`.
 
-## Update 2026-10-29, late
+## How releases are tested (see [release checklist](release-checklist.md))
 
-**Done since the earlier update:** schedule icon in the Scripts list; Opus translation review merged (77 strings); four Mid themes and a three-column Theme tab with live previews; settings card renamed "Notifications"; fix for the command-finish dot (typed commands) and for ghost "running" runs. `npm run test:ci` passes on the branch.
+`tools/vm-test.sh` runs the whole suite on the Ubuntu arm64 Parallels VM (Docker SSH included); `tools/vm-release-smoke.sh <version>` installs the release `.deb` from the draft and runs the packaged spec; Windows is best effort (`tools/vm-release-smoke-windows.sh`, blocked by the installer issue in the backlog). The lesson of this release: test the files users download, not a local build.
 
-**Left before release**
+## Next up
 
-1. Dan: re-test the green/red dot with `sleep 40` (still unexplained on his machine), then the [UAT checklist](uat-0.9.103.md) in a packaged build.
-2. Claude, on request: run `npm run test:package:mac:arm64`, bump to 0.9.103, write `docs/releases/v0.9.103.md` (lead with "No telemetry. No analytics. No account."), open one PR (the feature branch already contains the dependency commit).
-3. Dan: merge into `staging`, promote to `main`, run the `Release` workflow, post the tweet.
-4. Optional: busy badge for any running terminal command ([decisions](decisions.md) item 9).
+1. Done: UAT and VM test on `staging` `f6d613c7`.
+2. PR `staging` to `main`, Release workflow, draft smoke tests, publish, announce (see the [release checklist](release-checklist.md)).
+3. 0.9.105: command blocks lite, then session restore (see the [backlog](backlog.md)).
+4. Next dependency review: 2026-12-02.
 
-**Note:** Dan's dev app shares its data folder with the outer app, so run records can cross over.
-
-## Update 2026-10-29
-
-**Done** (branch `feat/0.9.103-attention-schedule-privacy`, on top of `chore/deps-and-hub-0.9.103`, commit `4f0fb3c2`)
-
-- **Attention layer.** Tab dot (green finished, red failed, pulsing amber approval), dock badge, desktop notification (click opens that terminal). Settings → General: switch plus threshold. See [progress](progress/features-0.9.103.md).
-- **Scheduled workflows.** Clock icon in the workflow header opens one dialog (interval or daily, weekday chips). Main process timer, runs in a background tab.
-- **Privacy tab.** Statement, what can leave the computer, host-only request list for this session.
-- Translations for all 18 locales (machine-assisted, not native-reviewed). 263 unit tests, type-check, i18n check, build and 6 Electron E2E tests pass, including new ones for a scheduled run and the approval alert.
-- Ideas bank and the "no-logs" verdict added: [ideas](ideas.md).
-
-**Open for Dan**
-
-- Decide ship timing and merge order ([decisions](decisions.md) items 1 and 2).
-- Hand-test in the packaged app: run a 20-second command in another tab and switch away (expect dot and notification); add a schedule and wait for it. macOS may ask to allow notifications the first time.
-- Everything from the 2026-10-28 list below still stands.
-
-**Known limits**
-
-- A tab dot only shows for terminals in the project you are viewing; notification and dock badge cover other projects. No numeric badge on Windows.
-- Schedules do nothing while the app is closed. Only the first open window runs them.
-- Version is still 0.9.102; bump and release notes happen at release.
-
-## Update 2026-10-28, evening
-
-**Done**
-
-- v0.9.102 released with 19 languages, Explain & fix, keystroke routing, safer persistence, Electron 42. `main` fast-forwarded to `staging`. Site updated.
-- Branch `chore/deps-and-hub-0.9.103` (off `staging`): Electron 42.4.0 → 42.11.18, electron-updater 6.8.3 → 6.8.11, `sharp`, `vite`, `vitest`, `postcss` bumped, overrides for `js-yaml`, `tar` and `undici`. `npm audit`: **0 vulnerabilities** (was 23, 1 critical). Tests, type-check, build, E2E and the packaged macOS smoke test pass.
-- This hub created. Competitor research done: [research](research-competitors.md).
-
-**Open for Claude**
-
-- Build the flagship feature once chosen (see [decisions](decisions.md) item 1).
-- Add the monthly dependency review workflow (see [backlog](backlog.md)).
-
-**Open for Dan**
-
-- Choose the flagship feature for 0.9.103 ([decisions](decisions.md) item 1).
-- Try the packaged v0.9.102 by hand: `python3` typing, Explain & fix, language switch.
-- Optional: native-speaker review of translations; Arabic right-to-left check.
-
-**Gotcha for the next agent**
-
-- npm 10.9.4 crashes ("Cannot read properties of null (reading 'edgesOut')") whenever dependencies must be re-resolved, even for the original `package.json`. Resolve with `npx -y npm@11 install`, then confirm `rm -rf node_modules && npm ci` works on npm 10 (CI uses it). See [decisions](decisions.md).
+History of the 0.9.103 build: [status history](progress/status-history-0.9.103.md).

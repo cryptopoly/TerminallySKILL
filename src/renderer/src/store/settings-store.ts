@@ -34,6 +34,7 @@ interface SettingsStore {
   setAIResponseLocale: (locale: AIResponseLocalePreference) => void
   setAttentionAlerts: (enabled: boolean) => void
   setAttentionMinSeconds: (seconds: number) => void
+  setAttentionKeepUntilDismissed: (enabled: boolean) => void
   setMaskSecrets: (enabled: boolean) => void
 }
 
@@ -91,6 +92,8 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     set((state) => ({ settings: { ...state.settings, attentionAlerts: enabled } })),
   setAttentionMinSeconds: (seconds) =>
     set((state) => ({ settings: { ...state.settings, attentionMinSeconds: seconds } })),
+  setAttentionKeepUntilDismissed: (enabled) =>
+    set((state) => ({ settings: { ...state.settings, attentionKeepUntilDismissed: enabled } })),
   setMaskSecrets: (enabled) =>
     set((state) => ({ settings: { ...state.settings, maskSecrets: enabled } }))
 }))

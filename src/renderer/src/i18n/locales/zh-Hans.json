@@ -68,7 +68,14 @@
     "privacy.masking.kind.password": "密码",
     "privacy.masking.kind.token": "令牌",
     "privacy.masking.kind.secret": "机密",
-    "privacy.masking.kind.api-key": "API 密钥"
+    "privacy.masking.kind.api-key": "API 密钥",
+    "general.attention.agentHint": "编程智能体（Claude Code、Codex、Gemini CLI 等）也可以在这里提醒你。如果没有提醒，请查看智能体自己的通知设置。",
+    "general.attention.keep.tip.turnOn": "开启",
+    "general.attention.keep.tip.notNow": "暂不",
+    "general.attention.keep.title": "保留通知直到关闭",
+    "general.attention.keep.description": "通知会一直显示在屏幕上，直到你关闭它们。具体行为取决于你的桌面环境。",
+    "general.attention.keep.macDescription": "这由 macOS 决定。请在系统设置中为 TerminallySKILL 选择会一直显示到关闭的样式。",
+    "general.attention.keep.openSettings": "打开系统设置"
   },
   "commandBuilder": {
     "referenceHelp.aiProviderFallback": "AI",
@@ -79,7 +86,11 @@
     "topbar.github": "GitHub",
     "topbar.websiteDescription": "terminallyskill.com",
     "palette.actions.jumpAttention": "跳到需要你的终端",
-    "palette.actions.jumpAttentionDescription": "在任意项目中打开等你最久的终端"
+    "palette.actions.jumpAttentionDescription": "在任意项目中打开等你最久的终端",
+    "palette.actions.nextProject": "下一个项目",
+    "palette.actions.nextProjectDescription": "切换到项目选择器中的下一个项目（{{shortcut}}）",
+    "palette.actions.previousProject": "上一个项目",
+    "palette.actions.previousProjectDescription": "切换到项目选择器中的上一个项目（{{shortcut}}）"
   },
   "projects": {
     "dialog.workingDirectoryPlaceholder": "/path/to/your/project",
@@ -185,7 +196,19 @@
     "attention.agentNotify": "需要你处理",
     "attention.agentBlocked": "正在等你",
     "attention.agentDone": "已完成",
-    "attention.agentError": "因错误停止"
+    "attention.agentError": "因错误停止",
+    "dot.running": "运行中",
+    "dot.needsYou": "需要你",
+    "dot.finished": "已完成",
+    "dot.failed": "失败",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "最大化终端",
+    "panel.restore": "恢复终端大小",
+    "panel.maximiseDescription": "隐藏项目视图，让终端占满窗口。再次点击可恢复之前的大小。",
+    "dot.idle": "空闲",
+    "attention.waitingForYes": "等待你的确认",
+    "attention.bell": "响了终端铃声",
+    "attention.stillWaiting": "仍在等你（{{duration}}）"
   },
   "native": {
     "menu.file": "文件",
@@ -314,6 +337,8 @@
     "sections.settings.steps.themes.desc": "从标题栏齿轮图标打开设置。可在 8 个主题中选择：虚空、余烬、黄昏、森林、粉笔、拿铁、鼠尾草或薄雾。",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "跳到等你最久的终端（带圆点的标签页），适用于任意项目。在 Windows 和 Linux 上为 Ctrl+Shift+J。",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "按项目选择器的顺序切换到下一个或上一个项目。在 Windows 和 Linux 上为 Ctrl+Alt+PageDown / Ctrl+Alt+PageUp。",
     "tour.show": "显示欢迎导览",
     "tour.showDescription": "快速浏览应用的各个部分",
     "tour.stepOf": "第 {{current}} 步，共 {{total}} 步",
@@ -335,6 +360,19 @@
     "tour.steps.terminal.title": "终端",
     "tour.steps.terminal.body": "在这里为当前项目打开终端。你可以拆分终端、排队执行命令，命令失败时还可以寻求帮助。",
     "tour.steps.helpSettings.title": "帮助和设置",
-    "tour.steps.helpSettings.body": "帮助指南介绍每项功能，并可重新播放本导览。设置中包括主题、语言、AI 提供商和“隐私”标签页。"
+    "tour.steps.helpSettings.body": "帮助指南介绍每项功能，并可重新播放本导览。设置中包括主题、语言、AI 提供商和“隐私”标签页。",
+    "sections.statusDots.title": "终端标签页上的圆点",
+    "sections.statusDots.steps.running.label": "运行中",
+    "sections.statusDots.steps.running.desc": "旋转的橙色圆环：该终端中有命令或智能体正在运行。",
+    "sections.statusDots.steps.needsYou.label": "需要你",
+    "sections.statusDots.steps.needsYou.desc": "闪烁的黄色圆点：工作流或智能体正在等待你的批准或回复。",
+    "sections.statusDots.steps.finished.label": "已完成",
+    "sections.statusDots.steps.finished.desc": "绿色圆点：在你没看的时候，一个耗时较长的命令或工作流已完成。",
+    "sections.statusDots.steps.failed.label": "失败",
+    "sections.statusDots.steps.failed.desc": "带叉号的红色圆点：命令、工作流或智能体因错误而停止。",
+    "sections.statusDots.steps.idle.label": "空闲",
+    "sections.statusDots.steps.idle.desc": "灰色圆环：程序已打开，但一段时间没有输出，例如等待下一个任务的智能体。只显示圆点，不发通知。",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "将终端最大化以占满窗口，或恢复原样。在 Windows 和 Linux 上为 Ctrl+Shift+M。"
   }
 }

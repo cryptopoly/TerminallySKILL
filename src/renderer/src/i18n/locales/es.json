@@ -143,7 +143,14 @@
     "privacy.masking.kind.password": "Contraseña",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Secreto",
-    "privacy.masking.kind.api-key": "Clave de API"
+    "privacy.masking.kind.api-key": "Clave de API",
+    "general.attention.agentHint": "Los agentes de programación (Claude Code, Codex, Gemini CLI y otros) también pueden avisarte aquí. Si el tuyo no dice nada, revisa la configuración de notificaciones de tu agente.",
+    "general.attention.keep.tip.turnOn": "Activar",
+    "general.attention.keep.tip.notNow": "Ahora no",
+    "general.attention.keep.title": "Mantener las notificaciones hasta cerrarlas",
+    "general.attention.keep.description": "Las notificaciones permanecen en pantalla hasta que las cierres. El comportamiento exacto depende de tu escritorio.",
+    "general.attention.keep.macDescription": "Esto lo decide macOS. En Ajustes del Sistema, elige para TerminallySKILL el estilo que permanece hasta que lo cierres.",
+    "general.attention.keep.openSettings": "Abrir Ajustes del Sistema"
   },
   "commands": {
     "addDialog.title": "Añadir comando",
@@ -387,7 +394,11 @@
     "topbar.sshShellDescription": "Abrir una nueva shell SSH interactiva para este espacio de trabajo",
     "palette.actions.openSshShellDescription": "Abrir una nueva shell SSH interactiva para este espacio de trabajo",
     "palette.actions.jumpAttention": "Ir a la terminal que te necesita",
-    "palette.actions.jumpAttentionDescription": "Abre la terminal que lleva más tiempo esperándote, en cualquier proyecto"
+    "palette.actions.jumpAttentionDescription": "Abre la terminal que lleva más tiempo esperándote, en cualquier proyecto",
+    "palette.actions.nextProject": "Proyecto siguiente",
+    "palette.actions.nextProjectDescription": "Cambiar al siguiente proyecto del selector de proyectos ({{shortcut}})",
+    "palette.actions.previousProject": "Proyecto anterior",
+    "palette.actions.previousProjectDescription": "Cambiar al proyecto anterior del selector de proyectos ({{shortcut}})"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} terminal",
@@ -1080,7 +1091,19 @@
     "attention.agentNotify": "Necesita tu atención",
     "attention.agentBlocked": "Esperándote",
     "attention.agentDone": "Listo",
-    "attention.agentError": "Se detuvo con un error"
+    "attention.agentError": "Se detuvo con un error",
+    "dot.running": "En ejecución",
+    "dot.needsYou": "Te necesita",
+    "dot.finished": "Terminado",
+    "dot.failed": "Con error",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Maximizar terminal",
+    "panel.restore": "Restaurar tamaño de la terminal",
+    "panel.maximiseDescription": "Oculta la vista del proyecto para que la terminal ocupe toda la ventana. Haz clic de nuevo para volver al tamaño anterior.",
+    "dot.idle": "Inactivo",
+    "attention.waitingForYes": "Esperando tu sí",
+    "attention.bell": "Hizo sonar la campana del terminal",
+    "attention.stillWaiting": "Sigue esperándote ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Constructor visual de comandos, espacio de trabajo de terminal, workflows, registros y herramientas de IA",
@@ -1262,6 +1285,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Abre una nueva pestaña de terminal.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Ir a la terminal que lleva más tiempo esperándote (una pestaña con un punto), en cualquier proyecto. Ctrl+Shift+J en Windows y Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Cambia al proyecto siguiente o anterior, en el orden del selector de proyectos. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp en Windows y Linux.",
     "tour.show": "Mostrar recorrido de bienvenida",
     "tour.showDescription": "Un breve recorrido por cada parte de la aplicación",
     "tour.stepOf": "Paso {{current}} de {{total}}",
@@ -1283,7 +1308,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Abre aquí una terminal en el proyecto actual. Puedes dividirla, poner comandos en cola y pedir ayuda cuando un comando falla.",
     "tour.steps.helpSettings.title": "Ayuda y configuración",
-    "tour.steps.helpSettings.body": "La guía explica cada función y puede repetir este recorrido. La configuración incluye temas, idioma, proveedores de IA y la pestaña Privacidad."
+    "tour.steps.helpSettings.body": "La guía explica cada función y puede repetir este recorrido. La configuración incluye temas, idioma, proveedores de IA y la pestaña Privacidad.",
+    "sections.statusDots.title": "Puntos en las pestañas de terminal",
+    "sections.statusDots.steps.running.label": "En ejecución",
+    "sections.statusDots.steps.running.desc": "Anillo naranja que gira: un comando o agente está trabajando en esa terminal.",
+    "sections.statusDots.steps.needsYou.label": "Te necesita",
+    "sections.statusDots.steps.needsYou.desc": "Punto amarillo que palpita: un workflow o agente espera tu aprobación o respuesta.",
+    "sections.statusDots.steps.finished.label": "Terminado",
+    "sections.statusDots.steps.finished.desc": "Punto verde: un comando largo o un workflow terminó mientras no mirabas.",
+    "sections.statusDots.steps.failed.label": "Con error",
+    "sections.statusDots.steps.failed.desc": "Punto rojo con una cruz: un comando, workflow o agente se detuvo con un error.",
+    "sections.statusDots.steps.idle.label": "Inactivo",
+    "sections.statusDots.steps.idle.desc": "Anillo gris: un programa está abierto pero lleva un rato sin mostrar nada, por ejemplo un agente que espera su siguiente tarea. Solo el punto, sin notificación.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Maximiza la terminal para que ocupe toda la ventana, o restáurala. Ctrl+Shift+M en Windows y Linux."
   },
   "ai": {
     "explain.label": "Explicar con IA",

@@ -1,15 +1,38 @@
 import { useEffect } from 'react'
+import { createReminderScheduler } from '../../../shared/attention-reminders'
+import { i18n, resolveFormatLocale } from '../i18n'
+import { isUserAway, isUserStopExitCode } from '../../../shared/attention'
 import {
   describeWorkflowAttention,
+  isUserAttending,
+  setUserAway,
   focusAttentionSession,
   isUserWatchingSession,
   raiseAttention
 } from '../lib/attention'
 import { useAttentionStore } from '../store/attention-store'
 import { useProjectStore } from '../store/project-store'
+import { useSettingsStore } from '../store/settings-store'
 import { useTerminalStore } from '../store/terminal-store'
 import { useWorkflowRunnerStore, type WorkflowRunStatus } from '../store/workflow-runner-store'
 
+function sendReminder(sessionId: string, minutes: number): void {
+  const entry = useAttentionStore.getState().entries[sessionId]
+  if (!entry) return
+  const settings = useSettingsStore.getState().settings
+  const duration = new Intl.NumberFormat(resolveFormatLocale(settings), {
+    style: 'unit',
+    unit: 'minute',
+    unitDisplay: 'long'
+  }).format(minutes)
+  void window.electronAPI.notifyAttention({
+    sessionId,
+    title: i18n.t('attention.stillWaiting', { ns: 'terminal', duration }),
+    body: entry.detail
+  })
+}
+
+const IDLE_POLL_MS = 10_000
 const ALERT_STATUSES: WorkflowRunStatus[] = ['awaiting_approval', 'completed', 'failed']
 
 function clearWatchedEntries(): void {
@@ -38,7 +61,9 @@ export function useAttentionLayer(): void {
           run.status as 'awaiting_approval' | 'completed' | 'failed',
           run.script.name
         )
-        raiseAttention(sessionId, alert.kind, alert.title, alert.body)
+        raiseAttention(sessionId, alert.kind, alert.title, alert.body, {
+          notify: !run.steps.some((step) => isUserStopExitCode(step.exitCode))
+        })
       }
     })
   }, [])
@@ -52,6 +77,52 @@ export function useAttentionLayer(): void {
       unsubscribeTerminals()
       unsubscribeProject()
       window.removeEventListener('focus', clearWatchedEntries)
+    }
+  }, [])
+
+  // Walked away with the window in front: after a while with no input, nobody is watching any terminal
+  useEffect(() => {
+    let away = false
+    const check = async (): Promise<void> => {
+      const nowAway = isUserAway(await window.electronAPI.getSystemIdleSeconds())
+      if (nowAway === away) return
+      away = nowAway
+      setUserAway(nowAway)
+      if (!nowAway) clearWatchedEntries()
+    }
+    const timer = setInterval(() => void check(), IDLE_POLL_MS)
+    return () => {
+      clearInterval(timer)
+      setUserAway(false)
+    }
+  }, [])
+
+  // Still waiting for a yes: remind at 10 and 30 minutes while the window is not in front
+  useEffect(() => {
+    const reminders = createReminderScheduler({
+      shouldRemind: (sessionId, at) => {
+        const entry = useAttentionStore.getState().entries[sessionId]
+        return (
+          entry?.kind === 'approval' &&
+          entry.at === at &&
+          !isUserAttending() &&
+          useSettingsStore.getState().settings.attentionAlerts
+        )
+      },
+      remind: sendReminder
+    })
+    const unsubscribe = useAttentionStore.subscribe((state, previous) => {
+      for (const sessionId of Object.keys(previous.entries)) {
+        if (!(sessionId in state.entries)) reminders.cancel(sessionId)
+      }
+      for (const [sessionId, entry] of Object.entries(state.entries)) {
+        if (entry.kind === 'approval') reminders.schedule(sessionId, entry.at)
+        else reminders.cancel(sessionId)
+      }
+    })
+    return () => {
+      unsubscribe()
+      reminders.cancelAll()
     }
   }, [])
 

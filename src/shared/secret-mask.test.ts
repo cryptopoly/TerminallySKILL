@@ -363,3 +363,117 @@ describe('maskSecretsDeep and field names', () => {
     expect(isSecretFieldName('max_tokens')).toBeNull()
   })
 })
+
+describe('maskSecrets gaps: empty URL user, pass/pwd names, plain KEY names', () => {
+  const masked = (input: string): string => maskSecrets(input).text
+  const unchanged = (input: string): void => expect(masked(input)).toBe(input)
+
+  it('masks the password in a URL with an empty user', () => {
+    expect(masked('redis://:s3cretpass@cache:6379')).toBe('redis://:[hidden: password in URL]@cache:6379')
+    expect(masked('REDIS_URL=redis://:s3cretpass@cache:6379/0')).not.toContain('s3cretpass')
+  })
+
+  it('keeps the existing URL password cases', () => {
+    expect(masked('postgres://admin:pw2x9@host')).toBe('postgres://admin:[hidden: password in URL]@host')
+    expect(masked('mongodb+srv://u:p%40ss@host')).toBe('mongodb+srv://u:[hidden: password in URL]@host')
+    expect(masked('https://api.example.com/x?password=abc')).not.toContain('=abc')
+  })
+
+  it('does not mask empty-user URLs with placeholders or no password', () => {
+    unchanged('redis://:<password>@cache:6379')
+    unchanged('redis://:${REDIS_PASS}@cache:6379')
+    unchanged('redis://cache:6379')
+    unchanged('http://localhost:8080/path@x')
+  })
+
+  it('masks names ending in pass or pwd', () => {
+    expect(masked('DB_PASS=hunter2hunter2')).toBe('DB_PASS=[hidden: password]')
+    expect(masked('db_pwd=hunter2hunter2')).toBe('db_pwd=[hidden: password]')
+    expect(masked('export MYSQL_PWD="hunter2 hunter2"')).toBe('export MYSQL_PWD="[hidden: password]"')
+    expect(masked('dbPass: hunter2hunter2')).toBe('dbPass: [hidden: password]')
+    expect(masked('{"db-pass": "hunter2hunter2"}')).toBe('{"db-pass": "[hidden: password]"}')
+    expect(maskSecrets('DB_PASS=hunter2hunter2').counts).toEqual({ password: 1 })
+  })
+
+  it('leaves look-alike names, test flags and placeholders alone', () => {
+    for (const line of [
+      'PASS=1',
+      'pass=hunter2hunter2',
+      'PWD=/Users/dan/project',
+      'OLDPWD=/Users/dan',
+      'bypass=hunter2hunter2',
+      'compass=hunter2hunter2',
+      'PASSENGER=hunter2hunter2',
+      'PASS_THROUGH=hunter2hunter2',
+      'ALL_PASS=1',
+      'TEST_PASS=true',
+      'DB_PASS=$DB_PASS',
+      'DB_PASS=<password>',
+      'pass: hunter2hunter2',
+      'npm test --pass-through x',
+      '--pass-through=hunter2hunter2'
+    ]) unchanged(line)
+  })
+
+  it('does not extend the --pass CLI flag', () => {
+    unchanged('mytool --pass hunter2hunter2')
+  })
+
+  it('masks plain KEY names only when the value looks random', () => {
+    expect(masked('STRIPE_KEY=abcd1234efgh5678')).toBe('STRIPE_KEY=[hidden: API key]')
+    expect(masked('DEPLOY_KEY="abcd1234efgh5678ijkl"')).toBe('DEPLOY_KEY="[hidden: API key]"')
+    expect(masked('ENCRYPTION_KEY: abcd1234efgh5678')).toBe('ENCRYPTION_KEY: [hidden: API key]')
+    expect(masked('{"signingKey": "abcd1234efgh5678"}')).toBe('{"signingKey": "[hidden: API key]"}')
+    expect(masked('SECRET_KEY=short')).toBe('SECRET_KEY=[hidden: secret]') // existing rule
+  })
+
+  it('leaves KEY look-alikes and non-random values alone', () => {
+    for (const line of [
+      'KEY=value',
+      'KEY=abcd1234efgh5678',
+      'SSH_KEY=~/.ssh/id_rsa',
+      'SSH_KEY=/home/dan/.ssh/id_rsa_2024_backup',
+      'DEPLOY_KEY=https://example.com/keys/abcd1234efgh5678',
+      'KEY_NAME=abcd1234efgh5678',
+      'monkey=abcd1234efgh5678',
+      'turkey=abcd1234efgh5678',
+      'HOTKEY=ctrl+k',
+      'HOTKEY=ctrl+shift+alt+k1',
+      'STRIPE_KEY=short1',
+      'STRIPE_KEY=abcdefghijklmnopqrst',
+      'STRIPE_KEY=12345678901234567890',
+      'STRIPE_KEY=my feature branch name 1234',
+      'STRIPE_KEY=<your key>',
+      'STRIPE_KEY=$STRIPE_KEY',
+      'SORT_KEY=my-feature-branch-name-2'
+    ]) unchanged(line)
+  })
+
+  it('does not mask every env var or DATABASE_URL by name alone', () => {
+    unchanged('DATABASE_URL=postgres://host/db')
+    unchanged('HOME=/Users/dan')
+  })
+
+  it('is idempotent for the new cases', () => {
+    const input = [
+      'redis://:s3cretpass@cache:6379',
+      'DB_PASS=hunter2hunter2',
+      'MYSQL_PWD=hunter2hunter2',
+      'STRIPE_KEY=abcd1234efgh5678',
+      'KEY=value'
+    ].join('\n')
+    const once = maskSecrets(input)
+    expect(once.total).toBe(4)
+    expect(maskSecrets(once.text)).toEqual({ text: once.text, counts: {}, total: 0 })
+  })
+
+  it('field-name check follows the same boundary rules', () => {
+    expect(isSecretFieldName('db_pass')).toBe('password')
+    expect(isSecretFieldName('MYSQL_PWD')).toBe('password')
+    expect(isSecretFieldName('dbPass')).toBe('password')
+    expect(isSecretFieldName('pass')).toBeNull()
+    expect(isSecretFieldName('bypass')).toBeNull()
+    expect(isSecretFieldName('compass')).toBeNull()
+    expect(isSecretFieldName('STRIPE_KEY')).toBeNull()
+  })
+})

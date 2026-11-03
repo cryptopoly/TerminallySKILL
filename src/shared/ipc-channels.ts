@@ -116,7 +116,9 @@ export const IPC_CHANNELS = {
   // Attention layer
   ATTENTION_NOTIFY: 'attention:notify',
   ATTENTION_SET_BADGE: 'attention:set-badge',
+  ATTENTION_IDLE_SECONDS: 'attention:idle-seconds',
   ATTENTION_FOCUS_SESSION: 'attention:focus-session',
+  ATTENTION_OPEN_SYSTEM_SETTINGS: 'attention:open-system-settings',
 
   // Scheduled workflows
   SCHEDULES_GET_ALL: 'schedules:get-all',

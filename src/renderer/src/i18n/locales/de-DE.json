@@ -89,7 +89,14 @@
     "privacy.masking.kind.password": "Passwort",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Geheimnis",
-    "privacy.masking.kind.api-key": "API-Schlüssel"
+    "privacy.masking.kind.api-key": "API-Schlüssel",
+    "general.attention.agentHint": "Coding-Agenten (Claude Code, Codex, Gemini CLI und andere) können dich auch hier benachrichtigen. Bleibt deiner stumm, sieh in die Benachrichtigungseinstellung deines Agenten.",
+    "general.attention.keep.tip.turnOn": "Einschalten",
+    "general.attention.keep.tip.notNow": "Nicht jetzt",
+    "general.attention.keep.title": "Benachrichtigungen bis zum Schließen anzeigen",
+    "general.attention.keep.description": "Benachrichtigungen bleiben sichtbar, bis du sie schließt. Das genaue Verhalten hängt von deinem Desktop ab.",
+    "general.attention.keep.macDescription": "Das entscheidet macOS. Wähle in den Systemeinstellungen für TerminallySKILL den Stil, der sichtbar bleibt, bis du ihn schließt.",
+    "general.attention.keep.openSettings": "Systemeinstellungen öffnen"
   },
   "commands": {
     "addDialog.title": "Befehl hinzufügen",
@@ -303,7 +310,11 @@
     "updates.downloadOpen": "Update herunterladen und öffnen",
     "updates.opening": "Update wird geöffnet",
     "palette.actions.jumpAttention": "Zum Terminal springen, das dich braucht",
-    "palette.actions.jumpAttentionDescription": "Das Terminal öffnen, das am längsten auf dich wartet, in jedem Projekt"
+    "palette.actions.jumpAttentionDescription": "Das Terminal öffnen, das am längsten auf dich wartet, in jedem Projekt",
+    "palette.actions.nextProject": "Nächstes Projekt",
+    "palette.actions.nextProjectDescription": "Zum nächsten Projekt in der Projektauswahl wechseln ({{shortcut}})",
+    "palette.actions.previousProject": "Vorheriges Projekt",
+    "palette.actions.previousProjectDescription": "Zum vorherigen Projekt in der Projektauswahl wechseln ({{shortcut}})"
   },
   "projects": {
     "dialog.titleEdit": "Projekt bearbeiten",
@@ -977,7 +988,19 @@
     "attention.agentNotify": "Braucht deine Aufmerksamkeit",
     "attention.agentBlocked": "Wartet auf dich",
     "attention.agentDone": "Fertig",
-    "attention.agentError": "Mit Fehler beendet"
+    "attention.agentError": "Mit Fehler beendet",
+    "dot.running": "Läuft",
+    "dot.needsYou": "Braucht dich",
+    "dot.finished": "Fertig",
+    "dot.failed": "Fehlgeschlagen",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Terminal maximieren",
+    "panel.restore": "Terminalgröße wiederherstellen",
+    "panel.maximiseDescription": "Blendet die Projektansicht aus, sodass das Terminal das Fenster füllt. Erneut klicken stellt die vorherige Größe wieder her.",
+    "dot.idle": "Ruhig",
+    "attention.waitingForYes": "Wartet auf dein Ja",
+    "attention.bell": "Hat die Terminalglocke geläutet",
+    "attention.stillWaiting": "Wartet noch auf dich ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Visueller Befehls-Builder, Terminal-Workspace, Workflows, Protokolle und KI-Tools",
@@ -1160,6 +1183,8 @@
     "sections.snippets.title": "Snippets",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Zum Terminal springen, das am längsten auf dich wartet (ein Tab mit Punkt), in jedem Projekt. Ctrl+Shift+J unter Windows und Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Wechselt zum nächsten oder vorherigen Projekt, in der Reihenfolge der Projektauswahl. Strg+Alt+Bild-ab / Strg+Alt+Bild-auf unter Windows und Linux (Ctrl+Alt+PageDown / Ctrl+Alt+PageUp).",
     "tour.show": "Willkommenstour anzeigen",
     "tour.showDescription": "Ein kurzer Rundgang durch alle Bereiche der App",
     "tour.stepOf": "Schritt {{current}} von {{total}}",
@@ -1181,7 +1206,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Hier öffnest du ein Terminal im aktuellen Projekt. Du kannst es teilen, Befehle einreihen und Hilfe holen, wenn ein Befehl fehlschlägt.",
     "tour.steps.helpSettings.title": "Hilfe und Einstellungen",
-    "tour.steps.helpSettings.body": "Die Hilfeseite erklärt jede Funktion und startet diese Tour erneut. In den Einstellungen findest du Designs, Sprache, KI-Anbieter und den Tab Datenschutz."
+    "tour.steps.helpSettings.body": "Die Hilfeseite erklärt jede Funktion und startet diese Tour erneut. In den Einstellungen findest du Designs, Sprache, KI-Anbieter und den Tab Datenschutz.",
+    "sections.statusDots.title": "Punkte auf Terminal-Tabs",
+    "sections.statusDots.steps.running.label": "Läuft",
+    "sections.statusDots.steps.running.desc": "Oranger, drehender Ring: In diesem Terminal arbeitet ein Befehl oder Agent.",
+    "sections.statusDots.steps.needsYou.label": "Braucht dich",
+    "sections.statusDots.steps.needsYou.desc": "Pulsierender gelber Punkt: Ein Workflow oder Agent wartet auf deine Freigabe oder Antwort.",
+    "sections.statusDots.steps.finished.label": "Fertig",
+    "sections.statusDots.steps.finished.desc": "Grüner Punkt: Ein langer Befehl oder Workflow ist fertig geworden, während du nicht hingesehen hast.",
+    "sections.statusDots.steps.failed.label": "Fehlgeschlagen",
+    "sections.statusDots.steps.failed.desc": "Roter Punkt mit Kreuz: Ein Befehl, Workflow oder Agent wurde mit einem Fehler beendet.",
+    "sections.statusDots.steps.idle.label": "Ruhig",
+    "sections.statusDots.steps.idle.desc": "Grauer Ring: Ein Programm ist offen, hat aber eine Weile nichts ausgegeben, zum Beispiel ein Agent, der auf die nächste Aufgabe wartet. Nur der Punkt, keine Benachrichtigung.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Das Terminal maximieren, sodass es das Fenster füllt, oder wiederherstellen. Ctrl+Shift+M unter Windows und Linux."
   },
   "ai": {
     "explain.label": "Mit KI erklären",

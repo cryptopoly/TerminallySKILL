@@ -89,7 +89,7 @@ interface Rule {
    * regex would otherwise be tried at every line. Rules that start with a literal are fast anyway.
    */
   requires?: string
-  validate?: (secret: string, match: RegExpExecArray) => boolean
+  validate?: (secret: string, match: RegExpExecArray, text: string) => boolean
 }
 
 // Words that stand for a value in help text, docs and examples rather than being one.
@@ -128,11 +128,45 @@ function longestAlnumRun(value: string): number {
 // Name keywords for assignments. A name must END with one of these (GITHUB_TOKEN, db_password,
 // _authToken, x-api-key), so TOKENIZERS_PARALLELISM, max_tokens and PASSWORD_FILE are left alone.
 const NAME_KEYWORDS =
-  'client[_-]?secret|secret[_-]?key|private[_-]?key|access[_-]?key|api[_-]?key|auth[_-]?token|passphrase|password|passwd|secret|token'
+  'client[_-]?secret|secret[_-]?key|private[_-]?key|access[_-]?key|api[_-]?key|auth[_-]?token|passphrase|password|passwd|secret|token|pass|pwd'
+
+// Short keywords (pass, pwd) and the plain `key` only count as the last word of a longer name:
+// DB_PASS, db-pwd, MYSQL_PWD, dbPass, STRIPE_KEY. Bare PASS=1, PWD=/home, bypass, compass, OLDPWD
+// and monkey are left alone. Checked in code because the rules are case-insensitive, so a
+// camelCase edge cannot be written into the regex.
+const BOUNDARY_ONLY_RE = /^(?:pass|pwd|key)$/i
+
+function nameBoundaryOk(text: string, start: number): boolean {
+  const prev = text[start - 1]
+  if (prev === undefined) return false
+  if (prev === '_' || prev === '-' || prev === '.') return start >= 2 && /[A-Za-z0-9]/.test(text[start - 2])
+  return /[a-z]/.test(prev) && /[A-Z]/.test(text[start]) // camelCase edge: dbPass, stripeKey
+}
+
+/** Boundary check for a rule whose keyword is capture group 1. Other keywords always pass. */
+function keywordBoundaryOk(match: RegExpExecArray, text: string): boolean {
+  if (!BOUNDARY_ONLY_RE.test(match[1])) return true
+  const index = match.indices?.[1]?.[0]
+  return index !== undefined && nameBoundaryOk(text, index)
+}
+
+// A short all-digit value after a pass name (ALL_PASS=1, TEST_PASS=0) is a flag, not a password.
+function passwordValueOk(match: RegExpExecArray, secret: string): boolean {
+  return !/^(?:pass|pwd)$/i.test(match[1]) || !/^\d{1,3}$/.test(secret)
+}
+
+// Values of plain `...KEY` names are only secrets when they look random (STRIPE_KEY=abcd1234...).
+// Help text (KEY=value), paths, URLs, key names and key bindings do not.
+function looksLikeRandomKey(value: string): boolean {
+  if (value.length < 16 || /\s/.test(value)) return false
+  if (/^[~./\\]|^[A-Za-z]:[\\/]|:\/\//.test(value)) return false
+  return hasDigitAndLetter(value) && longestAlnumRun(value) >= 12
+}
 
 function kindFromKeyword(keyword: string): SecretKind {
   const k = keyword.toLowerCase()
-  if (k.startsWith('pass')) return 'password'
+  if (k.startsWith('pass') || k === 'pwd') return 'password'
+  if (k === 'key') return 'api-key'
   if (k.endsWith('token')) return 'token'
   if (k.includes('secret')) return 'secret'
   return 'api-key'
@@ -227,10 +261,10 @@ const RULES: Rule[] = [
     validate: (secret, match) =>
       !isPlaceholderValue(secret) && (match[1] ? secret.length >= 4 : secret.length >= 16 && /\d/.test(secret))
   },
-  // scheme://user:password@host
+  // scheme://user:password@host, or scheme://:password@host (redis, empty user)
   {
     kind: 'url-password',
-    re: /\b[a-z][a-z0-9+.-]*:\/\/[^\s:/@'"]+:([^\s/@'"]+)@/gid,
+    re: /\b[a-z][a-z0-9+.-]*:\/\/[^\s:/@'"]*:([^\s/@'"]+)@/gid,
     group: 1,
     validate: (secret) => !isPlaceholderValue(secret)
   },
@@ -239,18 +273,41 @@ const RULES: Rule[] = [
     kind: (match) => kindFromKeyword(match[1]),
     re: new RegExp(`(${NAME_KEYWORDS})["']?[ \\t]*=(?!=)[ \\t]*(?:"([^"\\r\\n]*)"|'([^'\\r\\n]*)'|(${BARE_VALUE}))`, 'gid'),
     group: -1,
+    validate: (secret, match, text) => keywordBoundaryOk(match, text) && passwordValueOk(match, secret)
   },
   // "name": "value" (JSON, including AWS CLI output like "SessionToken": "...").
   {
     kind: (match) => kindFromKeyword(match[1]),
     re: new RegExp(`(${NAME_KEYWORDS})"[ \\t]*:[ \\t]*"([^"\\r\\n]*)"`, 'gid'),
     group: 2,
+    validate: (secret, match, text) => keywordBoundaryOk(match, text) && passwordValueOk(match, secret)
   },
   // name: value at the start of a line (YAML, HTTP headers such as x-api-key:, curl -v "> " prefixes).
   {
     kind: (match) => kindFromKeyword(match[1]),
     re: new RegExp(`^[ \\t>-]*[\\w.-]*?(${NAME_KEYWORDS})[ \\t]*:[ \\t]+(?:"([^"\\r\\n]*)"|'([^'\\r\\n]*)'|([^\\s'"]+))`, 'gimd'),
     group: -1,
+    validate: (secret, match, text) => keywordBoundaryOk(match, text) && passwordValueOk(match, secret)
+  },
+  // Names ending in plain KEY (STRIPE_KEY, DEPLOY_KEY, signingKey): the value must look random,
+  // because KEY=value in help text, SSH_KEY=~/.ssh/id_rsa and HOTKEY=ctrl+k are not secrets.
+  {
+    kind: 'api-key',
+    re: new RegExp(`(key)["']?[ \\t]*=(?!=)[ \\t]*(?:"([^"\\r\\n]*)"|'([^'\\r\\n]*)'|(${BARE_VALUE}))`, 'gid'),
+    group: -1,
+    validate: (secret, match, text) => keywordBoundaryOk(match, text) && looksLikeRandomKey(secret)
+  },
+  {
+    kind: 'api-key',
+    re: /(key)"[ \t]*:[ \t]*"([^"\r\n]*)"/gid,
+    group: 2,
+    validate: (secret, match, text) => keywordBoundaryOk(match, text) && looksLikeRandomKey(secret)
+  },
+  {
+    kind: 'api-key',
+    re: new RegExp(`^[ \\t>-]*[\\w.-]*?(key)[ \\t]*:[ \\t]+(?:"([^"\\r\\n]*)"|'([^'\\r\\n]*)'|([^\\s'"]+))`, 'gimd'),
+    group: -1,
+    validate: (secret, match, text) => keywordBoundaryOk(match, text) && looksLikeRandomKey(secret)
   },
   // CLI flags: --password x, --api-key=x, --client-secret "x". One space only, because help text
   // pads the description with several ("--password    The password to use").
@@ -345,7 +402,7 @@ function findRanges(text: string): Range[] {
       const indices = match.indices?.[group]
       if (secret === undefined || !indices) continue
       if (group !== 0 && isPlaceholderValue(secret)) continue
-      if (rule.validate && !rule.validate(secret, match)) continue
+      if (rule.validate && !rule.validate(secret, match, text)) continue
       const [start, end] = indices
       if (end <= start || overlaps(accepted, start, end)) continue
       const kind = typeof rule.kind === 'function' ? rule.kind(match) : rule.kind
@@ -397,8 +454,9 @@ export function totalSecretCount(counts: SecretCounts): number {
 
 /** True when a field name alone marks its value as a secret (input ids like "db_password"). */
 export function isSecretFieldName(name: string): SecretKind | null {
-  const match = new RegExp(`(${NAME_KEYWORDS})$`, 'i').exec(name)
-  return match ? kindFromKeyword(match[1]) : null
+  const match = new RegExp(`(${NAME_KEYWORDS})$`, 'id').exec(name)
+  if (!match || !keywordBoundaryOk(match, name)) return null
+  return kindFromKeyword(match[1])
 }
 
 /** Mask every string inside a JSON-like value (objects, arrays). Other values pass through. */

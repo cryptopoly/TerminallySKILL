@@ -218,7 +218,14 @@
     "privacy.masking.kind.password": "पासवर्ड",
     "privacy.masking.kind.token": "टोकन",
     "privacy.masking.kind.secret": "सीक्रेट",
-    "privacy.masking.kind.api-key": "API कुंजी"
+    "privacy.masking.kind.api-key": "API कुंजी",
+    "general.attention.agentHint": "कोडिंग एजेंट (Claude Code, Codex, Gemini CLI और अन्य) भी यहाँ आपको सूचित कर सकते हैं। अगर आपका एजेंट चुप रहता है, तो उसकी सूचना सेटिंग देखें।",
+    "general.attention.keep.tip.turnOn": "चालू करें",
+    "general.attention.keep.tip.notNow": "अभी नहीं",
+    "general.attention.keep.title": "सूचनाएँ बंद करने तक दिखाएँ",
+    "general.attention.keep.description": "सूचनाएँ तब तक स्क्रीन पर रहती हैं जब तक आप उन्हें बंद नहीं करते। सटीक व्यवहार आपके डेस्कटॉप पर निर्भर करता है।",
+    "general.attention.keep.macDescription": "यह macOS तय करता है। सिस्टम सेटिंग्स में TerminallySKILL के लिए वह शैली चुनें जो बंद करने तक बनी रहती है।",
+    "general.attention.keep.openSettings": "सिस्टम सेटिंग्स खोलें"
   },
   "commands": {
     "addDialog.title": "कमांड जोड़ें",
@@ -464,7 +471,11 @@
     "updates.opening": "अपडेट खुल रहा है",
     "sidebar.tabs.files": "फ़ाइलें",
     "palette.actions.jumpAttention": "उस टर्मिनल पर जाएँ जिसे आपकी ज़रूरत है",
-    "palette.actions.jumpAttentionDescription": "किसी भी प्रोजेक्ट में वह टर्मिनल खोलें जो सबसे लंबे समय से आपका इंतज़ार कर रहा है"
+    "palette.actions.jumpAttentionDescription": "किसी भी प्रोजेक्ट में वह टर्मिनल खोलें जो सबसे लंबे समय से आपका इंतज़ार कर रहा है",
+    "palette.actions.nextProject": "अगला प्रोजेक्ट",
+    "palette.actions.nextProjectDescription": "प्रोजेक्ट चयनकर्ता में अगले प्रोजेक्ट पर जाएँ ({{shortcut}})",
+    "palette.actions.previousProject": "पिछला प्रोजेक्ट",
+    "palette.actions.previousProjectDescription": "प्रोजेक्ट चयनकर्ता में पिछले प्रोजेक्ट पर जाएँ ({{shortcut}})"
   },
   "projects": {
     "selector.none": "कोई प्रोजेक्ट नहीं",
@@ -1169,7 +1180,19 @@
     "attention.agentNotify": "आपका ध्यान चाहिए",
     "attention.agentBlocked": "आपका इंतज़ार कर रहा है",
     "attention.agentDone": "पूरा हुआ",
-    "attention.agentError": "त्रुटि के साथ रुका"
+    "attention.agentError": "त्रुटि के साथ रुका",
+    "dot.running": "चल रहा है",
+    "dot.needsYou": "आपकी ज़रूरत है",
+    "dot.finished": "पूरा हुआ",
+    "dot.failed": "विफल",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "टर्मिनल बड़ा करें",
+    "panel.restore": "टर्मिनल का आकार वापस लाएँ",
+    "panel.maximiseDescription": "प्रोजेक्ट व्यू छिपाता है ताकि टर्मिनल पूरी विंडो भर दे। पिछले आकार पर लौटने के लिए फिर से क्लिक करें।",
+    "dot.idle": "निष्क्रिय",
+    "attention.waitingForYes": "आपकी हाँ की प्रतीक्षा",
+    "attention.bell": "टर्मिनल की घंटी बजाई",
+    "attention.stillWaiting": "अब भी आपकी प्रतीक्षा ({{duration}})"
   },
   "onboarding": {
     "subtitle": "विज़ुअल कमांड बिल्डर, टर्मिनल वर्कस्पेस, वर्कफ़्लो, लॉग और AI टूल",
@@ -1352,6 +1375,8 @@
     "sections.files.title": "फ़ाइलें",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "उस टर्मिनल पर जाएँ जो सबसे लंबे समय से आपका इंतज़ार कर रहा है (बिंदु वाला टैब), किसी भी प्रोजेक्ट में। Windows और Linux पर Ctrl+Shift+J।",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "प्रोजेक्ट चयनकर्ता के क्रम में अगले या पिछले प्रोजेक्ट पर जाएँ। Windows और Linux पर Ctrl+Alt+PageDown / Ctrl+Alt+PageUp।",
     "tour.show": "स्वागत टूर दिखाएं",
     "tour.showDescription": "ऐप के हर हिस्से की छोटी सैर",
     "tour.stepOf": "चरण {{current}} / {{total}}",
@@ -1373,7 +1398,20 @@
     "tour.steps.terminal.title": "टर्मिनल",
     "tour.steps.terminal.body": "यहां से मौजूदा प्रोजेक्ट में टर्मिनल खोलें। आप इसे बांट सकते हैं, कमांड कतार में लगा सकते हैं और कमांड विफल होने पर मदद मांग सकते हैं।",
     "tour.steps.helpSettings.title": "मदद और सेटिंग्स",
-    "tour.steps.helpSettings.body": "मदद गाइड हर फ़ीचर समझाती है और यह टूर दोबारा चला सकती है। सेटिंग्स में थीम, भाषा, AI प्रदाता और गोपनीयता टैब हैं।"
+    "tour.steps.helpSettings.body": "मदद गाइड हर फ़ीचर समझाती है और यह टूर दोबारा चला सकती है। सेटिंग्स में थीम, भाषा, AI प्रदाता और गोपनीयता टैब हैं।",
+    "sections.statusDots.title": "टर्मिनल टैब के बिंदु",
+    "sections.statusDots.steps.running.label": "चल रहा है",
+    "sections.statusDots.steps.running.desc": "घूमता नारंगी छल्ला: उस टर्मिनल में कोई कमांड या एजेंट काम कर रहा है।",
+    "sections.statusDots.steps.needsYou.label": "आपकी ज़रूरत है",
+    "sections.statusDots.steps.needsYou.desc": "धड़कता पीला बिंदु: कोई वर्कफ़्लो या एजेंट आपकी मंज़ूरी या जवाब का इंतज़ार कर रहा है।",
+    "sections.statusDots.steps.finished.label": "पूरा हुआ",
+    "sections.statusDots.steps.finished.desc": "हरा बिंदु: आपके न देखते समय कोई लंबी कमांड या वर्कफ़्लो पूरा हुआ।",
+    "sections.statusDots.steps.failed.label": "विफल",
+    "sections.statusDots.steps.failed.desc": "क्रॉस वाला लाल बिंदु: कोई कमांड, वर्कफ़्लो या एजेंट त्रुटि के साथ रुक गया।",
+    "sections.statusDots.steps.idle.label": "निष्क्रिय",
+    "sections.statusDots.steps.idle.desc": "धूसर घेरा: कोई प्रोग्राम खुला है पर कुछ देर से उसने कुछ नहीं दिखाया, जैसे अगले काम की प्रतीक्षा करता एजेंट। केवल बिंदु, कोई सूचना नहीं।",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "टर्मिनल को पूरी विंडो में बड़ा करें, या वापस लाएँ। Windows और Linux पर Ctrl+Shift+M।"
   },
   "ai": {
     "explain.label": "AI से समझाएं",

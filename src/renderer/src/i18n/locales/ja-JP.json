@@ -136,7 +136,14 @@
     "privacy.masking.kind.password": "パスワード",
     "privacy.masking.kind.token": "トークン",
     "privacy.masking.kind.secret": "シークレット",
-    "privacy.masking.kind.api-key": "API キー"
+    "privacy.masking.kind.api-key": "API キー",
+    "general.attention.agentHint": "コーディングエージェント (Claude Code、Codex、Gemini CLI など) もここで通知できます。通知が来ない場合は、エージェント側の通知設定を確認してください。",
+    "general.attention.keep.tip.turnOn": "オンにする",
+    "general.attention.keep.tip.notNow": "今はしない",
+    "general.attention.keep.title": "閉じるまで通知を表示",
+    "general.attention.keep.description": "通知は閉じるまで画面に表示されます。実際の動作はデスクトップ環境によって異なります。",
+    "general.attention.keep.macDescription": "これは macOS が制御します。システム設定で、TerminallySKILL に閉じるまで表示されるスタイルを選択してください。",
+    "general.attention.keep.openSettings": "システム設定を開く"
   },
   "commands": {
     "addDialog.title": "コマンドを追加",
@@ -373,7 +380,11 @@
     "updates.installing": "更新をインストール中",
     "updates.opening": "更新を開いています",
     "palette.actions.jumpAttention": "対応が必要なターミナルへ移動",
-    "palette.actions.jumpAttentionDescription": "どのプロジェクトでも、最も長く待っているターミナルを開きます"
+    "palette.actions.jumpAttentionDescription": "どのプロジェクトでも、最も長く待っているターミナルを開きます",
+    "palette.actions.nextProject": "次のプロジェクト",
+    "palette.actions.nextProjectDescription": "プロジェクトセレクターの順で次のプロジェクトに切り替えます（{{shortcut}}）",
+    "palette.actions.previousProject": "前のプロジェクト",
+    "palette.actions.previousProjectDescription": "プロジェクトセレクターの順で前のプロジェクトに切り替えます（{{shortcut}}）"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} 個のターミナル",
@@ -1047,7 +1058,19 @@
     "attention.agentNotify": "対応が必要です",
     "attention.agentBlocked": "あなたを待っています",
     "attention.agentDone": "完了",
-    "attention.agentError": "エラーで停止しました"
+    "attention.agentError": "エラーで停止しました",
+    "dot.running": "実行中",
+    "dot.needsYou": "対応待ち",
+    "dot.finished": "完了",
+    "dot.failed": "失敗",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "ターミナルを最大化",
+    "panel.restore": "ターミナルのサイズを戻す",
+    "panel.maximiseDescription": "プロジェクト表示を隠し、ターミナルをウィンドウ全体に広げます。もう一度クリックすると元のサイズに戻ります。",
+    "dot.idle": "待機中",
+    "attention.waitingForYes": "承認を待っています",
+    "attention.bell": "ターミナルのベルを鳴らしました",
+    "attention.stillWaiting": "まだ待っています ({{duration}})"
   },
   "onboarding": {
     "subtitle": "ビジュアルコマンドビルダー、ターミナルワークスペース、ワークフロー、ログ、AI ツール",
@@ -1229,6 +1252,8 @@
     "sections.keyboard.steps.newTerminal.desc": "新しいターミナルタブを開きます。",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "最も長く待っているターミナル（ドット付きのタブ）へ、どのプロジェクトでも移動します。Windows と Linux では Ctrl+Shift+J。",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "プロジェクトセレクターの並び順で、次または前のプロジェクトに切り替えます。Windows と Linux では Ctrl+Alt+PageDown / Ctrl+Alt+PageUp。",
     "tour.show": "ようこそツアーを表示",
     "tour.showDescription": "アプリの各画面を短く案内します",
     "tour.stepOf": "ステップ {{current}} / {{total}}",
@@ -1250,7 +1275,20 @@
     "tour.steps.terminal.title": "ターミナル",
     "tour.steps.terminal.body": "ここから現在のプロジェクトでターミナルを開きます。分割したり、コマンドをキューに入れたり、コマンドが失敗したときに助けを求めたりできます。",
     "tour.steps.helpSettings.title": "ヘルプと設定",
-    "tour.steps.helpSettings.body": "ヘルプガイドではすべての機能を説明しており、このツアーをもう一度見ることもできます。設定にはテーマ、言語、AI プロバイダー、「プライバシー」タブがあります。"
+    "tour.steps.helpSettings.body": "ヘルプガイドではすべての機能を説明しており、このツアーをもう一度見ることもできます。設定にはテーマ、言語、AI プロバイダー、「プライバシー」タブがあります。",
+    "sections.statusDots.title": "ターミナルタブのドット",
+    "sections.statusDots.steps.running.label": "実行中",
+    "sections.statusDots.steps.running.desc": "回転するオレンジのリング：そのターミナルでコマンドまたはエージェントが動作中です。",
+    "sections.statusDots.steps.needsYou.label": "対応待ち",
+    "sections.statusDots.steps.needsYou.desc": "点滅する黄色のドット：ワークフローまたはエージェントがあなたの承認や回答を待っています。",
+    "sections.statusDots.steps.finished.label": "完了",
+    "sections.statusDots.steps.finished.desc": "緑のドット：見ていない間に長いコマンドまたはワークフローが完了しました。",
+    "sections.statusDots.steps.failed.label": "失敗",
+    "sections.statusDots.steps.failed.desc": "×印付きの赤いドット：コマンド、ワークフロー、またはエージェントがエラーで停止しました。",
+    "sections.statusDots.steps.idle.label": "待機中",
+    "sections.statusDots.steps.idle.desc": "グレーの輪: プログラムは開いているものの、しばらく何も出力していません (次のタスクを待つエージェントなど)。点のみで、通知はしません。",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "ターミナルをウィンドウ全体に最大化、または元に戻します。Windows と Linux では Ctrl+Shift+M。"
   },
   "ai": {
     "explain.label": "AI で説明",

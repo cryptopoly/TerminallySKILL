@@ -3,7 +3,10 @@ import {
   attentionKindForExit,
   normalizeAttentionMinSeconds,
   pickNextAttentionSession,
-  shouldRaiseCommandAttention
+  resolveTabDotState,
+  shouldRaiseCommandAttention,
+  isUserAway,
+  isUserStopExitCode
 } from './attention'
 
 const start = '2026-10-29T10:00:00.000Z'
@@ -53,5 +56,46 @@ describe('pickNextAttentionSession', () => {
   it('skips closed terminals and returns null when nothing is waiting', () => {
     expect(pickNextAttentionSession({ gone: entry(1), b: entry(9) }, ['b'])).toBe('b')
     expect(pickNextAttentionSession({}, ['a'])).toBeNull()
+  })
+})
+
+describe('resolveTabDotState', () => {
+  const entry = (kind: 'finished' | 'failed' | 'approval') => ({ kind, detail: 'x', at: start })
+
+  it('shows nothing for an idle terminal', () => {
+    expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: null })).toBeNull()
+  })
+
+  it('shows running while the shell is busy', () => {
+    expect(resolveTabDotState({ entry: undefined, shellBusy: true, agentActivity: undefined })).toBe('running')
+  })
+
+  it('lets finished, failed and needs-you win over running', () => {
+    for (const kind of ['finished', 'failed', 'approval'] as const) {
+      expect(resolveTabDotState({ entry: entry(kind), shellBusy: true, agentActivity: 'working' })).toBe(kind)
+    }
+  })
+
+  it('follows the state an agent reports over the shell', () => {
+    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: 'idle' })).toBe('idle')
+    expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: 'working' })).toBe('running')
+  })
+
+  it('keeps a plain command running, and shows nothing once it ended', () => {
+    expect(resolveTabDotState({ entry: null, shellBusy: true, agentActivity: null })).toBe('running')
+    expect(resolveTabDotState({ entry: null, shellBusy: false, agentActivity: null })).toBeNull()
+    expect(resolveTabDotState({ entry: entry('approval'), shellBusy: true, agentActivity: null })).toBe('approval')
+  })
+})
+
+describe('user stops and being away', () => {
+  it('treats only signal exits as user stops', () => {
+    for (const code of [129, 130, 143]) expect(isUserStopExitCode(code)).toBe(true)
+    for (const code of [0, 1, 2, 127, 137, null]) expect(isUserStopExitCode(code)).toBe(false)
+  })
+
+  it('counts two minutes without input as away', () => {
+    expect(isUserAway(119)).toBe(false)
+    expect(isUserAway(120)).toBe(true)
   })
 })

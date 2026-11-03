@@ -138,7 +138,14 @@
     "privacy.masking.kind.password": "Пароль",
     "privacy.masking.kind.token": "Токен",
     "privacy.masking.kind.secret": "Секрет",
-    "privacy.masking.kind.api-key": "Ключ API"
+    "privacy.masking.kind.api-key": "Ключ API",
+    "general.attention.agentHint": "Агенты для программирования (Claude Code, Codex, Gemini CLI и другие) тоже могут оповещать вас здесь. Если ваш молчит, проверьте настройку уведомлений агента.",
+    "general.attention.keep.tip.turnOn": "Включить",
+    "general.attention.keep.tip.notNow": "Не сейчас",
+    "general.attention.keep.title": "Показывать уведомления до закрытия",
+    "general.attention.keep.description": "Уведомления остаются на экране, пока вы их не закроете. Точное поведение зависит от рабочего стола.",
+    "general.attention.keep.macDescription": "Это определяет macOS. В Системных настройках выберите для TerminallySKILL стиль, который остаётся до закрытия.",
+    "general.attention.keep.openSettings": "Открыть Системные настройки"
   },
   "commands": {
     "addDialog.title": "Добавить команду",
@@ -392,7 +399,11 @@
     "updates.installing": "Установка обновления",
     "updates.opening": "Открытие обновления",
     "palette.actions.jumpAttention": "Перейти к терминалу, которому нужны вы",
-    "palette.actions.jumpAttentionDescription": "Открыть терминал, который ждёт вас дольше всех, в любом проекте"
+    "palette.actions.jumpAttentionDescription": "Открыть терминал, который ждёт вас дольше всех, в любом проекте",
+    "palette.actions.nextProject": "Следующий проект",
+    "palette.actions.nextProjectDescription": "Переключиться на следующий проект в списке выбора проектов ({{shortcut}})",
+    "palette.actions.previousProject": "Предыдущий проект",
+    "palette.actions.previousProjectDescription": "Переключиться на предыдущий проект в списке выбора проектов ({{shortcut}})"
   },
   "projects": {
     "selector.terminalCount_one": "{{count}} терминал",
@@ -1116,7 +1127,19 @@
     "attention.agentNotify": "Требует вашего внимания",
     "attention.agentBlocked": "Ждёт вас",
     "attention.agentDone": "Готово",
-    "attention.agentError": "Остановлено с ошибкой"
+    "attention.agentError": "Остановлено с ошибкой",
+    "dot.running": "Выполняется",
+    "dot.needsYou": "Ждёт вас",
+    "dot.finished": "Завершено",
+    "dot.failed": "Ошибка",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Развернуть терминал",
+    "panel.restore": "Вернуть размер терминала",
+    "panel.maximiseDescription": "Скрывает вид проекта, чтобы терминал занял всё окно. Нажмите ещё раз, чтобы вернуть прежний размер.",
+    "dot.idle": "Простой",
+    "attention.waitingForYes": "Ждёт вашего согласия",
+    "attention.bell": "Подал звуковой сигнал терминала",
+    "attention.stillWaiting": "Всё ещё ждёт вас ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Визуальный конструктор команд, терминальное рабочее пространство, workflow, логи и инструменты ИИ",
@@ -1304,6 +1327,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Открыть новую вкладку терминала.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Перейти к терминалу, который ждёт вас дольше всех (вкладка с точкой), в любом проекте. Ctrl+Shift+J в Windows и Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Переключает на следующий или предыдущий проект в порядке списка выбора проектов. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp в Windows и Linux.",
     "tour.show": "Показать приветственный тур",
     "tour.showDescription": "Короткая экскурсия по всем разделам приложения",
     "tour.stepOf": "Шаг {{current}} из {{total}}",
@@ -1325,7 +1350,20 @@
     "tour.steps.terminal.title": "Терминал",
     "tour.steps.terminal.body": "Здесь открывается терминал в текущем проекте. Его можно разделить, ставить команды в очередь и просить помощи, если команда завершилась ошибкой.",
     "tour.steps.helpSettings.title": "Справка и настройки",
-    "tour.steps.helpSettings.body": "Справка описывает каждую функцию и позволяет повторить этот тур. В настройках — темы, язык, поставщики ИИ и вкладка «Приватность»."
+    "tour.steps.helpSettings.body": "Справка описывает каждую функцию и позволяет повторить этот тур. В настройках — темы, язык, поставщики ИИ и вкладка «Приватность».",
+    "sections.statusDots.title": "Точки на вкладках терминала",
+    "sections.statusDots.steps.running.label": "Выполняется",
+    "sections.statusDots.steps.running.desc": "Оранжевое вращающееся кольцо: в этом терминале работает команда или агент.",
+    "sections.statusDots.steps.needsYou.label": "Ждёт вас",
+    "sections.statusDots.steps.needsYou.desc": "Пульсирующая жёлтая точка: workflow или агент ждёт вашего подтверждения или ответа.",
+    "sections.statusDots.steps.finished.label": "Завершено",
+    "sections.statusDots.steps.finished.desc": "Зелёная точка: долгая команда или workflow завершились, пока вы не смотрели.",
+    "sections.statusDots.steps.failed.label": "Ошибка",
+    "sections.statusDots.steps.failed.desc": "Красная точка с крестиком: команда, workflow или агент остановились с ошибкой.",
+    "sections.statusDots.steps.idle.label": "Простой",
+    "sections.statusDots.steps.idle.desc": "Серое кольцо: программа открыта, но давно ничего не выводит, например агент ждёт следующую задачу. Только точка, без уведомления.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Развернуть терминал на всё окно или вернуть прежний размер. Ctrl+Shift+M в Windows и Linux."
   },
   "ai": {
     "explain.label": "Объяснить с помощью ИИ",

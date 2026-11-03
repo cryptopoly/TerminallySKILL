@@ -43,7 +43,7 @@ describe('workspace-target-manager', () => {
       _options: { timeout: number },
       callback: ExecCallback
     ) => {
-      callback({ name: 'Error', message: 'spawn ssh ENOENT', code: 'ENOENT' }, '', '')
+      callback(Object.assign(new Error('spawn ssh ENOENT'), { code: 'ENOENT', cmd: 'ssh' }), '', '')
     })
 
     await expect(
@@ -65,7 +65,7 @@ describe('workspace-target-manager', () => {
       callback: ExecCallback
     ) => {
       callback(
-        { name: 'Error', message: 'ssh exited', code: 255 },
+        Object.assign(new Error('ssh exited'), { code: 255, cmd: 'ssh' }),
         '',
         'Permission denied (publickey).'
       )

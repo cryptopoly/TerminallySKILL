@@ -24,13 +24,7 @@ import {
   type Project
 } from '../../../../shared/project-schema'
 import { compareLocalized } from '../../i18n/format'
-
-/** Parse "Group / Name" convention. Returns group=null for ungrouped projects. */
-function parseProjectGroup(name: string): { group: string | null; displayName: string } {
-  const idx = name.indexOf(' / ')
-  if (idx === -1) return { group: null, displayName: name }
-  return { group: name.slice(0, idx).trim(), displayName: name.slice(idx + 3).trim() }
-}
+import { groupProjectsForPicker, parseProjectGroup, sortProjectsForPicker } from '../../lib/project-order'
 
 interface ProjectSelectorProps {
   onCreateNew: () => void
@@ -63,19 +57,10 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
   }, [sessions, runsBySession, busySessionIds])
 
   // Sort: active processes first, then open terminals, then by lastOpenedAt
-  const sorted = useMemo(() => {
-    return [...projects].sort((a, b) => {
-      const aInfo = getProjectTerminalInfo(a.id)
-      const bInfo = getProjectTerminalInfo(b.id)
-
-      // Active processes first
-      if (aInfo.hasActive !== bInfo.hasActive) return aInfo.hasActive ? -1 : 1
-      // Then projects with open terminals
-      if ((aInfo.count > 0) !== (bInfo.count > 0)) return aInfo.count > 0 ? -1 : 1
-      // Then by lastOpenedAt (most recent first)
-      return (b.lastOpenedAt ?? '').localeCompare(a.lastOpenedAt ?? '')
-    })
-  }, [projects, getProjectTerminalInfo])
+  const sorted = useMemo(
+    () => sortProjectsForPicker(projects, getProjectTerminalInfo),
+    [projects, getProjectTerminalInfo]
+  )
 
   const filtered = useMemo(() => {
     if (!search.trim()) return sorted
@@ -91,20 +76,7 @@ export function ProjectSelector({ onCreateNew, onEditProject }: ProjectSelectorP
   // Build grouped structure — null when searching (flat mode)
   const groupedProjects = useMemo(() => {
     if (search.trim()) return null
-    const map = new Map<string | null, Project[]>()
-    for (const p of filtered) {
-      const { group } = parseProjectGroup(p.name)
-      if (!map.has(group)) map.set(group, [])
-      map.get(group)!.push(p)
-    }
-    const result: Array<{ group: string | null; projects: Project[] }> = []
-    const ungrouped = map.get(null)
-    if (ungrouped?.length) result.push({ group: null, projects: ungrouped })
-    const named = [...map.entries()]
-      .filter(([k]) => k !== null)
-      .sort(([a], [b]) => compareLocalized(a as string, b as string, settings))
-    for (const [group, projects] of named) result.push({ group: group as string, projects })
-    return result
+    return groupProjectsForPicker(filtered, (x, y) => compareLocalized(x, y, settings))
   }, [filtered, search, settings])
 
   // Flat list of currently visible projects (respects collapsed groups) for keyboard nav

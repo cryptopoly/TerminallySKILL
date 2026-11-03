@@ -3,6 +3,7 @@ import {
   AGENT_TEXT_MAX_LENGTH,
   OSC_7501_SUPPORT_REPLY,
   parseOsc7501,
+  parseOsc7501Activity,
   parseOsc777,
   parseOsc9,
   sanitizeAgentText
@@ -109,5 +110,21 @@ describe('parseOsc7501', () => {
     expect(parseOsc7501(`state=error:app=${'a'.repeat(40)}:msg=${b64('<b>tests</b> failed')}`)).toMatchObject({
       body: 'tests failed'
     })
+  })
+})
+
+describe('parseOsc7501Activity', () => {
+  it('reports working only for the working state', () => {
+    expect(parseOsc7501Activity('state=working:progress=40')).toBe('working')
+    for (const state of ['idle', 'done', 'blocked', 'error', 'clear']) {
+      expect(parseOsc7501Activity(`state=${state}`)).toBe('idle')
+    }
+  })
+
+  it('ignores queries, unknown states and oversized payloads', () => {
+    expect(parseOsc7501Activity('?')).toBeNull()
+    expect(parseOsc7501Activity('state=panic')).toBeNull()
+    expect(parseOsc7501Activity('msg=aGk=')).toBeNull()
+    expect(parseOsc7501Activity(`state=working:x=${'a'.repeat(5000)}`)).toBeNull()
   })
 })

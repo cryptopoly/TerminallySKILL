@@ -217,7 +217,14 @@
     "privacy.masking.kind.password": "Wachtwoord",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Geheim",
-    "privacy.masking.kind.api-key": "API-sleutel"
+    "privacy.masking.kind.api-key": "API-sleutel",
+    "general.attention.agentHint": "Codeeragents (Claude Code, Codex, Gemini CLI en andere) kunnen je hier ook waarschuwen. Blijft die van jou stil, kijk dan bij de meldingsinstelling van je agent.",
+    "general.attention.keep.tip.turnOn": "Inschakelen",
+    "general.attention.keep.tip.notNow": "Niet nu",
+    "general.attention.keep.title": "Meldingen tonen tot je ze sluit",
+    "general.attention.keep.description": "Meldingen blijven op het scherm tot je ze sluit. Het precieze gedrag hangt af van je bureaublad.",
+    "general.attention.keep.macDescription": "macOS bepaalt dit. Kies in Systeeminstellingen voor TerminallySKILL de stijl die blijft staan tot je hem sluit.",
+    "general.attention.keep.openSettings": "Systeeminstellingen openen"
   },
   "commands": {
     "addDialog.title": "Opdracht toevoegen",
@@ -467,7 +474,11 @@
     "sidebar.tabs.logs": "Logs",
     "sidebar.starterPack.scripts": "Scripts",
     "palette.actions.jumpAttention": "Naar de terminal die je nodig heeft",
-    "palette.actions.jumpAttentionDescription": "Open de terminal die het langst op je wacht, in elk project"
+    "palette.actions.jumpAttentionDescription": "Open de terminal die het langst op je wacht, in elk project",
+    "palette.actions.nextProject": "Volgend project",
+    "palette.actions.nextProjectDescription": "Naar het volgende project in de projectkiezer gaan ({{shortcut}})",
+    "palette.actions.previousProject": "Vorig project",
+    "palette.actions.previousProjectDescription": "Naar het vorige project in de projectkiezer gaan ({{shortcut}})"
   },
   "projects": {
     "selector.none": "Geen project",
@@ -1174,7 +1185,19 @@
     "attention.agentNotify": "Heeft je aandacht nodig",
     "attention.agentBlocked": "Wacht op jou",
     "attention.agentDone": "Klaar",
-    "attention.agentError": "Gestopt met een fout"
+    "attention.agentError": "Gestopt met een fout",
+    "dot.running": "Actief",
+    "dot.needsYou": "Wacht op jou",
+    "dot.finished": "Klaar",
+    "dot.failed": "Mislukt",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Terminal maximaliseren",
+    "panel.restore": "Terminalgrootte herstellen",
+    "panel.maximiseDescription": "Verbergt de projectweergave zodat de terminal het hele venster vult. Klik nogmaals om terug te gaan naar de vorige grootte.",
+    "dot.idle": "Stil",
+    "attention.waitingForYes": "Wacht op je ja",
+    "attention.bell": "Liet de terminalbel klinken",
+    "attention.stillWaiting": "Wacht nog steeds op je ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Visuele opdrachtbuilder, terminalwerkruimte, workflows, logs en AI-tools",
@@ -1357,6 +1380,8 @@
     "sections.scripts.title": "Scripts",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Spring naar de terminal die het langst op je wacht (een tab met een stip), in elk project. Ctrl+Shift+J op Windows en Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Ga naar het volgende of vorige project, in de volgorde van de projectkiezer. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp op Windows en Linux.",
     "tour.show": "Welkomsttour tonen",
     "tour.showDescription": "Een korte rondleiding langs elk onderdeel van de app",
     "tour.stepOf": "Stap {{current}} van {{total}}",
@@ -1378,7 +1403,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Open hier een terminal in het huidige project. Je kunt hem splitsen, opdrachten in de wachtrij zetten en hulp vragen als een opdracht mislukt.",
     "tour.steps.helpSettings.title": "Help en instellingen",
-    "tour.steps.helpSettings.body": "De help-gids legt elke functie uit en kan deze tour opnieuw starten. In de instellingen vind je thema's, taal, AI-aanbieders en het tabblad Privacy."
+    "tour.steps.helpSettings.body": "De help-gids legt elke functie uit en kan deze tour opnieuw starten. In de instellingen vind je thema's, taal, AI-aanbieders en het tabblad Privacy.",
+    "sections.statusDots.title": "Stippen op terminaltabbladen",
+    "sections.statusDots.steps.running.label": "Actief",
+    "sections.statusDots.steps.running.desc": "Oranje draaiende ring: er werkt een opdracht of agent in die terminal.",
+    "sections.statusDots.steps.needsYou.label": "Wacht op jou",
+    "sections.statusDots.steps.needsYou.desc": "Pulserende gele stip: een workflow of agent wacht op je goedkeuring of antwoord.",
+    "sections.statusDots.steps.finished.label": "Klaar",
+    "sections.statusDots.steps.finished.desc": "Groene stip: een lange opdracht of workflow is klaar terwijl je niet keek.",
+    "sections.statusDots.steps.failed.label": "Mislukt",
+    "sections.statusDots.steps.failed.desc": "Rode stip met een kruisje: een opdracht, workflow of agent is gestopt met een fout.",
+    "sections.statusDots.steps.idle.label": "Stil",
+    "sections.statusDots.steps.idle.desc": "Grijze ring: een programma is open maar heeft al een tijdje niets getoond, bijvoorbeeld een agent die op de volgende taak wacht. Alleen de stip, geen melding.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "De terminal maximaliseren zodat hij het venster vult, of herstellen. Ctrl+Shift+M op Windows en Linux."
   },
   "ai": {
     "explain.label": "Uitleggen met AI",

@@ -19,6 +19,8 @@ import { useBuilderStore } from '../../store/builder-store'
 import { useSettingsStore } from '../../store/settings-store'
 import { useAttentionStore } from '../../store/attention-store'
 import { jumpToNextAttention } from '../../lib/attention'
+import { cycleActiveProject } from '../../hooks/useProjectCycleShortcut'
+import { formatProjectCycleShortcut } from '../../lib/project-order'
 import {
   buildProjectExecutionCommand,
   createProjectTerminalSession,
@@ -48,6 +50,7 @@ interface CommandPaletteProps {
   onOpenSettings: () => void
   onOpenInfo: () => void
   onOpenTour: () => void
+  onToggleMaximise: () => void
   onCreateProject: () => void
 }
 
@@ -57,6 +60,7 @@ export function CommandPalette({
   onOpenSettings,
   onOpenInfo,
   onOpenTour,
+  onToggleMaximise,
   onCreateProject
 }: CommandPaletteProps): JSX.Element {
   const { t } = useTranslation('layout')
@@ -77,6 +81,9 @@ export function CommandPalette({
   const activeProject = useProjectStore((s) => s.activeProject)
   const hiddenCommandExecutables = useSettingsStore((s) => s.settings.hiddenCommandExecutables)
   const hasAttention = useAttentionStore((s) => Object.keys(s.entries).length > 0)
+  const activeProjectId = activeProject?.id ?? null
+  const hasProjectTerminal = useTerminalStore((s) => s.sessions.some((session) => session.projectId === activeProjectId))
+  const isMaximised = useTerminalStore((s) => s.terminalMaximised && s.terminalVisible)
 
   // Build the full item list
   const allItems = useMemo((): PaletteItem[] => {
@@ -92,6 +99,21 @@ export function CommandPalette({
         action: () => { onClose(); jumpToNextAttention() }
       })
     }
+    const isMac = navigator.platform.toLowerCase().includes('mac')
+    items.push({
+      id: 'action:next-project',
+      type: 'action',
+      label: t('palette.actions.nextProject'),
+      detail: t('palette.actions.nextProjectDescription', { shortcut: formatProjectCycleShortcut(isMac, 1) }),
+      action: () => { onClose(); cycleActiveProject(1) }
+    })
+    items.push({
+      id: 'action:previous-project',
+      type: 'action',
+      label: t('palette.actions.previousProject'),
+      detail: t('palette.actions.previousProjectDescription', { shortcut: formatProjectCycleShortcut(isMac, -1) }),
+      action: () => { onClose(); cycleActiveProject(-1) }
+    })
     items.push({
       id: 'action:terminal',
       type: 'action',
@@ -99,6 +121,15 @@ export function CommandPalette({
       detail: t('palette.actions.newTerminalDescription'),
       action: () => { onNewTerminal(); onClose() }
     })
+    if (hasProjectTerminal) {
+      items.push({
+        id: 'action:maximise-terminal',
+        type: 'action',
+        label: t(isMaximised ? 'panel.restore' : 'panel.maximise', { ns: 'terminal' }),
+        detail: t('panel.maximiseDescription', { ns: 'terminal' }),
+        action: () => { onClose(); onToggleMaximise() }
+      })
+    }
     if (activeProject?.workspaceTarget.type === 'ssh') {
       items.push({
         id: 'action:ssh-shell',
@@ -212,7 +243,7 @@ export function CommandPalette({
     }
 
     return items
-  }, [commands, scripts, snippets, history, activeProject, hasAttention, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onOpenTour, onCreateProject, resetValues, setActiveCommand, setActiveScript, setActiveSnippet, t])
+  }, [commands, scripts, snippets, history, activeProject, hasAttention, hasProjectTerminal, isMaximised, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onOpenTour, onToggleMaximise, onCreateProject, resetValues, setActiveCommand, setActiveScript, setActiveSnippet, t])
 
   const runHistoryCommand = useCallback(async (cmd: string) => {
     const envOverrides = useProjectStore.getState().getActiveEnvOverrides()

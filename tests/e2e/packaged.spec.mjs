@@ -104,3 +104,31 @@ test(`packaged app (${process.platform}) launches and persists settings across r
     await closeAndAssertExited(secondLaunch.app)
   }
 })
+
+// Goes through Electron's input path with sendInputEvent. Playwright's own key presses skip it, and so
+// would miss anything in the main process that blocks a key.
+test('packaged app lets Ctrl+R reach the shell', async ({}, testInfo) => {
+  const { app, page } = await launchPackagedTerminallySkill(testInfo)
+  try {
+    const workspaceDir = testInfo.outputPath('workspace')
+    await mkdir(workspaceDir, { recursive: true })
+    await page.evaluate(async (cwd) => {
+      await window.electronAPI.updateSettings({ terminalInputMode: 'classic' })
+      await window.electronAPI.createProject('E2E Keys', cwd, '#14b8a6', undefined, 'disabled', true)
+    }, workspaceDir)
+    await page.reload()
+    await page.locator('.xterm-helper-textarea').first().waitFor({ state: 'attached', timeout: 20_000 })
+    const rows = page.locator('.xterm-rows:visible')
+    await expect(rows).toContainText(/[%$#]/, { timeout: 20_000 })
+    await page.locator('.xterm:visible').click()
+
+    await app.evaluate(({ BrowserWindow }) => {
+      const { webContents } = BrowserWindow.getAllWindows()[0]
+      webContents.sendInputEvent({ type: 'keyDown', keyCode: 'r', modifiers: ['control'] })
+      webContents.sendInputEvent({ type: 'keyUp', keyCode: 'r', modifiers: ['control'] })
+    })
+    await expect(rows).toContainText(/bck-i-search|reverse-i-search/, { timeout: 10_000 })
+  } finally {
+    await closeAndAssertExited(app)
+  }
+})

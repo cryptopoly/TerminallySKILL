@@ -220,7 +220,14 @@
     "privacy.masking.kind.password": "비밀번호",
     "privacy.masking.kind.token": "토큰",
     "privacy.masking.kind.secret": "비밀 값",
-    "privacy.masking.kind.api-key": "API 키"
+    "privacy.masking.kind.api-key": "API 키",
+    "general.attention.agentHint": "코딩 에이전트(Claude Code, Codex, Gemini CLI 등)도 여기서 알려 줄 수 있습니다. 알림이 오지 않으면 에이전트의 알림 설정을 확인하세요.",
+    "general.attention.keep.tip.turnOn": "켜기",
+    "general.attention.keep.tip.notNow": "나중에",
+    "general.attention.keep.title": "닫을 때까지 알림 유지",
+    "general.attention.keep.description": "알림을 닫을 때까지 화면에 표시합니다. 정확한 동작은 데스크톱 환경에 따라 다릅니다.",
+    "general.attention.keep.macDescription": "macOS에서 결정합니다. 시스템 설정에서 TerminallySKILL에 닫을 때까지 표시되는 스타일을 선택하세요.",
+    "general.attention.keep.openSettings": "시스템 설정 열기"
   },
   "commands": {
     "addDialog.title": "명령 추가",
@@ -465,7 +472,11 @@
     "updates.installing": "업데이트 설치 중",
     "updates.opening": "업데이트 여는 중",
     "palette.actions.jumpAttention": "확인이 필요한 터미널로 이동",
-    "palette.actions.jumpAttentionDescription": "어느 프로젝트에서든 가장 오래 기다린 터미널을 엽니다"
+    "palette.actions.jumpAttentionDescription": "어느 프로젝트에서든 가장 오래 기다린 터미널을 엽니다",
+    "palette.actions.nextProject": "다음 프로젝트",
+    "palette.actions.nextProjectDescription": "프로젝트 선택기 순서에서 다음 프로젝트로 전환합니다 ({{shortcut}})",
+    "palette.actions.previousProject": "이전 프로젝트",
+    "palette.actions.previousProjectDescription": "프로젝트 선택기 순서에서 이전 프로젝트로 전환합니다 ({{shortcut}})"
   },
   "projects": {
     "selector.none": "프로젝트 없음",
@@ -1172,7 +1183,19 @@
     "attention.agentNotify": "확인이 필요합니다",
     "attention.agentBlocked": "입력을 기다리는 중",
     "attention.agentDone": "완료",
-    "attention.agentError": "오류로 중지됨"
+    "attention.agentError": "오류로 중지됨",
+    "dot.running": "실행 중",
+    "dot.needsYou": "확인 필요",
+    "dot.finished": "완료",
+    "dot.failed": "실패",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "터미널 최대화",
+    "panel.restore": "터미널 크기 복원",
+    "panel.maximiseDescription": "프로젝트 화면을 숨겨 터미널이 창 전체를 채우게 합니다. 다시 클릭하면 이전 크기로 돌아갑니다.",
+    "dot.idle": "대기",
+    "attention.waitingForYes": "승인을 기다리는 중",
+    "attention.bell": "터미널 벨을 울렸습니다",
+    "attention.stillWaiting": "아직 기다리는 중 ({{duration}})"
   },
   "onboarding": {
     "subtitle": "시각적 명령 빌더, 터미널 작업공간, 워크플로, 로그, AI 도구",
@@ -1354,6 +1377,8 @@
     "sections.keyboard.steps.newTerminal.desc": "새 터미널 탭을 엽니다.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "가장 오래 기다린 터미널(점이 표시된 탭)로 어느 프로젝트에서든 이동합니다. Windows와 Linux에서는 Ctrl+Shift+J.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "프로젝트 선택기의 순서대로 다음 또는 이전 프로젝트로 전환합니다. Windows와 Linux에서는 Ctrl+Alt+PageDown / Ctrl+Alt+PageUp.",
     "tour.show": "환영 둘러보기 보기",
     "tour.showDescription": "앱의 각 화면을 짧게 안내합니다",
     "tour.stepOf": "{{total}}단계 중 {{current}}단계",
@@ -1375,7 +1400,20 @@
     "tour.steps.terminal.title": "터미널",
     "tour.steps.terminal.body": "여기에서 현재 프로젝트의 터미널을 엽니다. 터미널을 분할하고, 명령을 대기열에 넣고, 명령이 실패하면 도움을 받을 수 있습니다.",
     "tour.steps.helpSettings.title": "도움말과 설정",
-    "tour.steps.helpSettings.body": "도움말 가이드는 모든 기능을 설명하며 이 둘러보기를 다시 볼 수 있습니다. 설정에는 테마, 언어, AI 제공자, 개인정보 보호 탭이 있습니다."
+    "tour.steps.helpSettings.body": "도움말 가이드는 모든 기능을 설명하며 이 둘러보기를 다시 볼 수 있습니다. 설정에는 테마, 언어, AI 제공자, 개인정보 보호 탭이 있습니다.",
+    "sections.statusDots.title": "터미널 탭 점",
+    "sections.statusDots.steps.running.label": "실행 중",
+    "sections.statusDots.steps.running.desc": "회전하는 주황색 고리: 그 터미널에서 명령이나 에이전트가 작업 중입니다.",
+    "sections.statusDots.steps.needsYou.label": "확인 필요",
+    "sections.statusDots.steps.needsYou.desc": "깜박이는 노란색 점: 워크플로나 에이전트가 승인이나 답변을 기다립니다.",
+    "sections.statusDots.steps.finished.label": "완료",
+    "sections.statusDots.steps.finished.desc": "초록색 점: 보지 않는 동안 오래 걸린 명령이나 워크플로가 끝났습니다.",
+    "sections.statusDots.steps.failed.label": "실패",
+    "sections.statusDots.steps.failed.desc": "X 표시가 있는 빨간색 점: 명령, 워크플로 또는 에이전트가 오류로 멈췄습니다.",
+    "sections.statusDots.steps.idle.label": "대기",
+    "sections.statusDots.steps.idle.desc": "회색 고리: 프로그램이 열려 있지만 한동안 아무것도 출력하지 않았습니다. 예: 다음 작업을 기다리는 에이전트. 점만 표시하고 알림은 없습니다.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "터미널을 창 전체로 최대화하거나 복원합니다. Windows와 Linux에서는 Ctrl+Shift+M."
   },
   "ai": {
     "explain.label": "AI로 설명",

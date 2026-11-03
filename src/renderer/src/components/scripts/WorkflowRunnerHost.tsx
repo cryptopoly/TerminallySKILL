@@ -19,7 +19,7 @@ import { buildEnvOverrides } from '../../../../shared/project-schema'
 import type { RunRecord, RunStepRecord, TerminalSessionInfo } from '../../../../shared/run-schema'
 import { buildProjectWorkspaceCommandString } from '../../../../shared/workspace-target'
 import { formatWorkflowRunError } from '../../lib/workflow-run-errors'
-import { isStillWaiting, snapshotWaitingStep, STEP_MARKER_GRACE_MS } from '../../lib/workflow-step-fallback'
+import { isStillWaiting, snapshotWaitingStep, STEP_MARKER_GRACE_MS, type WaitingStepSnapshot } from '../../lib/workflow-step-fallback'
 import { buildWorkflowStepMarkerCommand, shellSupportsWorkflowStepMarkers } from '../../../../shared/workflow-shell'
 
 type ScriptTranslator = (key: string, options?: Record<string, unknown>) => string
@@ -52,14 +52,23 @@ export function WorkflowRunnerEngine(): JSX.Element {
 
   useEffect(() => {
     const fallbackTimers = new Set<number>()
+    // The step attempt each session's shell has actually started running
+    const startedSteps = new Map<string, WaitingStepSnapshot>()
     const unsubReady = window.electronAPI.onShellReady((sessionId) => {
       markSessionReady(sessionId)
     })
     const unsubExit = window.electronAPI.onTerminalExit((sessionId) => {
+      startedSteps.delete(sessionId)
       markSessionClosed(sessionId)
     })
     // Listen for prompt-ready events with exit codes to detect workflow step completion
     const unsubShellEvent = window.electronAPI.onShellEvent((sessionId, event) => {
+      if (event.type === 'command-start') {
+        if (event.command.includes('workflow-step;')) return
+        const started = snapshotWaitingStep(useWorkflowRunnerStore.getState().runsBySession[sessionId])
+        if (started) startedSteps.set(sessionId, started)
+        return
+      }
       if (event.type !== 'prompt-ready') return
       const promptEvent = event as ShellPromptReadyEvent
       if (promptEvent.exitCode === null) return
@@ -73,6 +82,10 @@ export function WorkflowRunnerEngine(): JSX.Element {
       if (run.stepMarkers) {
         const waiting = snapshotWaitingStep(run)
         if (!waiting) return
+        // The previous step's marker draws its own prompt, which can arrive after this step was typed.
+        // A prompt only ends this step once the shell has started running it.
+        const started = startedSteps.get(sessionId)
+        if (!started || !isStillWaiting(run, started)) return
         const exitCode = promptEvent.exitCode
         const timeoutId = window.setTimeout(() => {
           fallbackTimers.delete(timeoutId)

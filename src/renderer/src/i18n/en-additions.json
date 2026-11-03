@@ -67,7 +67,14 @@
     "privacy.masking.kind.password": "Password",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Secret",
-    "privacy.masking.kind.api-key": "API key"
+    "privacy.masking.kind.api-key": "API key",
+    "general.attention.agentHint": "Coding agents (Claude Code, Codex, Gemini CLI and others) can alert you here too. If yours stays silent, see your agent's notification setting.",
+    "general.attention.keep.tip.turnOn": "Turn on",
+    "general.attention.keep.tip.notNow": "Not now",
+    "general.attention.keep.title": "Keep notifications until dismissed",
+    "general.attention.keep.description": "Notifications stay on screen until you close them. The exact behaviour depends on your desktop.",
+    "general.attention.keep.macDescription": "macOS decides this. In System Settings, set TerminallySKILL to Alerts to keep notifications until you close them.",
+    "general.attention.keep.openSettings": "Open System Settings"
   },
   "logs": {
     "diagnostics.suspect.exit1a": "The command ran but hit a generic failure, so the real cause is usually in the command output just above this error.",
@@ -121,7 +128,19 @@
     "attention.agentNotify": "Needs your attention",
     "attention.agentBlocked": "Waiting for you",
     "attention.agentDone": "Done",
-    "attention.agentError": "Stopped with an error"
+    "attention.agentError": "Stopped with an error",
+    "dot.running": "Running",
+    "dot.needsYou": "Needs you",
+    "dot.finished": "Finished",
+    "dot.failed": "Failed",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Maximise terminal",
+    "panel.restore": "Restore terminal size",
+    "panel.maximiseDescription": "Hide the project view so the terminal fills the window. Click again to go back to the previous size.",
+    "dot.idle": "Idle",
+    "attention.waitingForYes": "Waiting for your yes",
+    "attention.bell": "Rang the terminal bell",
+    "attention.stillWaiting": "Still waiting for you ({{duration}})"
   },
   "native": {
     "menu.file": "File",
@@ -280,11 +299,17 @@
   },
   "layout": {
     "palette.actions.jumpAttention": "Jump to the terminal that needs you",
-    "palette.actions.jumpAttentionDescription": "Open the terminal that has waited longest for you, in any project"
+    "palette.actions.jumpAttentionDescription": "Open the terminal that has waited longest for you, in any project",
+    "palette.actions.nextProject": "Next project",
+    "palette.actions.nextProjectDescription": "Switch to the next project in the project picker ({{shortcut}})",
+    "palette.actions.previousProject": "Previous project",
+    "palette.actions.previousProjectDescription": "Switch to the previous project in the project picker ({{shortcut}})"
   },
   "onboarding": {
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Jump to the terminal that has waited longest for you (a tab with a dot), in any project. Ctrl+Shift+J on Windows and Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Switch to the next or previous project, in the order the project picker shows. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp on Windows and Linux.",
     "tour.show": "Show welcome tour",
     "tour.showDescription": "A short walk through each part of the app",
     "tour.stepOf": "Step {{current}} of {{total}}",
@@ -306,6 +331,19 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Open a terminal in the current project here. You can split it, queue commands and ask for help when a command fails.",
     "tour.steps.helpSettings.title": "Help and settings",
-    "tour.steps.helpSettings.body": "The guide explains every feature and can replay this tour. Settings holds themes, language, AI providers and the Privacy tab."
+    "tour.steps.helpSettings.body": "The guide explains every feature and can replay this tour. Settings holds themes, language, AI providers and the Privacy tab.",
+    "sections.statusDots.title": "Terminal tab dots",
+    "sections.statusDots.steps.running.label": "Running",
+    "sections.statusDots.steps.running.desc": "Orange spinning ring: a command or agent is working in that terminal.",
+    "sections.statusDots.steps.needsYou.label": "Needs you",
+    "sections.statusDots.steps.needsYou.desc": "Pulsing yellow dot: a workflow or agent is waiting for your approval or answer.",
+    "sections.statusDots.steps.finished.label": "Finished",
+    "sections.statusDots.steps.finished.desc": "Green dot: a long command or workflow finished while you were not looking.",
+    "sections.statusDots.steps.failed.label": "Failed",
+    "sections.statusDots.steps.failed.desc": "Red dot with a cross: a command, workflow or agent stopped with an error.",
+    "sections.statusDots.steps.idle.label": "Idle",
+    "sections.statusDots.steps.idle.desc": "Grey ring: a program is open but has printed nothing for a while, for example an agent waiting for its next task. Dot only, no notification.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Maximise the terminal so it fills the window, or restore it. Ctrl+Shift+M on Windows and Linux."
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Script } from '../shared/script-schema'
+import type { Script, ScriptStep } from '../shared/script-schema'
 import type { TVFlowFile } from '../shared/tvflow-schema'
 import {
   backfillScript,
@@ -99,7 +99,7 @@ describe('script-persistence', () => {
     expect(copy.id).toBe('script-copy')
     expect(copy.name).toBe('Deploy (Copy)')
     expect(copy.steps[0].id).toBe('step-copy')
-    expect(copy.steps[0].commandString).toBe('npm test')
+    expect(copy.steps[0]).toMatchObject({ commandString: 'npm test' })
     expect(copy.lastRunAt).toBeNull()
     expect(copy.createdAt).toBe('2026-03-08T16:40:00.000Z')
     expect(copy.updatedAt).toBe('2026-03-08T16:40:00.000Z')
@@ -426,7 +426,7 @@ describe('script-persistence', () => {
           commandString: 'npm test',
           commandId: 'cmd-1',
           enabled: true
-        }
+        } as ScriptStep // legacy record without type, label or retry fields
       ]
     })
 

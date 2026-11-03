@@ -219,7 +219,14 @@
     "privacy.masking.kind.password": "كلمة مرور",
     "privacy.masking.kind.token": "رمز مميز",
     "privacy.masking.kind.secret": "سر",
-    "privacy.masking.kind.api-key": "مفتاح API"
+    "privacy.masking.kind.api-key": "مفتاح API",
+    "general.attention.agentHint": "يمكن لوكلاء البرمجة (Claude Code وCodex وGemini CLI وغيرها) تنبيهك هنا أيضًا. إذا بقي وكيلك صامتًا، فراجع إعداد الإشعارات الخاص به.",
+    "general.attention.keep.tip.turnOn": "تشغيل",
+    "general.attention.keep.tip.notNow": "ليس الآن",
+    "general.attention.keep.title": "إبقاء الإشعارات حتى إغلاقها",
+    "general.attention.keep.description": "تبقى الإشعارات على الشاشة حتى تغلقها. يعتمد السلوك الدقيق على سطح المكتب لديك.",
+    "general.attention.keep.macDescription": "يتحكم macOS في ذلك. في إعدادات النظام، اختر لـ TerminallySKILL نمط الإشعار الذي يبقى حتى تغلقه.",
+    "general.attention.keep.openSettings": "فتح إعدادات النظام"
   },
   "commands": {
     "addDialog.title": "إضافة أمر",
@@ -500,7 +507,11 @@
     "updates.installing": "جارٍ تثبيت التحديث",
     "updates.opening": "جارٍ فتح التحديث",
     "palette.actions.jumpAttention": "الانتقال إلى الطرفية التي تحتاجك",
-    "palette.actions.jumpAttentionDescription": "افتح الطرفية التي تنتظرك منذ أطول وقت، في أي مشروع"
+    "palette.actions.jumpAttentionDescription": "افتح الطرفية التي تنتظرك منذ أطول وقت، في أي مشروع",
+    "palette.actions.nextProject": "المشروع التالي",
+    "palette.actions.nextProjectDescription": "التبديل إلى المشروع التالي في محدد المشاريع ({{shortcut}})",
+    "palette.actions.previousProject": "المشروع السابق",
+    "palette.actions.previousProjectDescription": "التبديل إلى المشروع السابق في محدد المشاريع ({{shortcut}})"
   },
   "projects": {
     "selector.none": "لا يوجد مشروع",
@@ -1305,7 +1316,19 @@
     "attention.agentNotify": "يحتاج إلى انتباهك",
     "attention.agentBlocked": "بانتظارك",
     "attention.agentDone": "تم",
-    "attention.agentError": "توقف بسبب خطأ"
+    "attention.agentError": "توقف بسبب خطأ",
+    "dot.running": "قيد التشغيل",
+    "dot.needsYou": "بحاجة إليك",
+    "dot.finished": "انتهى",
+    "dot.failed": "فشل",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "تكبير الطرفية",
+    "panel.restore": "استعادة حجم الطرفية",
+    "panel.maximiseDescription": "يخفي عرض المشروع لتملأ الطرفية النافذة. انقر مرة أخرى للعودة إلى الحجم السابق.",
+    "dot.idle": "خامل",
+    "attention.waitingForYes": "بانتظار موافقتك",
+    "attention.bell": "أطلق جرس الطرفية",
+    "attention.stillWaiting": "لا يزال بانتظارك ({{duration}})"
   },
   "onboarding": {
     "subtitle": "منشئ أوامر مرئي ومساحة عمل طرفية وسير عمل وسجلات وأدوات ذكاء اصطناعي",
@@ -1499,6 +1522,8 @@
     "sections.keyboard.steps.newTerminal.desc": "افتح تبويب طرفية جديدًا.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "الانتقال إلى الطرفية التي تنتظرك منذ أطول وقت (تبويب عليه نقطة)، في أي مشروع. Ctrl+Shift+J على Windows وLinux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "التبديل إلى المشروع التالي أو السابق بحسب ترتيب محدد المشاريع. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp على Windows وLinux.",
     "tour.show": "عرض جولة الترحيب",
     "tour.showDescription": "جولة قصيرة في كل أجزاء التطبيق",
     "tour.stepOf": "الخطوة {{current}} من {{total}}",
@@ -1520,7 +1545,20 @@
     "tour.steps.terminal.title": "الطرفية",
     "tour.steps.terminal.body": "افتح من هنا طرفية في المشروع الحالي. يمكنك تقسيمها، ووضع الأوامر في قائمة انتظار، وطلب المساعدة عند فشل أمر.",
     "tour.steps.helpSettings.title": "المساعدة والإعدادات",
-    "tour.steps.helpSettings.body": "يشرح دليل المساعدة كل ميزة ويمكنه إعادة تشغيل هذه الجولة. وتضم الإعدادات السمات واللغة ومزوّدي الذكاء الاصطناعي وتبويب الخصوصية."
+    "tour.steps.helpSettings.body": "يشرح دليل المساعدة كل ميزة ويمكنه إعادة تشغيل هذه الجولة. وتضم الإعدادات السمات واللغة ومزوّدي الذكاء الاصطناعي وتبويب الخصوصية.",
+    "sections.statusDots.title": "نقاط تبويبات الطرفية",
+    "sections.statusDots.steps.running.label": "قيد التشغيل",
+    "sections.statusDots.steps.running.desc": "حلقة برتقالية دوّارة: يعمل أمر أو وكيل في هذه الطرفية.",
+    "sections.statusDots.steps.needsYou.label": "بحاجة إليك",
+    "sections.statusDots.steps.needsYou.desc": "نقطة صفراء نابضة: سير عمل أو وكيل ينتظر موافقتك أو ردك.",
+    "sections.statusDots.steps.finished.label": "انتهى",
+    "sections.statusDots.steps.finished.desc": "نقطة خضراء: انتهى أمر طويل أو سير عمل بينما لم تكن تنظر.",
+    "sections.statusDots.steps.failed.label": "فشل",
+    "sections.statusDots.steps.failed.desc": "نقطة حمراء عليها علامة ×: توقف أمر أو سير عمل أو وكيل بسبب خطأ.",
+    "sections.statusDots.steps.idle.label": "خامل",
+    "sections.statusDots.steps.idle.desc": "حلقة رمادية: برنامج مفتوح لكنه لم يطبع شيئًا منذ مدة، مثل وكيل ينتظر مهمته التالية. نقطة فقط، بلا إشعار.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "تكبير الطرفية لتملأ النافذة أو استعادتها. Ctrl+Shift+M على Windows وLinux."
   },
   "ai": {
     "explain.label": "اشرح بالذكاء الاصطناعي",

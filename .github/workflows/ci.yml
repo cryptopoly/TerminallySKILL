@@ -28,13 +28,15 @@ jobs:
           cache: npm
 
       - name: Install Linux build dependencies
-        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev xvfb libnss3 libxss1 libgtk-3-0 libgbm1 libasound2t64
+        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev xvfb libnss3 libxss1 libgtk-3-0 libgbm1 libasound2t64 x11vnc xterm x11-xserver-utils
 
       - run: npm ci
 
       - run: npm run test:ci
 
       - run: xvfb-run -a npm run test:e2e
+
+      - run: RUN_REAL_VNC_E2E=1 xvfb-run -a npm run test:e2e:ssh-local
 
       - run: REQUIRE_DOCKER_E2E=1 xvfb-run -a npm run test:e2e:ssh-docker
 

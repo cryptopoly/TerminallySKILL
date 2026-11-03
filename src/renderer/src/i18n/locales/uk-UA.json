@@ -217,7 +217,14 @@
     "privacy.masking.kind.password": "Пароль",
     "privacy.masking.kind.token": "Токен",
     "privacy.masking.kind.secret": "Секрет",
-    "privacy.masking.kind.api-key": "Ключ API"
+    "privacy.masking.kind.api-key": "Ключ API",
+    "general.attention.agentHint": "Агенти для програмування (Claude Code, Codex, Gemini CLI та інші) теж можуть сповіщати вас тут. Якщо ваш мовчить, перевірте налаштування сповіщень агента.",
+    "general.attention.keep.tip.turnOn": "Увімкнути",
+    "general.attention.keep.tip.notNow": "Не зараз",
+    "general.attention.keep.title": "Показувати сповіщення до закриття",
+    "general.attention.keep.description": "Сповіщення залишаються на екрані, доки ви їх не закриєте. Точна поведінка залежить від робочого столу.",
+    "general.attention.keep.macDescription": "Це визначає macOS. У Системних параметрах виберіть для TerminallySKILL стиль, який залишається до закриття.",
+    "general.attention.keep.openSettings": "Відкрити Системні параметри"
   },
   "commands": {
     "addDialog.title": "Додати команду",
@@ -480,7 +487,11 @@
     "updates.installing": "Установлення оновлення",
     "updates.opening": "Відкриття оновлення",
     "palette.actions.jumpAttention": "Перейти до термінала, якому потрібні ви",
-    "palette.actions.jumpAttentionDescription": "Відкрити термінал, який чекає на вас найдовше, у будь-якому проєкті"
+    "palette.actions.jumpAttentionDescription": "Відкрити термінал, який чекає на вас найдовше, у будь-якому проєкті",
+    "palette.actions.nextProject": "Наступний проєкт",
+    "palette.actions.nextProjectDescription": "Перейти до наступного проєкту в списку вибору проєктів ({{shortcut}})",
+    "palette.actions.previousProject": "Попередній проєкт",
+    "palette.actions.previousProjectDescription": "Перейти до попереднього проєкту в списку вибору проєктів ({{shortcut}})"
   },
   "projects": {
     "selector.none": "Немає проєкту",
@@ -1235,7 +1246,19 @@
     "attention.agentNotify": "Потребує вашої уваги",
     "attention.agentBlocked": "Чекає на вас",
     "attention.agentDone": "Готово",
-    "attention.agentError": "Зупинено з помилкою"
+    "attention.agentError": "Зупинено з помилкою",
+    "dot.running": "Виконується",
+    "dot.needsYou": "Чекає на вас",
+    "dot.finished": "Завершено",
+    "dot.failed": "Помилка",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Розгорнути термінал",
+    "panel.restore": "Повернути розмір термінала",
+    "panel.maximiseDescription": "Ховає вигляд проєкту, щоб термінал зайняв усе вікно. Натисніть ще раз, щоб повернути попередній розмір.",
+    "dot.idle": "Простій",
+    "attention.waitingForYes": "Чекає на вашу згоду",
+    "attention.bell": "Подав звуковий сигнал термінала",
+    "attention.stillWaiting": "Досі чекає на вас ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Візуальний конструктор команд, термінальний робочий простір, workflow, логи та інструменти ШІ",
@@ -1423,6 +1446,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Відкрити нову вкладку термінала.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Перейти до термінала, який чекає на вас найдовше (вкладка з крапкою), у будь-якому проєкті. Ctrl+Shift+J у Windows і Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Перемикає на наступний або попередній проєкт у порядку списку вибору проєктів. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp у Windows і Linux.",
     "tour.show": "Показати вітальний тур",
     "tour.showDescription": "Коротка екскурсія всіма розділами застосунку",
     "tour.stepOf": "Крок {{current}} з {{total}}",
@@ -1444,7 +1469,20 @@
     "tour.steps.terminal.title": "Термінал",
     "tour.steps.terminal.body": "Тут відкривається термінал у поточному проєкті. Його можна розділити, ставити команди в чергу та просити допомоги, коли команда завершилася помилкою.",
     "tour.steps.helpSettings.title": "Довідка та налаштування",
-    "tour.steps.helpSettings.body": "Довідка описує кожну функцію і дає змогу повторити цей тур. У налаштуваннях — теми, мова, постачальники ШІ та вкладка «Приватність»."
+    "tour.steps.helpSettings.body": "Довідка описує кожну функцію і дає змогу повторити цей тур. У налаштуваннях — теми, мова, постачальники ШІ та вкладка «Приватність».",
+    "sections.statusDots.title": "Крапки на вкладках термінала",
+    "sections.statusDots.steps.running.label": "Виконується",
+    "sections.statusDots.steps.running.desc": "Помаранчеве кільце, що обертається: у цьому терміналі працює команда або агент.",
+    "sections.statusDots.steps.needsYou.label": "Чекає на вас",
+    "sections.statusDots.steps.needsYou.desc": "Пульсуюча жовта крапка: workflow або агент чекає на ваше підтвердження чи відповідь.",
+    "sections.statusDots.steps.finished.label": "Завершено",
+    "sections.statusDots.steps.finished.desc": "Зелена крапка: довга команда або workflow завершилися, поки ви не дивилися.",
+    "sections.statusDots.steps.failed.label": "Помилка",
+    "sections.statusDots.steps.failed.desc": "Червона крапка з хрестиком: команда, workflow або агент зупинилися з помилкою.",
+    "sections.statusDots.steps.idle.label": "Простій",
+    "sections.statusDots.steps.idle.desc": "Сіре кільце: програма відкрита, але давно нічого не виводить, наприклад агент чекає на наступне завдання. Лише крапка, без сповіщення.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Розгорнути термінал на все вікно або повернути попередній розмір. Ctrl+Shift+M у Windows і Linux."
   },
   "ai": {
     "explain.label": "Пояснити за допомогою ШІ",

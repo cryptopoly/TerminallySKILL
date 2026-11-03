@@ -1,6 +1,6 @@
-import { BrowserWindow, ipcMain } from 'electron'
+import { BrowserWindow, ipcMain, powerMonitor } from 'electron'
 import { IPC_CHANNELS } from '../../shared/ipc-channels'
-import { notifyAttention, setWindowBadgeCount } from '../attention-manager'
+import { notifyAttention, openSystemNotificationSettings, setWindowBadgeCount } from '../attention-manager'
 import { requirePlainObject, requireString } from './validation'
 
 export function registerAttentionIpcHandlers(): void {
@@ -11,9 +11,14 @@ export function registerAttentionIpcHandlers(): void {
     notifyAttention(win, {
       sessionId: requireString(plain.sessionId, 'sessionId'),
       title: requireString(plain.title, 'title'),
-      body: typeof plain.body === 'string' ? plain.body : ''
+      body: typeof plain.body === 'string' ? plain.body : '',
+      keepUntilDismissed: plain.keepUntilDismissed === true
     })
   })
+
+  ipcMain.handle(IPC_CHANNELS.ATTENTION_OPEN_SYSTEM_SETTINGS, () => openSystemNotificationSettings())
+
+  ipcMain.handle(IPC_CHANNELS.ATTENTION_IDLE_SECONDS, () => powerMonitor.getSystemIdleTime())
 
   ipcMain.handle(IPC_CHANNELS.ATTENTION_SET_BADGE, (event, count: unknown) => {
     const win = BrowserWindow.fromWebContents(event.sender)

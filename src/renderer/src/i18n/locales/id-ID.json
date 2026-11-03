@@ -220,7 +220,14 @@
     "privacy.masking.kind.password": "Kata sandi",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Rahasia",
-    "privacy.masking.kind.api-key": "Kunci API"
+    "privacy.masking.kind.api-key": "Kunci API",
+    "general.attention.agentHint": "Agen coding (Claude Code, Codex, Gemini CLI, dan lainnya) juga bisa memberi tahu Anda di sini. Jika agen Anda tetap diam, lihat pengaturan notifikasi agen Anda.",
+    "general.attention.keep.tip.turnOn": "Aktifkan",
+    "general.attention.keep.tip.notNow": "Nanti saja",
+    "general.attention.keep.title": "Pertahankan notifikasi sampai ditutup",
+    "general.attention.keep.description": "Notifikasi tetap di layar sampai Anda menutupnya. Perilaku pastinya bergantung pada desktop Anda.",
+    "general.attention.keep.macDescription": "macOS yang menentukan ini. Di Pengaturan Sistem, pilih gaya untuk TerminallySKILL yang tetap tampil sampai ditutup.",
+    "general.attention.keep.openSettings": "Buka Pengaturan Sistem"
   },
   "commands": {
     "addDialog.title": "Tambah perintah",
@@ -466,7 +473,11 @@
     "updates.opening": "Membuka pembaruan",
     "sidebar.tabs.logs": "Log",
     "palette.actions.jumpAttention": "Lompat ke terminal yang membutuhkan Anda",
-    "palette.actions.jumpAttentionDescription": "Buka terminal yang paling lama menunggu Anda, di proyek mana pun"
+    "palette.actions.jumpAttentionDescription": "Buka terminal yang paling lama menunggu Anda, di proyek mana pun",
+    "palette.actions.nextProject": "Proyek berikutnya",
+    "palette.actions.nextProjectDescription": "Beralih ke proyek berikutnya di pemilih proyek ({{shortcut}})",
+    "palette.actions.previousProject": "Proyek sebelumnya",
+    "palette.actions.previousProjectDescription": "Beralih ke proyek sebelumnya di pemilih proyek ({{shortcut}})"
   },
   "projects": {
     "selector.none": "Tidak ada proyek",
@@ -1173,7 +1184,19 @@
     "attention.agentNotify": "Perlu perhatian Anda",
     "attention.agentBlocked": "Menunggu Anda",
     "attention.agentDone": "Selesai",
-    "attention.agentError": "Berhenti karena galat"
+    "attention.agentError": "Berhenti karena galat",
+    "dot.running": "Berjalan",
+    "dot.needsYou": "Butuh Anda",
+    "dot.finished": "Selesai",
+    "dot.failed": "Gagal",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Maksimalkan terminal",
+    "panel.restore": "Kembalikan ukuran terminal",
+    "panel.maximiseDescription": "Menyembunyikan tampilan proyek sehingga terminal memenuhi jendela. Klik lagi untuk kembali ke ukuran sebelumnya.",
+    "dot.idle": "Diam",
+    "attention.waitingForYes": "Menunggu persetujuan Anda",
+    "attention.bell": "Membunyikan bel terminal",
+    "attention.stillWaiting": "Masih menunggu Anda ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Command builder visual, workspace terminal, workflow, log, dan alat AI",
@@ -1355,6 +1378,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Buka tab terminal baru.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Lompat ke terminal yang paling lama menunggu Anda (tab dengan titik), di proyek mana pun. Ctrl+Shift+J di Windows dan Linux.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Beralih ke proyek berikutnya atau sebelumnya, sesuai urutan pemilih proyek. Ctrl+Alt+PageDown / Ctrl+Alt+PageUp di Windows dan Linux.",
     "tour.show": "Tampilkan tur sambutan",
     "tour.showDescription": "Jalan-jalan singkat ke setiap bagian aplikasi",
     "tour.stepOf": "Langkah {{current}} dari {{total}}",
@@ -1376,7 +1401,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Buka terminal di proyek saat ini dari sini. Anda dapat membaginya, mengantrekan perintah, dan meminta bantuan saat perintah gagal.",
     "tour.steps.helpSettings.title": "Bantuan dan pengaturan",
-    "tour.steps.helpSettings.body": "Panduan bantuan menjelaskan setiap fitur dan dapat memutar ulang tur ini. Pengaturan berisi tema, bahasa, penyedia AI, dan tab Privasi."
+    "tour.steps.helpSettings.body": "Panduan bantuan menjelaskan setiap fitur dan dapat memutar ulang tur ini. Pengaturan berisi tema, bahasa, penyedia AI, dan tab Privasi.",
+    "sections.statusDots.title": "Titik pada tab terminal",
+    "sections.statusDots.steps.running.label": "Berjalan",
+    "sections.statusDots.steps.running.desc": "Cincin oranye berputar: perintah atau agen sedang bekerja di terminal itu.",
+    "sections.statusDots.steps.needsYou.label": "Butuh Anda",
+    "sections.statusDots.steps.needsYou.desc": "Titik kuning berdenyut: workflow atau agen menunggu persetujuan atau jawaban Anda.",
+    "sections.statusDots.steps.finished.label": "Selesai",
+    "sections.statusDots.steps.finished.desc": "Titik hijau: perintah panjang atau workflow selesai saat Anda tidak melihat.",
+    "sections.statusDots.steps.failed.label": "Gagal",
+    "sections.statusDots.steps.failed.desc": "Titik merah bersilang: perintah, workflow, atau agen berhenti dengan galat.",
+    "sections.statusDots.steps.idle.label": "Diam",
+    "sections.statusDots.steps.idle.desc": "Cincin abu-abu: program terbuka tetapi sudah lama tidak menampilkan apa pun, misalnya agen yang menunggu tugas berikutnya. Hanya titik, tanpa notifikasi.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Maksimalkan terminal agar memenuhi jendela, atau kembalikan. Ctrl+Shift+M di Windows dan Linux."
   },
   "ai": {
     "explain.label": "Jelaskan dengan AI",

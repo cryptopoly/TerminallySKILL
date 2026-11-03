@@ -23,7 +23,12 @@ export function buildZshShellIntegrationInit(): string {
     '__tv_zdotdir="$ZDOTDIR"',
     'ZDOTDIR="${TV_USER_ZDOTDIR:-$HOME}"',
     '[ "$ZDOTDIR" = "$__tv_zdotdir" ] && ZDOTDIR="$HOME"',
+    // /etc/zshrc already ran with ZDOTDIR on the temp dir, which would keep history in a file deleted with the tab
+    '[[ "$HISTFILE" == "$__tv_zdotdir"/* ]] && HISTFILE="$ZDOTDIR/.zsh_history"',
     '[ -f "$ZDOTDIR/.zshrc" ] && source "$ZDOTDIR/.zshrc"',
+    // Workflow step markers are typed into the shell; keep them out of up-arrow history
+    '__tv_history_filter() { [[ "$1" != *"]7337;workflow-step;"* ]]; }',
+    'zshaddhistory_functions+=(__tv_history_filter)',
     "__tv_b64() { printf '%s' \"$1\" | base64 | tr -d '\\n'; }",
     "__tv_prompt_ready() { printf '\\033]7337;shell;prompt-ready;%s;%s\\007' \"$?\" \"$(__tv_b64 \"$PWD\")\"; }",
     "__tv_command_start() { printf '\\033]7337;shell;command-start;%s\\007' \"$(__tv_b64 \"$1\")\"; }",
@@ -36,6 +41,8 @@ export function buildZshShellIntegrationInit(): string {
 export function buildBashShellIntegrationInit(): string {
   return [
     '[ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"',
+    // Workflow step markers are typed into the shell; keep them out of up-arrow history
+    'HISTIGNORE="${HISTIGNORE:+$HISTIGNORE:}*]7337;workflow-step;*"',
     "__tv_b64() { printf '%s' \"$1\" | base64 | tr -d '\\n'; }",
     "__tv_prompt_ready() { printf '\\033]7337;shell;prompt-ready;%s;%s\\007' \"$__tv_last_exit\" \"$(__tv_b64 \"$PWD\")\"; }",
     "__tv_command_start() { printf '\\033]7337;shell;command-start;%s\\007' \"$(__tv_b64 \"$1\")\"; }",

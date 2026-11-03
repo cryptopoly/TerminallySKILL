@@ -79,3 +79,20 @@ describe('shell integration against real shells', () => {
     expect(out).toMatch(/hits=[1-9]/)
   })
 })
+
+describe('zsh history file', () => {
+  it.runIf(spawnSync('zsh', ['--version']).status === 0)('points back at the user file when system rc used the temp dir', () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), 'tv-home-'))
+    const tmp = mkdtempSync(path.join(os.tmpdir(), 'tv-zsh-'))
+    writeFileSync(path.join(tmp, '.zshrc'), 'HISTFILE="$ZDOTDIR/.zsh_history"\n' + buildZshShellIntegrationInit())
+    const run = (extra: string): string => {
+      writeFileSync(path.join(home, '.zshrc'), extra)
+      return spawnSync('zsh', ['-f', '-c', `ZDOTDIR=${tmp}; source ${tmp}/.zshrc; print -r -- $HISTFILE`], {
+        env: { ...process.env, HOME: home, TV_USER_ZDOTDIR: home },
+        encoding: 'utf8'
+      }).stdout.trim()
+    }
+    expect(run('')).toBe(path.join(home, '.zsh_history'))
+    expect(run('HISTFILE=/custom/history\n')).toBe('/custom/history')
+  })
+})

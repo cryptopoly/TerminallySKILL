@@ -220,7 +220,14 @@
     "privacy.masking.kind.password": "Parola",
     "privacy.masking.kind.token": "Token",
     "privacy.masking.kind.secret": "Gizli anahtar",
-    "privacy.masking.kind.api-key": "API anahtarı"
+    "privacy.masking.kind.api-key": "API anahtarı",
+    "general.attention.agentHint": "Kodlama ajanları (Claude Code, Codex, Gemini CLI ve diğerleri) de sizi burada uyarabilir. Sizinki sessiz kalırsa ajanınızın bildirim ayarına bakın.",
+    "general.attention.keep.tip.turnOn": "Aç",
+    "general.attention.keep.tip.notNow": "Şimdi değil",
+    "general.attention.keep.title": "Bildirimleri kapatılana kadar göster",
+    "general.attention.keep.description": "Bildirimler siz kapatana kadar ekranda kalır. Tam davranış masaüstünüze bağlıdır.",
+    "general.attention.keep.macDescription": "Bunu macOS belirler. Sistem Ayarları'nda TerminallySKILL için kapatılana kadar kalan stili seçin.",
+    "general.attention.keep.openSettings": "Sistem Ayarları'nı aç"
   },
   "commands": {
     "addDialog.title": "Komut ekle",
@@ -465,7 +472,11 @@
     "updates.installing": "Güncelleme yükleniyor",
     "updates.opening": "Güncelleme açılıyor",
     "palette.actions.jumpAttention": "Sizi bekleyen terminale git",
-    "palette.actions.jumpAttentionDescription": "Herhangi bir projede sizi en uzun süredir bekleyen terminali açar"
+    "palette.actions.jumpAttentionDescription": "Herhangi bir projede sizi en uzun süredir bekleyen terminali açar",
+    "palette.actions.nextProject": "Sonraki proje",
+    "palette.actions.nextProjectDescription": "Proje seçicideki sonraki projeye geç ({{shortcut}})",
+    "palette.actions.previousProject": "Önceki proje",
+    "palette.actions.previousProjectDescription": "Proje seçicideki önceki projeye geç ({{shortcut}})"
   },
   "projects": {
     "selector.none": "Proje yok",
@@ -1170,7 +1181,19 @@
     "attention.agentNotify": "İlginizi bekliyor",
     "attention.agentBlocked": "Sizi bekliyor",
     "attention.agentDone": "Bitti",
-    "attention.agentError": "Bir hatayla durdu"
+    "attention.agentError": "Bir hatayla durdu",
+    "dot.running": "Çalışıyor",
+    "dot.needsYou": "Seni bekliyor",
+    "dot.finished": "Tamamlandı",
+    "dot.failed": "Başarısız",
+    "dot.tooltip": "{{state}} · {{detail}}",
+    "panel.maximise": "Terminali büyüt",
+    "panel.restore": "Terminal boyutunu geri al",
+    "panel.maximiseDescription": "Proje görünümünü gizler, böylece terminal tüm pencereyi kaplar. Önceki boyuta dönmek için yeniden tıkla.",
+    "dot.idle": "Boşta",
+    "attention.waitingForYes": "Onayınızı bekliyor",
+    "attention.bell": "Terminal zilini çaldı",
+    "attention.stillWaiting": "Hâlâ sizi bekliyor ({{duration}})"
   },
   "onboarding": {
     "subtitle": "Görsel komut oluşturucu, terminal çalışma alanı, workflow'lar, günlükler ve AI araçları",
@@ -1352,6 +1375,8 @@
     "sections.keyboard.steps.newTerminal.desc": "Yeni bir terminal sekmesi aç.",
     "sections.keyboard.steps.jumpAttention.label": "Command+Shift+J",
     "sections.keyboard.steps.jumpAttention.desc": "Sizi en uzun süredir bekleyen terminale (noktalı sekme) herhangi bir projede gider. Windows ve Linux’ta Ctrl+Shift+J.",
+    "sections.keyboard.steps.cycleProjects.label": "Command+Option+Down / Command+Option+Up",
+    "sections.keyboard.steps.cycleProjects.desc": "Proje seçicinin sıralamasına göre sonraki veya önceki projeye geçer. Windows ve Linux’ta Ctrl+Alt+PageDown / Ctrl+Alt+PageUp.",
     "tour.show": "Hoş geldin turunu göster",
     "tour.showDescription": "Uygulamanın her bölümünde kısa bir gezinti",
     "tour.stepOf": "Adım {{current}} / {{total}}",
@@ -1373,7 +1398,20 @@
     "tour.steps.terminal.title": "Terminal",
     "tour.steps.terminal.body": "Geçerli projede buradan bir terminal açın. Terminali bölebilir, komutları sıraya alabilir ve bir komut başarısız olduğunda yardım isteyebilirsiniz.",
     "tour.steps.helpSettings.title": "Yardım ve ayarlar",
-    "tour.steps.helpSettings.body": "Yardım kılavuzu her özelliği açıklar ve bu turu yeniden başlatabilir. Ayarlarda temalar, dil, yapay zekâ sağlayıcıları ve Gizlilik sekmesi bulunur."
+    "tour.steps.helpSettings.body": "Yardım kılavuzu her özelliği açıklar ve bu turu yeniden başlatabilir. Ayarlarda temalar, dil, yapay zekâ sağlayıcıları ve Gizlilik sekmesi bulunur.",
+    "sections.statusDots.title": "Terminal sekmesi noktaları",
+    "sections.statusDots.steps.running.label": "Çalışıyor",
+    "sections.statusDots.steps.running.desc": "Dönen turuncu halka: o terminalde bir komut veya ajan çalışıyor.",
+    "sections.statusDots.steps.needsYou.label": "Seni bekliyor",
+    "sections.statusDots.steps.needsYou.desc": "Yanıp sönen sarı nokta: bir workflow veya ajan onayını ya da yanıtını bekliyor.",
+    "sections.statusDots.steps.finished.label": "Tamamlandı",
+    "sections.statusDots.steps.finished.desc": "Yeşil nokta: sen bakmıyorken uzun bir komut veya workflow tamamlandı.",
+    "sections.statusDots.steps.failed.label": "Başarısız",
+    "sections.statusDots.steps.failed.desc": "Çarpılı kırmızı nokta: bir komut, workflow veya ajan bir hatayla durdu.",
+    "sections.statusDots.steps.idle.label": "Boşta",
+    "sections.statusDots.steps.idle.desc": "Gri halka: bir program açık ama bir süredir hiçbir şey yazdırmadı, örneğin bir sonraki görevi bekleyen bir ajan. Yalnızca nokta, bildirim yok.",
+    "sections.keyboard.steps.maximise.label": "Command+Shift+M",
+    "sections.keyboard.steps.maximise.desc": "Terminali pencereyi kaplayacak şekilde büyüt veya geri al. Windows ve Linux’ta Ctrl+Shift+M."
   },
   "ai": {
     "explain.label": "AI ile açıkla",

@@ -52,7 +52,8 @@ import { registerAgentAttention } from '../../lib/agent-attention'
 import type { ShellIntegrationEvent } from '../../../../shared/shell-integration'
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
-  ArrowDown, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor
+  ArrowDown, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor,
+  Maximize2, Minimize2
 } from 'lucide-react'
 import { VncPanel } from './VncPanel'
 
@@ -76,7 +77,9 @@ export function TerminalPanel({
     setTerminalVisible,
     splitTerminal,
     closeSplitPane,
-    setFocusedPane
+    setFocusedPane,
+    terminalMaximised,
+    setTerminalMaximised
   } = useTerminalStore()
   const activeProject = useProjectStore((s) => s.activeProject)
   const projects = useProjectStore((s) => s.projects)
@@ -435,6 +438,23 @@ export function TerminalPanel({
                   }`}
                 >
                   <Rows2 size={13} />
+                </button>
+              </HelpTip>
+              <HelpTip
+                label={terminalMaximised ? t('panel.restore') : t('panel.maximise')}
+                description={t('panel.maximiseDescription')}
+                shortcut={navigator.platform.toLowerCase().includes('mac') ? '⌘⇧M' : 'Ctrl+Shift+M'}
+              >
+                <button
+                  onClick={() => setTerminalMaximised(!terminalMaximised)}
+                  aria-label={terminalMaximised ? t('panel.restore') : t('panel.maximise')}
+                  aria-pressed={terminalMaximised}
+                  data-testid="terminal-maximise"
+                  className={`p-1.5 transition-colors ${
+                    terminalMaximised ? 'text-accent-light' : 'text-gray-500 hover:text-accent-light'
+                  }`}
+                >
+                  {terminalMaximised ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                 </button>
               </HelpTip>
 
@@ -882,6 +902,7 @@ function XTermInstance({
   const secureInputActiveRef = useRef(false)
   const commandBlockCounterRef = useRef(0)
   const editorInputRef = useRef<HTMLInputElement>(null)
+  const shellHasKeyboardRef = useRef(false)
   const editorSelectionRef = useRef({ start: 0, end: 0 })
   const pendingEditorSelectionRef = useRef<{ start: number; end: number } | null>(null)
   const historyDraftRef = useRef('')
@@ -1601,6 +1622,19 @@ function XTermInstance({
     const selectionStart = event.currentTarget.selectionStart ?? 0
     const selectionEnd = event.currentTarget.selectionEnd ?? selectionStart
 
+    // Ctrl+R belongs to the shell (history search, or fzf and Atuin when bound to it). Hand over the
+    // typed text and the keyboard until the next prompt.
+    if (event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'r') {
+      event.preventDefault()
+      window.electronAPI.writeToTerminal(sessionId, `${editorCommand}\x12`)
+      resetEditorComposer()
+      shellHasKeyboardRef.current = true
+      shellStateRef.current = 'executing'
+      setShellState('executing')
+      termRef.current?.focus()
+      return
+    }
+
     if (editorSuggestions.length > 1) {
       if (event.shiftKey && event.key === 'Tab') {
         event.preventDefault()
@@ -1663,10 +1697,11 @@ function XTermInstance({
     acceptEditorSuggestion,
     activeEditorSuggestion,
     cycleEditorSuggestion,
-    editorCommand.length,
+    editorCommand,
     editorSuggestions.length,
     navigateEditorHistory,
     resetEditorComposer,
+    sessionId,
     submitEditorCommand
   ])
 
@@ -1774,6 +1809,7 @@ function XTermInstance({
     setShellCwd(nextCwd)
     setPromptCount((count) => count + 1)
     completeActiveCommandBlock(event.receivedAt, nextCwd, promptLine, event.exitCode)
+    shellHasKeyboardRef.current = false
     shellStateRef.current = 'idle'
     setShellState('idle')
     setTimeout(() => processQueue(), 50)
@@ -2034,6 +2070,11 @@ function XTermInstance({
           if (safePasteModeRef.current && maybeStartPasteConfirmationRef.current(data, pasteTarget)) {
             return
           }
+        }
+
+        if (shellHasKeyboardRef.current) {
+          sendTerminalInputDirectRef.current(data)
+          return
         }
 
         if (secureInputActiveRef.current && state === 'executing') {
