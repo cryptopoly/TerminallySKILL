@@ -5,7 +5,7 @@ summary: Read this first in every new session.
 ---
 # Status and handover
 
-> **Read first.** TerminallySKILL is an Electron + React terminal workspace (public repo `cryptopoly/TerminallySKILL`, site `terminallyskill.com`). **v0.9.103 is released (2026-10-31)** and the site is updated. **0.9.104 is bumped on `chore/release-0.9.104`** (2026-11-02); Dan's UAT is next, using [the checklist](uat-0.9.104.md). 0.9.105 is planned: command blocks lite, then session restore.
+> **Read first.** TerminallySKILL is an Electron + React terminal workspace (public repo `cryptopoly/TerminallySKILL`, site `terminallyskill.com`). **v0.9.103 is released (2026-10-31)** and the site is updated. **0.9.104 is on `staging` and passed Dan's UAT** ([checklist](uat-0.9.104.md)), and is on its way to release. 0.9.105 leads with command blocks, then session restore.
 
 Branch flow: feature branches into `staging` (default, protected) by pull request; `staging` promoted to `main` by pull request; the GitHub **Release** workflow is run on `staging` or `main` with the version and creates a **draft** release; Dan publishes it. Required checks on both branches: `test` and `test (macos-latest)`. Windows CI is non-blocking.
 
@@ -39,8 +39,8 @@ Electron 45; attention alerts and agent-aware dots (Claude Code, Codex); jump-to
 
 ## Next up
 
-1. Dan: UAT 0.9.104 on a build that includes the Ctrl+R, tip and VNC password changes.
-2. VM test, PR `staging` to `main`, Release workflow, draft smoke tests, publish, announce (see the [release checklist](release-checklist.md)).
+1. Done: UAT and VM test on `staging` `f6d613c7`.
+2. PR `staging` to `main`, Release workflow, draft smoke tests, publish, announce (see the [release checklist](release-checklist.md)).
 3. 0.9.105: command blocks lite, then session restore (see the [backlog](backlog.md)).
 4. Next dependency review: 2026-12-02.
 

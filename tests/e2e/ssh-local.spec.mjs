@@ -364,7 +364,8 @@ test.describe('local OpenSSH (user-space sshd)', () => {
         )
 
       // The remote login shell starts in the target cwd, so its prompt ends with the dir name (zsh prints %, bash $).
-      await expect.poll(terminalText, { timeout: 30000 }).toMatch(/remote-cwd\s*[%$#]/)
+      // A long prompt can wrap anywhere, even inside the dir name, so join the rows before matching.
+      await expect.poll(async () => (await terminalText()).replace(/\n/g, ''), { timeout: 30000 }).toMatch(/remote-cwd\s*[%$#]/)
 
       const terminalInput = page.locator('.xterm-helper-textarea').last()
       const typeLine = async (line) => {
