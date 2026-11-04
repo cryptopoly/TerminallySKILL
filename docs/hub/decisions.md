@@ -50,6 +50,10 @@ Where the old list had sub-items, each now has its own row. **Item 11** is the 0
 <details>
 <summary>Decision log (made decisions, newest section last)</summary>
 
+## 2026-11-04
+
+- **Node.js security pre-alert (Dan asked):** Node.js 22, 24 and 26 get security fixes on or after 2026-11-11, highest severity HIGH. We ship Node 24.22.1 inside Electron 45.2.1, and build with Node 22. Recommendation: read the advisory when out; if it affects Electron's main process, upgrade Electron when it ships the patched Node, test and release 0.9.105 or a patch. Builds need no change. Reminder added to the backlog.
+
 ## 2026-11-02
 
 - **CI frequency (25) (Dan decided):** batch related work into one PR from now on. After 0.9.104: docs-only PRs pass in seconds, and Windows runs only on PRs to `main`. Dan asked again 2026-11-03 to iterate on feature branches with CI only at merge; proposed (4), macOS off PRs to `staging`.
