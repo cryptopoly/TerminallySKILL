@@ -1258,7 +1258,12 @@
     "dot.idle": "Простій",
     "attention.waitingForYes": "Чекає на вашу згоду",
     "attention.bell": "Подав звуковий сигнал термінала",
-    "attention.stillWaiting": "Досі чекає на вас ({{duration}})"
+    "attention.stillWaiting": "Досі чекає на вас ({{duration}})",
+    "blocks.menu": "Дії з командою",
+    "blocks.copyOutput": "Копіювати вивід",
+    "blocks.copyCommand": "Копіювати команду",
+    "blocks.runAgain": "Запустити знову",
+    "blocks.explain": "Пояснити вивід"
   },
   "onboarding": {
     "subtitle": "Візуальний конструктор команд, термінальний робочий простір, workflow, логи та інструменти ШІ",

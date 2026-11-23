@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Run the test suite on the Linux VM in Parallels Desktop (Pro edition, needs `prlctl exec`).
-# Usage: tools/vm-test.sh [--vm "Ubuntu 26.04 ARM64"] [--branch NAME] [--stop] [--windows]
+# Usage: tools/vm-test.sh [--vm "U26 ARM64"] [--branch NAME] [--stop] [--windows]
 # --windows runs tools/vm-test-windows.ps1 instead (use with --vm "W11 Testing").
 # The branch must be pushed: the VM clones from GitHub, not from this working tree.
 set -euo pipefail
 
-VM="Ubuntu 26.04 ARM64"
+VM="U26 ARM64"
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 STOP=0
 WINDOWS=0

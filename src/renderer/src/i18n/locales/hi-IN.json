@@ -1192,7 +1192,12 @@
     "dot.idle": "निष्क्रिय",
     "attention.waitingForYes": "आपकी हाँ की प्रतीक्षा",
     "attention.bell": "टर्मिनल की घंटी बजाई",
-    "attention.stillWaiting": "अब भी आपकी प्रतीक्षा ({{duration}})"
+    "attention.stillWaiting": "अब भी आपकी प्रतीक्षा ({{duration}})",
+    "blocks.menu": "कमांड क्रियाएँ",
+    "blocks.copyOutput": "आउटपुट कॉपी करें",
+    "blocks.copyCommand": "कमांड कॉपी करें",
+    "blocks.runAgain": "फिर से चलाएँ",
+    "blocks.explain": "आउटपुट समझाएँ"
   },
   "onboarding": {
     "subtitle": "विज़ुअल कमांड बिल्डर, टर्मिनल वर्कस्पेस, वर्कफ़्लो, लॉग और AI टूल",

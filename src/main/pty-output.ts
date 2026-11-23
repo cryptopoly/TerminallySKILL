@@ -1,4 +1,4 @@
-import type { ShellIntegrationEvent } from '../shared/shell-integration'
+import { commandAnchor, type ShellIntegrationEvent } from '../shared/shell-integration'
 
 export const SHELL_READY_MARKER = '\x1b]7337;ready\x07'
 export const SHELL_READY_RE = /\x1b\]7337;ready\x07/g
@@ -86,7 +86,7 @@ export function extractShellIntegrationEvents(data: string): {
           exitCode,
           receivedAt: new Date().toISOString()
         })
-        return ''
+        return commandAnchor(`end;${exitCode ?? ''}`)
       }
 
       if (type === 'command-start') {
@@ -97,6 +97,7 @@ export function extractShellIntegrationEvents(data: string): {
             command,
             receivedAt: new Date().toISOString()
           })
+          return commandAnchor(`start;${payload1}`)
         }
         return ''
       }

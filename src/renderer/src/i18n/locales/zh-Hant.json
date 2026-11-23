@@ -1188,7 +1188,12 @@
     "dot.idle": "閒置",
     "attention.waitingForYes": "等待你的確認",
     "attention.bell": "響了終端機鈴聲",
-    "attention.stillWaiting": "仍在等你（{{duration}}）"
+    "attention.stillWaiting": "仍在等你（{{duration}}）",
+    "blocks.menu": "命令操作",
+    "blocks.copyOutput": "複製輸出",
+    "blocks.copyCommand": "複製命令",
+    "blocks.runAgain": "再次執行",
+    "blocks.explain": "解釋輸出"
   },
   "onboarding": {
     "subtitle": "視覺化命令建構器、終端機工作區、工作流程、日誌與 AI 工具",

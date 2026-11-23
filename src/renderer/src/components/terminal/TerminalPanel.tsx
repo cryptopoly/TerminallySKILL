@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState, useMemo, useLayoutEffect } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { Terminal } from '@xterm/xterm'
+import { Terminal, type IDecoration, type IMarker } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { SearchAddon } from '@xterm/addon-search'
@@ -49,7 +49,7 @@ import { resolveProjectWorkingDirectory } from '../../../../shared/project-schem
 import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
 import { raiseCommandAttention } from '../../lib/attention'
 import { registerAgentAttention } from '../../lib/agent-attention'
-import type { ShellIntegrationEvent } from '../../../../shared/shell-integration'
+import { COMMAND_ANCHOR_OSC, type ShellIntegrationEvent } from '../../../../shared/shell-integration'
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
   ArrowDown, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor,
@@ -751,6 +751,43 @@ interface TerminalCommandBlock {
 
 type AIReviewScope = 'session' | 'last-command' | 'selection'
 
+/** Most finished commands that keep a mark in one terminal; older marks are removed. */
+const MAX_COMMAND_BLOCK_MARKS = 200
+
+interface PendingCommandBlockMarks {
+  command: string
+  /** Line of the typed command, where the mark is drawn */
+  commandLine: IMarker
+  /** First line of the command's output */
+  outputLine: IMarker
+}
+
+interface FinishedCommandBlock {
+  id: string
+  command: string
+  exitCode: number | null
+  commandLine: IMarker
+  outputLine: IMarker
+  /** The prompt line after the output */
+  endLine: IMarker
+  decoration: IDecoration | undefined
+}
+
+function decodeBase64Utf8(value: string): string {
+  try {
+    return new TextDecoder().decode(Uint8Array.from(atob(value), (char) => char.charCodeAt(0)))
+  } catch {
+    return ''
+  }
+}
+
+function disposeFinishedCommandBlock(block: FinishedCommandBlock): void {
+  block.decoration?.dispose()
+  block.commandLine.dispose()
+  block.outputLine.dispose()
+  block.endLine.dispose()
+}
+
 type PendingPasteTarget = 'editor' | 'terminal-direct' | 'terminal-queue'
 
 interface PendingPaste {
@@ -901,6 +938,9 @@ function XTermInstance({
   const bracketedPasteModeRef = useRef(false)
   const secureInputActiveRef = useRef(false)
   const commandBlockCounterRef = useRef(0)
+  const pendingBlockMarksRef = useRef<PendingCommandBlockMarks | null>(null)
+  const finishedBlocksRef = useRef<FinishedCommandBlock[]>([])
+  const [blockMenu, setBlockMenu] = useState<{ blockId: string; x: number; y: number } | null>(null)
   const editorInputRef = useRef<HTMLInputElement>(null)
   const shellHasKeyboardRef = useRef(false)
   const editorSelectionRef = useRef({ start: 0, end: 0 })
@@ -1041,9 +1081,15 @@ function XTermInstance({
     }
   }, [editorCommand, shellCwd])
 
-  const runAIReview = useCallback(async (scope: AIReviewScope) => {
+  const runAIReview = useCallback(async (
+    scope: AIReviewScope,
+    block?: { command: string; exitCode: number | null; transcript: string | null }
+  ) => {
+    const target = block ?? (lastCompletedCommandBlock
+      ? { command: lastCompletedCommandBlock.command, exitCode: lastCompletedCommandBlock.exitCode, transcript: null }
+      : null)
     const transcript = scope === 'last-command'
-      ? getLastCommandTranscript()
+      ? (block ? block.transcript : getLastCommandTranscript())
       : getSerializedTerminalText(serializeAddonRef.current).trim()
 
     if (!transcript) {
@@ -1068,7 +1114,7 @@ function XTermInstance({
     setAIReviewScope(scope)
     setAIReviewTargetLabel(
       scope === 'last-command'
-        ? lastCompletedCommandBlock?.command ?? null
+        ? target?.command ?? null
         : projectName ?? sessionId
     )
     try {
@@ -1078,14 +1124,14 @@ function XTermInstance({
         source: 'terminal',
         focus: scope === 'last-command' ? 'command-block' : 'session',
         title: scope === 'last-command'
-          ? `Last command: ${lastCompletedCommandBlock?.command ?? 'Unknown command'}`
+          ? `Last command: ${target?.command ?? 'Unknown command'}`
           : projectName
             ? `Session ${sessionId} (${projectName})`
             : `Session ${sessionId}`,
         transcript,
         cwd: sessionInfo?.cwd ?? projectWorkingDirectory ?? undefined,
         shell: sessionInfo?.shell,
-        exitCode: scope === 'last-command' ? lastCompletedCommandBlock?.exitCode : undefined
+        exitCode: scope === 'last-command' ? target?.exitCode : undefined
       })
       setAIReview(response.content)
       setAISuggestedCommands('suggestedCommands' in response ? response.suggestedCommands ?? [] : [])
@@ -1748,6 +1794,111 @@ function XTermInstance({
   // Attention alerts keep their own start marker so they cover every command.
   const attentionStartRef = useRef<{ command: string; startedAt: string } | null>(null)
 
+  // Called by xterm while it parses a command anchor, so the cursor is at the anchor's exact place.
+  const startCommandBlockMarks = useCallback((command: string) => {
+    const terminal = termRef.current
+    const previous = pendingBlockMarksRef.current
+    previous?.commandLine.dispose()
+    previous?.outputLine.dispose()
+    pendingBlockMarksRef.current = null
+    // Full-screen apps draw on the alternate screen; their commands get no mark.
+    if (!terminal || terminal.buffer.active.type !== 'normal') return
+    pendingBlockMarksRef.current = {
+      command,
+      commandLine: terminal.registerMarker(-1),
+      outputLine: terminal.registerMarker(0)
+    }
+  }, [])
+
+  const finishCommandBlockMarks = useCallback((exitCode: number | null) => {
+    const terminal = termRef.current
+    const pending = pendingBlockMarksRef.current
+    pendingBlockMarksRef.current = null
+    if (!pending) return
+    if (!terminal || terminal.buffer.active.type !== 'normal' || pending.commandLine.isDisposed || pending.outputLine.isDisposed) {
+      pending.commandLine.dispose()
+      pending.outputLine.dispose()
+      return
+    }
+
+    const id = `${sessionId}-block-${++commandBlockCounterRef.current}`
+    const decoration = terminal.registerDecoration({ marker: pending.commandLine, anchor: 'right', x: 0, width: 1 })
+    decoration?.onRender((element) => {
+      // xterm leaves a right offset of 0 unset, which draws the mark over the first column
+      element.style.right = '0px'
+      element.style.left = ''
+      if (element.dataset.commandBlock) return
+      element.dataset.commandBlock = id
+      element.dataset.exitCode = exitCode === null ? 'unknown' : String(exitCode)
+      element.classList.add('command-block-mark')
+      element.title = t('blocks.menu')
+      element.style.cursor = 'pointer'
+      const dot = document.createElement('span')
+      dot.style.position = 'absolute'
+      dot.style.top = '50%'
+      dot.style.left = '50%'
+      dot.style.transform = 'translate(-50%, -50%)'
+      dot.style.width = '6px'
+      dot.style.height = '6px'
+      dot.style.borderRadius = '9999px'
+      dot.style.background = exitCode === null ? '#6b7280' : exitCode === 0 ? '#22c55e' : '#ef4444'
+      element.appendChild(dot)
+      element.addEventListener('mousedown', (mouseEvent) => {
+        mouseEvent.preventDefault()
+        mouseEvent.stopPropagation()
+        const rect = element.getBoundingClientRect()
+        setBlockMenu({ blockId: id, x: rect.right, y: rect.bottom })
+      })
+    })
+
+    const blocks = finishedBlocksRef.current
+    blocks.push({
+      id,
+      command: pending.command,
+      exitCode,
+      commandLine: pending.commandLine,
+      outputLine: pending.outputLine,
+      endLine: terminal.registerMarker(0),
+      decoration
+    })
+    while (blocks.length > MAX_COMMAND_BLOCK_MARKS) {
+      const oldest = blocks.shift()
+      if (oldest) disposeFinishedCommandBlock(oldest)
+    }
+  }, [sessionId, t])
+
+  const handleCommandAnchor = useCallback((payload: string) => {
+    const [kind, value = ''] = payload.split(';')
+    if (kind === 'start') {
+      startCommandBlockMarks(decodeBase64Utf8(value))
+    } else if (kind === 'end') {
+      const exitCode = Number.parseInt(value, 10)
+      finishCommandBlockMarks(Number.isFinite(exitCode) ? exitCode : null)
+    }
+  }, [finishCommandBlockMarks, startCommandBlockMarks])
+  const handleCommandAnchorRef = useRef(handleCommandAnchor)
+  useEffect(() => {
+    handleCommandAnchorRef.current = handleCommandAnchor
+  }, [handleCommandAnchor])
+
+  useEffect(() => {
+    if (!blockMenu) return
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return
+      // Capture before the terminal, which would otherwise take the key
+      event.preventDefault()
+      event.stopPropagation()
+      setBlockMenu(null)
+    }
+    window.addEventListener('keydown', closeOnEscape, true)
+    return () => window.removeEventListener('keydown', closeOnEscape, true)
+  }, [blockMenu])
+
+  const getFinishedBlockOutput = useCallback((block: FinishedCommandBlock): string | null => {
+    if (block.outputLine.isDisposed || block.endLine.isDisposed) return null
+    return extractCommandTranscriptFromLines(getTerminalBufferLines(), block.outputLine.line, block.endLine.line)
+  }, [getTerminalBufferLines])
+
   const handleShellEvent = useCallback((event: ShellIntegrationEvent) => {
     if (event.type === 'command-start') {
       attentionStartRef.current ??= { command: event.command, startedAt: event.receivedAt }
@@ -1872,6 +2023,12 @@ function XTermInstance({
     resetEditorComposer()
     shellCwdRef.current = projectWorkingDirectory
     commandBlockCounterRef.current = 0
+    finishedBlocksRef.current.forEach(disposeFinishedCommandBlock)
+    finishedBlocksRef.current = []
+    pendingBlockMarksRef.current?.commandLine.dispose()
+    pendingBlockMarksRef.current?.outputLine.dispose()
+    pendingBlockMarksRef.current = null
+    setBlockMenu(null)
     setShellCwd(projectWorkingDirectory)
     setPromptCount(0)
     setActiveCommandBlock(null)
@@ -1965,6 +2122,10 @@ function XTermInstance({
       fastScrollModifier: 'alt',
       theme: XTERM_THEMES[activeTheme],
       allowProposedApi: true
+    })
+    term.parser.registerOscHandler(COMMAND_ANCHOR_OSC, (payload) => {
+      handleCommandAnchorRef.current(payload)
+      return true
     })
 
     const fitAddon = new FitAddon()
@@ -2081,6 +2242,11 @@ function XTermInstance({
           sendTerminalInputDirectRef.current(data)
           inputBufferRef.current = ''
           setInputPreview('')
+          // Enter or Ctrl+C ends the prompt. Forget the prompt text so only a new prompt turns it back on.
+          if (data.includes('\r') || data.includes('\x03')) {
+            outputBufferRef.current = ''
+            setSecureInputState(false)
+          }
           return
         }
 
@@ -2142,7 +2308,7 @@ function XTermInstance({
           }
         })
 
-        const clean = data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '')
+        const clean = data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/\x1b\]7338;[^\x07]*\x07/g, '')
         outputBufferRef.current += clean
 
         if (outputBufferRef.current.length > 500) {
@@ -2618,23 +2784,6 @@ function XTermInstance({
             document.body
           )}
 
-          {secureInputActive && (
-            <div className="rounded-lg bg-caution/10 px-3 py-3 shadow-xl">
-              <div className="flex items-center gap-2">
-                <ShieldAlert size={14} className="text-caution shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-caution">
-                    {t('secureInput.title')}
-                  </div>
-                  <div className="text-sm text-gray-200">
-                    {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}.
-                    {' '}{t('secureInput.description')}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {pendingPaste && (
             <div className="rounded-lg bg-surface-light px-3 py-3 shadow-xl">
               <div className="flex items-center gap-2">
@@ -2839,6 +2988,17 @@ function XTermInstance({
 
               <div className="min-w-0 flex-1 text-[11px] text-gray-400">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {secureInputActive && (
+                    <HelpTip
+                      label={t('secureInput.title')}
+                      description={`${securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}. ${t('secureInput.description')}`}
+                    >
+                      <span data-testid="secure-input-chip" className="shrink-0 inline-flex cursor-default items-center gap-1 rounded-full bg-caution/15 px-2 py-0.5 text-caution">
+                        <ShieldAlert size={11} />
+                        {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}
+                      </span>
+                    </HelpTip>
+                  )}
                   <span className="truncate">
                     {t('toolbar.prompt')} <span className="font-mono text-gray-300">{shellCwd || t('toolbar.waitingForShell')}</span>
                   </span>
@@ -3011,6 +3171,49 @@ function XTermInstance({
           />
         )}
       </div>
+      {blockMenu && (() => {
+        const block = finishedBlocksRef.current.find((candidate) => candidate.id === blockMenu.blockId)
+        if (!block) return null
+        const output = getFinishedBlockOutput(block)
+        const close = (): void => setBlockMenu(null)
+        const itemClass = 'block w-full rounded-md px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+        return (
+          <div className="fixed inset-0 z-50" onMouseDown={close}>
+            <div
+              role="menu"
+              aria-label={t('blocks.menu')}
+              data-testid="command-block-menu"
+              className="fixed w-48 -translate-x-full rounded-lg border border-surface-border bg-surface-light p-1 shadow-2xl shadow-black/50"
+              style={{ left: blockMenu.x, top: Math.min(blockMenu.y, window.innerHeight - 160) }}
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="truncate px-3 py-1 font-mono text-[11px] text-gray-500" title={block.command}>{block.command}</div>
+              <button role="menuitem" className={itemClass} disabled={!output} onClick={() => { if (output) void window.electronAPI.writeClipboard(output); close() }}>
+                {t('blocks.copyOutput')}
+              </button>
+              <button role="menuitem" className={itemClass} onClick={() => { void window.electronAPI.writeClipboard(block.command); close() }}>
+                {t('blocks.copyCommand')}
+              </button>
+              <button role="menuitem" className={itemClass} disabled={shellState !== 'idle'} onClick={() => { insertSuggestedCommand(block.command); close() }}>
+                {t('blocks.runAgain')}
+              </button>
+              {activeAIProvider && (
+                <button
+                  role="menuitem"
+                  className={itemClass}
+                  disabled={!output || aiLoading || secureInputActive}
+                  onClick={() => {
+                    void runAIReview('last-command', { command: block.command, exitCode: block.exitCode, transcript: output })
+                    close()
+                  }}
+                >
+                  {t(block.exitCode !== null && block.exitCode !== 0 ? 'toolbar.explainFix' : 'blocks.explain')}
+                </button>
+              )}
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

@@ -1196,7 +1196,12 @@
     "dot.idle": "Diam",
     "attention.waitingForYes": "Menunggu persetujuan Anda",
     "attention.bell": "Membunyikan bel terminal",
-    "attention.stillWaiting": "Masih menunggu Anda ({{duration}})"
+    "attention.stillWaiting": "Masih menunggu Anda ({{duration}})",
+    "blocks.menu": "Tindakan perintah",
+    "blocks.copyOutput": "Salin output",
+    "blocks.copyCommand": "Salin perintah",
+    "blocks.runAgain": "Jalankan lagi",
+    "blocks.explain": "Jelaskan output"
   },
   "onboarding": {
     "subtitle": "Command builder visual, workspace terminal, workflow, log, dan alat AI",

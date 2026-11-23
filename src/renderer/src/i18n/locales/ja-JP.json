@@ -1070,7 +1070,12 @@
     "dot.idle": "待機中",
     "attention.waitingForYes": "承認を待っています",
     "attention.bell": "ターミナルのベルを鳴らしました",
-    "attention.stillWaiting": "まだ待っています ({{duration}})"
+    "attention.stillWaiting": "まだ待っています ({{duration}})",
+    "blocks.menu": "コマンド操作",
+    "blocks.copyOutput": "出力をコピー",
+    "blocks.copyCommand": "コマンドをコピー",
+    "blocks.runAgain": "もう一度実行",
+    "blocks.explain": "出力を説明"
   },
   "onboarding": {
     "subtitle": "ビジュアルコマンドビルダー、ターミナルワークスペース、ワークフロー、ログ、AI ツール",

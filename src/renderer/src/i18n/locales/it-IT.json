@@ -1076,7 +1076,12 @@
     "dot.idle": "Inattivo",
     "attention.waitingForYes": "In attesa del tuo sì",
     "attention.bell": "Ha suonato il campanello del terminale",
-    "attention.stillWaiting": "Ti sta ancora aspettando ({{duration}})"
+    "attention.stillWaiting": "Ti sta ancora aspettando ({{duration}})",
+    "blocks.menu": "Azioni del comando",
+    "blocks.copyOutput": "Copia output",
+    "blocks.copyCommand": "Copia comando",
+    "blocks.runAgain": "Esegui di nuovo",
+    "blocks.explain": "Spiega output"
   },
   "onboarding": {
     "subtitle": "Builder visuale di comandi, workspace terminale, workflow, log e strumenti IA",

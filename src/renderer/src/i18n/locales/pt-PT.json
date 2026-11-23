@@ -1208,7 +1208,12 @@
     "dot.idle": "Inativo",
     "attention.waitingForYes": "À espera do seu sim",
     "attention.bell": "Tocou a campainha do terminal",
-    "attention.stillWaiting": "Ainda à sua espera ({{duration}})"
+    "attention.stillWaiting": "Ainda à sua espera ({{duration}})",
+    "blocks.menu": "Ações do comando",
+    "blocks.copyOutput": "Copiar saída",
+    "blocks.copyCommand": "Copiar comando",
+    "blocks.runAgain": "Executar novamente",
+    "blocks.explain": "Explicar saída"
   },
   "onboarding": {
     "subtitle": "Construtor visual de comandos, workspace de terminal, workflows, registos e ferramentas de IA",

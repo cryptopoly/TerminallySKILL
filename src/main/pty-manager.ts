@@ -623,8 +623,11 @@ export function writeToTerminal(sessionId: string, data: string): void {
 
 export function resizeTerminal(sessionId: string, cols: number, rows: number): void {
   const session = sessions.get(sessionId)
-  if (session) {
+  if (!session) return
+  try {
     session.process.resize(cols, rows)
+  } catch {
+    // The shell has exited but its exit is not handled yet; the terminal is closed (EBADF).
   }
 }
 
