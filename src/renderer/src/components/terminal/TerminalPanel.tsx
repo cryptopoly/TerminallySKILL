@@ -2242,6 +2242,11 @@ function XTermInstance({
           sendTerminalInputDirectRef.current(data)
           inputBufferRef.current = ''
           setInputPreview('')
+          // Enter or Ctrl+C ends the prompt. Forget the prompt text so only a new prompt turns it back on.
+          if (data.includes('\r') || data.includes('\x03')) {
+            outputBufferRef.current = ''
+            setSecureInputState(false)
+          }
           return
         }
 
@@ -2779,23 +2784,6 @@ function XTermInstance({
             document.body
           )}
 
-          {secureInputActive && (
-            <div className="rounded-lg bg-caution/10 px-3 py-3 shadow-xl">
-              <div className="flex items-center gap-2">
-                <ShieldAlert size={14} className="text-caution shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-caution">
-                    {t('secureInput.title')}
-                  </div>
-                  <div className="text-sm text-gray-200">
-                    {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}.
-                    {' '}{t('secureInput.description')}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {pendingPaste && (
             <div className="rounded-lg bg-surface-light px-3 py-3 shadow-xl">
               <div className="flex items-center gap-2">
@@ -3000,6 +2988,17 @@ function XTermInstance({
 
               <div className="min-w-0 flex-1 text-[11px] text-gray-400">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {secureInputActive && (
+                    <HelpTip
+                      label={t('secureInput.title')}
+                      description={`${securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}. ${t('secureInput.description')}`}
+                    >
+                      <span data-testid="secure-input-chip" className="shrink-0 inline-flex cursor-default items-center gap-1 rounded-full bg-caution/15 px-2 py-0.5 text-caution">
+                        <ShieldAlert size={11} />
+                        {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}
+                      </span>
+                    </HelpTip>
+                  )}
                   <span className="truncate">
                     {t('toolbar.prompt')} <span className="font-mono text-gray-300">{shellCwd || t('toolbar.waitingForShell')}</span>
                   </span>
