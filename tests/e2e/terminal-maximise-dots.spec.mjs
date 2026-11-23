@@ -106,7 +106,8 @@ test('the terminal maximises and restores from the button, the shortcut and the 
     // (Playwright's Meta+K does not reach the page in Electron on macOS, so send the event directly.)
     await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true })))
     await page.keyboard.type('Restore terminal')
-    await page.getByText('Restore terminal size', { exact: true }).click()
+    // The palette shows the name in its list and again in the preview of the highlighted item
+    await page.getByText('Restore terminal size', { exact: true }).first().click()
     await expect.poll(heightOf).toBeGreaterThan(before - 3)
 
     // Minimise (hide) ends maximise; showing again brings back the old split, not a maximised one.
