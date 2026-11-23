@@ -2340,6 +2340,13 @@ function XTermInstance({
           if (autoScrollRef.current || !heldTopLine) return
           const target = heldTopLine.isDisposed ? 0 : heldTopLine.line
           if (term.buffer.active.viewportY !== target) term.scrollToLine(target)
+          // A wheel step can stop just short of the bottom; once the held view is the bottom, follow again
+          if (term.buffer.active.viewportY >= term.buffer.active.baseY) {
+            heldTopLine.dispose()
+            heldTopLine = null
+            autoScrollRef.current = true
+            setShowScrollDown(false)
+          }
         })
 
         const clean = data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/\x1b\]7338;[^\x07]*\x07/g, '')
