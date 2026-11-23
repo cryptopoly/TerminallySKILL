@@ -25,6 +25,7 @@ import { Tooltip } from '../ui/Tooltip'
 import { useFileStore } from '../../store/file-store'
 import { WorkflowRunPanel } from '../scripts/WorkflowRunnerHost'
 import { extractCommandTranscriptFromLines } from '../../lib/terminal-transcript'
+import { shortenPathForDisplay } from '../../lib/path-display'
 import { formatCommandForDisplay, isSSHSessionCommand, getSSHHost } from '../../lib/command-display'
 import { formatTime } from '../../i18n/format'
 import {
@@ -52,7 +53,7 @@ import { registerAgentAttention } from '../../lib/agent-attention'
 import { COMMAND_ANCHOR_OSC, type ShellIntegrationEvent } from '../../../../shared/shell-integration'
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
-  ArrowDown, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor,
+  ArrowDown, Folder, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor,
   Maximize2, Minimize2
 } from 'lucide-react'
 import { VncPanel } from './VncPanel'
@@ -2595,21 +2596,6 @@ function XTermInstance({
             />
           )}
 
-          {/* Scroll-to-bottom indicator */}
-          {showScrollDown && (
-            <button
-              onClick={() => {
-                termRef.current?.scrollToBottom()
-                autoScrollRef.current = true
-                setShowScrollDown(false)
-              }}
-              className="absolute bottom-3 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/90 text-white text-xs font-medium shadow-lg hover:bg-accent transition-all backdrop-blur-sm z-10"
-            >
-              <ArrowDown size={12} />
-              {t('panel.latestOutput')}
-            </button>
-          )}
-
           {/* Right-click context menu for selected text */}
           {contextMenu && createPortal(
             <>
@@ -2651,7 +2637,7 @@ function XTermInstance({
           )}
         </div>
 
-        <div className="shrink-0 px-2 pb-2 space-y-2">
+        <div className="shrink-0 px-2 pt-1.5 pb-2 space-y-1.5">
           {(aiReview || aiError || aiLoading) && createPortal(
             <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center overflow-y-auto p-6">
               <div className="w-full max-w-3xl max-h-[calc(100vh-3rem)] rounded-2xl border border-surface-border bg-surface-light shadow-2xl shadow-black/50 overflow-hidden flex flex-col">
@@ -2981,143 +2967,145 @@ function XTermInstance({
             </div>
           )}
 
-          <div className="rounded-lg bg-surface-light px-3 py-1.5">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <HelpTip
-                  label={t('toolbar.reviewSession')}
-                  description={
-                    activeAIProvider
-                      ? t('toolbar.reviewSessionEnabled')
-                      : t('toolbar.reviewSessionDisabled')
-                  }
-                >
-                  <button
-                    onClick={() => void runAIReview('session')}
-                    disabled={aiLoading || secureInputActive}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface text-xs text-gray-300 hover:text-gray-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {aiLoading && aiReviewScope !== 'last-command'
-                      ? <Loader2 size={12} className="animate-spin" />
-                      : <Sparkles size={12} />}
-                    {aiReviewScope === 'session' && aiReview ? t('toolbar.refreshSession') : t('toolbar.reviewSession')}
-                  </button>
-                </HelpTip>
-
-              </div>
-
-              <div className="min-w-0 flex-1 text-[11px] text-gray-400">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  {secureInputActive && (
-                    <HelpTip
-                      label={t('secureInput.title')}
-                      description={`${securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}. ${t('secureInput.description')}`}
-                    >
-                      <span data-testid="secure-input-chip" className="shrink-0 inline-flex cursor-default items-center gap-1 rounded-full bg-caution/15 px-2 py-0.5 text-caution">
-                        <ShieldAlert size={11} />
-                        {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}
-                      </span>
-                    </HelpTip>
-                  )}
-                  <span className="truncate">
-                    {t('toolbar.prompt')} <span className="font-mono text-gray-300">{shellCwd || t('toolbar.waitingForShell')}</span>
-                  </span>
-                  {activeCommandBlock && !isSSHSessionCommand(activeCommandBlock.command) ? (
-                    <span className="truncate">
-                      {t('toolbar.running')} <span className="font-mono text-accent-light">{formatCommandForDisplay(activeCommandBlock.command)}</span>
-                    </span>
-                  ) : activeCommandBlock && isSSHSessionCommand(activeCommandBlock.command) ? (
-                    <span className="truncate text-gray-500">
-                      {t('toolbar.connected')} <span className="font-mono text-gray-400">{getSSHHost(activeCommandBlock.command) ?? t('toolbar.remote')}</span>
-                    </span>
-                  ) : lastCompletedCommandBlock && !isSSHSessionCommand(lastCompletedCommandBlock.command) ? (
-                    <span className="truncate">
-                      {t('toolbar.last')} <span className="font-mono text-gray-300">{formatCommandForDisplay(lastCompletedCommandBlock.command)}</span>
-                      {lastCompletedCommandBlock.exitCode !== null && lastCompletedCommandBlock.exitCode !== 0 && (
-                        <>
-                          {' '}
-                          <span className="font-mono text-destructive">{t('toolbar.exitCode', { code: lastCompletedCommandBlock.exitCode })}</span>
-                          {activeAIProvider && (
-                            <button
-                              onClick={() => void runAIReview('last-command')}
-                              disabled={aiLoading || secureInputActive}
-                              className="ml-2 inline-flex items-center gap-1 rounded-md bg-accent/15 px-2 py-0.5 text-[11px] text-accent-light hover:bg-accent/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                              <Sparkles size={10} />
-                              {t('toolbar.explainFix')}
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </span>
-                  ) : null}
-                  {promptCount > 0 && (
-                    <span className="shrink-0 text-gray-500">
-                      {t('toolbar.promptCount', { count: promptCount })}
-                    </span>
-                  )}
-                  <HelpTip
-                    label={bracketedPasteMode ? t('toolbar.bracketedPaste') : t('toolbar.plainPaste')}
-                    description={
-                      bracketedPasteMode
-                        ? t('toolbar.bracketedPasteDescription')
-                        : t('toolbar.plainPasteDescription')
-                    }
-                  >
-                    <span className={`shrink-0 cursor-default ${bracketedPasteMode ? 'text-accent-light' : 'text-gray-500'}`}>
-                      {t('toolbar.paste')} {bracketedPasteMode ? t('toolbar.bracketed') : t('toolbar.plain')}
-                    </span>
-                  </HelpTip>
-                </div>
-              </div>
-              <div className="ml-auto flex items-center gap-1.5 text-[11px]">
-                {(sessionMode === 'ssh-interactive' || sessionMode === 'vnc') ? null : <HelpTip
-                  label={t('editorPrompt.title')}
-                  description={
-                    terminalInputMode === 'editor'
-                      ? t('editorPrompt.modeOnDescription')
-                      : t('editorPrompt.modeOffDescription')
-                  }
-                  shortcut="⌘E"
-                >
-                <button
-                  type="button"
-                  onClick={() => void handleTerminalInputModeChange(terminalInputMode === 'editor' ? 'classic' : 'editor')}
-                  className="inline-flex shrink-0 items-center gap-2.5 rounded-full pl-1 pr-1 py-0.5 text-gray-200 transition-colors hover:bg-surface-light/40"
-                >
-                  <span className="text-[11px] text-gray-400">{t('editorPrompt.title')}</span>
-                  <span
-                    role="switch"
-                    aria-checked={terminalInputMode === 'editor'}
-                    className={clsx(
-                      'relative isolate shrink-0 inline-flex h-8 w-20 items-center rounded-full border px-1 transition-all',
-                      terminalInputMode === 'editor'
-                        ? 'border-accent/30 bg-accent/10 shadow-[0_0_28px_rgba(6,182,212,0.15)]'
-                        : 'border-gray-500/40 bg-surface-light/60 shadow-inner'
+          <div className="flex h-7 items-center gap-2 rounded-lg bg-surface-light px-2 text-[11px] text-gray-400">
+            <HelpTip
+              label={t('toolbar.reviewSession')}
+              description={
+                activeAIProvider
+                  ? t('toolbar.reviewSessionEnabled')
+                  : t('toolbar.reviewSessionDisabled')
+              }
+            >
+              <button
+                onClick={() => void runAIReview('session')}
+                disabled={aiLoading || secureInputActive}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-surface px-2 py-0.5 text-xs text-gray-300 hover:text-gray-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {aiLoading && aiReviewScope !== 'last-command'
+                  ? <Loader2 size={12} className="animate-spin" />
+                  : <Sparkles size={12} />}
+                {aiReviewScope === 'session' && aiReview ? t('toolbar.refreshSession') : t('toolbar.reviewSession')}
+              </button>
+            </HelpTip>
+            {secureInputActive && (
+              <HelpTip
+                label={t('secureInput.title')}
+                description={`${securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}. ${t('secureInput.description')}`}
+              >
+                <span data-testid="secure-input-chip" className="shrink-0 inline-flex cursor-default items-center gap-1 rounded-full bg-caution/15 px-2 py-0.5 text-caution">
+                  <ShieldAlert size={11} />
+                  {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}
+                </span>
+              </HelpTip>
+            )}
+            {/* A plain title, not HelpTip: its wrapper would stop the path from shrinking in this row */}
+            <span
+              data-testid="status-cwd"
+              title={`${t('toolbar.prompt')} ${shellCwd || t('toolbar.waitingForShell')}`}
+              className="inline-flex min-w-0 max-w-[35%] shrink cursor-default items-center gap-1"
+            >
+              <Folder size={11} className="shrink-0 text-gray-500" />
+              <span className="truncate font-mono text-gray-300">{shellCwd ? shortenPathForDisplay(shellCwd) : t('toolbar.waitingForShell')}</span>
+            </span>
+            {activeCommandBlock && !isSSHSessionCommand(activeCommandBlock.command) ? (
+              <span className="inline-flex min-w-0 flex-1 items-center gap-1" title={formatCommandForDisplay(activeCommandBlock.command)}>
+                <Loader2 size={11} className="shrink-0 animate-spin text-accent" />
+                <span className="truncate font-mono text-accent-light">{formatCommandForDisplay(activeCommandBlock.command)}</span>
+              </span>
+            ) : activeCommandBlock && isSSHSessionCommand(activeCommandBlock.command) ? (
+              <span className="min-w-0 flex-1 truncate text-gray-500">
+                {t('toolbar.connected')} <span className="font-mono text-gray-400">{getSSHHost(activeCommandBlock.command) ?? t('toolbar.remote')}</span>
+              </span>
+            ) : lastCompletedCommandBlock && !isSSHSessionCommand(lastCompletedCommandBlock.command) ? (
+              <>
+                <span className="min-w-0 flex-1 truncate" title={formatCommandForDisplay(lastCompletedCommandBlock.command)}>
+                  {t('toolbar.last')} <span className="font-mono text-gray-300">{formatCommandForDisplay(lastCompletedCommandBlock.command)}</span>
+                </span>
+                {lastCompletedCommandBlock.exitCode !== null && lastCompletedCommandBlock.exitCode !== 0 && (
+                  <>
+                    <span className="shrink-0 font-mono text-destructive">{t('toolbar.exitCode', { code: lastCompletedCommandBlock.exitCode })}</span>
+                    {activeAIProvider && (
+                      <button
+                        onClick={() => void runAIReview('last-command')}
+                        disabled={aiLoading || secureInputActive}
+                        className="inline-flex shrink-0 items-center gap-1 rounded-md bg-accent/15 px-2 py-0.5 text-[11px] text-accent-light hover:bg-accent/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        <Sparkles size={10} />
+                        {t('toolbar.explainFix')}
+                      </button>
                     )}
-                  >
-                    <span className="absolute inset-0 rounded-full bg-gradient-to-r from-white/[0.02] via-transparent to-transparent" />
-                    <span
-                      className={clsx(
-                        'absolute top-1 bottom-1 w-[38px] rounded-full border transition-all duration-200',
-                        terminalInputMode === 'editor'
-                          ? 'left-[38px] border-accent/40 bg-gradient-to-r from-accent to-cyan-300 shadow-[0_0_24px_rgba(34,211,238,0.28)]'
-                          : 'left-1 border-gray-500/30 bg-gradient-to-r from-gray-500/50 to-gray-600/40'
-                      )}
-                    />
-                    <span className="relative z-10 flex w-full items-center justify-between px-2 text-[9px] font-semibold uppercase tracking-[0.18em]">
-                      <span className={terminalInputMode === 'editor' ? 'text-gray-500' : 'text-white'}>{t('editorPrompt.off')}</span>
-                      <span className={terminalInputMode === 'editor' ? 'text-slate-950' : 'text-gray-500'}>{t('editorPrompt.on')}</span>
-                    </span>
-                  </span>
-                </button>
-                </HelpTip>}
-              </div>
-            </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <span className="flex-1" />
+            )}
+            {promptCount > 0 && (
+              <span className="shrink-0 inline-flex cursor-default items-center rounded-full bg-surface px-2 py-0.5 text-gray-500">
+                {t('toolbar.promptCount', { count: promptCount })}
+              </span>
+            )}
+            <HelpTip
+              label={bracketedPasteMode ? t('toolbar.bracketedPaste') : t('toolbar.plainPaste')}
+              description={
+                bracketedPasteMode
+                  ? t('toolbar.bracketedPasteDescription')
+                  : t('toolbar.plainPasteDescription')
+              }
+            >
+              <span className={`shrink-0 inline-flex cursor-default items-center rounded-full bg-surface px-2 py-0.5 ${bracketedPasteMode ? 'text-accent-light' : 'text-gray-500'}`}>
+                {t('toolbar.paste')} {bracketedPasteMode ? t('toolbar.bracketed') : t('toolbar.plain')}
+              </span>
+            </HelpTip>
+            {showScrollDown && (
+              <button
+                onClick={() => {
+                  termRef.current?.scrollToBottom()
+                  autoScrollRef.current = true
+                  setShowScrollDown(false)
+                }}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/90 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-accent transition-colors"
+              >
+                <ArrowDown size={11} />
+                {t('panel.latestOutput')}
+              </button>
+            )}
+            {(sessionMode === 'ssh-interactive' || sessionMode === 'vnc') ? null : <HelpTip
+              label={t('editorPrompt.title')}
+              description={
+                terminalInputMode === 'editor'
+                  ? t('editorPrompt.modeOnDescription')
+                  : t('editorPrompt.modeOffDescription')
+              }
+              shortcut="⌘E"
+            >
+              <button
+                type="button"
+                onClick={() => void handleTerminalInputModeChange(terminalInputMode === 'editor' ? 'classic' : 'editor')}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-1 py-0.5 transition-colors hover:bg-surface/60"
+              >
+                <span className="text-[11px] text-gray-400">{t('editorPrompt.title')}</span>
+                <span
+                  role="switch"
+                  aria-checked={terminalInputMode === 'editor'}
+                  className={clsx(
+                    'relative inline-flex h-4 w-8 shrink-0 items-center rounded-full border transition-colors',
+                    terminalInputMode === 'editor' ? 'border-accent/40 bg-accent/80' : 'border-gray-500/40 bg-surface'
+                  )}
+                >
+                  <span
+                    className={clsx(
+                      'absolute h-3 w-3 rounded-full bg-white transition-all duration-200',
+                      terminalInputMode === 'editor' ? 'left-[17px]' : 'left-[1px] bg-gray-400'
+                    )}
+                  />
+                </span>
+              </button>
+            </HelpTip>}
           </div>
 
-          {shellState === 'executing' && (activeCommandBlock || inputPreview || queuedCommands.length > 0) && !(workflowRun && !isTerminalRunStatus(workflowRun.status)) && !(activeCommandBlock && isSSHSessionCommand(activeCommandBlock.command) && queuedCommands.length === 0 && !inputPreview) && (
-            <div className="rounded-lg bg-surface-light px-3 py-3 shadow-xl">
+          {shellState === 'executing' && (inputPreview || queuedCommands.length > 0) && !(workflowRun && !isTerminalRunStatus(workflowRun.status)) && (
+            <div className="rounded-lg bg-surface-light px-3 py-2">
               <div className="flex items-center gap-2 mb-1.5">
                 <Loader2 size={11} className="animate-spin text-accent" />
                 <span className="text-[11px] text-gray-400">
@@ -3132,20 +3120,6 @@ function XTermInstance({
                   </button>
                 )}
               </div>
-
-              {activeCommandBlock && (
-                <div className="flex items-center gap-2 mb-2 px-2 py-1 bg-surface rounded">
-                  <span className="text-[11px] text-gray-500 shrink-0">{t('busy.running')}</span>
-                  <span className="text-xs text-gray-300 font-mono flex-1 truncate">
-                    {formatCommandForDisplay(activeCommandBlock.command)}
-                  </span>
-                  {activeCommandBlock.cwd && (
-                    <span className="text-[11px] text-gray-500 truncate max-w-[40%]">
-                      {activeCommandBlock.cwd}
-                    </span>
-                  )}
-                </div>
-              )}
 
               {queuedCommands.map((cmd, i) => (
                 <div
