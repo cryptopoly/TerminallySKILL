@@ -1201,7 +1201,13 @@
     "blocks.copyOutput": "Salin output",
     "blocks.copyCommand": "Salin perintah",
     "blocks.runAgain": "Jalankan lagi",
-    "blocks.explain": "Jelaskan output"
+    "blocks.explain": "Jelaskan output",
+    "folder.change": "Ganti folder…",
+    "folder.menu": "Tindakan folder",
+    "folder.revealMac": "Tampilkan di Finder",
+    "folder.revealWindows": "Tampilkan di File Explorer",
+    "folder.revealLinux": "Buka di pengelola file",
+    "folder.copyPath": "Salin jalur"
   },
   "onboarding": {
     "subtitle": "Command builder visual, workspace terminal, workflow, log, dan alat AI",

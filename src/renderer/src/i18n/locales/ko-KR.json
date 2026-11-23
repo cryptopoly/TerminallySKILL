@@ -1200,7 +1200,13 @@
     "blocks.copyOutput": "출력 복사",
     "blocks.copyCommand": "명령 복사",
     "blocks.runAgain": "다시 실행",
-    "blocks.explain": "출력 설명"
+    "blocks.explain": "출력 설명",
+    "folder.change": "폴더 변경…",
+    "folder.menu": "폴더 작업",
+    "folder.revealMac": "Finder에서 보기",
+    "folder.revealWindows": "파일 탐색기에서 보기",
+    "folder.revealLinux": "파일 관리자에서 열기",
+    "folder.copyPath": "경로 복사"
   },
   "onboarding": {
     "subtitle": "시각적 명령 빌더, 터미널 작업공간, 워크플로, 로그, AI 도구",

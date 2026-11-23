@@ -1198,7 +1198,13 @@
     "blocks.copyOutput": "Çıktıyı kopyala",
     "blocks.copyCommand": "Komutu kopyala",
     "blocks.runAgain": "Yeniden çalıştır",
-    "blocks.explain": "Çıktıyı açıkla"
+    "blocks.explain": "Çıktıyı açıkla",
+    "folder.change": "Klasörü değiştir…",
+    "folder.menu": "Klasör işlemleri",
+    "folder.revealMac": "Finder'da göster",
+    "folder.revealWindows": "Dosya Gezgini'nde göster",
+    "folder.revealLinux": "Dosya yöneticisinde aç",
+    "folder.copyPath": "Yolu kopyala"
   },
   "onboarding": {
     "subtitle": "Görsel komut oluşturucu, terminal çalışma alanı, workflow'lar, günlükler ve AI araçları",

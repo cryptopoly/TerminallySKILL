@@ -1202,7 +1202,13 @@
     "blocks.copyOutput": "Uitvoer kopiëren",
     "blocks.copyCommand": "Opdracht kopiëren",
     "blocks.runAgain": "Opnieuw uitvoeren",
-    "blocks.explain": "Uitvoer uitleggen"
+    "blocks.explain": "Uitvoer uitleggen",
+    "folder.change": "Map wijzigen…",
+    "folder.menu": "Mapacties",
+    "folder.revealMac": "Toon in Finder",
+    "folder.revealWindows": "Toon in Verkenner",
+    "folder.revealLinux": "Openen in bestandsbeheer",
+    "folder.copyPath": "Pad kopiëren"
   },
   "onboarding": {
     "subtitle": "Visuele opdrachtbuilder, terminalwerkruimte, workflows, logs en AI-tools",

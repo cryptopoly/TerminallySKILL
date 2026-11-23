@@ -1333,7 +1333,13 @@
     "blocks.copyOutput": "نسخ المخرجات",
     "blocks.copyCommand": "نسخ الأمر",
     "blocks.runAgain": "تشغيل مرة أخرى",
-    "blocks.explain": "شرح المخرجات"
+    "blocks.explain": "شرح المخرجات",
+    "folder.change": "تغيير المجلد…",
+    "folder.menu": "إجراءات المجلد",
+    "folder.revealMac": "إظهار في Finder",
+    "folder.revealWindows": "إظهار في مستكشف الملفات",
+    "folder.revealLinux": "فتح في مدير الملفات",
+    "folder.copyPath": "نسخ المسار"
   },
   "onboarding": {
     "subtitle": "منشئ أوامر مرئي ومساحة عمل طرفية وسير عمل وسجلات وأدوات ذكاء اصطناعي",

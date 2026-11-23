@@ -1,3 +1,4 @@
+import { statSync } from 'node:fs'
 import { ipcMain, BrowserWindow, dialog, clipboard } from 'electron'
 import { IPC_CHANNELS } from '../../shared/ipc-channels'
 import {
@@ -76,10 +77,10 @@ export function registerTerminalIpcHandlers(): void {
     return selectedPath
   })
 
-  ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY, async (event) => {
+  ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY, async (event, startPath?: unknown) => {
     const win = BrowserWindow.fromWebContents(event.sender)!
     const result = await dialog.showOpenDialog(win, {
-      defaultPath: dialogDefaultPath(),
+      defaultPath: isDirectory(startPath) ? startPath : dialogDefaultPath(),
       properties: ['openDirectory']
     })
     if (result.canceled) return null
@@ -91,6 +92,15 @@ export function registerTerminalIpcHandlers(): void {
     }
     return selectedPath
   })
+
+  function isDirectory(value: unknown): value is string {
+    if (typeof value !== 'string' || !value) return false
+    try {
+      return statSync(value).isDirectory()
+    } catch {
+      return false
+    }
+  }
 
   ipcMain.handle(IPC_CHANNELS.CLIPBOARD_WRITE, (_event, text: string) => {
     // Electron 44 made the main-process clipboard asynchronous.

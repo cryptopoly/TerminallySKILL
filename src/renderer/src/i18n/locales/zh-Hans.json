@@ -213,7 +213,13 @@
     "blocks.copyOutput": "复制输出",
     "blocks.copyCommand": "复制命令",
     "blocks.runAgain": "再次运行",
-    "blocks.explain": "解释输出"
+    "blocks.explain": "解释输出",
+    "folder.change": "更改文件夹…",
+    "folder.menu": "文件夹操作",
+    "folder.revealMac": "在访达中显示",
+    "folder.revealWindows": "在文件资源管理器中显示",
+    "folder.revealLinux": "在文件管理器中打开",
+    "folder.copyPath": "复制路径"
   },
   "native": {
     "menu.file": "文件",

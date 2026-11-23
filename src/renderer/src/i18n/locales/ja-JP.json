@@ -1075,7 +1075,13 @@
     "blocks.copyOutput": "出力をコピー",
     "blocks.copyCommand": "コマンドをコピー",
     "blocks.runAgain": "もう一度実行",
-    "blocks.explain": "出力を説明"
+    "blocks.explain": "出力を説明",
+    "folder.change": "フォルダを変更…",
+    "folder.menu": "フォルダの操作",
+    "folder.revealMac": "Finder で表示",
+    "folder.revealWindows": "エクスプローラーで表示",
+    "folder.revealLinux": "ファイルマネージャーで開く",
+    "folder.copyPath": "パスをコピー"
   },
   "onboarding": {
     "subtitle": "ビジュアルコマンドビルダー、ターミナルワークスペース、ワークフロー、ログ、AI ツール",

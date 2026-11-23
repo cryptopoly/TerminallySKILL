@@ -145,7 +145,13 @@
     "blocks.copyOutput": "Copy output",
     "blocks.copyCommand": "Copy command",
     "blocks.runAgain": "Run again",
-    "blocks.explain": "Explain output"
+    "blocks.explain": "Explain output",
+    "folder.change": "Change folder…",
+    "folder.menu": "Folder actions",
+    "folder.revealMac": "Show in Finder",
+    "folder.revealWindows": "Show in File Explorer",
+    "folder.revealLinux": "Open in file manager",
+    "folder.copyPath": "Copy path"
   },
   "native": {
     "menu.file": "File",

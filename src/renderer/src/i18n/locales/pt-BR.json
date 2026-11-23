@@ -1096,7 +1096,13 @@
     "blocks.copyOutput": "Copiar saída",
     "blocks.copyCommand": "Copiar comando",
     "blocks.runAgain": "Executar novamente",
-    "blocks.explain": "Explicar saída"
+    "blocks.explain": "Explicar saída",
+    "folder.change": "Mudar pasta…",
+    "folder.menu": "Ações da pasta",
+    "folder.revealMac": "Mostrar no Finder",
+    "folder.revealWindows": "Mostrar no Explorador de Arquivos",
+    "folder.revealLinux": "Abrir no gerenciador de arquivos",
+    "folder.copyPath": "Copiar caminho"
   },
   "onboarding": {
     "subtitle": "Builder visual de comandos, workspace de terminal, workflows, logs e ferramentas de IA",

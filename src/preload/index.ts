@@ -130,8 +130,9 @@ export const electronAPI = {
   openFileDialog: (): Promise<string | null> =>
     ipcRenderer.invoke(IPC_CHANNELS.DIALOG_OPEN_FILE),
 
-  openDirectoryDialog: (): Promise<string | null> =>
-    ipcRenderer.invoke(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY),
+  /** startPath: the folder the picker opens in, when it exists */
+  openDirectoryDialog: (startPath?: string): Promise<string | null> =>
+    ipcRenderer.invoke(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY, startPath),
 
   writeClipboard: (text: string): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.CLIPBOARD_WRITE, text),

@@ -1197,7 +1197,13 @@
     "blocks.copyOutput": "आउटपुट कॉपी करें",
     "blocks.copyCommand": "कमांड कॉपी करें",
     "blocks.runAgain": "फिर से चलाएँ",
-    "blocks.explain": "आउटपुट समझाएँ"
+    "blocks.explain": "आउटपुट समझाएँ",
+    "folder.change": "फ़ोल्डर बदलें…",
+    "folder.menu": "फ़ोल्डर क्रियाएँ",
+    "folder.revealMac": "Finder में दिखाएँ",
+    "folder.revealWindows": "फ़ाइल एक्सप्लोरर में दिखाएँ",
+    "folder.revealLinux": "फ़ाइल मैनेजर में खोलें",
+    "folder.copyPath": "पथ कॉपी करें"
   },
   "onboarding": {
     "subtitle": "विज़ुअल कमांड बिल्डर, टर्मिनल वर्कस्पेस, वर्कफ़्लो, लॉग और AI टूल",

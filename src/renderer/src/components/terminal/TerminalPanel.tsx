@@ -942,6 +942,7 @@ function XTermInstance({
   const pendingBlockMarksRef = useRef<PendingCommandBlockMarks | null>(null)
   const finishedBlocksRef = useRef<FinishedCommandBlock[]>([])
   const [blockMenu, setBlockMenu] = useState<{ blockId: string; x: number; y: number } | null>(null)
+  const [pathMenu, setPathMenu] = useState<{ x: number; y: number } | null>(null)
   const editorInputRef = useRef<HTMLInputElement>(null)
   const shellHasKeyboardRef = useRef(false)
   const editorSelectionRef = useRef({ start: 0, end: 0 })
@@ -1540,6 +1541,18 @@ function XTermInstance({
     }
   }, [handleEditorCommandChange, terminalInputMode])
 
+  // A local file picker cannot choose folders on a remote machine.
+  const isRemoteShell = sessionMode === 'ssh-interactive' || sessionMode === 'vnc' ||
+    (activeCommandBlock !== null && isSSHSessionCommand(activeCommandBlock.command))
+  const canChangeFolder = Boolean(shellCwd) && shellState === 'idle' && !isRemoteShell
+
+  const changeFolderWithPicker = useCallback(async () => {
+    const folder = await window.electronAPI.openDirectoryDialog(shellCwd ?? undefined)
+    if (!folder || folder === shellCwd) return
+    // Typed at the prompt for the user to run, so the shell history stays right and nothing runs by surprise
+    insertSuggestedCommand(`cd '${folder.replace(/'/g, `'\\''`)}'`)
+  }, [insertSuggestedCommand, shellCwd])
+
   const cycleEditorSuggestion = useCallback((direction: 'previous' | 'next') => {
     if (editorSuggestions.length <= 1) return
 
@@ -1883,17 +1896,18 @@ function XTermInstance({
   }, [handleCommandAnchor])
 
   useEffect(() => {
-    if (!blockMenu) return
+    if (!blockMenu && !pathMenu) return
     const closeOnEscape = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return
       // Capture before the terminal, which would otherwise take the key
       event.preventDefault()
       event.stopPropagation()
       setBlockMenu(null)
+      setPathMenu(null)
     }
     window.addEventListener('keydown', closeOnEscape, true)
     return () => window.removeEventListener('keydown', closeOnEscape, true)
-  }, [blockMenu])
+  }, [blockMenu, pathMenu])
 
   const getFinishedBlockOutput = useCallback((block: FinishedCommandBlock): string | null => {
     if (block.outputLine.isDisposed || block.endLine.isDisposed) return null
@@ -2999,13 +3013,32 @@ function XTermInstance({
               </HelpTip>
             )}
             {/* A plain title, not HelpTip: its wrapper would stop the path from shrinking in this row */}
-            <span
-              data-testid="status-cwd"
-              title={`${t('toolbar.prompt')} ${shellCwd || t('toolbar.waitingForShell')}`}
-              className="inline-flex min-w-0 max-w-[35%] shrink cursor-default items-center gap-1"
-            >
-              <Folder size={11} className="shrink-0 text-gray-500" />
-              <span className="truncate font-mono text-gray-300">{shellCwd ? shortenPathForDisplay(shellCwd) : t('toolbar.waitingForShell')}</span>
+            <span className="inline-flex min-w-0 max-w-[35%] shrink items-center">
+              <button
+                type="button"
+                data-testid="status-cwd"
+                disabled={!canChangeFolder}
+                onClick={() => void changeFolderWithPicker()}
+                title={`${t('toolbar.prompt')} ${shellCwd || t('toolbar.waitingForShell')}${canChangeFolder ? `\n${t('folder.change')}` : ''}`}
+                className="inline-flex min-w-0 items-center gap-1 rounded-l px-1 py-0.5 enabled:hover:bg-surface disabled:cursor-default"
+              >
+                <Folder size={11} className="shrink-0 text-gray-500" />
+                <span className="truncate font-mono text-gray-300">{shellCwd ? shortenPathForDisplay(shellCwd) : t('toolbar.waitingForShell')}</span>
+              </button>
+              {shellCwd && !isRemoteShell && (
+                <button
+                  type="button"
+                  aria-label={t('folder.menu')}
+                  title={t('folder.menu')}
+                  onClick={(event) => {
+                    const rect = event.currentTarget.getBoundingClientRect()
+                    setPathMenu({ x: rect.left, y: rect.top })
+                  }}
+                  className="shrink-0 rounded-r px-0.5 py-0.5 text-gray-500 hover:bg-surface hover:text-gray-300"
+                >
+                  <ChevronDown size={11} />
+                </button>
+              )}
             </span>
             {activeCommandBlock && !isSSHSessionCommand(activeCommandBlock.command) ? (
               <span className="inline-flex min-w-0 flex-1 items-center gap-1" title={formatCommandForDisplay(activeCommandBlock.command)}>
@@ -3165,6 +3198,41 @@ function XTermInstance({
           />
         )}
       </div>
+      {pathMenu && shellCwd && (
+        <div className="fixed inset-0 z-50" onMouseDown={() => setPathMenu(null)}>
+          <div
+            role="menu"
+            aria-label={t('folder.menu')}
+            data-testid="folder-menu"
+            className="fixed w-52 -translate-y-full rounded-lg border border-surface-border bg-surface-light p-1 shadow-2xl shadow-black/50"
+            style={{ left: pathMenu.x, top: pathMenu.y - 4 }}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            {[
+              { label: t('folder.change'), disabled: !canChangeFolder, run: () => void changeFolderWithPicker() },
+              {
+                label: t(navigator.platform.toLowerCase().includes('mac') ? 'folder.revealMac' : navigator.platform.toLowerCase().includes('win') ? 'folder.revealWindows' : 'folder.revealLinux'),
+                disabled: false,
+                run: () => void window.electronAPI.openInExplorer(shellCwd)
+              },
+              { label: t('folder.copyPath'), disabled: false, run: () => void window.electronAPI.writeClipboard(shellCwd) }
+            ].map((item) => (
+              <button
+                key={item.label}
+                role="menuitem"
+                disabled={item.disabled}
+                onClick={() => {
+                  setPathMenu(null)
+                  item.run()
+                }}
+                className="block w-full rounded-md px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {blockMenu && (() => {
         const block = finishedBlocksRef.current.find((candidate) => candidate.id === blockMenu.blockId)
         if (!block) return null

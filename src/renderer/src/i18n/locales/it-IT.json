@@ -1081,7 +1081,13 @@
     "blocks.copyOutput": "Copia output",
     "blocks.copyCommand": "Copia comando",
     "blocks.runAgain": "Esegui di nuovo",
-    "blocks.explain": "Spiega output"
+    "blocks.explain": "Spiega output",
+    "folder.change": "Cambia cartella…",
+    "folder.menu": "Azioni cartella",
+    "folder.revealMac": "Mostra nel Finder",
+    "folder.revealWindows": "Mostra in Esplora file",
+    "folder.revealLinux": "Apri nel gestore file",
+    "folder.copyPath": "Copia percorso"
   },
   "onboarding": {
     "subtitle": "Builder visuale di comandi, workspace terminale, workflow, log e strumenti IA",

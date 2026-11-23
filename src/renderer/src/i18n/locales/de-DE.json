@@ -1005,7 +1005,13 @@
     "blocks.copyOutput": "Ausgabe kopieren",
     "blocks.copyCommand": "Befehl kopieren",
     "blocks.runAgain": "Erneut ausführen",
-    "blocks.explain": "Ausgabe erklären"
+    "blocks.explain": "Ausgabe erklären",
+    "folder.change": "Ordner wechseln…",
+    "folder.menu": "Ordneraktionen",
+    "folder.revealMac": "Im Finder zeigen",
+    "folder.revealWindows": "Im Explorer anzeigen",
+    "folder.revealLinux": "Im Dateimanager öffnen",
+    "folder.copyPath": "Pfad kopieren"
   },
   "onboarding": {
     "subtitle": "Visueller Befehls-Builder, Terminal-Workspace, Workflows, Protokolle und KI-Tools",
