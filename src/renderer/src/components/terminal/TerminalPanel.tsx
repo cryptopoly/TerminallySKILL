@@ -2280,10 +2280,33 @@ function XTermInstance({
     })
 
     let scrollTimer: ReturnType<typeof setTimeout> | null = null
+    // Output moves the view on its own (xterm follows new lines); only the user's own scrolling decides
+    // whether to follow the output or hold the lines they scrolled to.
+    let heldTopLine: IMarker | null = null
+    let userScrollUntil = 0
+    let draggingScrollbar = false
+    const markUserScroll = (): void => {
+      userScrollUntil = performance.now() + 400
+    }
+    const startScrollbarDrag = (): void => {
+      draggingScrollbar = true
+      markUserScroll()
+    }
+    const endScrollbarDrag = (): void => {
+      draggingScrollbar = false
+    }
+    const terminalElement = term.element
+    terminalElement?.addEventListener('wheel', markUserScroll, { capture: true, passive: true })
+    terminalElement?.addEventListener('keydown', markUserScroll, true)
+    terminalElement?.addEventListener('mousedown', startScrollbarDrag, true)
+    window.addEventListener('mouseup', endScrollbarDrag)
     term.onScroll(() => {
+      if (!draggingScrollbar && performance.now() > userScrollUntil) return
       const buf = term.buffer.active
       const atBottom = buf.viewportY >= buf.baseY
       autoScrollRef.current = atBottom
+      heldTopLine?.dispose()
+      heldTopLine = atBottom ? null : term.registerMarker(buf.viewportY - (buf.baseY + buf.cursorY))
       if (scrollTimer) clearTimeout(scrollTimer)
       scrollTimer = setTimeout(() => setShowScrollDown(!atBottom), 150)
     })
@@ -2296,16 +2319,12 @@ function XTermInstance({
           setBracketedPasteMode(nextBracketedPasteMode)
         }
 
-        const wasScrolledUp = !autoScrollRef.current
-        const savedViewportY = wasScrolledUp ? term.buffer.active.viewportY : 0
-
+        // Put a scrolled-up view back on the lines the user scrolled to. Decided when the write is drawn, so
+        // scrolling back to the bottom while fast output is queued follows it again.
         term.write(data, () => {
-          if (wasScrolledUp) {
-            const delta = savedViewportY - term.buffer.active.baseY
-            if (delta < 0) {
-              term.scrollLines(delta)
-            }
-          }
+          if (autoScrollRef.current || !heldTopLine) return
+          const target = heldTopLine.isDisposed ? 0 : heldTopLine.line
+          if (term.buffer.active.viewportY !== target) term.scrollToLine(target)
         })
 
         const clean = data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/\x1b\]7338;[^\x07]*\x07/g, '')
@@ -2373,6 +2392,7 @@ function XTermInstance({
       unsubExit()
       unsubShellEvent()
       agentAttention.forEach((disposable) => disposable.dispose())
+      window.removeEventListener('mouseup', endScrollbarDrag)
       term.dispose()
     }
   }, [sessionId])
