@@ -1,5 +1,5 @@
 # Runs inside the Windows test VM. Started by `tools/vm-test.sh --windows`.
-# Needs Node and MinGit unpacked in C:\tools (see docs/hub/backlog.md, "Windows VM").
+# Needs Node and MinGit unpacked in C:\tools (see the ProjectHub handover page, "Test machines").
 param([string]$Branch = 'staging')
 $ErrorActionPreference = 'Continue'
 $env:Path = 'C:\tools\node;C:\tools\git\cmd;' + $env:Path

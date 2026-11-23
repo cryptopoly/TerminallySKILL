@@ -46,7 +46,7 @@ jobs:
             echo
             echo "- [ ] Bump packages (check Electron release notes and advisories too)"
             echo "- [ ] \`npm audit\` clean; \`npm run test:ci\`, \`npm run test:e2e\` and the packaged smoke test pass"
-            echo "- [ ] Note the result in \`docs/hub/status.md\`"
+            echo "- [ ] Note the result in ProjectHub (hub status update)"
             echo
             cat report.md
           } > body.md

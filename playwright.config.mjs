@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 30000,
   workers: 1,
-  // One retry on CI: a slow shared runner flakes about 1 run in 20 on the schedule-history jump test (see docs/hub/backlog.md).
+  // One retry on CI: a slow shared runner flakes about 1 run in 20 on the schedule-history jump test (see the ProjectHub backlog, B0103).
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['dot']] : [['list']],
   use: {
