@@ -441,7 +441,7 @@
    away from the theme accent, with orange, yellow and red kept apart. Shapes differ too, so
    colour is never the only cue: running = spinning ring, needs you = pulsing dot with a halo,
    finished = solid dot, failed = dot with a cross, idle = still grey ring.
-   Measured contrast and colour distances: docs/hub/progress/terminal-maximise-dots.md. */
+   Measured contrast and colour distances: the ProjectHub progress note terminal-maximise-dots. */
 :root,
 [data-theme="void"], [data-theme="dusk"] {
   --dot-running: #fb923c;

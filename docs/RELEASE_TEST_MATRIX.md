@@ -37,7 +37,7 @@ Current automated package smoke coverage:
 
 - macOS arm64: `npm run test:package:mac:arm64`
 - Linux (unpacked app, AppImage, `.deb` install and remove): `tools/linux-package-smoke.sh`, run for every VM test by `tools/vm-test.sh`
-- Linux release files from GitHub (the exact `.deb` users download): `tools/vm-release-smoke.sh <version>`. Run on every draft release before publishing; local builds are not enough (see docs/hub/release-checklist.md).
+- Linux release files from GitHub (the exact `.deb` users download): `tools/vm-release-smoke.sh <version>`. Run on every draft release before publishing; local builds are not enough (see the release checklist in ProjectHub).
 - Windows: manual on the `W11 Testing` VM, best effort (no automated package smoke yet).
 
 ## Manual Smoke That Remains
