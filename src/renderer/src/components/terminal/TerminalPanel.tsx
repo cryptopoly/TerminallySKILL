@@ -2338,10 +2338,13 @@ function XTermInstance({
         // scrolling back to the bottom while fast output is queued follows it again.
         term.write(data, () => {
           if (autoScrollRef.current || !heldTopLine) return
-          const target = heldTopLine.isDisposed ? 0 : heldTopLine.line
-          if (term.buffer.active.viewportY !== target) term.scrollToLine(target)
-          // A wheel step can stop just short of the bottom; once the held view is the bottom, follow again
-          if (term.buffer.active.viewportY >= term.buffer.active.baseY) {
+          // Lines the user scrolled to can leave the scrollback during a long burst; there is nothing left to
+          // hold then, so follow the output again. A wheel step can also stop just short of the bottom.
+          if (!heldTopLine.isDisposed && term.buffer.active.viewportY !== heldTopLine.line) {
+            term.scrollToLine(heldTopLine.line)
+          }
+          if (heldTopLine.isDisposed || term.buffer.active.viewportY >= term.buffer.active.baseY) {
+            term.scrollToBottom()
             heldTopLine.dispose()
             heldTopLine = null
             autoScrollRef.current = true
