@@ -1091,7 +1091,12 @@
     "dot.idle": "Ocioso",
     "attention.waitingForYes": "Aguardando seu sim",
     "attention.bell": "Tocou o sino do terminal",
-    "attention.stillWaiting": "Ainda aguardando você ({{duration}})"
+    "attention.stillWaiting": "Ainda aguardando você ({{duration}})",
+    "blocks.menu": "Ações do comando",
+    "blocks.copyOutput": "Copiar saída",
+    "blocks.copyCommand": "Copiar comando",
+    "blocks.runAgain": "Executar novamente",
+    "blocks.explain": "Explicar saída"
   },
   "onboarding": {
     "subtitle": "Builder visual de comandos, workspace de terminal, workflows, logs e ferramentas de IA",

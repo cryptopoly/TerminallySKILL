@@ -140,7 +140,12 @@
     "dot.idle": "Idle",
     "attention.waitingForYes": "Waiting for your yes",
     "attention.bell": "Rang the terminal bell",
-    "attention.stillWaiting": "Still waiting for you ({{duration}})"
+    "attention.stillWaiting": "Still waiting for you ({{duration}})",
+    "blocks.menu": "Command actions",
+    "blocks.copyOutput": "Copy output",
+    "blocks.copyCommand": "Copy command",
+    "blocks.runAgain": "Run again",
+    "blocks.explain": "Explain output"
   },
   "native": {
     "menu.file": "File",

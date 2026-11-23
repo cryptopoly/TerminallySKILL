@@ -1328,7 +1328,12 @@
     "dot.idle": "خامل",
     "attention.waitingForYes": "بانتظار موافقتك",
     "attention.bell": "أطلق جرس الطرفية",
-    "attention.stillWaiting": "لا يزال بانتظارك ({{duration}})"
+    "attention.stillWaiting": "لا يزال بانتظارك ({{duration}})",
+    "blocks.menu": "إجراءات الأمر",
+    "blocks.copyOutput": "نسخ المخرجات",
+    "blocks.copyCommand": "نسخ الأمر",
+    "blocks.runAgain": "تشغيل مرة أخرى",
+    "blocks.explain": "شرح المخرجات"
   },
   "onboarding": {
     "subtitle": "منشئ أوامر مرئي ومساحة عمل طرفية وسير عمل وسجلات وأدوات ذكاء اصطناعي",

@@ -208,7 +208,12 @@
     "dot.idle": "空闲",
     "attention.waitingForYes": "等待你的确认",
     "attention.bell": "响了终端铃声",
-    "attention.stillWaiting": "仍在等你（{{duration}}）"
+    "attention.stillWaiting": "仍在等你（{{duration}}）",
+    "blocks.menu": "命令操作",
+    "blocks.copyOutput": "复制输出",
+    "blocks.copyCommand": "复制命令",
+    "blocks.runAgain": "再次运行",
+    "blocks.explain": "解释输出"
   },
   "native": {
     "menu.file": "文件",

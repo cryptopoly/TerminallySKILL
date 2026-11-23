@@ -1197,7 +1197,12 @@
     "dot.idle": "Stil",
     "attention.waitingForYes": "Wacht op je ja",
     "attention.bell": "Liet de terminalbel klinken",
-    "attention.stillWaiting": "Wacht nog steeds op je ({{duration}})"
+    "attention.stillWaiting": "Wacht nog steeds op je ({{duration}})",
+    "blocks.menu": "Opdrachtacties",
+    "blocks.copyOutput": "Uitvoer kopiëren",
+    "blocks.copyCommand": "Opdracht kopiëren",
+    "blocks.runAgain": "Opnieuw uitvoeren",
+    "blocks.explain": "Uitvoer uitleggen"
   },
   "onboarding": {
     "subtitle": "Visuele opdrachtbuilder, terminalwerkruimte, workflows, logs en AI-tools",

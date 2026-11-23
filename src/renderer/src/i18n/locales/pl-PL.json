@@ -1157,7 +1157,12 @@
     "dot.idle": "Bezczynny",
     "attention.waitingForYes": "Czeka na Twoją zgodę",
     "attention.bell": "Użył dzwonka terminala",
-    "attention.stillWaiting": "Nadal na Ciebie czeka ({{duration}})"
+    "attention.stillWaiting": "Nadal na Ciebie czeka ({{duration}})",
+    "blocks.menu": "Akcje polecenia",
+    "blocks.copyOutput": "Kopiuj wynik",
+    "blocks.copyCommand": "Kopiuj polecenie",
+    "blocks.runAgain": "Uruchom ponownie",
+    "blocks.explain": "Wyjaśnij wynik"
   },
   "onboarding": {
     "subtitle": "Wizualny builder poleceń, obszar roboczy terminala, workflow, logi i narzędzia AI",

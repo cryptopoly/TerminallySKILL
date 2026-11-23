@@ -1193,7 +1193,12 @@
     "dot.idle": "Boşta",
     "attention.waitingForYes": "Onayınızı bekliyor",
     "attention.bell": "Terminal zilini çaldı",
-    "attention.stillWaiting": "Hâlâ sizi bekliyor ({{duration}})"
+    "attention.stillWaiting": "Hâlâ sizi bekliyor ({{duration}})",
+    "blocks.menu": "Komut işlemleri",
+    "blocks.copyOutput": "Çıktıyı kopyala",
+    "blocks.copyCommand": "Komutu kopyala",
+    "blocks.runAgain": "Yeniden çalıştır",
+    "blocks.explain": "Çıktıyı açıkla"
   },
   "onboarding": {
     "subtitle": "Görsel komut oluşturucu, terminal çalışma alanı, workflow'lar, günlükler ve AI araçları",

@@ -1128,7 +1128,12 @@
     "dot.idle": "Inactif",
     "attention.waitingForYes": "Attend votre accord",
     "attention.bell": "A fait sonner la cloche du terminal",
-    "attention.stillWaiting": "Vous attend toujours ({{duration}})"
+    "attention.stillWaiting": "Vous attend toujours ({{duration}})",
+    "blocks.menu": "Actions de la commande",
+    "blocks.copyOutput": "Copier la sortie",
+    "blocks.copyCommand": "Copier la commande",
+    "blocks.runAgain": "Relancer",
+    "blocks.explain": "Expliquer la sortie"
   },
   "onboarding": {
     "subtitle": "Builder de commandes visuel, espace de travail de terminal, workflows, journaux et outils IA",

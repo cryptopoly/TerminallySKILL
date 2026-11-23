@@ -1139,7 +1139,12 @@
     "dot.idle": "Простой",
     "attention.waitingForYes": "Ждёт вашего согласия",
     "attention.bell": "Подал звуковой сигнал терминала",
-    "attention.stillWaiting": "Всё ещё ждёт вас ({{duration}})"
+    "attention.stillWaiting": "Всё ещё ждёт вас ({{duration}})",
+    "blocks.menu": "Действия с командой",
+    "blocks.copyOutput": "Копировать вывод",
+    "blocks.copyCommand": "Копировать команду",
+    "blocks.runAgain": "Запустить снова",
+    "blocks.explain": "Объяснить вывод"
   },
   "onboarding": {
     "subtitle": "Визуальный конструктор команд, терминальное рабочее пространство, workflow, логи и инструменты ИИ",

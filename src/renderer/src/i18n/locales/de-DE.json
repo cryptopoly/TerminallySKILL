@@ -1000,7 +1000,12 @@
     "dot.idle": "Ruhig",
     "attention.waitingForYes": "Wartet auf dein Ja",
     "attention.bell": "Hat die Terminalglocke geläutet",
-    "attention.stillWaiting": "Wartet noch auf dich ({{duration}})"
+    "attention.stillWaiting": "Wartet noch auf dich ({{duration}})",
+    "blocks.menu": "Befehlsaktionen",
+    "blocks.copyOutput": "Ausgabe kopieren",
+    "blocks.copyCommand": "Befehl kopieren",
+    "blocks.runAgain": "Erneut ausführen",
+    "blocks.explain": "Ausgabe erklären"
   },
   "onboarding": {
     "subtitle": "Visueller Befehls-Builder, Terminal-Workspace, Workflows, Protokolle und KI-Tools",

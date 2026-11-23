@@ -1195,7 +1195,12 @@
     "dot.idle": "대기",
     "attention.waitingForYes": "승인을 기다리는 중",
     "attention.bell": "터미널 벨을 울렸습니다",
-    "attention.stillWaiting": "아직 기다리는 중 ({{duration}})"
+    "attention.stillWaiting": "아직 기다리는 중 ({{duration}})",
+    "blocks.menu": "명령 작업",
+    "blocks.copyOutput": "출력 복사",
+    "blocks.copyCommand": "명령 복사",
+    "blocks.runAgain": "다시 실행",
+    "blocks.explain": "출력 설명"
   },
   "onboarding": {
     "subtitle": "시각적 명령 빌더, 터미널 작업공간, 워크플로, 로그, AI 도구",
