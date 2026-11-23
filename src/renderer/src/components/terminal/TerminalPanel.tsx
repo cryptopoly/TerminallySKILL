@@ -49,7 +49,7 @@ import { resolveProjectWorkingDirectory } from '../../../../shared/project-schem
 import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
 import { raiseCommandAttention } from '../../lib/attention'
 import { registerAgentAttention } from '../../lib/agent-attention'
-import type { ShellIntegrationEvent } from '../../../../shared/shell-integration'
+import { COMMAND_ANCHOR_OSC, type ShellIntegrationEvent } from '../../../../shared/shell-integration'
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
   ArrowDown, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor,
@@ -771,6 +771,14 @@ interface FinishedCommandBlock {
   /** The prompt line after the output */
   endLine: IMarker
   decoration: IDecoration | undefined
+}
+
+function decodeBase64Utf8(value: string): string {
+  try {
+    return new TextDecoder().decode(Uint8Array.from(atob(value), (char) => char.charCodeAt(0)))
+  } catch {
+    return ''
+  }
 }
 
 function disposeFinishedCommandBlock(block: FinishedCommandBlock): void {
@@ -1786,6 +1794,7 @@ function XTermInstance({
   // Attention alerts keep their own start marker so they cover every command.
   const attentionStartRef = useRef<{ command: string; startedAt: string } | null>(null)
 
+  // Called by xterm while it parses a command anchor, so the cursor is at the anchor's exact place.
   const startCommandBlockMarks = useCallback((command: string) => {
     const terminal = termRef.current
     const previous = pendingBlockMarksRef.current
@@ -1858,6 +1867,20 @@ function XTermInstance({
     }
   }, [sessionId, t])
 
+  const handleCommandAnchor = useCallback((payload: string) => {
+    const [kind, value = ''] = payload.split(';')
+    if (kind === 'start') {
+      startCommandBlockMarks(decodeBase64Utf8(value))
+    } else if (kind === 'end') {
+      const exitCode = Number.parseInt(value, 10)
+      finishCommandBlockMarks(Number.isFinite(exitCode) ? exitCode : null)
+    }
+  }, [finishCommandBlockMarks, startCommandBlockMarks])
+  const handleCommandAnchorRef = useRef(handleCommandAnchor)
+  useEffect(() => {
+    handleCommandAnchorRef.current = handleCommandAnchor
+  }, [handleCommandAnchor])
+
   useEffect(() => {
     if (!blockMenu) return
     const closeOnEscape = (event: KeyboardEvent): void => {
@@ -1879,7 +1902,6 @@ function XTermInstance({
   const handleShellEvent = useCallback((event: ShellIntegrationEvent) => {
     if (event.type === 'command-start') {
       attentionStartRef.current ??= { command: event.command, startedAt: event.receivedAt }
-      startCommandBlockMarks(event.command)
       useTerminalStore.getState().setSessionBusy(sessionId, true)
       if (shellStateRef.current === 'executing') {
         return
@@ -1938,19 +1960,16 @@ function XTermInstance({
     setShellCwd(nextCwd)
     setPromptCount((count) => count + 1)
     completeActiveCommandBlock(event.receivedAt, nextCwd, promptLine, event.exitCode)
-    finishCommandBlockMarks(event.exitCode)
     shellHasKeyboardRef.current = false
     shellStateRef.current = 'idle'
     setShellState('idle')
     setTimeout(() => processQueue(), 50)
   }, [
     completeActiveCommandBlock,
-    finishCommandBlockMarks,
     getActiveBufferLine,
     processQueue,
     projectWorkingDirectory,
-    sessionId,
-    startCommandBlockMarks
+    sessionId
   ])
 
   const activeCommandBlockRef = useRef(activeCommandBlock)
@@ -2103,6 +2122,10 @@ function XTermInstance({
       fastScrollModifier: 'alt',
       theme: XTERM_THEMES[activeTheme],
       allowProposedApi: true
+    })
+    term.parser.registerOscHandler(COMMAND_ANCHOR_OSC, (payload) => {
+      handleCommandAnchorRef.current(payload)
+      return true
     })
 
     const fitAddon = new FitAddon()
@@ -2280,7 +2303,7 @@ function XTermInstance({
           }
         })
 
-        const clean = data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '')
+        const clean = data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/\x1b\]7338;[^\x07]*\x07/g, '')
         outputBufferRef.current += clean
 
         if (outputBufferRef.current.length > 500) {

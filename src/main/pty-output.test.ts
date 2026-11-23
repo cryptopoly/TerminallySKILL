@@ -29,7 +29,9 @@ describe('pty-output', () => {
         `middle\x1b]7337;shell;prompt-ready;0;${promptPayload}\x07after`
     )
 
-    expect(extracted.data).toBe('beforemiddleafter')
+    expect(extracted.data).toBe(
+      `before\x1b]7338;start;${commandPayload}\x07middle\x1b]7338;end;0\x07after`
+    )
     expect(extracted.sawMarker).toBe(true)
     expect(extracted.events).toHaveLength(2)
     expect(extracted.events[0]).toMatchObject({
