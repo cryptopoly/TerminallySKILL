@@ -944,6 +944,15 @@ function XTermInstance({
   const finishedBlocksRef = useRef<FinishedCommandBlock[]>([])
   const [blockMenu, setBlockMenu] = useState<{ blockId: string; x: number; y: number } | null>(null)
   const [pathMenu, setPathMenu] = useState<{ x: number; y: number } | null>(null)
+  // Narrow panes (splits) get a footer without the less important labels, so nothing overlaps
+  const [footerElement, setFooterElement] = useState<HTMLDivElement | null>(null)
+  const [compactFooter, setCompactFooter] = useState(false)
+  useEffect(() => {
+    if (!footerElement) return
+    const observer = new ResizeObserver(([entry]) => setCompactFooter(entry.contentRect.width < 720))
+    observer.observe(footerElement)
+    return () => observer.disconnect()
+  }, [footerElement])
   const editorInputRef = useRef<HTMLInputElement>(null)
   const shellHasKeyboardRef = useRef(false)
   const editorSelectionRef = useRef({ start: 0, end: 0 })
@@ -2992,7 +3001,8 @@ function XTermInstance({
             </div>
           )}
 
-          <div className="flex h-7 items-center gap-2 rounded-lg bg-surface-light px-2 text-[11px] text-gray-400">
+          <div ref={setFooterElement} className="flex h-7 min-w-0 items-center gap-2 overflow-hidden rounded-lg bg-surface-light px-2 text-[11px] text-gray-400">
+            <span className="inline-flex shrink-0">
             <HelpTip
               label={t('toolbar.reviewSession')}
               description={
@@ -3004,15 +3014,18 @@ function XTermInstance({
               <button
                 onClick={() => void runAIReview('session')}
                 disabled={aiLoading || secureInputActive}
+                aria-label={aiReviewScope === 'session' && aiReview ? t('toolbar.refreshSession') : t('toolbar.reviewSession')}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-surface px-2 py-0.5 text-xs text-gray-300 hover:text-gray-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {aiLoading && aiReviewScope !== 'last-command'
                   ? <Loader2 size={12} className="animate-spin" />
                   : <Sparkles size={12} />}
-                {aiReviewScope === 'session' && aiReview ? t('toolbar.refreshSession') : t('toolbar.reviewSession')}
+                {!compactFooter && (aiReviewScope === 'session' && aiReview ? t('toolbar.refreshSession') : t('toolbar.reviewSession'))}
               </button>
             </HelpTip>
+            </span>
             {secureInputActive && (
+              <span className="inline-flex shrink-0">
               <HelpTip
                 label={t('secureInput.title')}
                 description={`${securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}. ${t('secureInput.description')}`}
@@ -3022,6 +3035,7 @@ function XTermInstance({
                   {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}
                 </span>
               </HelpTip>
+              </span>
             )}
             {/* A plain title, not HelpTip: its wrapper would stop the path from shrinking in this row */}
             <span className="inline-flex min-w-0 max-w-[35%] shrink items-center">
@@ -3084,23 +3098,27 @@ function XTermInstance({
             ) : (
               <span className="flex-1" />
             )}
-            {promptCount > 0 && (
+            {promptCount > 0 && !compactFooter && (
               <span className="shrink-0 inline-flex cursor-default items-center rounded-full bg-surface px-2 py-0.5 text-gray-500">
                 {t('toolbar.promptCount', { count: promptCount })}
               </span>
             )}
-            <HelpTip
-              label={bracketedPasteMode ? t('toolbar.bracketedPaste') : t('toolbar.plainPaste')}
-              description={
-                bracketedPasteMode
-                  ? t('toolbar.bracketedPasteDescription')
-                  : t('toolbar.plainPasteDescription')
-              }
-            >
-              <span className={`shrink-0 inline-flex cursor-default items-center rounded-full bg-surface px-2 py-0.5 ${bracketedPasteMode ? 'text-accent-light' : 'text-gray-500'}`}>
-                {t('toolbar.paste')} {bracketedPasteMode ? t('toolbar.bracketed') : t('toolbar.plain')}
+            {!compactFooter && (
+              <span className="inline-flex shrink-0">
+              <HelpTip
+                label={bracketedPasteMode ? t('toolbar.bracketedPaste') : t('toolbar.plainPaste')}
+                description={
+                  bracketedPasteMode
+                    ? t('toolbar.bracketedPasteDescription')
+                    : t('toolbar.plainPasteDescription')
+                }
+              >
+                <span className={`shrink-0 inline-flex cursor-default items-center rounded-full bg-surface px-2 py-0.5 ${bracketedPasteMode ? 'text-accent-light' : 'text-gray-500'}`}>
+                  {t('toolbar.paste')} {bracketedPasteMode ? t('toolbar.bracketed') : t('toolbar.plain')}
+                </span>
+              </HelpTip>
               </span>
-            </HelpTip>
+            )}
             {showScrollDown && (
               <button
                 onClick={() => {
@@ -3114,7 +3132,7 @@ function XTermInstance({
                 {t('panel.latestOutput')}
               </button>
             )}
-            {(sessionMode === 'ssh-interactive' || sessionMode === 'vnc') ? null : <HelpTip
+            {(sessionMode === 'ssh-interactive' || sessionMode === 'vnc') ? null : <span className="inline-flex shrink-0"><HelpTip
               label={t('editorPrompt.title')}
               description={
                 terminalInputMode === 'editor'
@@ -3128,9 +3146,10 @@ function XTermInstance({
                 onClick={() => void handleTerminalInputModeChange(terminalInputMode === 'editor' ? 'classic' : 'editor')}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-1 py-0.5 transition-colors hover:bg-surface/60"
               >
-                <span className="text-[11px] text-gray-400">{t('editorPrompt.title')}</span>
+                {!compactFooter && <span className="text-[11px] text-gray-400">{t('editorPrompt.title')}</span>}
                 <span
                   role="switch"
+                  aria-label={t('editorPrompt.title')}
                   aria-checked={terminalInputMode === 'editor'}
                   className={clsx(
                     'relative inline-flex h-4 w-8 shrink-0 items-center rounded-full border transition-colors',
@@ -3145,7 +3164,7 @@ function XTermInstance({
                   />
                 </span>
               </button>
-            </HelpTip>}
+            </HelpTip></span>}
           </div>
 
           {shellState === 'executing' && (inputPreview || queuedCommands.length > 0) && !(workflowRun && !isTerminalRunStatus(workflowRun.status)) && (
