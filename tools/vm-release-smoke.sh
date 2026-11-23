@@ -2,11 +2,11 @@
 # Smoke-test the .deb from a GitHub release on the Linux test VM: install it, run the packaged spec against it
 # (app opens, version matches, settings persist, a terminal starts). Leaves it installed.
 # This tests the file users download, not a local build. Draft releases work too (needs `gh` access).
-# Usage: tools/vm-release-smoke.sh <version> [--vm "Ubuntu 26.04 ARM64"]
+# Usage: tools/vm-release-smoke.sh <version> [--vm "U26 ARM64"]
 set -euo pipefail
 
 VERSION=${1:?version required, e.g. 0.9.103}; shift || true
-VM="Ubuntu 26.04 ARM64"
+VM="U26 ARM64"
 [ "${1:-}" = "--vm" ] && VM=$2
 
 prlctl status "$VM" | grep -q running || { prlctl start "$VM" >/dev/null; sleep 30; }
