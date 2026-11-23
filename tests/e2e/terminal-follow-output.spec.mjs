@@ -38,7 +38,10 @@ test('a scrolled-up view stays put, and scrolling back down follows fast output 
 
     // During the burst, scroll back to the bottom: the view follows to the end without "Latest output"
     await expect.poll(() => page.evaluate(() => document.body.innerText.includes('burst-')), { timeout: 15_000 }).toBe(true)
-    for (let i = 0; i < 60; i += 1) await page.mouse.wheel(0, 2000)
+    // Keep scrolling until the view reaches the bottom; how far one wheel step goes differs by platform
+    const latest = page.getByRole('button', { name: 'Latest output' })
+    for (let i = 0; i < 300 && (await latest.isVisible()); i += 1) await page.mouse.wheel(0, 2000)
+    await expect(latest).toBeHidden()
     await expect(rows).toContainText('stream-finished', { timeout: 30_000 })
   } finally {
     await app.close()
