@@ -516,7 +516,8 @@ export function TerminalPanel({
               key={session.id}
               style={getSessionStyle(session.id)}
               className="flex-col"
-              onClick={() => {
+              // On press, not click: the terminal can redraw between press and release, and the browser then drops the click
+              onMouseDownCapture={() => {
                 if (isPrimary && isSplit) setFocusedPane('primary')
                 if (isSecondary) setFocusedPane('secondary')
               }}
