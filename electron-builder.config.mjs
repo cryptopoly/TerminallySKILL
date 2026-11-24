@@ -65,6 +65,11 @@ const config = {
     artifactName: `${productSlug}-\${version}-\${arch}.\${ext}`,
     notarize: canNotarize
   },
+  toolsets: {
+    // The legacy AppImage runtime links libz.so and libfuse2, which a stock Ubuntu arm64 lacks. 1.0.3
+    // uses the static type-2 runtime, which needs neither.
+    appimage: '1.0.3'
+  },
   linux: {
     target: ['AppImage', 'deb'],
     icon: 'build/icons',
