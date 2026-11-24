@@ -79,6 +79,8 @@ Save reusable command templates with `{{placeholder}}` variables. Open a snippet
 Full shell sessions powered by node-pty and xterm.js:
 - **Editor Prompt** — command bar with ghost suggestions, history cycling, and safe paste handling
 - **Split panes** — vertical or horizontal splits with independent sessions
+- **Command blocks** — a green or red dot on each finished command: copy its output, copy the command, run it again or ask AI to explain it
+- **Reopen tabs** — optionally bring back your local tabs, split and folders at the next launch (Settings → General)
 - **Command queue** — type while a command is running; input fires when the shell is ready
 - **Output snapshots** — capture terminal output and compare any two with side-by-side diff
 - **In-terminal search** — regex, case-sensitive, and whole-word matching
