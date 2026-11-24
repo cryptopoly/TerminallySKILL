@@ -95,7 +95,9 @@ function createWindow(projectId?: string): void {
   const windowId = win.id
 
   win.on('ready-to-show', () => {
-    win.show()
+    // End-to-end tests open the app in the background so they do not take focus from whoever is at the machine
+    if (process.env.TERMINALLYSKILL_BACKGROUND_WINDOW === '1') win.showInactive()
+    else win.show()
   })
 
   win.on('close', (e) => {
@@ -241,6 +243,11 @@ function watchWindowShortcuts(window: BrowserWindow): void {
 }
 
 app.whenReady().then(() => {
+  // End-to-end tests: no Dock icon and never the active app, so test windows do not take focus
+  if (process.env.TERMINALLYSKILL_BACKGROUND_WINDOW === '1' && process.platform === 'darwin') {
+    app.setActivationPolicy('accessory')
+  }
+
   app.setName(APP_DISPLAY_NAME)
   electronApp.setAppUserModelId('com.terminallyskill.app')
 

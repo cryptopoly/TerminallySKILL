@@ -35,6 +35,8 @@ async function launchElectronExecutable({
       ...process.env,
       ELECTRON_DISABLE_SECURITY_WARNINGS: 'true',
       TERMINALLYSKILL_USER_DATA_DIR: resolvedUserDataDir,
+      // Show the window without taking focus from whoever is using the machine
+      TERMINALLYSKILL_BACKGROUND_WINDOW: '1',
       ...env
     }
   })
