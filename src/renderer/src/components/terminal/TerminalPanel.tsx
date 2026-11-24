@@ -56,8 +56,15 @@ import { COMMAND_ANCHOR_OSC, type ShellIntegrationEvent } from '../../../../shar
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
   ArrowDown, Folder, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor,
-  Maximize2, Minimize2
+  Maximize2, Minimize2, Grid2x2
 } from 'lucide-react'
+import {
+  clampQuadRatio,
+  QUAD_MIN_PANE_HEIGHT,
+  QUAD_MIN_PANE_WIDTH,
+  quadKey,
+  resolveQuadArrangement
+} from '../../lib/quad-layout'
 import { VncPanel } from './VncPanel'
 
 export function TerminalPanel({
@@ -96,6 +103,10 @@ export function TerminalPanel({
     () => resolveProjectTerminalContext(sessions, activeProjectId, activeSessionId, splitSessionId),
     [activeProjectId, activeSessionId, sessions, splitSessionId]
   )
+  const quad = useTerminalStore((s) => s.quadByProject[quadKey(activeProjectId)] ?? null)
+  const toggleQuad = useTerminalStore((s) => s.toggleQuad)
+  const placeQuadSession = useTerminalStore((s) => s.placeQuadSession)
+  const isQuad = quad !== null
   const closeTerminalPanel = useCallback(() => {
     if (onRequestClose) {
       onRequestClose()
@@ -160,6 +171,16 @@ export function TerminalPanel({
     setSplitRatio(50)
   }
 
+  /** An empty quad pane's New terminal button: a normal new tab, placed in that pane */
+  const handleNewQuadPane = async (index: number): Promise<void> => {
+    const sessionId = await createProjectTerminalSession(
+      activeProject,
+      addSession,
+      useProjectStore.getState().getActiveEnvOverrides()
+    )
+    placeQuadSession(activeProjectId, index, sessionId)
+  }
+
   const handleOpenInteractiveSSH = async (): Promise<void> => {
     await openInteractiveProjectShell(activeProject, addSession)
   }
@@ -181,7 +202,81 @@ export function TerminalPanel({
     removeSession(sessionId)
   }, [closeSplitPane, removeSession, runsBySession, t])
 
-  const isSplit = !!splitProjectSessionId
+  const isSplit = !isQuad && !!splitProjectSessionId
+
+  // Quad: the panes' arrangement follows the space there is, and its dividers start in the middle.
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const update = (): void => setContainerSize({ width: container.clientWidth, height: container.clientHeight })
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
+  const quadArrangement = isQuad ? resolveQuadArrangement(containerSize.width, containerSize.height) : null
+  const [quadRatios, setQuadRatios] = useState({ column: 50, row: 50 })
+  useEffect(() => {
+    if (isQuad) setQuadRatios({ column: 50, row: 50 })
+  }, [isQuad])
+  const quadColumn = clampQuadRatio(quadRatios.column, containerSize.width, QUAD_MIN_PANE_WIDTH)
+  const quadRow = clampQuadRatio(quadRatios.row, containerSize.height, QUAD_MIN_PANE_HEIGHT)
+  const quadSlots = quad?.slots ?? []
+  const isInQuad = (id: string): boolean => quadSlots.includes(id)
+  const multiPane = isSplit || (isQuad && quadArrangement !== 'single')
+
+  /** Drag a quad divider: the vertical one (column), the horizontal one (row) or where they cross (both). */
+  const handleQuadDividerMouseDown = useCallback((e: React.MouseEvent, axis: 'column' | 'row' | 'both') => {
+    e.preventDefault()
+    const container = containerRef.current
+    if (!container) return
+
+    const handleMouseMove = (ev: MouseEvent): void => {
+      const rect = container.getBoundingClientRect()
+      setQuadRatios((current) => ({
+        column: axis === 'row'
+          ? current.column
+          : clampQuadRatio(((ev.clientX - rect.left) / rect.width) * 100, rect.width, QUAD_MIN_PANE_WIDTH),
+        row: axis === 'column'
+          ? current.row
+          : clampQuadRatio(((ev.clientY - rect.top) / rect.height) * 100, rect.height, QUAD_MIN_PANE_HEIGHT)
+      }))
+    }
+
+    const handleMouseUp = (): void => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    document.body.style.cursor = axis === 'column' ? 'col-resize' : axis === 'row' ? 'row-resize' : 'move'
+    document.body.style.userSelect = 'none'
+  }, [])
+
+  /** Where quad pane `index` (row by row) sits */
+  const getQuadPaneStyle = (index: number): React.CSSProperties => {
+    const base: React.CSSProperties = { display: 'flex', position: 'absolute' }
+    if (quadArrangement === 'row' || quadArrangement === 'column') {
+      // Four in a line with a 4px gap between neighbours
+      const before = index > 0 ? 2 : 0
+      const size = `calc(25% - ${before + (index < 3 ? 2 : 0)}px)`
+      const start = `calc(${index * 25}% + ${before}px)`
+      return quadArrangement === 'row'
+        ? { ...base, top: 0, bottom: 0, left: start, width: size }
+        : { ...base, left: 0, right: 0, top: start, height: size }
+    }
+    const isRight = index % 2 === 1
+    const isBottom = index >= 2
+    return {
+      ...base,
+      ...(isRight ? { right: 0, width: `calc(${100 - quadColumn}% - 2px)` } : { left: 0, width: `calc(${quadColumn}% - 2px)` }),
+      ...(isBottom ? { bottom: 0, height: `calc(${100 - quadRow}% - 2px)` } : { top: 0, height: `calc(${quadRow}% - 2px)` })
+    }
+  }
 
   // Drag handler for the split resize divider
   const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
@@ -221,6 +316,15 @@ export function TerminalPanel({
     const isProjectSession = projectSessions.some((session) => session.id === sessionId)
     if (!isProjectSession) {
       return { display: 'none', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
+    }
+
+    if (isQuad) {
+      const index = quadSlots.indexOf(sessionId)
+      if (index >= 0 && quadArrangement !== 'single') return getQuadPaneStyle(index)
+      // Too small for four panes: only the focused one shows, full size
+      return index >= 0 && sessionId === activeProjectSessionId
+        ? { display: 'flex', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
+        : { display: 'none', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
     }
 
     if (!isSplit) {
@@ -266,7 +370,7 @@ export function TerminalPanel({
             const tabColor = project?.color ?? null
             const tabLabel = project ? project.name : session.id
             const isActive = activeProjectSessionId === session.id
-            const isInSplit = isSplit && isSessionInSplit(session.id)
+            const isInSplit = (isSplit && isSessionInSplit(session.id)) || (isQuad && isInQuad(session.id))
             const workflowRun = runsBySession[session.id] ?? null
             const workflowIsActive = workflowRun ? !isTerminalRunStatus(workflowRun.status) : false
 
@@ -403,6 +507,11 @@ export function TerminalPanel({
         <div className="flex items-center gap-0.5 mr-1">
           {activeProjectSessionId && (
             <>
+              {isQuad && quadArrangement === 'single' && (
+                <span className="text-[10px] text-gray-500 mr-1 whitespace-nowrap" data-testid="quad-too-small">
+                  {t('panel.quadTooSmall')}
+                </span>
+              )}
               <HelpTip
                 label={isSplit && splitDirection === 'vertical' ? t('panel.closeSplit') : t('panel.splitVertical')}
                 description={t('panel.splitVerticalDescription')}
@@ -410,7 +519,8 @@ export function TerminalPanel({
               >
                 <button
                   onClick={() => isSplit ? void handleCloseSplitPane(splitProjectSessionId!) : void handleSplit('vertical')}
-                  className={`p-1.5 transition-colors ${
+                  disabled={isQuad}
+                  className={`p-1.5 transition-colors disabled:opacity-30 disabled:pointer-events-none ${
                     isSplit && splitDirection === 'vertical'
                       ? 'text-accent-light'
                       : 'text-gray-500 hover:text-accent-light'
@@ -426,13 +536,31 @@ export function TerminalPanel({
               >
                 <button
                   onClick={() => isSplit ? void handleCloseSplitPane(splitProjectSessionId!) : void handleSplit('horizontal')}
-                  className={`p-1.5 transition-colors ${
+                  disabled={isQuad}
+                  className={`p-1.5 transition-colors disabled:opacity-30 disabled:pointer-events-none ${
                     isSplit && splitDirection === 'horizontal'
                       ? 'text-accent-light'
                       : 'text-gray-500 hover:text-accent-light'
                   }`}
                 >
                   <Rows2 size={13} />
+                </button>
+              </HelpTip>
+              <HelpTip
+                label={isQuad ? t('panel.closeQuad') : t('panel.quad')}
+                description={t('panel.quadDescription')}
+                shortcut={navigator.platform.toLowerCase().includes('mac') ? '⌘⇧G' : 'Ctrl+Shift+G'}
+              >
+                <button
+                  onClick={() => toggleQuad(activeProjectId)}
+                  aria-label={isQuad ? t('panel.closeQuad') : t('panel.quad')}
+                  aria-pressed={isQuad}
+                  data-testid="terminal-quad"
+                  className={`p-1.5 transition-colors ${
+                    isQuad ? 'text-accent-light' : 'text-gray-500 hover:text-accent-light'
+                  }`}
+                >
+                  <Grid2x2 size={13} />
                 </button>
               </HelpTip>
               <HelpTip
@@ -496,28 +624,34 @@ export function TerminalPanel({
           const project = session.projectId
             ? projects.find((p) => p.id === session.projectId) ?? null
             : null
-          const isVisible = session.id === activeProjectSessionId || (isSplit && session.id === splitProjectSessionId)
+          const sessionStyle = getSessionStyle(session.id)
+          const isVisible = sessionStyle.display !== 'none'
           const isPrimary = session.id === activeProjectSessionId
           const isSecondary = isSplit && session.id === splitProjectSessionId
-          const isFocused = isSplit && (
-            (isPrimary && focusedPane === 'primary') ||
-            (isSecondary && focusedPane === 'secondary')
-          )
+          const isQuadPane = isQuad && isInQuad(session.id)
+          const isFocused = isQuad
+            ? isPrimary
+            : isSplit
+              ? (isPrimary && focusedPane === 'primary') || (isSecondary && focusedPane === 'secondary')
+              : isPrimary
           const workflowRun = runsBySession[session.id] ?? null
 
           return (
             <div
               key={session.id}
-              style={getSessionStyle(session.id)}
+              style={sessionStyle}
               className="flex-col"
+              data-quad-pane={isQuadPane ? quadSlots.indexOf(session.id) : undefined}
+              data-focused-pane={multiPane && isVisible && isFocused ? 'true' : undefined}
               // On press, not click: the terminal can redraw between press and release, and the browser then drops the click
               onMouseDownCapture={() => {
+                if (isQuadPane && !isPrimary) setActiveSession(session.id)
                 if (isPrimary && isSplit) setFocusedPane('primary')
                 if (isSecondary) setFocusedPane('secondary')
               }}
             >
               {/* Focus indicator */}
-              {isSplit && (isPrimary || isSecondary) && (
+              {multiPane && isVisible && (
                 <div
                   className="h-0.5 shrink-0 transition-colors duration-150"
                   style={{ backgroundColor: isFocused ? 'var(--accent)' : 'var(--surface-border)' }}
@@ -546,6 +680,8 @@ export function TerminalPanel({
                     <XTermInstance
                       sessionId={session.id}
                       visible={isVisible}
+                      focused={isVisible && isFocused}
+                      multiPane={multiPane}
                       projectName={project?.name ?? null}
                       projectWorkingDirectory={project ? resolveProjectWorkingDirectory(project) : null}
                       sessionMode={session.mode}
@@ -579,6 +715,56 @@ export function TerminalPanel({
             }
           />
         )}
+
+        {/* Quad: empty panes offer a new terminal */}
+        {isQuad && quadArrangement !== 'single' && quadSlots.map((id, index) =>
+          id && projectSessions.some((session) => session.id === id) ? null : (
+            <div
+              key={`quad-empty-${index}`}
+              style={getQuadPaneStyle(index)}
+              className="flex-col items-center justify-center bg-surface"
+              data-quad-empty={index}
+            >
+              <button
+                onClick={() => void handleNewQuadPane(index)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-surface-border text-xs text-gray-500 hover:text-accent-light hover:border-accent/40 transition-colors"
+              >
+                <Plus size={12} />
+                {t('panel.newTerminal')}
+              </button>
+            </div>
+          )
+        )}
+
+        {/* Quad dividers — draggable, the crossing moves both */}
+        {isQuad && quadArrangement === 'grid' && (
+          <>
+            <div
+              onMouseDown={(e) => handleQuadDividerMouseDown(e, 'column')}
+              className="absolute z-20 top-0 bottom-0 w-1 cursor-col-resize bg-surface-border hover:bg-accent/50 transition-colors"
+              style={{ left: `calc(${quadColumn}% - 2px)` }}
+              data-testid="quad-divider-column"
+            />
+            <div
+              onMouseDown={(e) => handleQuadDividerMouseDown(e, 'row')}
+              className="absolute z-20 left-0 right-0 h-1 cursor-row-resize bg-surface-border hover:bg-accent/50 transition-colors"
+              style={{ top: `calc(${quadRow}% - 2px)` }}
+              data-testid="quad-divider-row"
+            />
+            <div
+              onMouseDown={(e) => handleQuadDividerMouseDown(e, 'both')}
+              className="absolute z-30 w-3 h-3 cursor-move rounded-sm hover:bg-accent/50 transition-colors"
+              style={{ left: `calc(${quadColumn}% - 6px)`, top: `calc(${quadRow}% - 6px)` }}
+            />
+          </>
+        )}
+        {isQuad && (quadArrangement === 'row' || quadArrangement === 'column') && [1, 2, 3].map((index) => (
+          <div
+            key={`quad-gap-${index}`}
+            className={`absolute z-20 bg-surface-border ${quadArrangement === 'row' ? 'top-0 bottom-0 w-1' : 'left-0 right-0 h-1'}`}
+            style={quadArrangement === 'row' ? { left: `calc(${index * 25}% - 2px)` } : { top: `calc(${index * 25}% - 2px)` }}
+          />
+        ))}
 
         {projectSessions.length === 0 && (
           <div className="h-full flex items-center justify-center text-gray-600 text-sm">
@@ -859,17 +1045,24 @@ function resolveDirectoryBase(
 function XTermInstance({
   sessionId,
   visible,
+  focused = visible,
+  multiPane = false,
   projectName,
   projectWorkingDirectory,
   sessionMode
 }: {
   sessionId: string
   visible: boolean
+  /** The pane the user works in (always true for a lone visible terminal) */
+  focused?: boolean
+  /** Shown beside other terminals (split or quad) */
+  multiPane?: boolean
   projectName: string | null
   projectWorkingDirectory: string | null
   sessionMode?: string
 }) {
   const { t } = useTranslation('terminal')
+  const rootRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
@@ -2072,15 +2265,27 @@ function XTermInstance({
       terminalInputMode === 'editor' && shellState === 'idle' ? 'bar' : 'block'
   }, [shellState, terminalInputMode])
 
+  // Only the focused pane takes the keyboard, so the editor prompt follows the focus in a split or quad.
   useEffect(() => {
-    if (!visible || terminalInputMode !== 'editor' || shellState !== 'idle') return
+    if (!visible || !focused || terminalInputMode !== 'editor' || shellState !== 'idle') return
 
     const focusTimer = window.setTimeout(() => {
       editorInputRef.current?.focus()
     }, 0)
 
     return () => window.clearTimeout(focusTimer)
-  }, [shellState, terminalInputMode, visible])
+  }, [focused, shellState, terminalInputMode, visible])
+
+  // Moving the focus to this pane by keyboard (Cmd+] / Cmd+[) moves the keyboard here too.
+  useEffect(() => {
+    if (!visible || !focused || !multiPane) return
+    if (terminalInputMode === 'editor' && shellStateRef.current === 'idle') return // the effect above does it
+    const focusTimer = window.setTimeout(() => {
+      if (!rootRef.current?.contains(document.activeElement)) termRef.current?.focus()
+    }, 0)
+    return () => window.clearTimeout(focusTimer)
+    // Only when the focus arrives, not on every input mode change
+  }, [focused, multiPane, visible])
 
   useLayoutEffect(() => {
     const pendingSelection = pendingEditorSelectionRef.current
@@ -2466,9 +2671,9 @@ function XTermInstance({
     }
   }, [visible, handleResize])
 
-  // Cmd+F to open search, Cmd+S to capture snapshot
+  // Cmd+F to open search, Cmd+S to capture snapshot (the focused pane only, in a split or quad)
   useEffect(() => {
-    if (!visible) return
+    if (!visible || !focused) return
 
     const handler = (e: KeyboardEvent): void => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
@@ -2483,7 +2688,7 @@ function XTermInstance({
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [visible])
+  }, [focused, visible])
 
   const captureSnapshot = useCallback(() => {
     if (!serializeAddonRef.current || !termRef.current) return
@@ -2509,6 +2714,7 @@ function XTermInstance({
 
   return (
     <div
+      ref={rootRef}
       className="absolute inset-0 flex flex-col"
       style={{ display: visible ? 'flex' : 'none' }}
     >
