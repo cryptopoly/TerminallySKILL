@@ -237,6 +237,50 @@ export function hasRunningTerminalProcesses(): boolean {
   return runningProcesses.size > 0
 }
 
+/** With conpty.dll, how long to wait for a terminal's exit before ending the next one (it takes about 60ms). */
+const KILL_EXIT_TIMEOUT_MS = 250
+/** Settles once every terminal handed to killPty has been ended */
+let killsDone: Promise<void> = Promise.resolve()
+
+/**
+ * Ends a terminal's shell.
+ *
+ * node-pty 1.1.0 keeps its open terminals in a list that each terminal's exit thread edits without a
+ * lock (microsoft/node-pty#921, fixed in 1.2.0-beta.13). With conpty.dll, kill() ends the shell at once,
+ * so ending terminals back to back (quitting, closing a window) makes those threads edit the list
+ * together. About 1 quit in 100 with three terminals open then crashed, or failed an assert in node-pty,
+ * which shows a "Microsoft Visual C++ Runtime Library" dialog and keeps the app from ever exiting.
+ * So with conpty.dll terminals end one at a time, the next one after node-pty has reported the exit of
+ * the one before.
+ */
+function killPty(ptyProcess: IPty): void {
+  if (!USE_CONPTY_DLL) {
+    ptyProcess.kill()
+    return
+  }
+  killsDone = killsDone.then(() => killAndAwaitExit(ptyProcess))
+}
+
+function killAndAwaitExit(ptyProcess: IPty): Promise<void> {
+  // It ended by itself while waiting its turn.
+  if (!runningProcesses.has(ptyProcess)) return Promise.resolve()
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, KILL_EXIT_TIMEOUT_MS)
+    ptyProcess.onExit(({ exitCode }) => {
+      // node-pty has the exit code only once the terminal's exit thread is done with the list.
+      if (typeof exitCode !== 'number') return
+      clearTimeout(timer)
+      resolve()
+    })
+    try {
+      ptyProcess.kill()
+    } catch (error) {
+      // A rejected promise here would keep every later terminal from being ended.
+      console.warn('[pty] Could not end a terminal:', error)
+    }
+  })
+}
+
 async function waitForProcessExits(timeoutMs: number): Promise<void> {
   if (runningProcesses.size === 0) return
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -707,7 +751,7 @@ export function killTerminal(sessionId: string): void {
   if (session) {
     // Auto-save log BEFORE killing — main process handles all log persistence
     void autoSaveLog(session, null)
-    session.process.kill()
+    killPty(session.process)
     session.cleanupInit()
     unregisterTerminalSession(sessionId)
     sessions.delete(sessionId)
@@ -757,7 +801,7 @@ export function killSessionsForWindow(targetWindow: BrowserWindow): void {
   for (const [id, session] of sessions) {
     if (session.window === targetWindow) {
       void autoSaveLog(session, null)
-      session.process.kill()
+      killPty(session.process)
       session.cleanupInit()
       unregisterTerminalSession(id)
       sessions.delete(id)
@@ -775,12 +819,13 @@ export async function killAllTerminals(): Promise<void> {
   const saves: Promise<void>[] = []
   for (const [, session] of sessions) {
     saves.push(autoSaveLog(session, null).catch(() => {}))
-    session.process.kill()
+    killPty(session.process)
     session.cleanupInit()
     unregisterTerminalSession(session.sessionId)
   }
   sessions.clear()
   await Promise.allSettled(saves)
+  await killsDone
 
   // Wait for the shells to end, so their exits are not delivered during quit teardown.
   // A shell that ignores SIGHUP is killed outright.

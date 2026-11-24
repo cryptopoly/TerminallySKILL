@@ -1,6 +1,8 @@
 import { execSync } from 'node:child_process'
 import { chmod, lstat, readdir } from 'node:fs/promises'
 import path from 'node:path'
+import { Arch } from 'electron-builder'
+import { missingConptyFiles, restoreConptyFiles } from './scripts/node-pty-conpty.mjs'
 
 const defaultProductName = 'TerminallySKILL'
 const productSlug = 'TerminallySKILL'
@@ -43,6 +45,18 @@ async function normaliseModes(file) {
 
 await normaliseModes('build/icons')
 
+// A node-pty rebuilt for this package has lost its bundled ConPTY (see scripts/node-pty-conpty.mjs): put it
+// back in the packaged app, and stop the build rather than ship an app that cannot open a terminal.
+function ensureBundledConpty(context) {
+  const nodePtyDir = path.join(context.appOutDir, 'resources', 'app.asar.unpacked', 'node_modules', 'node-pty')
+  const arch = Arch[context.arch]
+  restoreConptyFiles(nodePtyDir, arch)
+  const missing = missingConptyFiles(nodePtyDir, arch)
+  if (missing.length > 0) {
+    throw new Error(`The packaged app could not open a terminal, node-pty's bundled ConPTY is missing: ${missing.join(', ')}`)
+  }
+}
+
 const canNotarize =
   Boolean(appleId && appleAppSpecificPassword && appleTeamId) &&
   (Boolean(process.env.CSC_LINK) || hasMacCodeSigningIdentity())
@@ -63,6 +77,7 @@ const config = {
   ],
   afterPack: async (context) => {
     if (context.electronPlatformName === 'linux') await normaliseModes(context.appOutDir)
+    if (context.electronPlatformName === 'win32') ensureBundledConpty(context)
   },
   asarUnpack: [
     '**/node-pty/**'
