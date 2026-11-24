@@ -28,7 +28,10 @@ test('the footer folder opens a picker that types cd, and its menu copies the pa
     }, otherDir)
     await folderButton.click()
     // PowerShell quotes a ' inside single quotes by doubling it.
-    const typedCd = shellCommand(`cd '${workspaceDir}/it'\\''s here'`, `cd '${otherDir.replace(/'/g, "''")}'`)
+    const typedCd = shellCommand(
+      `cd '${workspaceDir}/it'\\''s here'`,
+      `Set-Location -LiteralPath '${otherDir.replace(/'/g, "''")}'`
+    )
     await expect(rows).toContainText(typedCd, { timeout: 10_000 })
     await page.locator('.xterm:visible').click()
     await page.keyboard.press('Enter')
