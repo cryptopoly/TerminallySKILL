@@ -109,7 +109,56 @@ const CONPTY_SCROLLING = [
   '\nPS C:\\w>\x1b[1C'
 ]
 
+/**
+ * The same two commands under node-pty's bundled conpty.dll (OpenConsole), captured the same way on the same
+ * build. Each anchor arrives after the line break before it, so no correction is needed. The redraw of the
+ * line on every keystroke is cut to the last one, and the working folder is shortened as above.
+ */
+const CONPTY_DLL_SESSION = [
+  'PS C:\\w> ',
+  '\x1b[?25l\x1b[1;10H\x1b[93mecho\x1b[39;49m \x1b[36m"bloc\x1b[39;49m\x1b[0m',
+  '\x1b[1;15H\x1b[?25h',
+  '\x1b[?25l\x1b[1;10H\x1b[93mecho\x1b[39;49m \x1b[36m"block-\x1b[37m$(\x1b[97m40\x1b[90m+\x1b[97m2\x1b[37m)\x1b[36m"',
+  '\x1b[39;49m\x1b[0m',
+  '\x1b[1;30H\x1b[?25h',
+  '\x1b[1;30H\r\n',
+  '\x1b[0m\x1b[0m',
+  '\x1b]7338;start;ZWNobyAiYmxvY2stJCg0MCsyKSI=\x07',
+  'block-42\r\n',
+  '\x1b]7338;end;0\x07',
+  'PS C:\\w> ',
+  '\x1b[?25l',
+  '\x1b[3;10H\x1b[93mcmd\x1b[39;49m \x1b[37m/c\x1b[39;49m \x1b[37mexit\x1b[39;49m \x1b[97m1',
+  '\x1b[39;49m',
+  '\x1b[0m',
+  '\x1b[3;23H',
+  '\x1b[?25h',
+  '\x1b[3;23H',
+  '\r\n',
+  '\x1b[0m',
+  '\x1b[0m',
+  '\x1b]7338;start;Y21kIC9jIGV4aXQgMQ==\x07',
+  '\x1b[?7l',
+  '\x1b[?7h',
+  '\x1b]0;Administrator: Windows PowerShell\x1b\\',
+  '\x1b]7338;end;1\x07',
+  'PS C:\\w> '
+]
+
 describe('command block anchors', () => {
+  it('marks the typed command and its output under the bundled conpty.dll without the lag correction', async () => {
+    const terminal = blockTerminal(false)
+    await terminal.write(CONPTY_DLL_SESSION)
+
+    expect(terminal.blocks).toHaveLength(2)
+    const [echo, fail] = terminal.blocks
+    expect(terminal.line(echo.commandLine.line)).toBe('PS C:\\w> echo "block-$(40+2)"')
+    expect(terminal.output(echo)).toBe('block-42')
+    expect(terminal.line(fail.commandLine.line)).toBe('PS C:\\w> cmd /c exit 1')
+    expect(fail.outputLine.line).toBe(fail.endLine.line)
+    expect(terminal.line(fail.endLine.line)).toBe('PS C:\\w> ')
+  })
+
   it('marks the typed command and its output when ConPTY draws line breaks after the anchors', async () => {
     const terminal = blockTerminal(true)
     await terminal.write(CONPTY_SESSION)

@@ -758,8 +758,11 @@ type AIReviewScope = 'session' | 'last-command' | 'selection'
 /** Most finished commands that keep a mark in one terminal; older marks are removed. */
 const MAX_COMMAND_BLOCK_MARKS = 200
 
-/** Windows ConPTY can pass a command anchor through before it draws the line break written before it */
-const COMMAND_ANCHORS_MAY_LAG = /^win/i.test(navigator.platform)
+/**
+ * The ConPTY built into Windows can pass a command anchor through before it draws the line break written
+ * before it. The bundled conpty.dll keeps them in order, so only the TSK_CONPTY_DLL=0 fallback needs this.
+ */
+const COMMAND_ANCHORS_MAY_LAG = /^win/i.test(navigator.platform) && !window.electronAPI?.usesBundledConpty
 
 interface PendingCommandBlockMarks {
   command: string

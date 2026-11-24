@@ -27,6 +27,7 @@ import {
   stripWorkflowMarkerEcho
 } from './pty-output'
 import type { TerminalSessionInfo } from '../shared/run-schema'
+import { usesBundledConpty } from '../shared/conpty-mode'
 
 interface PtySession {
   process: IPty
@@ -65,6 +66,12 @@ const MARKER_ECHO_HOLD_MS = 100
 let nextId = 1
 let ptyRuntimePromise: Promise<typeof import('node-pty')> | null = null
 const nodeRequire = createRequire(import.meta.url)
+
+/** Windows: node-pty's bundled conpty.dll unless TSK_CONPTY_DLL=0 (see usesBundledConpty) */
+const USE_CONPTY_DLL = usesBundledConpty(process.platform, process.env)
+/** Primary device attributes query, and the answer xterm.js gives to it */
+const DA1_QUERY = '\x1b[c'
+const DA1_REPLY = '\x1b[?1;2c'
 
 /** Cached enriched PATH — resolved once, reused for all sessions */
 let cachedEnrichedPath: string | null = null
@@ -387,7 +394,9 @@ export async function createTerminal(
   }
   env = sanitizeSpawnEnv(env)
 
-  console.log(`[pty] Creating terminal ${sessionId}: shell=${shell}, cwd=${resolvedCwd}`)
+  console.log(
+    `[pty] Creating terminal ${sessionId}: shell=${shell}, cwd=${resolvedCwd}${USE_CONPTY_DLL ? ', conpty.dll' : ''}`
+  )
 
   const pty = await getPtyRuntime()
   const spawnOptions = {
@@ -395,7 +404,8 @@ export async function createTerminal(
     cols: 80,
     rows: 24,
     cwd: resolvedCwd,
-    env
+    env,
+    ...(USE_CONPTY_DLL ? { useConptyDll: true } : {})
   }
 
   let ptyProcess: IPty
@@ -553,6 +563,12 @@ export async function createTerminal(
         bufferForLog(session, held)
         if (!window.isDestroyed()) window.webContents.send(IPC_CHANNELS.PTY_DATA, sessionId, held)
       }, MARKER_ECHO_HOLD_MS)
+    }
+    if (USE_CONPTY_DLL && !session.startupFlushed && data.includes(DA1_QUERY)) {
+      // OpenConsole asks the terminal for its device attributes at startup and waits up to 3s for the
+      // answer. Startup output is held here until the first prompt, so xterm never sees the question.
+      data = data.split(DA1_QUERY).join('')
+      ptyProcess.write(DA1_REPLY)
     }
     if (!session.startupFlushed) {
       session.startupBuffer += data
