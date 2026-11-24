@@ -147,10 +147,15 @@ export function splitIncompleteMarker(data: string): { complete: string; tail: s
   return { complete: data.slice(0, start), tail: data.slice(start) }
 }
 
-/** Remove the terminal's echo of the step-marker command line ("printf '\\033]7337;workflow-step;...") */
+/**
+ * Remove the terminal's echo of the step-marker command line ("printf '\\033]7337;workflow-step;...").
+ * Only a whole line, up to its newline: readline in macOS bash 3.2 wraps a long line with " \r" instead
+ * of a newline, and draws it over several chunks. A line cut short here is left to MarkerEchoFilter,
+ * which drops it through to its newline.
+ */
 export function stripWorkflowMarkerEcho(data: string): string {
   if (!data.includes('workflow-step;')) return data
-  return data.replace(/[^\r\n]*printf '\\033\]7337;workflow-step;[^\r\n]*(\r?\n)?/g, '')
+  return data.replace(/[^\r\n]*printf '\\033\]7337;workflow-step;[^\n]*\n/g, '')
 }
 
 const MARKER_ECHO_UNIQUE = 'workflow-step;'
