@@ -27,7 +27,6 @@ import {
   stripWorkflowMarkerEcho
 } from './pty-output'
 import type { TerminalSessionInfo } from '../shared/run-schema'
-import { isPowerShell } from '../shared/local-shell'
 
 interface PtySession {
   process: IPty
@@ -538,7 +537,7 @@ export async function createTerminal(
         window.webContents.send(IPC_CHANNELS.WORKFLOW_STEP_RESULT, sessionId, result)
       }
     }
-    data = stripWorkflowMarkerEcho(extracted.data, isPowerShell(session.shell))
+    data = stripWorkflowMarkerEcho(extracted.data)
     for (const event of shellIntegration.events) {
       if (event.type === 'command-start') session.markerEcho.noteCommandStart()
       else session.markerEcho.notePromptReady()

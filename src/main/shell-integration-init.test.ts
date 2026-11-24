@@ -47,6 +47,25 @@ describe('shell integration init scripts', () => {
     expect(init).toMatch(/^[\x00-\x7f]*$/)
   })
 
+  it('defines the workflow step function, which erases its own typed line and reports the step status', () => {
+    const init = buildPowerShellShellIntegrationInit()
+    const body = init.split('function global:__TvStep([string]$Run, [string]$Step, $Ok, $Native) {\n')[1].split('\n}\n')[0]
+
+    // Rows the prompt plus the typed line take, wrapped at the window width; cursor up that many, erase to the end
+    expect(body).toContain('$rows = [Math]::Floor(($start + $MyInvocation.Line.Length - 1) / $width) + 1')
+    expect(body).toContain('[Console]::Write([string][char]27 + "[" + $rows + "A`r" + [char]27 + "[J")')
+    // Only a line the line editor drew is erased, and only once
+    expect(body).toContain('  $global:__TvState.LineStart = $null\n  if ($null -ne $start -and $MyInvocation.Line) {')
+    // A failed step reports the code its prompt worked out, else $LASTEXITCODE, else 1
+    expect(body).toContain("  if (-not $Ok) {\n    $code = $global:__TvState.Code\n    if (-not $code) { $code = 1; if ($Native) { $code = $Native } }")
+    expect(init).toContain('    $global:__TvState.Code = $code')
+    // ...and is taken out of Get-History by the next prompt
+    expect(init).toContain('if ($last -and $last.CommandLine.StartsWith("__TvStep ")) { Clear-History -Id $last.Id }')
+    expect(body).toContain('"]7337;workflow-step;" + $Run + ";" + $Step + ";" + $code + [char]7')
+    // Defined before the prompt and line-editor hooks, so it exists even if a later part fails
+    expect(init.indexOf('function global:__TvStep')).toBeLessThan(init.indexOf('function global:prompt'))
+  })
+
   it('builds PowerShell command-start and history hooks only when PSReadLine is loaded', () => {
     const init = buildPowerShellShellIntegrationInit()
     const readLineBlock = init.slice(init.indexOf('if (Get-Module PSReadLine) {'))
@@ -58,7 +77,9 @@ describe('shell integration init scripts', () => {
     expect(readLineBlock).toContain('[string]::IsNullOrWhiteSpace($line)')
     expect(readLineBlock).toContain('"command-start;" + (__TvB64 $line)')
     expect(readLineBlock).toContain('$global:__TvState.History = (Get-PSReadLineOption).AddToHistoryHandler')
-    expect(readLineBlock).toContain('if ($Line.Contains("]7337;workflow-step;")) { return $false }')
+    expect(readLineBlock).toContain('if ($Line.StartsWith("__TvStep ")) { return $false }')
+    // Where the typed line starts, read before the line editor runs
+    expect(readLineBlock).toContain('$global:__TvState.LineStart = $Host.UI.RawUI.CursorPosition.X\n    if (-not $ok)')
     expect(readLineBlock).toContain('return $global:__TvState.History.Invoke($Line)')
   })
 
@@ -143,6 +164,23 @@ describe('shell integration against real shells', () => {
 
     expect(events.map((event) => event[1])).toEqual(['0', '3', '1', '3'])
     expect(Buffer.from(events[0][2], 'base64').toString('utf8').toLowerCase()).toBe(process.env.SystemRoot?.toLowerCase())
+  })
+
+  it.runIf(process.platform === 'win32')('powershell: the workflow step line reports the step status', () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'tv-ps-step-'))
+    const file = path.join(dir, 'init.ps1')
+    writeFileSync(file, buildPowerShellShellIntegrationInit())
+    const args = buildPowerShellIntegrationArgs(file).filter((arg) => arg !== '-NoExit')
+    args[args.length - 1] +=
+      '; cmd /c exit 3; __TvStep r1 0 $? $LASTEXITCODE; cmd /c exit 0; __TvStep r1 1 $? $LASTEXITCODE;' +
+      ' Get-Item nope; __TvStep r1 2 $? $LASTEXITCODE'
+
+    const out = spawnSync('powershell.exe', ['-NoProfile', ...args], { encoding: 'utf8' }).stdout
+    const results = [...out.matchAll(/\x1b\]7337;workflow-step;r1;(\d+);(-?\d+)\x07/g)].map((m) => `${m[1]}:${m[2]}`)
+
+    expect(results).toEqual(['0:3', '1:0', '2:1'])
+    // Not read by the line editor here, so nothing is erased
+    expect(out).not.toContain('\x1b[J')
   })
 })
 

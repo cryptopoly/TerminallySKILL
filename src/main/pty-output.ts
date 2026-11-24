@@ -4,8 +4,12 @@ export const SHELL_READY_MARKER = '\x1b]7337;ready\x07'
 export const SHELL_READY_RE = /\x1b\]7337;ready\x07/g
 export const SHELL_EVENT_RE = /\x1b\]7337;shell;([^;\x07]+)(?:;([^;\x07]*))?(?:;([^;\x07]*))?\x07/g
 export const WORKFLOW_STEP_RESULT_RE = /\x1b\]7337;workflow-step;([^;\x07]+);([^;\x07]+);(-?\d+)\x07/g
-/** The step-marker command line, as buildWorkflowStepMarkerCommand writes it for zsh/bash or PowerShell */
-export const STEP_MARKER_COMMAND_RE = /(?:printf '\\033|& \{ param\(\$ok, \$code\) [^\r\n]*?')\]7337;workflow-step;[^\r\n]*/
+/**
+ * The zsh/bash step-marker command line, whose echo the main process removes. PowerShell's step line
+ * (__TvStep) is erased by the shell itself: ConPTY keeps its own copy of the screen and redraws it, so
+ * text taken out of the stream here would leave the two out of step.
+ */
+export const STEP_MARKER_COMMAND_RE = /printf '\\033\]7337;workflow-step;[^\r\n]*/
 export const MAX_OUTPUT_BUFFER_BYTES = 10 * 1024 * 1024
 export const TARGET_OUTPUT_BUFFER_BYTES = 8 * 1024 * 1024
 
@@ -143,15 +147,10 @@ export function splitIncompleteMarker(data: string): { complete: string; tail: s
   return { complete: data.slice(0, start), tail: data.slice(start) }
 }
 
-/**
- * Remove the terminal's echo of the step-marker command line ("printf '\\033]7337;workflow-step;..." in
- * zsh and bash, "... [char]27 + ']7337;workflow-step;..." in PowerShell)
- */
-export function stripWorkflowMarkerEcho(data: string, powerShell = false): string {
+/** Remove the terminal's echo of the step-marker command line ("printf '\\033]7337;workflow-step;...") */
+export function stripWorkflowMarkerEcho(data: string): string {
   if (!data.includes('workflow-step;')) return data
-  return powerShell
-    ? data.replace(/[^\r\n]*'\]7337;workflow-step;[^\r\n]*(\r?\n)?/g, '')
-    : data.replace(/[^\r\n]*printf '\\033\]7337;workflow-step;[^\r\n]*(\r?\n)?/g, '')
+  return data.replace(/[^\r\n]*printf '\\033\]7337;workflow-step;[^\r\n]*(\r?\n)?/g, '')
 }
 
 const MARKER_ECHO_UNIQUE = 'workflow-step;'
