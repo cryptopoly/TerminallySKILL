@@ -4,6 +4,7 @@ import {
   type Project,
   type ProjectWorkspaceTarget
 } from './project-schema'
+import { buildNativeInvocation } from './local-shell'
 
 export interface WorkspaceTerminalLaunchPlan {
   cwd?: string
@@ -11,6 +12,7 @@ export interface WorkspaceTerminalLaunchPlan {
   envOverrides?: Record<string, string>
 }
 
+/** POSIX quoting for the remote side of an SSH target, which always runs in a POSIX shell. */
 function shellSingleQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`
 }
@@ -61,10 +63,12 @@ function buildRemoteEnvExports(envOverrides?: Record<string, string>): string[] 
     .map(([key, value]) => `export ${key}=${shellSingleQuote(value)}`)
 }
 
+/** `localShell` is the shell the command is typed into; the `ssh` call is quoted for it (PowerShell or sh). */
 export function buildWorkspaceCommandString(
   workspaceTarget: ProjectWorkspaceTarget | null | undefined,
   commandString: string,
-  envOverrides?: Record<string, string>
+  envOverrides?: Record<string, string>,
+  localShell?: string | null
 ): string {
   if (!workspaceTarget || !isSSHProjectWorkspaceTarget(workspaceTarget)) {
     return commandString
@@ -80,15 +84,16 @@ export function buildWorkspaceCommandString(
     workspaceTarget,
     remoteCommand: remoteSegments.join(' && ')
   })
-  return sshArgs.map(shellSingleQuote).join(' ')
+  return buildNativeInvocation(sshArgs, localShell)
 }
 
 export function buildProjectWorkspaceCommandString(
   project: Pick<Project, 'workspaceTarget'> | null | undefined,
   commandString: string,
-  envOverrides?: Record<string, string>
+  envOverrides?: Record<string, string>,
+  localShell?: string | null
 ): string {
-  return buildWorkspaceCommandString(project?.workspaceTarget, commandString, envOverrides)
+  return buildWorkspaceCommandString(project?.workspaceTarget, commandString, envOverrides, localShell)
 }
 
 export function buildWorkspaceTerminalLaunchPlan(
@@ -121,7 +126,8 @@ export function buildWorkspaceTerminalLaunchPlan(
 }
 
 export function buildInteractiveWorkspaceConnectCommand(
-  workspaceTarget: ProjectWorkspaceTarget | null | undefined
+  workspaceTarget: ProjectWorkspaceTarget | null | undefined,
+  localShell?: string | null
 ): string | null {
   if (!workspaceTarget || !isSSHProjectWorkspaceTarget(workspaceTarget)) {
     return null
@@ -134,11 +140,14 @@ export function buildInteractiveWorkspaceConnectCommand(
     .filter((segment): segment is string => Boolean(segment))
     .join(' && ')
 
-  return buildSSHInvocationArgs({
-    workspaceTarget,
-    allocateTty: true,
-    remoteCommand
-  }).map(shellSingleQuote).join(' ')
+  return buildNativeInvocation(
+    buildSSHInvocationArgs({
+      workspaceTarget,
+      allocateTty: true,
+      remoteCommand
+    }),
+    localShell
+  )
 }
 
 export function buildWorkspaceTargetTestInvocation(

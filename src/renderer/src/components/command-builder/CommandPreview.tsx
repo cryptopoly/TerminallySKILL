@@ -16,8 +16,10 @@ import type { CommandDefinition } from '../../../../shared/command-schema'
 import {
   buildProjectExecutionCommand,
   createProjectTerminalSession,
+  defaultLocalShell,
   ensureProjectExecutionSession
 } from '../../lib/workspace-session'
+import { isSSHProjectWorkspaceTarget } from '../../../../shared/project-schema'
 
 interface CommandPreviewProps {
   command: CommandDefinition
@@ -56,11 +58,13 @@ export function CommandPreview({ command }: CommandPreviewProps): JSX.Element {
     [activeProject?.id, activeSessionId, sessions, splitSessionId]
   )
 
-  const builderCommandString = serializeCommand(command, values)
+  // An SSH target runs the command in a POSIX shell on the remote machine
+  const commandShell = activeProject && isSSHProjectWorkspaceTarget(activeProject.workspaceTarget) ? null : defaultLocalShell()
+  const builderCommandString = serializeCommand(command, values, commandShell)
   const commandString = manualCommandString ?? builderCommandString
   const aiDraftCommandString = useMemo(
-    () => (aiDraft ? serializeCommand(command, aiDraft.values) : ''),
-    [aiDraft, command]
+    () => (aiDraft ? serializeCommand(command, aiDraft.values, commandShell) : ''),
+    [aiDraft, command, commandShell]
   )
 
   const beginPreviewEdit = useCallback((): void => {

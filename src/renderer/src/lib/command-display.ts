@@ -6,6 +6,9 @@ import { i18n } from '../i18n'
  * e.g. `'ssh' '-t' '-i' '~/.ssh/id_ed25519' 'root@host'` → ['ssh', '-t', '-i', '~/.ssh/id_ed25519', 'root@host']
  */
 function parseShellQuotedArgs(raw: string): string[] | null {
+  // PowerShell form: & 'ssh' '-t' 'it''s', where a doubled quote inside a quoted argument is a literal quote
+  const powerShell = raw.startsWith("& '")
+  if (powerShell) raw = raw.slice(2)
   if (!raw.startsWith("'")) return null
   const args: string[] = []
   let i = 0
@@ -16,7 +19,13 @@ function parseShellQuotedArgs(raw: string): string[] | null {
     while (i < raw.length) {
       if (raw[i] === "'") {
         i++ // skip opening quote
-        while (i < raw.length && raw[i] !== "'") arg += raw[i++]
+        while (i < raw.length) {
+          if (raw[i] === "'") {
+            if (!powerShell || raw[i + 1] !== "'") break
+            i++
+          }
+          arg += raw[i++]
+        }
         i++ // skip closing quote
       } else if (raw[i] === '\\' && i + 1 < raw.length) {
         arg += raw[i + 1]; i += 2
