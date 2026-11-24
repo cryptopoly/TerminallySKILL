@@ -149,6 +149,9 @@ describe('shell integration against real shells', () => {
     expect(out).toMatch(/hits=[1-9]/)
   })
 
+  // Starting Windows PowerShell can take several seconds on a busy CI runner
+  const POWERSHELL_TIMEOUT_MS = 30_000
+
   it.runIf(process.platform === 'win32')('powershell: reports the exit code and folder at each prompt', () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), "tv-ps O'Brien\u2019s-"))
     const file = path.join(dir, 'init.ps1')
@@ -164,7 +167,8 @@ describe('shell integration against real shells', () => {
 
     expect(events.map((event) => event[1])).toEqual(['0', '3', '1', '3'])
     expect(Buffer.from(events[0][2], 'base64').toString('utf8').toLowerCase()).toBe(process.env.SystemRoot?.toLowerCase())
-  })
+
+  }, POWERSHELL_TIMEOUT_MS)
 
   it.runIf(process.platform === 'win32')('powershell: the workflow step line reports the step status', () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), 'tv-ps-step-'))
@@ -181,7 +185,8 @@ describe('shell integration against real shells', () => {
     expect(results).toEqual(['0:3', '1:0', '2:1'])
     // Not read by the line editor here, so nothing is erased
     expect(out).not.toContain('\x1b[J')
-  })
+
+  }, POWERSHELL_TIMEOUT_MS)
 })
 
 describe('zsh history file', () => {
