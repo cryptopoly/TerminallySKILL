@@ -69,6 +69,7 @@ test('quad on and off: four live terminals, each runs a command, focus moves by 
     await pane(page, 1).locator('.xterm').click()
     await cycleFocus(page, ']')
     await expect.poll(() => focusedPaneIndex(page)).toBe('2')
+    await expect(pane(page, 2).locator('.xterm-helper-textarea')).toBeFocused()
     await page.keyboard.type(printNumber(52))
     await page.keyboard.press('Enter')
     await expect(pane(page, 2).locator('.xterm-rows')).toContainText('Q52', { timeout: 10_000 })
