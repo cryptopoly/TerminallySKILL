@@ -51,7 +51,7 @@ import {
   type Project
 } from '../../../../shared/project-schema'
 import type { AppUpdateCheckResult } from '../../../../shared/update-schema'
-import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
+import { createProjectTerminalSession, openInteractiveProjectShell, openVncViewer } from '../../lib/workspace-session'
 import type { ActiveFile } from '../../store/file-store'
 
 function areStringArraysEqual(left: string[], right: string[]): boolean {
@@ -149,6 +149,7 @@ export function AppShell(): JSX.Element {
   const [dismissedStartupUpdateVersion, setDismissedStartupUpdateVersion] = useState<string | null>(null)
   const layoutHydratedProjectIdRef = useRef<string | null>(null)
   const layoutSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const layoutSavePatchRef = useRef<{ projectId: string; patch: Partial<Project['workspaceLayout']> } | null>(null)
   const sessionVisitedProjectIds = useRef<Set<string>>(new Set())
   const autoOpenedTerminalProjectIdRef = useRef<string | null>(null)
   const startupUpdateCheckedRef = useRef(false)
@@ -240,15 +241,8 @@ export function AppShell(): JSX.Element {
   }, [activeProject, addSession])
 
   const handleOpenVnc = useCallback(async (): Promise<void> => {
-    if (!activeProject || activeProject.workspaceTarget.type !== 'ssh') return
     try {
-      const vncPort = activeProject.workspaceTarget.vncPort ?? 5901
-      const { sessionId, wsPort, token } = await window.electronAPI.startVncSession(
-        activeProject.workspaceTarget,
-        vncPort
-      )
-      addSession(sessionId, activeProject.id, 'vnc', wsPort, token)
-      setTerminalVisible(true)
+      if (await openVncViewer(activeProject, addSession)) setTerminalVisible(true)
     } catch (err) {
       console.error('[VNC] Failed to start session:', err)
     }
@@ -635,16 +629,22 @@ export function AppShell(): JSX.Element {
     }
   }, [activeProject, activeScript, scripts, setActiveScript])
 
-  const queueWorkspaceLayoutSave = useCallback((nextLayout: Project['workspaceLayout']): void => {
+  // Saves only the fields that changed. A whole-layout snapshot taken before the debounce would also carry
+  // the sidebar tab of that moment, and undo a tab switch made in the meantime (such as a jump to Runs & Logs).
+  const queueWorkspaceLayoutSave = useCallback((patch: Partial<Project['workspaceLayout']>): void => {
     if (!activeProject) return
 
     if (layoutSaveTimeoutRef.current) {
       clearTimeout(layoutSaveTimeoutRef.current)
     }
+    const pending = layoutSavePatchRef.current
+    const merged = pending?.projectId === activeProject.id ? { ...pending.patch, ...patch } : patch
+    layoutSavePatchRef.current = { projectId: activeProject.id, patch: merged }
 
     layoutSaveTimeoutRef.current = setTimeout(() => {
+      layoutSavePatchRef.current = null
       void window.electronAPI
-        .updateProject(activeProject.id, { workspaceLayout: nextLayout })
+        .updateProject(activeProject.id, { workspaceLayout: merged })
         .then((updated) => {
           if (updated) {
             useProjectStore.getState().updateProjectInStore(updated)
@@ -689,7 +689,6 @@ export function AppShell(): JSX.Element {
     if (!activeProject || layoutHydratedProjectIdRef.current !== activeProject.id) return
 
     const nextLayout = {
-      ...activeProject.workspaceLayout,
       terminalVisible,
       preferredSplitDirection: splitDirection,
       openFilePaths: openFiles.map((file) => file.path),
@@ -975,10 +974,7 @@ export function AppShell(): JSX.Element {
           if (nextTerminalSize <= terminalMinSize + 0.1 && activeProject.workspaceLayout.terminalSize < nextTerminalSize) {
             return
           }
-          queueWorkspaceLayoutSave({
-            ...activeProject.workspaceLayout,
-            terminalSize: nextTerminalSize
-          })
+          queueWorkspaceLayoutSave({ terminalSize: nextTerminalSize })
         }}
       >
         <Panel
@@ -1000,10 +996,7 @@ export function AppShell(): JSX.Element {
               if (!activeProject || sizes.length < 2) return
               const nextSidebarSize = sizes[0]
               if (nextSidebarSize === activeProject.workspaceLayout.sidebarSize) return
-              queueWorkspaceLayoutSave({
-                ...activeProject.workspaceLayout,
-                sidebarSize: nextSidebarSize
-              })
+              queueWorkspaceLayoutSave({ sidebarSize: nextSidebarSize })
             }}
           >
             <Panel
