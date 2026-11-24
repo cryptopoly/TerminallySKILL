@@ -108,3 +108,75 @@ export function buildBashShellIntegrationInit(): string {
     'PROMPT_COMMAND="__tv_prompt_command"'
   ].join('\n') + '\n'
 }
+
+/**
+ * Runs after the user's profile, so it wraps whatever prompt the profile set (oh-my-posh, starship).
+ * Windows PowerShell 5.1 has no `e escape, hence [char]27. Markers go straight to the console so the
+ * pipeline and formatting never see them.
+ */
+export function buildPowerShellShellIntegrationInit(): string {
+  return [
+    '$global:__TvState = @{ Prompt = $function:prompt; LastError = $null; History = $null; ReadLine = $null; Reading = $false }',
+    'if ($global:Error.Count) { $global:__TvState.LastError = $global:Error[0] }',
+    'function global:__TvMarker([string]$Payload) { [Console]::Write([string][char]27 + "]7337;shell;" + $Payload + [char]7) }',
+    'function global:__TvB64([string]$Text) { [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($Text)) }',
+    'function global:prompt {',
+    // Anything we run resets $?, so it has to be read first
+    '  $ok = $?',
+    '  $native = $global:LASTEXITCODE',
+    '  Set-StrictMode -Off',
+    // PSReadLine redraws the prompt mid-edit (Ctrl+L, transient prompts on Enter); only a new prompt is an event
+    '  if (-not $global:__TvState.Reading) {',
+    '    $lastError = $null',
+    '    if ($global:Error.Count) { $lastError = $global:Error[0] }',
+    '    $code = 0',
+    '    if (-not $ok) {',
+    '      $code = 1',
+    // $LASTEXITCODE keeps its value through later cmdlet failures: use it only when no PowerShell error came since
+    '      if ($native -is [int] -and $native -ne 0 -and [object]::ReferenceEquals($lastError, $global:__TvState.LastError)) { $code = $native }',
+    '    }',
+    '    $global:__TvState.LastError = $lastError',
+    // Registry, Env: and other provider locations are not folders; report the FileSystem location instead
+    '    __TvMarker ("prompt-ready;" + $code + ";" + (__TvB64 (Get-Location -PSProvider FileSystem).ProviderPath))',
+    '  }',
+    // Give $? back to a prompt that shows the last status (starship, oh-my-posh)
+    '  if (-not $ok) { Write-Error "failure" -ErrorAction Ignore }',
+    '  & $global:__TvState.Prompt',
+    // A prompt that runs git or another program must not change what the next line sees
+    '  $global:LASTEXITCODE = $native',
+    '}',
+    // Without PSReadLine there is no hook for the submitted line; prompt-ready still works
+    'if (Get-Module PSReadLine) {',
+    '  $global:__TvState.ReadLine = $function:PSConsoleHostReadLine',
+    // Returns once a line is accepted, whichever key accepted it and after the newline is drawn, so the
+    // marker lands on the line where the output starts. An Enter key handler fires on incomplete lines too.
+    '  function global:PSConsoleHostReadLine {',
+    '    $ok = $?',
+    '    $global:__TvState.Reading = $true',
+    // PSReadLine 2.1+ reads $? itself to colour the prompt after a failure
+    '    if (-not $ok) { Write-Error "failure" -ErrorAction Ignore }',
+    '    try { $line = & $global:__TvState.ReadLine } finally { $global:__TvState.Reading = $false }',
+    '    if (-not [string]::IsNullOrWhiteSpace($line)) { __TvMarker ("command-start;" + (__TvB64 $line)) }',
+    '    $line',
+    '  }',
+    '  $global:__TvState.History = (Get-PSReadLineOption).AddToHistoryHandler',
+    // Workflow step markers are typed into the shell; keep them out of up-arrow history
+    '  Set-PSReadLineOption -AddToHistoryHandler {',
+    '    param([string]$Line)',
+    '    if ($Line.Contains("]7337;workflow-step;")) { return $false }',
+    '    if ($global:__TvState.History) { return $global:__TvState.History.Invoke($Line) }',
+    '    $true',
+    '  }',
+    '}'
+  ].join('\n') + '\n'
+}
+
+/**
+ * The script is read as text rather than run as a .ps1 file, so the execution policy (Restricted by
+ * default on Windows PowerShell) neither blocks it nor has to be loosened for the user's session.
+ * PowerShell also treats curly single quotes as quotes, so they are doubled like the plain one.
+ */
+export function buildPowerShellIntegrationArgs(scriptPath: string): string[] {
+  const quoted = `'${scriptPath.replace(/['\u2018\u2019\u201a\u201b]/g, '$&$&')}'`
+  return ['-NoLogo', '-NoExit', '-Command', `. ([ScriptBlock]::Create([IO.File]::ReadAllText(${quoted})))`]
+}

@@ -9,7 +9,13 @@ import { getAllScanDirs } from './command-detector'
 import { saveSessionLog, shouldSaveSessionLog } from './log-manager'
 import { attachLogToRuns } from './run-manager'
 import { registerTerminalSession, unregisterTerminalSession } from './terminal-session-registry'
-import { buildBashShellIntegrationInit, buildZshEnvForward, buildZshShellIntegrationInit } from './shell-integration-init'
+import {
+  buildBashShellIntegrationInit,
+  buildPowerShellIntegrationArgs,
+  buildPowerShellShellIntegrationInit,
+  buildZshEnvForward,
+  buildZshShellIntegrationInit
+} from './shell-integration-init'
 import {
   appendOutputChunk,
   extractShellIntegrationEvents,
@@ -253,6 +259,7 @@ async function autoSaveLog(session: PtySession, exitCode: number | null = null):
  *
  * For zsh: uses ZDOTDIR trick to inject precmd/preexec hooks via temp .zshrc
  * For bash: uses --rcfile to inject prompt-ready and command-start hooks via temp init file
+ * For PowerShell: runs a temp init script with -NoExit -Command, after the user's profile
  */
 function setupShellIntegration(
   shell: string,
@@ -325,6 +332,15 @@ function setupShellIntegration(
     args = ['--rcfile', tmpFile]
     hasIntegration = true
     console.log(`[pty] Shell integration (bash): rcfile=${tmpFile} (prompt-ready + command-start)`)
+  } else if (/(^|[\\/])(powershell|pwsh)(\.exe)?$/i.test(shell)) {
+    const tmpFile = path.join(os.tmpdir(), `tv-ps-${sessionId}.ps1`)
+    tempPaths.push(tmpFile)
+
+    fs.writeFileSync(tmpFile, buildPowerShellShellIntegrationInit())
+
+    args = buildPowerShellIntegrationArgs(tmpFile)
+    hasIntegration = true
+    console.log(`[pty] Shell integration (PowerShell): init=${tmpFile} (prompt-ready + command-start)`)
   } else {
     console.log(`[pty] Shell integration: unsupported shell "${shell}", no hooks installed`)
   }
@@ -429,7 +445,7 @@ export async function createTerminal(
     saved: false,
     startupBuffer: '',
     markerCarry: '',
-    // Shells without integration (e.g. PowerShell on Windows) never emit a
+    // Shells without integration (e.g. fish, cmd) never emit a
     // prompt-ready event, so we skip startup buffering entirely for them.
     startupFlushed: !hasIntegration,
     sshEchoFilterUntil: 0,
@@ -465,7 +481,7 @@ export async function createTerminal(
     : null
 
   let markerSeen = false
-  // For shells without integration (e.g. PowerShell), we emit SHELL_READY
+  // For shells without integration (e.g. fish, cmd), we emit SHELL_READY
   // on the first data chunk so the renderer knows the shell is alive.
   // This unblocks the editor prompt, script execution, and shell state tracking.
   let syntheticReadySent = false
@@ -502,7 +518,7 @@ export async function createTerminal(
         window.webContents.send(IPC_CHANNELS.SHELL_READY, sessionId)
       }
 
-      // Shells without integration (PowerShell, fish, etc.) never emit
+      // Shells without integration (fish, cmd, etc.) never emit
       // prompt-ready markers. Emit a synthetic SHELL_READY on the first
       // output so the renderer transitions to 'idle' — enabling the editor
       // prompt, script execution, and proper shell-state tracking.
