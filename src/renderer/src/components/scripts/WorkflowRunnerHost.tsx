@@ -20,7 +20,12 @@ import type { RunRecord, RunStepRecord, TerminalSessionInfo } from '../../../../
 import { buildProjectWorkspaceCommandString } from '../../../../shared/workspace-target'
 import { formatWorkflowRunError } from '../../lib/workflow-run-errors'
 import { isStillWaiting, snapshotWaitingStep, STEP_MARKER_GRACE_MS, type WaitingStepSnapshot } from '../../lib/workflow-step-fallback'
-import { buildWorkflowStepMarkerCommand, shellSupportsWorkflowStepMarkers } from '../../../../shared/workflow-shell'
+import {
+  buildWorkflowStepMarkerCommand,
+  isWorkflowStepMarkerLine,
+  resolveWorkflowStepResult,
+  shellSupportsWorkflowStepMarkers
+} from '../../../../shared/workflow-shell'
 import { defaultLocalShell } from '../../lib/workspace-session'
 
 type ScriptTranslator = (key: string, options?: Record<string, unknown>) => string
@@ -65,7 +70,7 @@ export function WorkflowRunnerEngine(): JSX.Element {
     // Listen for prompt-ready events with exit codes to detect workflow step completion
     const unsubShellEvent = window.electronAPI.onShellEvent((sessionId, event) => {
       if (event.type === 'command-start') {
-        if (event.command.includes('workflow-step;')) return
+        if (isWorkflowStepMarkerLine(event.command)) return
         const started = snapshotWaitingStep(useWorkflowRunnerStore.getState().runsBySession[sessionId])
         if (started) startedSteps.set(sessionId, started)
         return
@@ -108,7 +113,7 @@ export function WorkflowRunnerEngine(): JSX.Element {
     })
 
     const unsubStepResult = window.electronAPI.onWorkflowStepResult((sessionId, result) => {
-      handleStepResult(sessionId, result)
+      handleStepResult(sessionId, resolveWorkflowStepResult(useWorkflowRunnerStore.getState().runsBySession[sessionId], result))
     })
 
     return () => {
@@ -227,14 +232,14 @@ function WorkflowRunController({
     const shell = sessionInfo?.shell ?? defaultLocalShell()
     const command = buildProjectWorkspaceCommandString(runProject, currentStep.commandString, envOverrides, shell)
     const marker = activeRun.stepMarkers && shell
-      ? buildWorkflowStepMarkerCommand(activeRun.runId, currentStep.stepId, shell)
+      ? buildWorkflowStepMarkerCommand(activeRun.runId, currentStep.stepId, shell, activeRun.currentStepIndex)
       : null
     // The marker goes on its own line so a trailing comment or `&` in the step cannot swallow it
     window.electronAPI.writeToTerminal(
       activeRun.sessionId,
       marker ? `${command}\n${marker}\n` : command + '\n'
     )
-  }, [activeRun.runId, activeRun.sessionId, activeRun.stepMarkers, currentStep, markCurrentCommandRunning, markSessionExecuting, runProject, sessionInfo?.shell])
+  }, [activeRun.currentStepIndex, activeRun.runId, activeRun.sessionId, activeRun.stepMarkers, currentStep, markCurrentCommandRunning, markSessionExecuting, runProject, sessionInfo?.shell])
 
   useEffect(() => {
     if (isTerminalRunStatus(activeRun.status) || activeRun.status === 'awaiting_approval') {

@@ -116,10 +116,25 @@ export function buildBashShellIntegrationInit(): string {
  */
 export function buildPowerShellShellIntegrationInit(): string {
   return [
-    '$global:__TvState = @{ Prompt = $function:prompt; LastError = $null; History = $null; ReadLine = $null; Reading = $false }',
+    '$global:__TvState = @{ Prompt = $function:prompt; LastError = $null; History = $null; ReadLine = $null; Reading = $false; LineStart = $null }',
     'if ($global:Error.Count) { $global:__TvState.LastError = $global:Error[0] }',
     'function global:__TvMarker([string]$Payload) { [Console]::Write([string][char]27 + "]7337;shell;" + $Payload + [char]7) }',
     'function global:__TvB64([string]$Text) { [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($Text)) }',
+    // A workflow runner types `__TvStep RUN STEP $? $LASTEXITCODE` after each step; the arguments are read before
+    // the call, so they are the step's status. The line editor has drawn the typed line: erase it (with the prompt
+    // in front of it) from inside the shell, so the console and the terminal both drop it, wrapped rows included.
+    'function global:__TvStep([string]$Run, [string]$Step, $Ok, $Native) {',
+    '  $start = $global:__TvState.LineStart',
+    '  $global:__TvState.LineStart = $null',
+    '  if ($null -ne $start -and $MyInvocation.Line) {',
+    '    $width = [Math]::Max(1, $Host.UI.RawUI.BufferSize.Width)',
+    '    $rows = [Math]::Floor(($start + $MyInvocation.Line.Length - 1) / $width) + 1',
+    '    [Console]::Write([string][char]27 + "[" + $rows + "A`r" + [char]27 + "[J")',
+    '  }',
+    '  $code = 1',
+    '  if ($Ok) { $code = 0 } elseif ($Native) { $code = $Native }',
+    '  [Console]::Write([string][char]27 + "]7337;workflow-step;" + $Run + ";" + $Step + ";" + $code + [char]7)',
+    '}',
     'function global:prompt {',
     // Anything we run resets $?, so it has to be read first
     '  $ok = $?',
@@ -153,6 +168,8 @@ export function buildPowerShellShellIntegrationInit(): string {
     '  function global:PSConsoleHostReadLine {',
     '    $ok = $?',
     '    $global:__TvState.Reading = $true',
+    // Where the typed line starts, for __TvStep to erase it
+    '    $global:__TvState.LineStart = $Host.UI.RawUI.CursorPosition.X',
     // PSReadLine 2.1+ reads $? itself to colour the prompt after a failure
     '    if (-not $ok) { Write-Error "failure" -ErrorAction Ignore }',
     '    try { $line = & $global:__TvState.ReadLine } finally { $global:__TvState.Reading = $false }',
@@ -163,7 +180,7 @@ export function buildPowerShellShellIntegrationInit(): string {
     // Workflow step markers are typed into the shell; keep them out of up-arrow history
     '  Set-PSReadLineOption -AddToHistoryHandler {',
     '    param([string]$Line)',
-    '    if ($Line.Contains("]7337;workflow-step;")) { return $false }',
+    '    if ($Line.StartsWith("__TvStep ")) { return $false }',
     '    if ($global:__TvState.History) { return $global:__TvState.History.Invoke($Line) }',
     '    $true',
     '  }',
