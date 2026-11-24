@@ -47,13 +47,6 @@ describe('shell integration init scripts', () => {
     expect(init).toMatch(/^[\x00-\x7f]*$/)
   })
 
-  it('waits for ConPTY to draw the last output before prompt-ready, on Windows only', () => {
-    expect(buildPowerShellShellIntegrationInit({ conpty: true })).toContain(
-      '    Start-Sleep -Milliseconds 30\n    __TvMarker ("prompt-ready;"'
-    )
-    expect(buildPowerShellShellIntegrationInit()).not.toContain('Start-Sleep')
-  })
-
   it('builds PowerShell command-start and history hooks only when PSReadLine is loaded', () => {
     const init = buildPowerShellShellIntegrationInit()
     const readLineBlock = init.slice(init.indexOf('if (Get-Module PSReadLine) {'))

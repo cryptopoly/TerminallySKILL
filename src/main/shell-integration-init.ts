@@ -113,10 +113,8 @@ export function buildBashShellIntegrationInit(): string {
  * Runs after the user's profile, so it wraps whatever prompt the profile set (oh-my-posh, starship).
  * Windows PowerShell 5.1 has no `e escape, hence [char]27. Markers go straight to the console so the
  * pipeline and formatting never see them.
- * Some Windows ConPTY builds pass a marker through at once but draw the text written before it on their
- * next frame, so on Windows (conpty) the prompt waits a moment for the command's last output to be drawn.
  */
-export function buildPowerShellShellIntegrationInit({ conpty = false }: { conpty?: boolean } = {}): string {
+export function buildPowerShellShellIntegrationInit(): string {
   return [
     '$global:__TvState = @{ Prompt = $function:prompt; LastError = $null; History = $null; ReadLine = $null; Reading = $false }',
     'if ($global:Error.Count) { $global:__TvState.LastError = $global:Error[0] }',
@@ -138,7 +136,6 @@ export function buildPowerShellShellIntegrationInit({ conpty = false }: { conpty
     '      if ($native -is [int] -and $native -ne 0 -and [object]::ReferenceEquals($lastError, $global:__TvState.LastError)) { $code = $native }',
     '    }',
     '    $global:__TvState.LastError = $lastError',
-    ...(conpty ? ['    Start-Sleep -Milliseconds 30'] : []),
     // Registry, Env: and other provider locations are not folders; report the FileSystem location instead
     '    __TvMarker ("prompt-ready;" + $code + ";" + (__TvB64 (Get-Location -PSProvider FileSystem).ProviderPath))',
     '  }',
