@@ -53,6 +53,11 @@ function backfillWorkspaceTarget(
   return createLocalWorkspaceTarget(workingDirectory)
 }
 
+/** A saved divider position (percent), or the default when it is missing or out of range */
+function dividerPercent(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 && value < 100 ? value : fallback
+}
+
 function backfillWorkspaceLayout(
   raw: Partial<ProjectWorkspaceLayout> | undefined
 ): ProjectWorkspaceLayout {
@@ -74,6 +79,12 @@ function backfillWorkspaceLayout(
         ? raw.preferredSplitDirection
         : DEFAULT_PROJECT_WORKSPACE_LAYOUT.preferredSplitDirection,
     quadLayout: raw?.quadLayout === true,
+    terminalMaximised: raw?.terminalMaximised === true,
+    splitRatio: dividerPercent(raw?.splitRatio, DEFAULT_PROJECT_WORKSPACE_LAYOUT.splitRatio),
+    quadRatios: {
+      column: dividerPercent(raw?.quadRatios?.column, DEFAULT_PROJECT_WORKSPACE_LAYOUT.quadRatios.column),
+      row: dividerPercent(raw?.quadRatios?.row, DEFAULT_PROJECT_WORKSPACE_LAYOUT.quadRatios.row)
+    },
     sidebarTab:
       raw?.sidebarTab === 'commands' ||
       raw?.sidebarTab === 'scripts' ||

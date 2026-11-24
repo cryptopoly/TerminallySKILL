@@ -35,6 +35,12 @@ export interface ProjectWorkspaceLayout {
   preferredSplitDirection: ProjectWorkspaceSplitDirection
   /** Terminal shown as a quad split (four terminals in a 2x2 grid). Missing in layouts saved before 0.9.105. */
   quadLayout: boolean
+  /** Terminal maximised (fills the window). Saved per project; terminalSize keeps the docked size. Since 0.9.105. */
+  terminalMaximised: boolean
+  /** Two-pane split divider, percent of the first pane. Since 0.9.105. */
+  splitRatio: number
+  /** Quad dividers, percent: column = left panes' width, row = top panes' height. Since 0.9.105. */
+  quadRatios: { column: number; row: number }
   sidebarTab: ProjectSidebarTab
   openFilePaths: string[]
   activeFilePath: string | null
@@ -110,6 +116,9 @@ export const DEFAULT_PROJECT_WORKSPACE_LAYOUT: ProjectWorkspaceLayout = {
   terminalVisible: false,
   preferredSplitDirection: 'vertical',
   quadLayout: false,
+  terminalMaximised: false,
+  splitRatio: 50,
+  quadRatios: { column: 50, row: 50 },
   sidebarTab: 'scripts',
   openFilePaths: [],
   activeFilePath: null

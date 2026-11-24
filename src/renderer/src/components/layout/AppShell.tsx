@@ -560,6 +560,9 @@ export function AppShell(): JSX.Element {
     const isFirstVisit = !sessionVisitedProjectIds.current.has(activeProject.id)
     sessionVisitedProjectIds.current.add(activeProject.id)
     setTerminalVisible(isFirstVisit ? false : activeProject.workspaceLayout.terminalVisible)
+    // Maximise is per project: a project left maximised opens maximised once its terminal shows.
+    // After setTerminalVisible, which ends maximise when it hides the terminal.
+    setTerminalMaximised(activeProject.workspaceLayout.terminalMaximised)
     setSplitDirection(activeProject.workspaceLayout.preferredSplitDirection)
     // A project saved in quad opens in quad; empty panes get terminals once the project has one.
     if (activeProject.workspaceLayout.quadLayout) useTerminalStore.getState().enterQuad(activeProject.id)
@@ -638,7 +641,7 @@ export function AppShell(): JSX.Element {
     return () => {
       cancelled = true
     }
-  }, [activeProject?.id, clearFiles, hydrateFiles, setSplitDirection, setTerminalVisible])
+  }, [activeProject?.id, clearFiles, hydrateFiles, setSplitDirection, setTerminalMaximised, setTerminalVisible])
 
   useEffect(() => {
     if (!activeProject) return
@@ -685,22 +688,28 @@ export function AppShell(): JSX.Element {
   const queueWorkspaceLayoutSave = useCallback((patch: Partial<Project['workspaceLayout']>): void => {
     if (!activeProject) return
 
-    if (layoutSaveTimeoutRef.current) {
-      clearTimeout(layoutSaveTimeoutRef.current)
-    }
-    const pending = layoutSavePatchRef.current
-    const merged = pending?.projectId === activeProject.id ? { ...pending.patch, ...patch } : patch
-    layoutSavePatchRef.current = { projectId: activeProject.id, patch: merged }
-
-    layoutSaveTimeoutRef.current = setTimeout(() => {
-      layoutSavePatchRef.current = null
+    const save = (projectId: string, layoutPatch: Partial<Project['workspaceLayout']>): void => {
       void window.electronAPI
-        .updateProject(activeProject.id, { workspaceLayout: merged })
+        .updateProject(projectId, { workspaceLayout: layoutPatch })
         .then((updated) => {
           if (updated) {
             useProjectStore.getState().updateProjectInStore(updated)
           }
         })
+    }
+
+    if (layoutSaveTimeoutRef.current) {
+      clearTimeout(layoutSaveTimeoutRef.current)
+    }
+    const pending = layoutSavePatchRef.current
+    // A change still waiting for another project (switched away within the debounce) is saved now, not dropped.
+    if (pending && pending.projectId !== activeProject.id) save(pending.projectId, pending.patch)
+    const merged = pending?.projectId === activeProject.id ? { ...pending.patch, ...patch } : patch
+    layoutSavePatchRef.current = { projectId: activeProject.id, patch: merged }
+
+    layoutSaveTimeoutRef.current = setTimeout(() => {
+      layoutSavePatchRef.current = null
+      save(activeProject.id, merged)
     }, 150)
   }, [activeProject])
 
@@ -743,6 +752,7 @@ export function AppShell(): JSX.Element {
       terminalVisible,
       preferredSplitDirection: splitDirection,
       quadLayout: quadActive,
+      terminalMaximised,
       openFilePaths: openFiles.map((file) => file.path),
       activeFilePath
     }
@@ -751,12 +761,13 @@ export function AppShell(): JSX.Element {
       nextLayout.terminalVisible !== activeProject.workspaceLayout.terminalVisible ||
       nextLayout.preferredSplitDirection !== activeProject.workspaceLayout.preferredSplitDirection ||
       nextLayout.quadLayout !== activeProject.workspaceLayout.quadLayout ||
+      nextLayout.terminalMaximised !== activeProject.workspaceLayout.terminalMaximised ||
       nextLayout.activeFilePath !== activeProject.workspaceLayout.activeFilePath ||
       !areStringArraysEqual(nextLayout.openFilePaths, activeProject.workspaceLayout.openFilePaths)
     ) {
       queueWorkspaceLayoutSave(nextLayout)
     }
-  }, [activeFilePath, activeProject, openFiles, queueWorkspaceLayoutSave, quadActive, splitDirection, terminalVisible])
+  }, [activeFilePath, activeProject, openFiles, queueWorkspaceLayoutSave, quadActive, splitDirection, terminalMaximised, terminalVisible])
 
   const handleCreateNew = (): void => {
     setEditingProject(null)
@@ -1079,7 +1090,7 @@ export function AppShell(): JSX.Element {
           collapsible
           collapsedSize={0}
         >
-          <TerminalPanel />
+          <TerminalPanel onLayoutChange={queueWorkspaceLayoutSave} />
         </Panel>
       </PanelGroup>
 
