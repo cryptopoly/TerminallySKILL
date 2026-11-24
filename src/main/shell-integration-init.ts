@@ -156,6 +156,9 @@ export function buildPowerShellShellIntegrationInit(): string {
     '    }',
     '    $global:__TvState.LastError = $lastError',
     '    $global:__TvState.Code = $code',
+    // A workflow step line is in the session history (Get-History) once it ran; take it out again
+    '    $last = Get-History -Count 1',
+    '    if ($last -and $last.CommandLine.StartsWith("__TvStep ")) { Clear-History -Id $last.Id }',
     // Registry, Env: and other provider locations are not folders; report the FileSystem location instead
     '    __TvMarker ("prompt-ready;" + $code + ";" + (__TvB64 (Get-Location -PSProvider FileSystem).ProviderPath))',
     '  }',

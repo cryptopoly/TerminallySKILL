@@ -59,6 +59,8 @@ describe('shell integration init scripts', () => {
     // A failed step reports the code its prompt worked out, else $LASTEXITCODE, else 1
     expect(body).toContain("  if (-not $Ok) {\n    $code = $global:__TvState.Code\n    if (-not $code) { $code = 1; if ($Native) { $code = $Native } }")
     expect(init).toContain('    $global:__TvState.Code = $code')
+    // ...and is taken out of Get-History by the next prompt
+    expect(init).toContain('if ($last -and $last.CommandLine.StartsWith("__TvStep ")) { Clear-History -Id $last.Id }')
     expect(body).toContain('"]7337;workflow-step;" + $Run + ";" + $Step + ";" + $code + [char]7')
     // Defined before the prompt and line-editor hooks, so it exists even if a later part fails
     expect(init.indexOf('function global:__TvStep')).toBeLessThan(init.indexOf('function global:prompt'))
