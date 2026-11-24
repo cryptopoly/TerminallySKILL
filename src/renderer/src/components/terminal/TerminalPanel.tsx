@@ -2892,9 +2892,93 @@ function XTermInstance({
           )}
 
           {terminalInputMode === 'editor' && shellState === 'idle' && !(workflowRun && !isTerminalRunStatus(workflowRun.status)) && (
-            <div className="rounded-lg bg-surface-light px-3 py-2 shadow-xl">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider mb-1.5">
-                <span className="text-accent-light font-semibold">{t('editorPrompt.title')}</span>
+            // One slim row like the footer. Suggestions sit inside the row, so typing never changes its
+            // height (which would resize the terminal on every keystroke).
+            <div
+              data-testid="editor-prompt"
+              className="flex h-8 min-w-0 items-center gap-2 rounded-lg bg-surface-light px-2 ring-1 ring-transparent transition-shadow focus-within:ring-accent/30"
+            >
+              <span aria-hidden="true" className="shrink-0 pl-0.5 font-mono text-sm leading-none text-accent">›</span>
+              <div className="relative min-w-0 flex-1">
+                {showInlineEditorSuggestion && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center overflow-hidden text-[13px] font-mono">
+                    <span className="whitespace-pre text-transparent">{editorCommand}</span>
+                    <span className="whitespace-pre text-gray-500">{activeEditorSuggestionSuffix}</span>
+                  </div>
+                )}
+                <input
+                  ref={editorInputRef}
+                  type="text"
+                  value={editorCommand}
+                  onChange={(event) =>
+                    handleEditorCommandChange(event.target.value, {
+                      start: event.target.selectionStart ?? event.target.value.length,
+                      end: event.target.selectionEnd ?? event.target.selectionStart ?? event.target.value.length
+                    })}
+                  onClick={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
+                  onKeyUp={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
+                  onSelect={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
+                  onPaste={handleEditorPaste}
+                  onKeyDown={handleEditorKeyDown}
+                  placeholder={t('editorPrompt.placeholder')}
+                  aria-label={t('editorPrompt.title')}
+                  spellCheck={false}
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  className="relative z-10 w-full bg-transparent text-[13px] text-gray-200 placeholder:text-gray-600 font-mono focus:outline-none"
+                />
+              </div>
+
+              {activeEditorSuggestion && (
+                <div className="flex min-w-0 max-w-[45%] shrink items-center gap-1 overflow-hidden text-[11px]">
+                  {!compactFooter && (
+                    <span className="shrink-0 text-[10px] uppercase tracking-wide text-gray-500">
+                      {t(`editorPrompt.sources.${activeEditorSuggestion.source}`)}
+                    </span>
+                  )}
+                  {(compactFooter ? [activeEditorSuggestion] : editorSuggestions.slice(0, 3)).map((suggestion) => {
+                    const suggestionIndex = editorSuggestions.indexOf(suggestion)
+                    const selected = suggestion === activeEditorSuggestion
+                    const useInlineSuffix =
+                      selected &&
+                      activeEditorSuggestionSuffix &&
+                      suggestion.value.startsWith(editorCommand)
+
+                    return (
+                      <button
+                        key={`${suggestion.source}-${suggestion.value}`}
+                        type="button"
+                        title={`${t(`editorPrompt.sources.${suggestion.source}`)}: ${suggestion.value}`}
+                        onMouseEnter={() => setSelectedEditorSuggestionIndex(suggestionIndex)}
+                        onClick={() => acceptEditorSuggestion(suggestion.value)}
+                        className={clsx(
+                          'min-w-0 max-w-[16rem] truncate rounded-md px-1.5 py-0.5 font-mono transition-colors',
+                          selected
+                            ? 'bg-accent/10 text-accent-light'
+                            : 'bg-surface text-gray-400 hover:text-gray-200'
+                        )}
+                      >
+                        {useInlineSuffix ? (
+                          <>
+                            <span className="text-gray-500">{editorCommand}</span>
+                            <span>{activeEditorSuggestionSuffix}</span>
+                          </>
+                        ) : (
+                          suggestion.value
+                        )}
+                      </button>
+                    )
+                  })}
+                  <kbd
+                    title={t('editorPrompt.tabAccepts')}
+                    className="shrink-0 rounded border border-surface-border bg-surface px-1 font-mono text-[10px] leading-4 text-gray-500"
+                  >
+                    Tab
+                  </kbd>
+                </div>
+              )}
+
+              <span className="inline-flex shrink-0">
                 <HelpTip
                   label={t('editorPrompt.title')}
                   description={
@@ -2905,100 +2989,19 @@ function XTermInstance({
                 >
                   <button
                     type="button"
-                    className="text-gray-500 hover:text-accent-light transition-colors normal-case tracking-normal"
+                    className="inline-flex text-gray-500 hover:text-accent-light transition-colors"
                     aria-label={t('editorPrompt.helpLabel')}
                   >
                     <CircleHelp size={13} />
                   </button>
                 </HelpTip>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2">
-                <span className="text-sm font-mono text-accent shrink-0">›</span>
-                <div className="relative flex-1">
-                  {showInlineEditorSuggestion && (
-                    <div className="pointer-events-none absolute inset-0 flex items-center overflow-hidden text-sm font-mono">
-                      <span className="whitespace-pre text-transparent">{editorCommand}</span>
-                      <span className="whitespace-pre text-gray-500">{activeEditorSuggestionSuffix}</span>
-                    </div>
-                  )}
-                  <input
-                    ref={editorInputRef}
-                    type="text"
-                    value={editorCommand}
-                    onChange={(event) =>
-                      handleEditorCommandChange(event.target.value, {
-                        start: event.target.selectionStart ?? event.target.value.length,
-                        end: event.target.selectionEnd ?? event.target.selectionStart ?? event.target.value.length
-                      })}
-                    onClick={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
-                    onKeyUp={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
-                    onSelect={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
-                    onPaste={handleEditorPaste}
-                    onKeyDown={handleEditorKeyDown}
-                    placeholder={t('editorPrompt.placeholder')}
-                    spellCheck={false}
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    className="relative z-10 w-full bg-transparent text-sm text-gray-200 placeholder:text-gray-600 font-mono focus:outline-none"
-                  />
-                </div>
-                <button
-                  onClick={submitEditorCommand}
-                  className="shrink-0 rounded-md bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent-light hover:bg-accent/20 transition-colors"
-                >
-                  {t('editorPrompt.run')}
-                </button>
-              </div>
-
-              <div className="mt-1.5 min-h-[2rem] flex items-center gap-2 text-[11px]">
-                <span className="text-gray-500 shrink-0">{t('editorPrompt.suggestion')}</span>
-                <div className="min-w-0 flex-1 overflow-hidden">
-                  {editorSuggestions.length > 0 ? (
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-                      {editorSuggestions.slice(0, 3).map((suggestion, index) => {
-                        const suggestionIndex = index
-                        const selected = suggestionIndex === selectedEditorSuggestionIndex
-                        const useInlineSuffix =
-                          selected &&
-                          activeEditorSuggestionSuffix &&
-                          suggestion.value.startsWith(editorCommand)
-
-                        return (
-                          <button
-                            key={`${suggestion.source}-${suggestion.value}`}
-                            type="button"
-                            onMouseEnter={() => setSelectedEditorSuggestionIndex(suggestionIndex)}
-                            onClick={() => acceptEditorSuggestion(suggestion.value)}
-                            className={`shrink-0 rounded-md border px-2 py-1 font-mono transition-colors ${
-                              selected
-                                ? 'border-accent/20 bg-accent/10 text-accent-light'
-                                : 'border-surface-border bg-surface text-gray-400 hover:text-gray-200'
-                            }`}
-                          >
-                            <span className="mr-1.5 rounded px-1 py-0.5 text-[10px] uppercase tracking-wide bg-surface/60 text-gray-500">
-                              {t(`editorPrompt.sources.${suggestion.source}`)}
-                            </span>
-                            {useInlineSuffix ? (
-                              <>
-                                <span className="text-gray-500">{editorCommand}</span>
-                                <span>{activeEditorSuggestionSuffix}</span>
-                              </>
-                            ) : (
-                              suggestion.value
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <div className="flex items-center h-full text-gray-600">
-                      {t('editorPrompt.emptySuggestions')}
-                    </div>
-                  )}
-                </div>
-                <span className="text-gray-600 shrink-0">{t('editorPrompt.tabAccepts')}</span>
-              </div>
+              </span>
+              <button
+                onClick={submitEditorCommand}
+                className="shrink-0 rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent-light hover:bg-accent/20 transition-colors"
+              >
+                {t('editorPrompt.run')}
+              </button>
             </div>
           )}
 
