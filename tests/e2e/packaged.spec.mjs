@@ -119,7 +119,8 @@ test('packaged app lets Ctrl+R reach the shell', async ({}, testInfo) => {
     await page.reload()
     await page.locator('.xterm-helper-textarea').first().waitFor({ state: 'attached', timeout: 20_000 })
     const rows = page.locator('.xterm-rows:visible')
-    await expect(rows).toContainText(/[%$#]/, { timeout: 20_000 })
+    // zsh and bash end their prompt with % $ or #, PowerShell with >
+    await expect(rows).toContainText(/[%$#>]/, { timeout: 20_000 })
     await page.locator('.xterm:visible').click()
 
     await app.evaluate(({ BrowserWindow }) => {
