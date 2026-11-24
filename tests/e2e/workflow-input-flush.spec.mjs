@@ -1,4 +1,6 @@
 import { existsSync } from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
 import { isWindows, shellCommand } from './shell-commands.mjs'
@@ -32,15 +34,36 @@ test('a workflow continues past a command that flushes the terminal input', asyn
 })
 
 // Each line editor draws the typed-ahead marker its own way: zsh a few characters per chunk, readline in
-// macOS /bin/bash 3.2 wraps a long line with " \r". On macOS and Linux the test runs in every shell found.
+// macOS /bin/bash 3.2 wraps a long line with " \r". On macOS and Linux the test runs in every shell found,
+// with the user's own prompt and with a long one (like a CI runner's host name) that makes the marker line
+// wrap inside its start, where the line editors redraw characters.
 const markerShells = isWindows
   ? [null]
   : ['/bin/zsh', '/bin/bash', '/opt/homebrew/bin/bash', '/usr/local/bin/bash'].filter((shell) => existsSync(shell))
+const longPrompt = 'runner@sat12-bq165-ee9ebc1c-cd16-42fd-b463-b074e0e23356-36AEEBC4AED3'
 
-for (const shell of markerShells) {
-  test(`the step marker never shows in the terminal or in shell history${shell ? ` (${shell})` : ''}`, async ({}, testInfo) => {
+/** A home folder whose rc files draw a prompt that ends 18 columns before the window edge. */
+async function longPromptHome(testInfo) {
+  const home = testInfo.outputPath('home')
+  await mkdir(home, { recursive: true })
+  await writeFile(
+    join(home, '.zshrc'),
+    `precmd() { PROMPT="\${\${:-${longPrompt}\${(l:COLUMNS::-:)}}[1,COLUMNS-20]}%# " }\n`
+  )
+  await writeFile(
+    join(home, '.bashrc'),
+    `shopt -s checkwinsize\nPROMPT_COMMAND='p="${longPrompt}$(printf "%\${COLUMNS}s" | tr " " -)"; PS1="\${p:0:COLUMNS-20}\\$ "'\n`
+  )
+  return home
+}
+
+for (const shell of markerShells) for (const long of shell ? [false, true] : [false]) {
+  const name = shell ? ` (${shell}${long ? ', long prompt' : ''})` : ''
+  test(`the step marker never shows in the terminal or in shell history${name}`, async ({}, testInfo) => {
     test.setTimeout(90_000)
-    const { app, page } = await launchTerminallySkill(testInfo, shell ? { SHELL: shell } : {})
+    const env = shell ? { SHELL: shell } : {}
+    if (long) Object.assign(env, { HOME: await longPromptHome(testInfo), TV_USER_ZDOTDIR: '' })
+    const { app, page } = await launchTerminallySkill(testInfo, env)
     try {
       const historyStep = shellCommand('fc -ln -5; echo second-step-ran', '(Get-History -Count 5).CommandLine; echo second-step-ran')
       await page.evaluate(async (historyStep) => {

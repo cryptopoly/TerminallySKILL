@@ -1,4 +1,5 @@
-import { commandAnchor, type ShellIntegrationEvent } from '../shared/shell-integration'
+import { COMMAND_ANCHOR_OSC, commandAnchor, type ShellIntegrationEvent } from '../shared/shell-integration'
+import { isWorkflowStepMarkerLine } from '../shared/workflow-shell'
 
 export const SHELL_READY_MARKER = '\x1b]7337;ready\x07'
 export const SHELL_READY_RE = /\x1b\]7337;ready\x07/g
@@ -150,56 +151,47 @@ export function splitIncompleteMarker(data: string): { complete: string; tail: s
 /**
  * Remove the terminal's echo of the step-marker command line ("printf '\\033]7337;workflow-step;...").
  * Only a whole line, up to its newline: readline in macOS bash 3.2 wraps a long line with " \r" instead
- * of a newline, and draws it over several chunks. A line cut short here is left to MarkerEchoFilter,
- * which drops it through to its newline.
+ * of a newline, and draws it over several chunks. A line cut short here is left to MarkerEchoFilter.
+ * The line never takes a command anchor with it, so the prompt's end mark stays.
  */
 export function stripWorkflowMarkerEcho(data: string): string {
   if (!data.includes('workflow-step;')) return data
-  return data.replace(/[^\r\n]*printf '\\033\]7337;workflow-step;[^\n]*\n/g, '')
+  return data.replace(/[^\r\n]*printf '\\033\]7337;workflow-step;[^\n]*\n/g, (line) => line.match(ANCHOR_RE)?.join('') ?? '')
 }
 
 const MARKER_ECHO_UNIQUE = 'workflow-step;'
 const ECHO_ESCAPE_RE = /\x1b(?:\[[0-?]*[ -/]*[@-~]|[()][A-Z0-9]|[@-Z\\-_=>])/y
+const ANCHOR_PREFIX = `\x1b]${COMMAND_ANCHOR_OSC};`
+const ANCHOR_RE = new RegExp(`\\x1b\\]${COMMAND_ANCHOR_OSC};(start|end);([^\\x07]*)\\x07`, 'g')
+
+type MarkerEchoPhase = 'idle' | 'waiting-step' | 'running' | 'prompt'
 
 /**
- * Removes the shell's echo of a typed-ahead step marker. A line editor (zsh ZLE, readline) that
- * picks up typed-ahead text redraws it a few characters per PTY chunk, so a per-chunk replace never
- * sees the whole line. Armed only while a marker is expected. Text that could be the marker is held
- * back until it matches or stops matching; the caller flushes it after a short wait so a program's
- * output or a user's typing is never lost.
+ * Removes the shell's echoes of a typed-ahead step marker. Works on the command anchors in the stream:
+ * - While the step runs, the terminal echoes the typed-ahead marker as plain text. That copy is matched
+ *   by its start and dropped through to its newline.
+ * - At the step's prompt the line editor (zsh ZLE, readline) draws the prompt and the marker again, a
+ *   few characters per chunk and, when the line wraps, with carriage returns and redrawn characters in
+ *   between. Everything from the prompt's end anchor is held until the next command starts: when that
+ *   command is the marker, the held prompt and line are dropped; anything else is given back.
+ * The caller flushes held text after a short wait, so a program's output or a user's typing is never lost.
  */
 export class MarkerEchoFilter {
   private expected: string | null = null
+  private phase: MarkerEchoPhase = 'idle'
   private matched = 0
   private held = ''
   private swallowingLineEnd = false
-  private promptsSinceArmed = 0
-  private commandStarted = false
+  private promptShown = false
+  private markerRunning = false
 
-  /**
-   * Only the start of the marker is matched: it cannot be anything else, and a long marker wraps at the
-   * window edge, where the line editor redraws characters. The rest of the line is dropped unread.
-   */
+  /** Only the start of the marker is matched in the terminal's echo: it cannot be anything else. */
   arm(markerCommand: string): void {
     const unique = markerCommand.indexOf(MARKER_ECHO_UNIQUE)
     this.expected = unique === -1 ? markerCommand : markerCommand.slice(0, unique + MARKER_ECHO_UNIQUE.length)
+    this.phase = 'waiting-step'
     this.matched = 0
-    this.promptsSinceArmed = 0
-    this.commandStarted = false
-  }
-
-  noteCommandStart(): void {
-    this.commandStarted = true
-  }
-
-  /**
-   * The marker's own prompt is the second one after its step started; past that it was flushed (Ctrl+C,
-   * sudo). A prompt before the step starts belongs to the previous step's marker and does not count.
-   */
-  notePromptReady(): void {
-    if (!this.expected || !this.commandStarted) return
-    this.promptsSinceArmed += 1
-    if (this.promptsSinceArmed >= 2) this.expected = null
+    this.promptShown = false
   }
 
   get hasHeld(): boolean {
@@ -210,11 +202,77 @@ export class MarkerEchoFilter {
     const held = this.held
     this.held = ''
     this.matched = 0
+    if (held && this.phase === 'prompt') this.promptShown = true
     return held
   }
 
   push(data: string): string {
-    if (!this.expected && !this.swallowingLineEnd && !this.held) return data
+    if (this.phase === 'idle' && !this.swallowingLineEnd && !this.held) {
+      if (data.includes(ANCHOR_PREFIX)) {
+        for (const anchor of data.matchAll(ANCHOR_RE)) this.noteAnchor(anchor[1], anchor[2])
+      }
+      return data
+    }
+    let out = ''
+    let last = 0
+    for (const anchor of data.matchAll(ANCHOR_RE)) {
+      out += this.pushText(data.slice(last, anchor.index))
+      out += this.pushAnchor(anchor[1], anchor[2], anchor[0])
+      last = anchor.index + anchor[0].length
+    }
+    return out + this.pushText(data.slice(last))
+  }
+
+  private disarm(): void {
+    this.phase = 'idle'
+    this.expected = null
+  }
+
+  /** True for the prompt a marker draws once it ran; it can come after the next step was typed. */
+  private noteAnchor(kind: string, payload: string): boolean {
+    const markerPrompt = kind === 'end' && this.markerRunning
+    this.markerRunning = kind === 'start' && isMarkerPayload(payload)
+    return markerPrompt
+  }
+
+  private pushAnchor(kind: string, payload: string, anchor: string): string {
+    const markerPrompt = this.noteAnchor(kind, payload)
+    if (this.phase === 'waiting-step') {
+      if (kind === 'start' && !this.markerRunning) this.phase = 'running'
+      // An empty step has no start of its own, only its prompt
+      if (kind !== 'end' || markerPrompt) return anchor
+    }
+    if (this.phase === 'running' || this.phase === 'waiting-step') {
+      if (kind !== 'end') return anchor
+      const pending = this.flush()
+      this.swallowingLineEnd = false
+      this.phase = 'prompt'
+      this.promptShown = false
+      return pending + anchor
+    }
+    if (this.phase === 'prompt') {
+      const shown = this.promptShown
+      const held = this.flush()
+      this.disarm()
+      if (kind === 'start' && isMarkerPayload(payload)) {
+        // Part of the prompt went out before the marker came: clear its row
+        return (shown ? '\r\x1b[K' : '') + anchor
+      }
+      return held + anchor
+    }
+    return anchor
+  }
+
+  private pushText(data: string): string {
+    if (!data) return ''
+    if (this.phase === 'prompt') {
+      this.held += data
+      return ''
+    }
+    return this.matchEcho(data)
+  }
+
+  private matchEcho(data: string): string {
     let out = ''
     let i = 0
     while (i < data.length) {
@@ -247,13 +305,6 @@ export class MarkerEchoFilter {
           this.held = ''
           this.matched = 0
           this.swallowingLineEnd = true
-          // Typed while a step runs, the terminal echoes the marker and the line editor draws it again at
-          // the prompt, so stay armed. Only the prompt's copy has a prompt in front of it to erase; the shell
-          // draws a new one once the marker has run.
-          if (this.promptsSinceArmed > 0) {
-            out += '\r\x1b[K'
-            this.expected = null
-          }
         }
         continue
       }
@@ -266,6 +317,10 @@ export class MarkerEchoFilter {
     }
     return out
   }
+}
+
+function isMarkerPayload(payload: string): boolean {
+  return isWorkflowStepMarkerLine(decodeShellPayload(payload) ?? '')
 }
 
 export function extractWorkflowStepResults(data: string): {
