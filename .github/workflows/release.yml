@@ -119,6 +119,10 @@ jobs:
       - name: Build and package
         run: npm run package:win:${{ matrix.arch }}
 
+      - name: Check the installer payload uses only 7z filters NSIS can extract
+        shell: bash
+        run: tools/check-nsis-payload.sh dist/*-Setup-*-${{ matrix.arch }}.exe
+
       - uses: actions/upload-artifact@v7
         with:
           name: win-${{ matrix.arch }}
