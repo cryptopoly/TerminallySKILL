@@ -27,6 +27,7 @@ import {
   stripWorkflowMarkerEcho
 } from './pty-output'
 import type { TerminalSessionInfo } from '../shared/run-schema'
+import { usesBundledConpty } from '../shared/conpty-mode'
 
 interface PtySession {
   process: IPty
@@ -66,11 +67,8 @@ let nextId = 1
 let ptyRuntimePromise: Promise<typeof import('node-pty')> | null = null
 const nodeRequire = createRequire(import.meta.url)
 
-/**
- * TSK_CONPTY_DLL=1 makes node-pty use its bundled conpty.dll and OpenConsole.exe instead of the
- * ConPTY built into Windows (decision D0041). Off by default; Windows only.
- */
-const USE_CONPTY_DLL = process.platform === 'win32' && process.env.TSK_CONPTY_DLL === '1'
+/** Windows: node-pty's bundled conpty.dll unless TSK_CONPTY_DLL=0 (see usesBundledConpty) */
+const USE_CONPTY_DLL = usesBundledConpty(process.platform, process.env)
 /** Primary device attributes query, and the answer xterm.js gives to it */
 const DA1_QUERY = '\x1b[c'
 const DA1_REPLY = '\x1b[?1;2c'

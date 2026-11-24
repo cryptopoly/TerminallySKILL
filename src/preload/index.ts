@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
+import { usesBundledConpty } from '../shared/conpty-mode'
 import type { CommandDefinition, DiscoveredCommand, ParsedHelpResult } from '../shared/command-schema'
 import type {
   Project,
@@ -37,6 +38,9 @@ type ProjectUpdates = Partial<Omit<Project, 'workspaceLayout'>> & {
 }
 
 export const electronAPI = {
+  /** Windows terminals run on node-pty's bundled conpty.dll (same check as the main process) */
+  usesBundledConpty: usesBundledConpty(process.platform, process.env),
+
   getAppVersion: (): Promise<string> =>
     ipcRenderer.invoke(IPC_CHANNELS.APP_GET_VERSION),
 
