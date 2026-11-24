@@ -688,22 +688,28 @@ export function AppShell(): JSX.Element {
   const queueWorkspaceLayoutSave = useCallback((patch: Partial<Project['workspaceLayout']>): void => {
     if (!activeProject) return
 
-    if (layoutSaveTimeoutRef.current) {
-      clearTimeout(layoutSaveTimeoutRef.current)
-    }
-    const pending = layoutSavePatchRef.current
-    const merged = pending?.projectId === activeProject.id ? { ...pending.patch, ...patch } : patch
-    layoutSavePatchRef.current = { projectId: activeProject.id, patch: merged }
-
-    layoutSaveTimeoutRef.current = setTimeout(() => {
-      layoutSavePatchRef.current = null
+    const save = (projectId: string, layoutPatch: Partial<Project['workspaceLayout']>): void => {
       void window.electronAPI
-        .updateProject(activeProject.id, { workspaceLayout: merged })
+        .updateProject(projectId, { workspaceLayout: layoutPatch })
         .then((updated) => {
           if (updated) {
             useProjectStore.getState().updateProjectInStore(updated)
           }
         })
+    }
+
+    if (layoutSaveTimeoutRef.current) {
+      clearTimeout(layoutSaveTimeoutRef.current)
+    }
+    const pending = layoutSavePatchRef.current
+    // A change still waiting for another project (switched away within the debounce) is saved now, not dropped.
+    if (pending && pending.projectId !== activeProject.id) save(pending.projectId, pending.patch)
+    const merged = pending?.projectId === activeProject.id ? { ...pending.patch, ...patch } : patch
+    layoutSavePatchRef.current = { projectId: activeProject.id, patch: merged }
+
+    layoutSaveTimeoutRef.current = setTimeout(() => {
+      layoutSavePatchRef.current = null
+      save(activeProject.id, merged)
     }, 150)
   }, [activeProject])
 
