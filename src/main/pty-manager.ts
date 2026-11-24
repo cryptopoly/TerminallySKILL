@@ -71,6 +71,9 @@ const nodeRequire = createRequire(import.meta.url)
  * ConPTY built into Windows (decision D0041). Off by default; Windows only.
  */
 const USE_CONPTY_DLL = process.platform === 'win32' && process.env.TSK_CONPTY_DLL === '1'
+/** Primary device attributes query, and the answer xterm.js gives to it */
+const DA1_QUERY = '\x1b[c'
+const DA1_REPLY = '\x1b[?1;2c'
 
 /** Cached enriched PATH — resolved once, reused for all sessions */
 let cachedEnrichedPath: string | null = null
@@ -562,6 +565,12 @@ export async function createTerminal(
         bufferForLog(session, held)
         if (!window.isDestroyed()) window.webContents.send(IPC_CHANNELS.PTY_DATA, sessionId, held)
       }, MARKER_ECHO_HOLD_MS)
+    }
+    if (USE_CONPTY_DLL && !session.startupFlushed && data.includes(DA1_QUERY)) {
+      // OpenConsole asks the terminal for its device attributes at startup and waits up to 3s for the
+      // answer. Startup output is held here until the first prompt, so xterm never sees the question.
+      data = data.split(DA1_QUERY).join('')
+      ptyProcess.write(DA1_REPLY)
     }
     if (!session.startupFlushed) {
       session.startupBuffer += data
