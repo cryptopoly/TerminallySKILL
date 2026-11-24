@@ -1,4 +1,4 @@
-# TEMPORARY: reproduces the Windows conpty.dll failure on GitHub's runners. Lives on fix/conpty-dll-server
+# TEMPORARY: reproduces Windows conpty.dll problems on GitHub's runners. Lives on fix/conpty-dll-server
 # only and is removed before the branch is finished.
 name: conpty debug (temporary)
 
@@ -12,16 +12,108 @@ permissions:
   contents: read
 
 jobs:
-  probe:
-    name: probe (${{ matrix.os }})
+  # node-pty alone: several terminals killed back to back, as when the app quits.
+  kill-stress:
+    name: kill stress (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-2022, windows-11-arm]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - run: pip install setuptools
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Is cdb.exe on this machine?
+        shell: pwsh
+        run: Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\Debuggers' -Recurse -Filter cdb.exe -ErrorAction SilentlyContinue | ForEach-Object FullName
+
+      - name: node-pty as installed (files, then spawn, write, kill, spawn again)
+        run: node .github/conpty-debug/probe.cjs
+
+      - name: DLL, 3 terminals, 150 rounds
+        run: node .github/conpty-debug/supervise.cjs dll 3 150
+        continue-on-error: true
+
+      - name: DLL, 8 terminals, 60 rounds
+        run: node .github/conpty-debug/supervise.cjs dll 8 60
+        continue-on-error: true
+
+      - name: inbox, 3 terminals, 100 rounds
+        run: node .github/conpty-debug/supervise.cjs inbox 3 100
+        continue-on-error: true
+
+      - name: inbox, 8 terminals, 40 rounds
+        run: node .github/conpty-debug/supervise.cjs inbox 8 40
+        continue-on-error: true
+
+  # The app: quit with terminals open, many times, with the DLL and without.
+  quit-stress:
+    name: quit stress (${{ matrix.os }}, dll ${{ matrix.dll }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-2022]
+        dll: ["on", "off"]
+        include:
+          - os: windows-11-arm
+            dll: "on"
+    env:
+      TSK_CONPTY_DLL: ${{ matrix.dll == 'off' && '0' || '' }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - run: pip install setuptools
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Quit with 3 terminals open, 100 times
+        run: npx playwright test tests/e2e/zz-conpty-quit-stress.spec.mjs --reporter=list --retries=0
+        continue-on-error: true
+        env:
+          RUN_CONPTY_QUIT_STRESS: "1"
+          QUIT_STRESS_ROUNDS: "100"
+          QUIT_STRESS_TERMINALS: "3"
+
+      - name: The test that hung on windows-2022, 20 times
+        run: npx playwright test tests/e2e/attention-schedule.spec.mjs -g "missed run is recorded" --repeat-each=20 --retries=0 --reporter=list
+        continue-on-error: true
+
+  # The normal checks, with the fix and nothing copied by hand.
+  suite:
+    name: suite (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, windows-2022, windows-11-arm]
-    env:
-      RUN_CONPTY_DEBUG: "1"
     steps:
       - uses: actions/checkout@v6
 
@@ -37,92 +129,15 @@ jobs:
           cache: npm
 
       - run: npm ci
-        continue-on-error: true
 
-      - name: 1. node-pty as installed (files, then spawn, write, kill, spawn again)
-        run: node .github/conpty-debug/probe.cjs
-        continue-on-error: true
+      - run: npm run test:ci
 
-      - run: npm run build
-
-      - name: 2. the app as installed (open a terminal through IPC)
-        run: npx playwright test tests/e2e/zz-conpty-debug.spec.mjs --reporter=list --retries=0
-        continue-on-error: true
-
-      - name: 3. put conpty.dll and OpenConsole.exe next to the conpty.node that node-pty loads
-        shell: pwsh
-        run: |
-          $pty = 'node_modules/node-pty'
-          $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
-          if (-not (Test-Path "$pty/build/Release/conpty.node")) { 'No rebuilt conpty.node: nothing to copy'; exit 0 }
-          $source = (Get-ChildItem "$pty/third_party/conpty" | Select-Object -First 1).FullName + "/win10-$arch"
-          New-Item -ItemType Directory -Force "$pty/build/Release/conpty" | Out-Null
-          Copy-Item "$source/conpty.dll", "$source/OpenConsole.exe" "$pty/build/Release/conpty/"
-          Get-ChildItem "$pty/build/Release/conpty"
-
-      - name: 4. node-pty with the DLL in place
-        run: node .github/conpty-debug/probe.cjs
-        continue-on-error: true
-
-      - name: 5. the app with the DLL in place
-        run: npx playwright test tests/e2e/zz-conpty-debug.spec.mjs --reporter=list --retries=0
-        continue-on-error: true
-
-      - name: 6. the whole e2e suite with the DLL in place
-        run: npx playwright test --reporter=list
-        continue-on-error: true
-        env:
-          RUN_CONPTY_DEBUG: "0"
+      - run: npm run test:e2e
 
       - name: Keep e2e traces and screenshots
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: conpty-debug-${{ matrix.os }}
+          name: conpty-suite-${{ matrix.os }}
           path: test-results
           retention-days: 7
-
-  # What the Release workflow's Windows build puts in the package (same commands, nothing published).
-  package:
-    name: package (${{ matrix.arch }})
-    runs-on: windows-latest
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x64, arm64]
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - run: pip install setuptools
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-
-      - run: npm ci
-
-      - run: npm run package:win:${{ matrix.arch }}
-
-      - name: Native terminal files in the package
-        shell: pwsh
-        run: |
-          $unpacked = if ('${{ matrix.arch }}' -eq 'arm64') { 'dist/win-arm64-unpacked' } else { 'dist/win-unpacked' }
-          $pty = "$unpacked/resources/app.asar.unpacked/node_modules/node-pty"
-          Get-ChildItem $pty -Recurse -File -Include *.node, *.dll, *.exe, .forge-meta |
-            ForEach-Object { '{0,10}  {1}' -f $_.Length, $_.FullName.Substring((Resolve-Path $pty).Path.Length + 1) }
-
-      - name: Packaged app opens a terminal (x64 only, the runner cannot run arm64)
-        if: matrix.arch == 'x64'
-        run: npx playwright test tests/e2e/packaged.spec.mjs tests/e2e/zz-conpty-debug.spec.mjs --reporter=list --retries=0
-        continue-on-error: true
-        env:
-          RUN_PACKAGED_E2E: "1"
-          RUN_CONPTY_DEBUG: "1"
-          PROBE_PACKAGED: "1"
-          TERMINALLYSKILL_PACKAGED_EXECUTABLE: dist/win-unpacked/TerminallySKILL.exe
