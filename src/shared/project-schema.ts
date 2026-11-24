@@ -159,6 +159,28 @@ export function resolveProjectWorkingDirectory(project: Pick<Project, 'workingDi
   return project.workingDirectory
 }
 
+/** Finds an existing project on the same machine and folder as `target`. SSH projects match only on the same host, user and port. */
+export function findProjectWithSameWorkspace(
+  projects: Project[],
+  target: ProjectWorkspaceTarget
+): Project | undefined {
+  const dir = target.cwd.trim().toLowerCase()
+  if (!dir) return undefined
+  return projects.find((p) => {
+    const other = p.workspaceTarget ?? createLocalWorkspaceTarget(p.workingDirectory)
+    if (other.type !== target.type) return false
+    if (resolveProjectWorkingDirectory(p).trim().toLowerCase() !== dir) return false
+    if (isSSHProjectWorkspaceTarget(other) && isSSHProjectWorkspaceTarget(target)) {
+      return (
+        other.host.trim().toLowerCase() === target.host.trim().toLowerCase() &&
+        other.user.trim() === target.user.trim() &&
+        (other.port ?? 22) === (target.port ?? 22)
+      )
+    }
+    return true
+  })
+}
+
 export function getProjectWorkspaceTargetLabel(
   project: Pick<Project, 'workspaceTarget'>
 ): string {
