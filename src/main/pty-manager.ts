@@ -337,7 +337,7 @@ function setupShellIntegration(
     const tmpFile = path.join(os.tmpdir(), `tv-ps-${sessionId}.ps1`)
     tempPaths.push(tmpFile)
 
-    fs.writeFileSync(tmpFile, buildPowerShellShellIntegrationInit())
+    fs.writeFileSync(tmpFile, buildPowerShellShellIntegrationInit({ conpty: process.platform === 'win32' }))
 
     args = buildPowerShellIntegrationArgs(tmpFile)
     hasIntegration = true

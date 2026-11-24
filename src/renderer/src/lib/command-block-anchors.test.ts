@@ -2,7 +2,7 @@ import { createRequire } from 'node:module'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { IMarker, Terminal as XtermTerminal } from '@xterm/xterm'
 import { COMMAND_ANCHOR_OSC } from '../../../shared/shell-integration'
-import { commandAnchorLineOffset, markCommandEnd, markCommandStart } from './command-block-anchors'
+import { markCommandEnd, markCommandStart } from './command-block-anchors'
 import { extractCommandTranscriptFromLines } from './terminal-transcript'
 
 // The xterm bundle is CommonJS; Node's ESM loader does not see its named exports
@@ -47,12 +47,13 @@ function blockTerminal(anchorsMayLag: boolean, cols = 80, rows = 8) {
   return { blocks, write, line, output }
 }
 
+// Captured from Windows PowerShell 5.1 under the inbox ConPTY of a Windows 11 arm64 build (26300), as the
+// renderer received it (anchors already rewritten to OSC 7338). Only the long working folder in the prompt
+// was shortened, with the cursor moves that depend on its length.
+
 /**
- * Captured from Windows PowerShell 5.1 under the inbox ConPTY of a Windows 11 arm64 build, as the
- * renderer received it (anchors already rewritten to OSC 7338); only the long working folder in the
- * prompt was shortened. Both start anchors arrive before ConPTY draws the line break that accepts the
- * command (the second even before the last typed character), and the first end anchor arrives before
- * the line break after the output.
+ * Both start anchors arrive before ConPTY draws the line break that accepts the command (the second even
+ * before the last typed character), and the first end anchor before the line break after the output.
  */
 const CONPTY_SESSION = [
   '\x1b[?25l\x1b[2J\x1b[m\x1b[H\x1b[?25h\x1b]7338;end;0\x07',
@@ -83,14 +84,32 @@ const CONPTY_SESSION = [
   'PS C:\\w> '
 ]
 
-describe('command block anchors', () => {
-  it('moves only a mid-line anchor, and only when anchors may lag', () => {
-    expect(commandAnchorLineOffset(0, true)).toBe(0)
-    expect(commandAnchorLineOffset(27, true)).toBe(1)
-    expect(commandAnchorLineOffset(27, false)).toBe(0)
-    expect(commandAnchorLineOffset(0, false)).toBe(0)
-  })
+/**
+ * A command typed on the bottom line whose output scrolls the screen, then a short one. ConPTY ends each
+ * output line with a carriage return and draws the line feed only with the next text, so both end anchors
+ * arrive at the start of the last output line, which already holds text.
+ */
+const CONPTY_SCROLLING = [
+  'PS C:\\w> \r\n'.repeat(7) + 'PS C:\\w> ',
+  '\x1b[?25l',
+  '\x1b[97m1\x1b[90m..\x1b[97m30\x1b[?25h',
+  '\x1b[?25l\x1b[m\x1b[97m\x1b[8;10H1\x1b[90m..\x1b[97m30 \x1b[37m| \x1b[93m% \x1b[37m{ \x1b[36m"row\x1b[92m$_',
+  '\x1b[m\x1b[97m\x1b[8;10H1\x1b[90m..\x1b[97m30 \x1b[37m| \x1b[93m% \x1b[37m{ \x1b[36m"row\x1b[92m$_\x1b[36m" \x1b[37m}\x1b[?25h',
+  '\x1b]7338;start;MS4uMzAgfCAlIHsgInJvdyRfIiB9\x07',
+  '\x1b[m\r\nrow1\r',
+  ...Array.from({ length: 29 }, (_, index) => `\nrow${index + 2}\r`),
+  '\x1b]7338;end;0\x07',
+  '\nPS C:\\w>\x1b[1C',
+  '\x1b[?25l',
+  '\x1b[93mecho \x1b[36m"a1"\x1b[?25h',
+  '\x1b]7338;start;ZWNobyAiYTEi\x07',
+  '\x1b[m\r\n',
+  'a1\r',
+  '\x1b]7338;end;0\x07',
+  '\nPS C:\\w>\x1b[1C'
+]
 
+describe('command block anchors', () => {
   it('marks the typed command and its output when ConPTY draws line breaks after the anchors', async () => {
     const terminal = blockTerminal(true)
     await terminal.write(CONPTY_SESSION)
@@ -116,37 +135,34 @@ describe('command block anchors', () => {
     expect(terminal.line(fail.commandLine.line)).toBe('block-42')
   })
 
-  it('keeps lagging anchors right when the command and its output scroll the screen', async () => {
-    const terminal = blockTerminal(true, 40, 4)
-    await terminal.write([
-      'PS C:\\w> \r\nPS C:\\w> \r\nPS C:\\w> \r\nPS C:\\w> echo one two',
-      '\x1b]7338;start;ZWNobyBvbmUgdHdv\x07',
-      '\r\none\r\ntwo',
-      '\x1b]7338;end;0\x07',
-      '\r\nPS C:\\w> '
-    ])
+  it('keeps the last output line when ConPTY has not drawn its line feed yet, also while scrolling', async () => {
+    const terminal = blockTerminal(true)
+    await terminal.write(CONPTY_SCROLLING)
 
-    const [block] = terminal.blocks
-    expect(terminal.line(block.commandLine.line)).toBe('PS C:\\w> echo one two')
-    expect(terminal.output(block)).toBe('one\ntwo')
+    const [rows, echo] = terminal.blocks
+    expect(terminal.line(rows.commandLine.line)).toBe('PS C:\\w> 1..30 | % { "row$_" }')
+    expect(terminal.output(rows)).toBe(Array.from({ length: 30 }, (_, index) => `row${index + 1}`).join('\n'))
+    expect(terminal.line(echo.commandLine.line)).toBe('PS C:\\w> echo "a1"')
+    expect(terminal.output(echo)).toBe('a1')
+    expect(terminal.line(echo.endLine.line)).toBe('PS C:\\w>')
   })
 
-  it('places anchors written at the start of a line (zsh, bash) the same way either way', async () => {
+  it('places anchors written at the start of an empty line (zsh, bash) the same way either way', async () => {
     for (const anchorsMayLag of [false, true]) {
       const terminal = blockTerminal(anchorsMayLag)
       await terminal.write([
-        'user@host ~ % echo hi\r\n',
-        '\x1b]7338;start;ZWNobyBoaQ==\x07',
-        'hi\r\n',
+        'user@host ~ % printf "a\\nb\\n"\r\n',
+        '\x1b]7338;start;cHJpbnRmICJhXG5iXG4i\x07',
+        'a\r\nb\r\n',
         '\x1b]7338;end;0\x07',
         'user@host ~ % '
       ])
 
       const [block] = terminal.blocks
-      expect(terminal.line(block.commandLine.line)).toBe('user@host ~ % echo hi')
+      expect(terminal.line(block.commandLine.line)).toBe('user@host ~ % printf "a\\nb\\n"')
       expect(block.outputLine.line).toBe(1)
-      expect(block.endLine.line).toBe(2)
-      expect(terminal.output(block)).toBe('hi')
+      expect(block.endLine.line).toBe(3)
+      expect(terminal.output(block)).toBe('a\nb')
     }
   })
 })
