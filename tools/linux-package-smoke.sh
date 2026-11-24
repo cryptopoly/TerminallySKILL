@@ -8,8 +8,7 @@ cd "$(dirname "$0")/.."
 
 shopt -s nullglob
 appimage=(dist/*.AppImage); deb=(dist/*.deb)
-# arm64 ships the deb only (its AppImage runtime links libz.so and fails to start on stock Ubuntu).
-[ ${#deb[@]} -eq 1 ] && [ ${#appimage[@]} -le 1 ] || { echo "Expected one deb and at most one AppImage in dist/. Run npm run package:linux."; exit 2; }
+[ ${#deb[@]} -eq 1 ] && [ ${#appimage[@]} -eq 1 ] || { echo "Expected one deb and one AppImage in dist/. Run npm run package:linux."; exit 2; }
 
 SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO="sudo -n"
 results=()
@@ -24,7 +23,7 @@ packaged_spec() { # $1 executable (empty = unpacked default), $2 output dir
 
 step "unpacked app" packaged_spec "" test-results/pkg-unpacked
 # AppImages need FUSE to mount themselves; unpack-and-run works on machines without it.
-[ ${#appimage[@]} -eq 1 ] && step "AppImage" env APPIMAGE_EXTRACT_AND_RUN=1 bash -c "$(declare -f packaged_spec); packaged_spec '$PWD/${appimage[0]}' test-results/pkg-appimage"
+step "AppImage" env APPIMAGE_EXTRACT_AND_RUN=1 bash -c "$(declare -f packaged_spec); packaged_spec '$PWD/${appimage[0]}' test-results/pkg-appimage"
 
 deb_install() {
   $SUDO dpkg -i "${deb[0]}" || { $SUDO apt-get install -f -y && $SUDO dpkg -i "${deb[0]}"; } || return 1

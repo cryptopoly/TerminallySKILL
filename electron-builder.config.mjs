@@ -1,4 +1,6 @@
 import { execSync } from 'node:child_process'
+import { chmod, lstat, readdir } from 'node:fs/promises'
+import path from 'node:path'
 
 const defaultProductName = 'TerminallySKILL'
 const productSlug = 'TerminallySKILL'
@@ -22,6 +24,25 @@ function hasMacCodeSigningIdentity() {
   }
 }
 
+// Package file modes otherwise follow the build machine's umask and checkout modes (a 077 umask
+// ships a deb whose files only root can read). Files electron-builder writes itself (desktop file,
+// install scripts) follow the umask; files copied from the checkout (the app folder, build/icons)
+// keep their modes, so normalise those: 0755 for directories and executables, 0644 for the rest.
+process.umask(0o022)
+
+async function normaliseModes(file) {
+  const stat = await lstat(file)
+  if (stat.isSymbolicLink()) return
+  if (stat.isDirectory()) {
+    await chmod(file, 0o755)
+    for (const entry of await readdir(file)) await normaliseModes(path.join(file, entry))
+  } else {
+    await chmod(file, stat.mode & 0o100 ? 0o755 : 0o644)
+  }
+}
+
+await normaliseModes('build/icons')
+
 const canNotarize =
   Boolean(appleId && appleAppSpecificPassword && appleTeamId) &&
   (Boolean(process.env.CSC_LINK) || hasMacCodeSigningIdentity())
@@ -40,6 +61,9 @@ const config = {
       to: 'commands'
     }
   ],
+  afterPack: async (context) => {
+    if (context.electronPlatformName === 'linux') await normaliseModes(context.appOutDir)
+  },
   asarUnpack: [
     '**/node-pty/**'
   ],
@@ -64,6 +88,11 @@ const config = {
     gatekeeperAssess: false,
     artifactName: `${productSlug}-\${version}-\${arch}.\${ext}`,
     notarize: canNotarize
+  },
+  toolsets: {
+    // The legacy AppImage runtime links libz.so and libfuse2, which a stock Ubuntu arm64 lacks. 1.0.3
+    // uses the static type-2 runtime, which needs neither.
+    appimage: '1.0.3'
   },
   linux: {
     target: ['AppImage', 'deb'],
