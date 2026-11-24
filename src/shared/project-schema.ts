@@ -33,6 +33,8 @@ export interface ProjectWorkspaceLayout {
   terminalSize: number
   terminalVisible: boolean
   preferredSplitDirection: ProjectWorkspaceSplitDirection
+  /** Terminal shown as a quad split (four terminals in a 2x2 grid). Missing in layouts saved before 0.9.105. */
+  quadLayout: boolean
   sidebarTab: ProjectSidebarTab
   openFilePaths: string[]
   activeFilePath: string | null
@@ -107,6 +109,7 @@ export const DEFAULT_PROJECT_WORKSPACE_LAYOUT: ProjectWorkspaceLayout = {
   terminalSize: 35,
   terminalVisible: false,
   preferredSplitDirection: 'vertical',
+  quadLayout: false,
   sidebarTab: 'scripts',
   openFilePaths: [],
   activeFilePath: null

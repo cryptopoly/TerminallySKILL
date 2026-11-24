@@ -1116,7 +1116,11 @@
     "folder.revealWindows": "Mostrar en el Explorador de archivos",
     "folder.revealLinux": "Abrir en el gestor de archivos",
     "folder.copyPath": "Copiar ruta",
-    "openFailed.message": "No se pudo abrir un terminal: {{reason}}"
+    "openFailed.message": "No se pudo abrir un terminal: {{reason}}",
+    "panel.quad": "División en cuatro",
+    "panel.closeQuad": "Salir de la división en cuatro",
+    "panel.quadDescription": "Cuatro terminales en una cuadrícula de 2x2. Usa primero tus pestañas abiertas y abre nuevas para el resto. Haz clic de nuevo para volver al diseño anterior; no se cierra ninguna terminal.",
+    "panel.quadTooSmall": "División en cuatro en pausa: ventana demasiado pequeña"
   },
   "onboarding": {
     "subtitle": "Constructor visual de comandos, espacio de trabajo de terminal, workflows, registros y herramientas de IA",
@@ -1334,7 +1338,9 @@
     "sections.statusDots.steps.idle.label": "Inactivo",
     "sections.statusDots.steps.idle.desc": "Anillo gris: un programa está abierto pero lleva un rato sin mostrar nada, por ejemplo un agente que espera su siguiente tarea. Solo el punto, sin notificación.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maximiza la terminal para que ocupe toda la ventana, o restáurala. Ctrl+Shift+M en Windows y Linux."
+    "sections.keyboard.steps.maximise.desc": "Maximiza la terminal para que ocupe toda la ventana, o restáurala. Ctrl+Shift+M en Windows y Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Activa o desactiva la división en cuatro (cuatro terminales en una cuadrícula de 2x2). Command+] / Command+[ cambia entre sus paneles. Ctrl+Shift+G en Windows y Linux."
   },
   "ai": {
     "explain.label": "Explicar con IA",

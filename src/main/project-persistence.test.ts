@@ -104,6 +104,7 @@ describe('project-persistence', () => {
       terminalSize: 40,
       terminalVisible: true,
       preferredSplitDirection: 'horizontal',
+      quadLayout: false,
       sidebarTab: 'files',
       openFilePaths: ['/repo/src/index.ts', '/repo/README.md'],
       activeFilePath: '/repo/README.md'
@@ -196,9 +197,23 @@ describe('project-persistence', () => {
       terminalSize: DEFAULT_PROJECT_WORKSPACE_LAYOUT.terminalSize,
       terminalVisible: DEFAULT_PROJECT_WORKSPACE_LAYOUT.terminalVisible,
       preferredSplitDirection: DEFAULT_PROJECT_WORKSPACE_LAYOUT.preferredSplitDirection,
+      quadLayout: false,
       sidebarTab: 'logs',
       openFilePaths: ['/repo/src/app.tsx'],
       activeFilePath: '/repo/src/app.tsx'
     })
+  })
+
+  it('keeps a saved quad split and reads anything else as no quad', () => {
+    const withLayout = (workspaceLayout: unknown) =>
+      backfillProject(
+        { id: 'proj-5', name: 'Quad', workingDirectory: '/repo', workspaceLayout: workspaceLayout as Project['workspaceLayout'] },
+        0,
+        '2026-03-08T16:30:00.000Z'
+      ).workspaceLayout.quadLayout
+
+    expect(withLayout({ quadLayout: true })).toBe(true)
+    expect(withLayout({ quadLayout: 'yes' })).toBe(false)
+    expect(withLayout(undefined)).toBe(false)
   })
 })

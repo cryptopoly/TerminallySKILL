@@ -154,7 +154,11 @@
     "folder.revealWindows": "Show in File Explorer",
     "folder.revealLinux": "Open in file manager",
     "folder.copyPath": "Copy path",
-    "openFailed.message": "Could not open a terminal: {{reason}}"
+    "openFailed.message": "Could not open a terminal: {{reason}}",
+    "panel.quad": "Quad split",
+    "panel.closeQuad": "Leave quad split",
+    "panel.quadDescription": "Four terminals in a 2x2 grid. Uses your open tabs first and opens new ones for the rest. Click again to go back to the previous layout; no terminal is closed.",
+    "panel.quadTooSmall": "Quad paused: window too small"
   },
   "native": {
     "menu.file": "File",
@@ -358,6 +362,8 @@
     "sections.statusDots.steps.idle.label": "Idle",
     "sections.statusDots.steps.idle.desc": "Grey ring: a program is open but has printed nothing for a while, for example an agent waiting for its next task. Dot only, no notification.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maximise the terminal so it fills the window, or restore it. Ctrl+Shift+M on Windows and Linux."
+    "sections.keyboard.steps.maximise.desc": "Maximise the terminal so it fills the window, or restore it. Ctrl+Shift+M on Windows and Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Turn the quad split (four terminals in a 2x2 grid) on or off. Command+] / Command+[ moves between its panes. Ctrl+Shift+G on Windows and Linux."
   }
 }
