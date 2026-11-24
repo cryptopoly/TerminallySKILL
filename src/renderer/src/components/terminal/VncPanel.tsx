@@ -137,33 +137,40 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
     passwordRejected.current = false
     triedEmptyPassword.current = askFirst
 
-    let rfb: InstanceType<typeof RFB>
+    // React can end this run while connect() still waits for the saved password (StrictMode runs every
+    // effect twice in development). An ended run must not open a connection of its own, and events from its
+    // connection must not touch the state the next run uses: two live viewers each spent password attempts.
+    let cancelled = false
+    let rfb: InstanceType<typeof RFB> | null = null
 
     const connect = async (): Promise<void> => {
       if (!containerRef.current) return
 
       // Check for a saved password before connecting
       const saved = await window.electronAPI.getVncPassword(storageKey)
+      if (cancelled || !containerRef.current) return
       hasSavedPassword.current = !!saved && !askFirst
 
-      rfb = new RFB(
+      const client = new RFB(
         containerRef.current,
         `ws://127.0.0.1:${wsPort}?token=${encodeURIComponent(token)}`
       )
 
-      rfb.scaleViewport = true
-      rfb.resizeSession = false
-      rfbRef.current = rfb
+      client.scaleViewport = true
+      client.resizeSession = false
+      rfb = client
+      rfbRef.current = client
 
-      rfb.addEventListener('connect', () => {
-        setStatus('connected')
+      client.addEventListener('connect', () => {
+        if (!cancelled) setStatus('connected')
       })
 
-      rfb.addEventListener('securityfailure', () => {
-        passwordRejected.current = true
+      client.addEventListener('securityfailure', () => {
+        if (!cancelled) passwordRejected.current = true
       })
 
-      rfb.addEventListener('disconnect', (e: CustomEvent) => {
+      client.addEventListener('disconnect', (e: CustomEvent) => {
+        if (cancelled) return
         // A server ends the connection when it rejects a password, so asking again needs a new one.
         if (passwordRejected.current) {
           askForPassword.current = true
@@ -176,16 +183,17 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
         }
       })
 
-      rfb.addEventListener('credentialsrequired', () => {
+      client.addEventListener('credentialsrequired', () => {
+        if (cancelled) return
         if (hasSavedPassword.current && saved) {
           // Try the saved password automatically — no modal
           hasSavedPassword.current = false
-          rfb.sendCredentials({ password: saved })
+          client.sendCredentials({ password: saved })
         } else if (!triedEmptyPassword.current) {
           // Many VNC servers behind SSH tunnels don't need a password.
           // Try an empty password silently first before showing the prompt.
           triedEmptyPassword.current = true
-          rfb.sendCredentials({ password: '' })
+          client.sendCredentials({ password: '' })
         } else {
           setPasswordPrompt(true)
         }
@@ -202,8 +210,9 @@ export function VncPanel({ sessionId, wsPort, token, vncPort, storageKey, visibl
     })
 
     return () => {
+      cancelled = true
       unsubscribe()
-      rfbRef.current?.disconnect()
+      rfb?.disconnect()
       rfbRef.current = null
     }
   }, [wsPort, token, sessionId, storageKey, connectKey, vncPort, t])

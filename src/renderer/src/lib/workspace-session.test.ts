@@ -4,7 +4,8 @@ import {
   buildProjectExecutionCommand,
   createProjectTerminalSession,
   defaultLocalShell,
-  openInteractiveProjectShell
+  openInteractiveProjectShell,
+  openVncViewer
 } from './workspace-session'
 
 describe('createProjectTerminalSession', () => {
@@ -65,5 +66,48 @@ describe('local shell for typed commands', () => {
       'session-1',
       "& 'ssh' '-t' 'deploy@prod.example.com' 'cd ''/srv/app'' && exec \\\"${SHELL:-/bin/sh}\\\" -l'\n"
     )
+  })
+})
+
+describe('openVncViewer', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  const sshProject = {
+    id: 'p1',
+    name: 'Desktop',
+    workingDirectory: '/home/me',
+    workspaceTarget: createSSHWorkspaceTarget('desk.example.com', 'me', '/home/me')
+  } as Project
+
+  it('opens one viewer for a double click, and another once the first has started', async () => {
+    let finishStart: (value: { sessionId: string; wsPort: number; token: string }) => void = () => {}
+    const startVncSession = vi.fn(
+      () => new Promise<{ sessionId: string; wsPort: number; token: string }>((resolve) => { finishStart = resolve })
+    )
+    vi.stubGlobal('window', { electronAPI: { startVncSession } })
+    const addSession = vi.fn()
+
+    // Each viewer makes its own password attempts, so a second one doubled what the server saw.
+    const first = openVncViewer(sshProject, addSession)
+    const second = openVncViewer(sshProject, addSession)
+    finishStart({ sessionId: 'vnc-1', wsPort: 4000, token: 't' })
+    expect(await first).toBe('vnc-1')
+    expect(await second).toBeNull()
+    expect(startVncSession).toHaveBeenCalledTimes(1)
+    expect(addSession).toHaveBeenCalledWith('vnc-1', 'p1', 'vnc', 4000, 't')
+
+    const third = openVncViewer(sshProject, addSession)
+    finishStart({ sessionId: 'vnc-2', wsPort: 4001, token: 'u' })
+    expect(await third).toBe('vnc-2')
+  })
+
+  it('can try again after a viewer failed to start', async () => {
+    const startVncSession = vi.fn().mockRejectedValueOnce(new Error('tunnel failed')).mockResolvedValue({ sessionId: 'vnc-3', wsPort: 4002, token: 'v' })
+    vi.stubGlobal('window', { electronAPI: { startVncSession } })
+
+    await expect(openVncViewer(sshProject, vi.fn())).rejects.toThrow('tunnel failed')
+    expect(await openVncViewer(sshProject, vi.fn())).toBe('vnc-3')
   })
 })

@@ -48,7 +48,7 @@ import type { SensitivePromptKind, TerminalPasteReason } from '../../lib/termina
 import { confirmTerminalClose } from '../../lib/terminal-close'
 import type { Theme } from '../../../../shared/settings-schema'
 import { resolveProjectWorkingDirectory } from '../../../../shared/project-schema'
-import { createProjectTerminalSession, getSessionShell, openInteractiveProjectShell } from '../../lib/workspace-session'
+import { createProjectTerminalSession, getSessionShell, openInteractiveProjectShell, openVncViewer } from '../../lib/workspace-session'
 import { buildChangeDirectoryCommand } from '../../../../shared/local-shell'
 import { raiseCommandAttention } from '../../lib/attention'
 import { registerAgentAttention } from '../../lib/agent-attention'
@@ -165,16 +165,8 @@ export function TerminalPanel({
   }
 
   const handleOpenVnc = async (): Promise<void> => {
-    if (!activeProject || activeProject.workspaceTarget.type !== 'ssh') return
     try {
-      const vncPort = activeProject.workspaceTarget.type === 'ssh'
-        ? (activeProject.workspaceTarget.vncPort ?? 5901)
-        : 5901
-      const { sessionId, wsPort, token } = await window.electronAPI.startVncSession(
-        activeProject.workspaceTarget,
-        vncPort
-      )
-      addSession(sessionId, activeProject.id, 'vnc', wsPort, token)
+      await openVncViewer(activeProject, addSession)
     } catch (err) {
       console.error('[VNC] Failed to start session:', err)
     }

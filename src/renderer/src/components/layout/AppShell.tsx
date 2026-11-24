@@ -44,7 +44,7 @@ import {
   type Project
 } from '../../../../shared/project-schema'
 import type { AppUpdateCheckResult } from '../../../../shared/update-schema'
-import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
+import { createProjectTerminalSession, openInteractiveProjectShell, openVncViewer } from '../../lib/workspace-session'
 import type { ActiveFile } from '../../store/file-store'
 
 function areStringArraysEqual(left: string[], right: string[]): boolean {
@@ -201,15 +201,8 @@ export function AppShell(): JSX.Element {
   }, [activeProject, addSession])
 
   const handleOpenVnc = useCallback(async (): Promise<void> => {
-    if (!activeProject || activeProject.workspaceTarget.type !== 'ssh') return
     try {
-      const vncPort = activeProject.workspaceTarget.vncPort ?? 5901
-      const { sessionId, wsPort, token } = await window.electronAPI.startVncSession(
-        activeProject.workspaceTarget,
-        vncPort
-      )
-      addSession(sessionId, activeProject.id, 'vnc', wsPort, token)
-      setTerminalVisible(true)
+      if (await openVncViewer(activeProject, addSession)) setTerminalVisible(true)
     } catch (err) {
       console.error('[VNC] Failed to start session:', err)
     }
