@@ -1126,7 +1126,6 @@
     "toolbar.plain": "simples",
     "busy.title": "Shell ocupada - os comandos serão executados quando estiver pronta",
     "busy.clearQueue": "Limpar fila",
-    "busy.running": "A executar",
     "search.previous": "Correspondência anterior (Shift+Enter)",
     "search.next": "Correspondência seguinte (Enter)",
     "search.close": "Fechar (Esc)",

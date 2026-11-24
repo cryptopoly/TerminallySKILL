@@ -992,7 +992,6 @@
     "toolbar.plain": "通常",
     "busy.title": "shell がビジー - 準備ができたらコマンドを実行します",
     "busy.clearQueue": "キューをクリア",
-    "busy.running": "実行中",
     "search.previous": "前の一致 (Shift+Enter)",
     "search.next": "次の一致 (Enter)",
     "search.close": "閉じる (Esc)",

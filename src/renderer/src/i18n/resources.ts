@@ -1406,9 +1406,7 @@ const enBase: LocaleResource = {
         directory: 'Directory'
       },
       modeOnDescription: 'Editor mode is ON - type commands in a dedicated input bar with suggestions and history. Toggle to switch back to classic shell input.',
-      modeOffDescription: 'Editor mode is OFF - you are typing directly into the live shell. Toggle to use an editor-style command bar with suggestions.',
-      off: 'Off',
-      on: 'On'
+      modeOffDescription: 'Editor mode is OFF - you are typing directly into the live shell. Toggle to use an editor-style command bar with suggestions.'
     },
     toolbar: {
       reviewSession: 'Review Session',
@@ -1435,8 +1433,7 @@ const enBase: LocaleResource = {
     },
     busy: {
       title: 'Shell busy - commands will run when ready',
-      clearQueue: 'Clear queue',
-      running: 'Running'
+      clearQueue: 'Clear queue'
     },
     search: {
       placeholder: 'Find in terminal...',
@@ -2438,9 +2435,9 @@ const p0SurfaceOverrides: Record<string, Partial<LocaleResource>> = {
       aiReview: { titleLastCommand: 'AI 审查 - 上一条命令', titleSelection: 'AI 审查 - 选中文本', titleSession: 'AI 审查 - 会话', noLastCommand: '请先运行命令，这样才有已完成的命令块可供审查。', noTerminalOutput: '请先运行命令，这样才有终端输出可供审查。', selectTextFirst: '请先在终端中选择一些文本。', selectedText: '选中文本', selectedTerminalTextTitle: '选中的终端文本', reviewing: '正在审查终端输出...', thinking: '正在思考...', followUpPlaceholder: '提出后续问题...', close: '关闭', reviewSelection: 'AI 审查选中文本', copy: '复制' },
       secureInput: { title: '安全输入已启用', fallbackPrompt: '检测到敏感提示', prompts: { sudoPassword: 'sudo 密码提示', password: '密码提示', passphrase: '密码短语提示', pin: 'PIN 提示', verificationCode: '验证码提示', token: '令牌提示', apiKey: 'API 密钥提示' }, description: '按键会直接发送到 shell，不会预览或排队。' },
       safePaste: { title: '确认粘贴', editorDraft: '编辑器草稿', queuedForLater: '已排队稍后发送', sendToShell: '发送到 shell', flagged: '此次粘贴被标记，因为它包含 {{reasons}}。', bracketed: '此 shell 已启用 bracketed paste，因此确认后的粘贴会被安全包装。', plain: '此 shell 未声明支持 bracketed paste，因此确认后的内容会作为普通输入发送。', lines_one: '将粘贴 {{count}} 行。', lines_other: '将粘贴 {{count}} 行。', reasons: { multiLine_one: '多行粘贴（{{count}} 行）', multiLine_other: '多行粘贴（{{count}} 行）', largePayload: '粘贴内容较大', controlCharacters: '检测到控制字符', dangerousCommand: '可能危险的 shell 命令' }, review: '发送到 shell 前请检查内容。', cancel: '取消', pasteAnyway: '仍然粘贴', pasteAndDisable: '仍然粘贴且不再显示' },
-      editorPrompt: { title: '编辑器提示', helpWithHistory: 'Enter 运行。Tab 接受选中的建议。Shift+Tab 或 Alt+上/下循环建议。上/下循环命令历史。Ctrl+N / Ctrl+P 也可循环建议。', helpNoHistory: 'Enter 运行。Tab 接受选中的建议。Shift+Tab 或 Alt+上/下循环建议。首次运行后会显示历史。', helpLabel: '编辑器提示帮助', placeholder: '输入命令并按 Enter', run: '运行', suggestion: '建议：', emptySuggestions: '开始输入以生成建议。', tabAccepts: 'Tab 接受选中的建议。', sources: { history: '历史', command: '命令', directory: '目录' }, modeOnDescription: '编辑器模式已开启 - 在专用输入栏中输入命令，并获得建议和历史。切换可回到经典 shell 输入。', modeOffDescription: '编辑器模式已关闭 - 你正在直接向实时 shell 输入。切换可使用带建议的编辑器式命令栏。', off: '关', on: '开' },
+      editorPrompt: { title: '编辑器提示', helpWithHistory: 'Enter 运行。Tab 接受选中的建议。Shift+Tab 或 Alt+上/下循环建议。上/下循环命令历史。Ctrl+N / Ctrl+P 也可循环建议。', helpNoHistory: 'Enter 运行。Tab 接受选中的建议。Shift+Tab 或 Alt+上/下循环建议。首次运行后会显示历史。', helpLabel: '编辑器提示帮助', placeholder: '输入命令并按 Enter', run: '运行', suggestion: '建议：', emptySuggestions: '开始输入以生成建议。', tabAccepts: 'Tab 接受选中的建议。', sources: { history: '历史', command: '命令', directory: '目录' }, modeOnDescription: '编辑器模式已开启 - 在专用输入栏中输入命令，并获得建议和历史。切换可回到经典 shell 输入。', modeOffDescription: '编辑器模式已关闭 - 你正在直接向实时 shell 输入。切换可使用带建议的编辑器式命令栏。' },
       toolbar: { reviewSession: '审查会话', refreshSession: '刷新会话审查', reviewSessionEnabled: '让当前 AI 提供商审查完整终端会话记录。', reviewSessionDisabled: '请在设置中选择启用的 AI 提供商以审查终端输出。', prompt: '提示符：', waitingForShell: '正在等待 shell...', running: '正在运行：', connected: '已连接：', remote: '远程', last: '上次：', promptCount_one: '{{count}} 个提示符', promptCount_other: '{{count}} 个提示符', bracketedPaste: 'Bracketed Paste', plainPaste: '普通粘贴', bracketedPasteDescription: 'shell 支持 bracketed paste - 粘贴文本会被转义序列包裹，因此不会逐行执行。多行粘贴更安全。', plainPasteDescription: 'shell 正在使用普通粘贴 - 粘贴文本会像直接输入一样发送，换行可能立即执行命令。', paste: '粘贴：', bracketed: 'bracketed', plain: '普通' },
-      busy: { title: 'Shell 正忙 - 命令会在就绪后运行', clearQueue: '清空队列', running: '正在运行' },
+      busy: { title: 'Shell 正忙 - 命令会在就绪后运行', clearQueue: '清空队列' },
       search: { placeholder: '在终端中查找...', caseSensitive: '区分大小写', regex: '正则表达式', wholeWord: '全词匹配', previous: '上一个匹配项（Shift+Enter）', next: '下一个匹配项（Enter）', close: '关闭（Esc）' },
       mismatch: { title: '不同项目的终端', description: '当前终端属于 {{terminalProjectName}}，但你正在 {{activeProjectName}} 中工作。在这里运行可能会使用错误的工作目录。', openNewTerminal: '为 {{projectName}} 打开新终端', runAnyway: '仍在 {{projectName}} 终端中运行' },
       vnc: { connecting: '正在通过 SSH 隧道连接...', connectionError: '连接错误', disconnected: '已断开连接', connectionLost: '连接丢失。请检查远程机器上是否正在运行 VNC 服务器（端口 {{port}}）。', reconnect: '重新连接', passwordRequired: '需要 VNC 密码', passwordDescription: '远程机器上的 VNC 服务器需要自己的密码，与 SSH 分开。', passwordPlaceholder: 'VNC 密码', rememberPassword: '记住密码', keychain: '已保存到系统钥匙串', connect: '连接', pasteClipboard: '从剪贴板粘贴（Ctrl+V）', exitFullscreen: '退出全屏（Esc）', enterFullscreen: '进入全屏' },

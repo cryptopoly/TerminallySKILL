@@ -1111,7 +1111,6 @@
     "toolbar.plain": "düz",
     "busy.title": "Shell meşgul - komutlar hazır olunca çalışacak",
     "busy.clearQueue": "Kuyruğu temizle",
-    "busy.running": "Çalışıyor",
     "search.previous": "Önceki eşleşme (Shift+Enter)",
     "search.next": "Sonraki eşleşme (Enter)",
     "search.close": "Kapat (Esc)",

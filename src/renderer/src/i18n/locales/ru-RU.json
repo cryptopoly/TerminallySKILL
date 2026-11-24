@@ -1057,7 +1057,6 @@
     "toolbar.plain": "обычная",
     "busy.title": "Shell занят - команды выполнятся, когда он освободится",
     "busy.clearQueue": "Очистить очередь",
-    "busy.running": "Выполняется",
     "search.previous": "Предыдущее совпадение (Shift+Enter)",
     "search.next": "Следующее совпадение (Enter)",
     "search.close": "Закрыть (Esc)",

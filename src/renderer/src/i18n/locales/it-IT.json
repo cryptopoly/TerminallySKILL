@@ -998,7 +998,6 @@
     "toolbar.plain": "normale",
     "busy.title": "Shell occupata - i comandi verranno eseguiti quando sarà pronta",
     "busy.clearQueue": "Svuota coda",
-    "busy.running": "In esecuzione",
     "search.previous": "Corrispondenza precedente (Shift+Enter)",
     "search.next": "Corrispondenza successiva (Enter)",
     "search.close": "Chiudi (Esc)",

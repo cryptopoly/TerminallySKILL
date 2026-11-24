@@ -1242,7 +1242,6 @@
     "toolbar.plain": "عادي",
     "busy.title": "shell مشغول - ستعمل الأوامر عندما يصبح جاهزًا",
     "busy.clearQueue": "مسح قائمة الانتظار",
-    "busy.running": "قيد التشغيل",
     "search.previous": "التطابق السابق (Shift+Enter)",
     "search.next": "التطابق التالي (Enter)",
     "search.close": "إغلاق (Esc)",

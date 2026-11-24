@@ -1111,7 +1111,6 @@
     "toolbar.plain": "일반",
     "busy.title": "셸이 사용 중입니다 - 준비되면 명령이 실행됩니다",
     "busy.clearQueue": "대기열 지우기",
-    "busy.running": "실행 중",
     "search.previous": "이전 일치 항목 (Shift+Enter)",
     "search.next": "다음 일치 항목 (Enter)",
     "search.close": "닫기 (Esc)",

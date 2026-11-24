@@ -1106,7 +1106,6 @@
     "toolbar.plain": "純文字",
     "busy.title": "Shell 忙碌中 - 命令將在就緒後執行",
     "busy.clearQueue": "清除佇列",
-    "busy.running": "執行中",
     "search.previous": "上一個相符項目（Shift+Enter）",
     "search.next": "下一個相符項目（Enter）",
     "search.close": "關閉（Esc）",

@@ -1018,7 +1018,6 @@
     "toolbar.plain": "simple",
     "busy.title": "Shell ocupada: los comandos se ejecutarán cuando esté lista",
     "busy.clearQueue": "Vaciar cola",
-    "busy.running": "En ejecución",
     "search.previous": "Coincidencia anterior (Shift+Enter)",
     "search.next": "Coincidencia siguiente (Enter)",
     "search.close": "Cerrar (Esc)",

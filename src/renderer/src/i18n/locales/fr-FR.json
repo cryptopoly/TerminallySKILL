@@ -1048,7 +1048,6 @@
     "toolbar.plain": "simple",
     "busy.title": "Shell occupé - les commandes s’exécuteront quand il sera prêt",
     "busy.clearQueue": "Vider la file",
-    "busy.running": "En cours",
     "search.previous": "Correspondance précédente (Shift+Entrée)",
     "search.next": "Correspondance suivante (Entrée)",
     "search.close": "Fermer (Échap)",

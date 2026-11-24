@@ -921,7 +921,6 @@
     "toolbar.plain": "normal",
     "busy.title": "Shell beschäftigt - Befehle laufen, sobald sie bereit ist",
     "busy.clearQueue": "Warteschlange leeren",
-    "busy.running": "Läuft",
     "search.previous": "Vorheriger Treffer (Shift+Enter)",
     "search.next": "Nächster Treffer (Enter)",
     "search.close": "Schließen (Esc)",

@@ -1174,7 +1174,6 @@
     "toolbar.plain": "звичайне",
     "busy.title": "Shell зайнятий - команди виконаються, коли він буде готовий",
     "busy.clearQueue": "Очистити чергу",
-    "busy.running": "Виконується",
     "search.previous": "Попередній збіг (Shift+Enter)",
     "search.next": "Наступний збіг (Enter)",
     "search.close": "Закрити (Esc)",

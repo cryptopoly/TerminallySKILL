@@ -447,8 +447,6 @@ const allLocaleSurfaceTranslatedKeys = [
   'terminal.editorPrompt.title',
   'terminal.editorPrompt.run',
   'terminal.editorPrompt.suggestion',
-  'terminal.editorPrompt.off',
-  'terminal.editorPrompt.on',
   'terminal.editorPrompt.modeOnDescription',
   'terminal.editorPrompt.modeOffDescription',
   'terminal.editorPrompt.sources.history',
