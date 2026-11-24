@@ -71,7 +71,10 @@ jobs:
 
       - run: npm run test:ci
 
+      # TEMPORARY diagnostic: does Windows e2e pass with Windows' own ConPTY (D0041)? Revert after one run.
       - run: npm run test:e2e
+        env:
+          TSK_CONPTY_DLL: ${{ matrix.os == 'windows-latest' && '0' || '' }}
 
       - name: Keep e2e traces and screenshots
         if: failure()
