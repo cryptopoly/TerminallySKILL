@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   buildQuadSlots,
   clampQuadRatio,
-  fillQuadSlots,
   nextQuadSessionId,
   placeInQuadSlot,
   quadKey,
@@ -16,11 +15,6 @@ describe('quad layout', () => {
     expect(buildQuadSlots([], null, null)).toEqual([null, null, null, null])
     // Sessions of other projects never end up in the grid
     expect(buildQuadSlots(['a'], 'other', 'x')).toEqual(['a', null, null, null])
-  })
-
-  it('fills empty or closed panes with spare tabs and keeps the rest in place', () => {
-    expect(fillQuadSlots(['a', null, 'gone', 'b'], ['a', 'b', 'c', 'd'])).toEqual(['a', 'c', 'd', 'b'])
-    expect(fillQuadSlots(['a', null, null, null], ['a'])).toEqual(['a', null, null, null])
   })
 
   it('places a session in a pane, swapping when it already sits in another', () => {

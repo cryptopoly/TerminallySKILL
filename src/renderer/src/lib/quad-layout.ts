@@ -33,13 +33,6 @@ export function buildQuadSlots(
   return Array.from({ length: QUAD_PANE_COUNT }, (_, index) => ordered[index] ?? null)
 }
 
-/** Fills empty or stale slots with open tabs that are not in the grid yet, keeping the others in place. */
-export function fillQuadSlots(slots: QuadSlots, projectSessionIds: string[]): QuadSlots {
-  const kept = slots.map((id) => (id && projectSessionIds.includes(id) ? id : null))
-  const spare = projectSessionIds.filter((id) => !kept.includes(id))
-  return kept.map((id) => id ?? spare.shift() ?? null)
-}
-
 /** Puts a session in one slot. If it was in another slot already, the two swap places. */
 export function placeInQuadSlot(slots: QuadSlots, index: number, sessionId: string): QuadSlots {
   if (index < 0 || index >= slots.length) return slots
