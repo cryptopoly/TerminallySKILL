@@ -1,4 +1,4 @@
-# TEMPORARY: verifies the conpty.dll fix on GitHub's Windows runners. Lives on fix/conpty-dll-server only and
+# TEMPORARY: measures quitting with terminals open on GitHub's Windows runners (the full verification is in bbf7bc2d). Lives on fix/conpty-dll-server only and
 # is removed before the branch is finished.
 name: conpty debug (temporary)
 
@@ -12,46 +12,6 @@ permissions:
   contents: read
 
 jobs:
-  # The normal CI checks (same steps as ci.yml), DLL on.
-  suite:
-    name: suite (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, windows-2022, windows-11-arm]
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - run: pip install setuptools
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 26
-          cache: npm
-
-      - run: npm ci
-
-      - name: node-pty as installed (files, then spawn, write, kill, spawn again)
-        run: node .github/conpty-debug/probe.cjs
-
-      - run: npm run test:ci
-
-      - run: npm run test:e2e
-
-      - name: Keep e2e traces and screenshots
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: conpty-suite-${{ matrix.os }}
-          path: test-results
-          retention-days: 7
-
   # Quit with terminals open, many times: the commit before "end conpty.dll terminals one at a time" and this one.
   quit-stress:
     name: quit stress (${{ matrix.os }}, ${{ matrix.code }})
@@ -67,7 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ matrix.code == 'before' && 'fcfa74379162c8a4b7f5d76986e02ddc11f7c500' || github.sha }}
+          fetch-depth: 30
+
+      - name: Take out "end conpty.dll terminals one at a time" (8c385156)
+        if: matrix.code == 'before'
+        shell: bash
+        run: |
+          git show 8c385156 -- src/main/pty-manager.ts | git apply -R
+          git diff --stat
 
       - uses: actions/setup-python@v6
         with:
@@ -97,118 +64,3 @@ jobs:
         env:
           QUIT_STRESS_ROUNDS: "100"
           QUIT_STRESS_TERMINALS: "8"
-
-  # The Release workflow's Windows build, same commands, nothing published.
-  package:
-    name: package (${{ matrix.arch }})
-    runs-on: windows-latest
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x64, arm64]
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - run: pip install setuptools
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 26
-          cache: npm
-
-      - run: npm ci
-
-      - name: Build and package
-        run: npm run package:win:${{ matrix.arch }}
-
-      - name: Check the installer payload uses only 7z filters NSIS can extract
-        shell: bash
-        run: tools/check-nsis-payload.sh dist/*-Setup-*-${{ matrix.arch }}.exe
-
-      - name: Native terminal files in the unpacked app
-        shell: pwsh
-        run: |
-          $unpacked = if ('${{ matrix.arch }}' -eq 'arm64') { 'dist/win-arm64-unpacked' } else { 'dist/win-unpacked' }
-          $pty = (Resolve-Path "$unpacked/resources/app.asar.unpacked/node_modules/node-pty").Path
-          Get-ChildItem $pty -Recurse -File -Include *.node, *.dll, *.exe |
-            ForEach-Object { '{0,10}  {1}' -f $_.Length, $_.FullName.Substring($pty.Length + 1) }
-
-      - name: Native terminal files in the installer
-        shell: bash
-        run: |
-          work=$(mktemp -d ./payload.XXXXXX)
-          7z x -y -o"$work" dist/*-Setup-*-${{ matrix.arch }}.exe '$PLUGINSDIR/app-*.7z' >/dev/null
-          7z l "$work"/\$PLUGINSDIR/app-*.7z | grep -i 'node-pty.build.Release' || { echo "no rebuilt node-pty in the installer"; exit 1; }
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: win-setup-${{ matrix.arch }}
-          path: dist/*-Setup-*-${{ matrix.arch }}.exe
-          retention-days: 1
-
-  # Install each setup .exe on a machine of its architecture and open a terminal in the installed app.
-  installed:
-    name: installed app (${{ matrix.arch }})
-    needs: package
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x64
-            os: windows-latest
-          - arch: arm64
-            os: windows-11-arm
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 26
-          cache: npm
-
-      # As tools/vm-release-smoke-windows.ps1: the packaged spec only needs Playwright.
-      - run: npm ci --ignore-scripts
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: win-setup-${{ matrix.arch }}
-          path: setup
-
-      - name: Install silently
-        shell: pwsh
-        run: |
-          $setup = (Get-ChildItem setup -Filter *.exe | Select-Object -First 1).FullName
-          Start-Process $setup -ArgumentList '/S' -Wait
-          $exe = $null
-          for ($i = 0; $i -lt 30 -and -not $exe; $i++) {
-            Start-Sleep 2
-            $exe = Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter TerminallySKILL.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-          }
-          if (-not $exe) { 'installed TerminallySKILL.exe not found'; exit 1 }
-          "Installed: $($exe.FullName)"
-          "TERMINALLYSKILL_PACKAGED_EXECUTABLE=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          $pty = Join-Path $exe.DirectoryName 'resources\app.asar.unpacked\node_modules\node-pty'
-          Get-ChildItem $pty -Recurse -File -Include *.node, *.dll, *.exe |
-            ForEach-Object { '{0,10}  {1}' -f $_.Length, $_.FullName.Substring($pty.Length + 1) }
-
-      - name: Installed app opens terminals (packaged spec, then the IPC probe)
-        run: npx playwright test tests/e2e/packaged.spec.mjs tests/e2e/zz-conpty-debug.spec.mjs --reporter=list --retries=0
-        env:
-          RUN_PACKAGED_E2E: "1"
-          RUN_CONPTY_DEBUG: "1"
-          PROBE_PACKAGED: "1"
-
-      - name: Keep e2e traces and screenshots
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: conpty-installed-${{ matrix.arch }}
-          path: test-results
-          retention-days: 7

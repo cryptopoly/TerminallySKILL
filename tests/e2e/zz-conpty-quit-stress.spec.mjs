@@ -37,8 +37,10 @@ test('conpty debug: quit with terminals open, many times', async ({}, testInfo) 
         if (line.trim()) lines.push(`  [${source} +${Date.now() - startedAt}ms] ${line}`)
       }
     }
-    app.process().stdout.on('data', record('main'))
-    app.process().stderr.on('data', record('main:err'))
+    // Playwright's handle to the process is gone once the app has closed.
+    const child = app.process()
+    child.stdout.on('data', record('main'))
+    child.stderr.on('data', record('main:err'))
 
     await page.evaluate(async (cwd) => {
       await window.electronAPI.updateSettings({ terminalInputMode: 'classic' })
@@ -111,7 +113,7 @@ test('conpty debug: quit with terminals open, many times', async ({}, testInfo) 
     } else {
       closeTimes.push(closeMs)
       // The app is started through cmd.exe on Windows, which passes the app's exit code on.
-      const exitCode = app.process().exitCode
+      const exitCode = child.exitCode
       if (exitCode !== 0) badExitCodes.push(`round ${round}: 0x${((exitCode ?? -1) >>> 0).toString(16).toUpperCase()}`)
       if (round <= 2 || closeMs > 4000 || !idle || exitCode !== 0) {
         console.log(`[quit-stress] round ${round}: closed in ${closeMs}ms, exit code ${exitCode} (shells idle: ${idle}, close began at ${closeAt})`)
