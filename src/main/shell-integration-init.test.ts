@@ -3,7 +3,13 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { buildBashShellIntegrationInit, buildZshEnvForward, buildZshShellIntegrationInit } from './shell-integration-init'
+import {
+  buildBashShellIntegrationInit,
+  buildPowerShellIntegrationArgs,
+  buildPowerShellShellIntegrationInit,
+  buildZshEnvForward,
+  buildZshShellIntegrationInit
+} from './shell-integration-init'
 
 describe('shell integration init scripts', () => {
   it('builds zsh hooks for prompt-ready and command-start events', () => {
@@ -23,6 +29,49 @@ describe('shell integration init scripts', () => {
     expect(init).toContain('__tv_prompt_state=1')
     expect(init).toContain('__tv_run_original_prompt_command()')
     expect(init).toContain('__tv_original_prompt_command_array=("${PROMPT_COMMAND[@]}")')
+  })
+
+  it('builds PowerShell hooks that wrap the profile prompt and work in Windows PowerShell 5.1', () => {
+    const init = buildPowerShellShellIntegrationInit()
+    const promptBody = init.split('function global:prompt {\n')[1]
+
+    // $? is lost as soon as anything else runs
+    expect(promptBody.startsWith('  $ok = $?\n')).toBe(true)
+    expect(init).toContain('Prompt = $function:prompt')
+    expect(init).toContain('& $global:__TvState.Prompt')
+    expect(init).toContain('[Console]::Write([string][char]27 + "]7337;shell;" + $Payload + [char]7)')
+    expect(init).toContain('"prompt-ready;" + $code + ";"')
+    // The next typed line (a workflow step marker) still sees the user's $LASTEXITCODE
+    expect(promptBody).toContain('  & $global:__TvState.Prompt\n  $global:LASTEXITCODE = $native\n}')
+    expect(init).not.toContain('`e')
+    expect(init).toMatch(/^[\x00-\x7f]*$/)
+  })
+
+  it('builds PowerShell command-start and history hooks only when PSReadLine is loaded', () => {
+    const init = buildPowerShellShellIntegrationInit()
+    const readLineBlock = init.slice(init.indexOf('if (Get-Module PSReadLine) {'))
+
+    expect(readLineBlock).toContain('function global:PSConsoleHostReadLine {\n    $ok = $?\n')
+    // A prompt redrawn while a line is edited (Ctrl+L, transient prompt) is not a new prompt
+    expect(readLineBlock).toContain('try { $line = & $global:__TvState.ReadLine } finally { $global:__TvState.Reading = $false }')
+    expect(init).toContain('  if (-not $global:__TvState.Reading) {')
+    expect(readLineBlock).toContain('[string]::IsNullOrWhiteSpace($line)')
+    expect(readLineBlock).toContain('"command-start;" + (__TvB64 $line)')
+    expect(readLineBlock).toContain('$global:__TvState.History = (Get-PSReadLineOption).AddToHistoryHandler')
+    expect(readLineBlock).toContain('if ($Line.Contains("]7337;workflow-step;")) { return $false }')
+    expect(readLineBlock).toContain('return $global:__TvState.History.Invoke($Line)')
+  })
+
+  it('quotes the PowerShell init path for -Command and keeps the user profile', () => {
+    const args = buildPowerShellIntegrationArgs("C:\\Users\\Jo O'Brien\u2019s\\AppData\\Local\\Temp\\tv-ps-term-1.ps1")
+
+    expect(args).toEqual([
+      '-NoLogo',
+      '-NoExit',
+      '-Command',
+      ". ([ScriptBlock]::Create([IO.File]::ReadAllText('C:\\Users\\Jo O''Brien\u2019\u2019s\\AppData\\Local\\Temp\\tv-ps-term-1.ps1')))"
+    ])
+    expect(args).not.toContain('-NoProfile')
   })
 })
 
@@ -77,6 +126,23 @@ describe('shell integration against real shells', () => {
     const out = run('bash', ['--rcfile', rc, '-i', '-c', 'true; true; echo hits=$PREV_TRAP_HITS'], { HOME: dir })
 
     expect(out).toMatch(/hits=[1-9]/)
+  })
+
+  it.runIf(process.platform === 'win32')('powershell: reports the exit code and folder at each prompt', () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "tv-ps O'Brien\u2019s-"))
+    const file = path.join(dir, 'init.ps1')
+    writeFileSync(file, buildPowerShellShellIntegrationInit())
+    // Same quoting as a real tab; prompt is called by hand since this shell is not interactive
+    const args = buildPowerShellIntegrationArgs(file).filter((arg) => arg !== '-NoExit')
+    args[args.length - 1] +=
+      '; Set-Location $env:SystemRoot; prompt | Out-Null; cmd /c exit 3; prompt | Out-Null;' +
+      ' Get-Item nope; prompt | Out-Null; cmd /c exit 3; prompt | Out-Null'
+
+    const out = spawnSync('powershell.exe', ['-NoProfile', ...args], { encoding: 'utf8' }).stdout
+    const events = [...out.matchAll(/\x1b\]7337;shell;prompt-ready;(-?\d+);([^\x07]*)\x07/g)]
+
+    expect(events.map((event) => event[1])).toEqual(['0', '3', '1', '3'])
+    expect(Buffer.from(events[0][2], 'base64').toString('utf8').toLowerCase()).toBe(process.env.SystemRoot?.toLowerCase())
   })
 })
 

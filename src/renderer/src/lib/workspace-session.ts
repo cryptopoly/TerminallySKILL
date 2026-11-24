@@ -1,10 +1,26 @@
-import type { Project } from '../../../shared/project-schema'
+import { isSSHProjectWorkspaceTarget, type Project } from '../../../shared/project-schema'
 import {
   buildInteractiveWorkspaceConnectCommand,
   buildProjectWorkspaceCommandString,
   buildWorkspaceTerminalLaunchPlan
 } from '../../../shared/workspace-target'
 import type { TerminalSessionMode } from '../store/terminal-store'
+
+/**
+ * The shell a new local terminal runs, for building command lines before its session is known.
+ * Mirrors getDefaultShell in the main process: PowerShell on Windows, a POSIX shell elsewhere.
+ */
+export function defaultLocalShell(): string | null {
+  return typeof navigator !== 'undefined' && navigator.platform.toLowerCase().startsWith('win')
+    ? 'powershell.exe'
+    : null
+}
+
+/** The shell running in a session, falling back to the platform default */
+export async function getSessionShell(sessionId: string): Promise<string | null> {
+  const info = await window.electronAPI.getSessionInfo(sessionId).catch(() => null)
+  return info?.shell ?? defaultLocalShell()
+}
 
 export async function createProjectTerminalSession(
   project: Project | null | undefined,
@@ -50,11 +66,11 @@ export async function openInteractiveProjectShell(
   project: Project | null | undefined,
   addSession: (sessionId: string, projectId: string | null, mode?: TerminalSessionMode) => void
 ): Promise<string | null> {
-  const command = buildInteractiveWorkspaceConnectCommand(project?.workspaceTarget)
-  if (!command) return null
+  if (!project || !isSSHProjectWorkspaceTarget(project.workspaceTarget)) return null
 
   const sessionId = await createProjectTerminalSession(project, addSession, undefined, 'ssh-interactive')
-  window.electronAPI.writeToTerminal(sessionId, command + '\n')
+  const command = buildInteractiveWorkspaceConnectCommand(project.workspaceTarget, await getSessionShell(sessionId))
+  if (command) window.electronAPI.writeToTerminal(sessionId, command + '\n')
   return sessionId
 }
 
@@ -63,5 +79,5 @@ export function buildProjectExecutionCommand(
   commandString: string,
   envOverrides?: Record<string, string>
 ): string {
-  return buildProjectWorkspaceCommandString(project, commandString, envOverrides)
+  return buildProjectWorkspaceCommandString(project, commandString, envOverrides, defaultLocalShell())
 }

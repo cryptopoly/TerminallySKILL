@@ -10,8 +10,10 @@ import {
   splitIncompleteMarker,
   stripAnsi,
   stripWorkflowMarkerEcho,
-  MarkerEchoFilter
+  MarkerEchoFilter,
+  STEP_MARKER_COMMAND_RE
 } from './pty-output'
+import { buildWorkflowStepMarkerCommand } from '../shared/workflow-shell'
 
 describe('pty-output', () => {
   it('strips ANSI escapes and normalizes carriage returns', () => {
@@ -143,6 +145,38 @@ describe('pty-output', () => {
     const echoed = "npm test\r\nprintf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-1' 'step-1' $?\r\nok\r\n"
     expect(stripWorkflowMarkerEcho(echoed)).toBe('npm test\r\nok\r\n')
   })
+
+  it('removes the echoed PowerShell marker command line, colours and prompt included', () => {
+    const marker = buildWorkflowStepMarkerCommand('wf-1', 'step-1', 'powershell.exe')!
+    expect(stripWorkflowMarkerEcho(`npm test\r\nPS C:\\repo> ${marker}\r\nok\r\n`, true)).toBe('npm test\r\nok\r\n')
+    // PSReadLine colours tokens; the marker text sits inside one single-quoted string token
+    const coloured = `\x1b[93m&\x1b[0m { \x1b[92mparam\x1b[0m(\x1b[92m$ok\x1b[0m) \x1b[36m']7337;workflow-step;wf-1;step-1;'\x1b[0m $?\r\n`
+    expect(stripWorkflowMarkerEcho(`a\r\n${coloured}b`, true)).toBe('a\r\nb')
+  })
+
+  it('keeps zsh/bash output exactly as before, and each shell strips only its own marker', () => {
+    const psLine = `x ']7337;workflow-step;wf-1;step-1;'\r\n`
+    expect(stripWorkflowMarkerEcho(psLine)).toBe(psLine)
+    const shLine = "printf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-1' 'step-1' $?\r\n"
+    expect(stripWorkflowMarkerEcho(shLine, true)).toBe(shLine)
+    expect(stripWorkflowMarkerEcho('grep workflow-step; log.txt\r\n')).toBe('grep workflow-step; log.txt\r\n')
+    expect(stripWorkflowMarkerEcho('grep workflow-step; log.txt\r\n', true)).toBe('grep workflow-step; log.txt\r\n')
+  })
+
+  it('finds the marker command for zsh/bash and PowerShell in what the app writes', () => {
+    for (const shell of ['/bin/zsh', 'powershell.exe']) {
+      const marker = buildWorkflowStepMarkerCommand('wf-1', 'step-1', shell)!
+      expect(`npm test\n${marker}\n`.match(STEP_MARKER_COMMAND_RE)?.[0]).toBe(marker)
+    }
+    expect('echo "[Console]::Write(1)"\n'.match(STEP_MARKER_COMMAND_RE)).toBeNull()
+  })
+
+  it('reads the exit code the PowerShell marker prints (checked on Windows PowerShell 5.1)', () => {
+    // Bytes printed on Windows by `cmd /c exit 3` followed by the marker command
+    expect(extractWorkflowStepResults('\x1b]7337;workflow-step;wf-1;step-1;3\x07').results).toEqual([
+      { runId: 'wf-1', stepId: 'step-1', exitCode: 3 }
+    ])
+  })
 })
 
 describe('MarkerEchoFilter', () => {
@@ -216,6 +250,22 @@ describe('MarkerEchoFilter', () => {
     const wrapped = `${marker.slice(0, 60)} \r\x1b[K${marker[60]}\r${marker.slice(60)}\x1b[?2004l\r\r\n`
     expect(filter.push(wrapped)).toBe('\r\x1b[K')
     expect(filter.push('next')).toBe('next')
+  })
+
+  it('removes a PowerShell marker echo with colour codes between its tokens', () => {
+    const psMarker = buildWorkflowStepMarkerCommand('wf-1', 'st-1', 'powershell.exe')!
+    const filter = new MarkerEchoFilter()
+    filter.arm(psMarker.match(STEP_MARKER_COMMAND_RE)![0])
+    filter.noteCommandStart()
+    filter.notePromptReady()
+    const coloured = psMarker
+      .replace('& {', '\x1b[93m&\x1b[0m {')
+      .replace('[Console]', '\x1b[37m[Console]\x1b[0m')
+      .replace("']7337", "\x1b[36m']7337")
+    const out = filter.push(`PS C:\\> ${coloured}\r\nnext`)
+    // A colour code before the first character passes through; the line is erased after it
+    expect(out).toBe('PS C:\\> \x1b[93m\r\x1b[Knext')
+    expect(stripAnsi(out)).toBe('PS C:\\> next')
   })
 
   it('removes both the terminal echo during a step and the prompt echo after it', () => {
