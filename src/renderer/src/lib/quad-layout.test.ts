@@ -45,6 +45,9 @@ describe('quad layout', () => {
     expect(resolveQuadArrangement(400, 700)).toBe('column')
     // Too small for any: only the focused pane
     expect(resolveQuadArrangement(500, 200)).toBe('single')
+    // A 1024x677 window (CI runners, small laptops): maximised is a 2x2 grid, docked four side by side
+    expect(resolveQuadArrangement(1008, 590)).toBe('grid')
+    expect(resolveQuadArrangement(1008, 245)).toBe('row')
   })
 
   it('keeps dividers where both neighbours keep their minimum size', () => {

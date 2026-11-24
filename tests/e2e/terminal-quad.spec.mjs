@@ -10,6 +10,20 @@ const shotPath = (testInfo, name) =>
     ? join(process.env.TERMINALLYSKILL_SCREENSHOT_DIR, name)
     : testInfo.outputPath(name)
 
+/**
+ * Launches at an explicit window size, so the panes' arrangement does not depend on the screen.
+ * 1024x677 is what CI runners (about 1024x768 screens) end up with: docked, quad shows four side by side.
+ */
+async function launch(testInfo, width = 1024, height = 677) {
+  const launched = await launchTerminallySkill(testInfo)
+  await setWindowSize(launched.app, width, height)
+  return launched
+}
+
+async function setWindowSize(app, width, height) {
+  await app.evaluate(({ BrowserWindow }, size) => BrowserWindow.getAllWindows()[0].setSize(size.width, size.height), { width, height })
+}
+
 async function openProject(page, testInfo, name, settings = {}) {
   const workspaceDir = testInfo.outputPath('workspace')
   await mkdir(join(workspaceDir, 'deep'), { recursive: true })
@@ -41,7 +55,7 @@ const focusedPaneIndex = (page) =>
 
 test('quad on and off: four live terminals, each runs a command, focus moves by click and keyboard', async ({}, testInfo) => {
   test.setTimeout(90_000)
-  const { app, page } = await launchTerminallySkill(testInfo)
+  const { app, page } = await launch(testInfo)
   try {
     await openProject(page, testInfo, 'E2E Quad')
     const quadButton = page.getByTestId('terminal-quad')
@@ -53,6 +67,9 @@ test('quad on and off: four live terminals, each runs a command, focus moves by 
     await expect(page.locator('.xterm:visible')).toHaveCount(4, { timeout: 15_000 })
     await expect(page.locator('.xterm')).toHaveCount(4)
     for (let i = 0; i < 4; i++) await expect(pane(page, i)).toBeVisible()
+    // Docked at 1024x677 there is no room for two rows: four side by side
+    const top = (await pane(page, 0).boundingBox()).y
+    for (let i = 1; i < 4; i++) expect(Math.abs((await pane(page, i).boundingBox()).y - top)).toBeLessThan(2)
 
     // Each pane runs its own command; clicking a pane focuses it
     for (let i = 0; i < 4; i++) {
@@ -112,9 +129,8 @@ test('quad on and off: four live terminals, each runs a command, focus moves by 
 
 test('quad in the maximised terminal: a 2x2 grid with resizable dividers, and a small window falls back', async ({}, testInfo) => {
   test.setTimeout(90_000)
-  const { app, page } = await launchTerminallySkill(testInfo)
+  const { app, page } = await launch(testInfo, 1400, 900)
   try {
-    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1400, 900))
     await openProject(page, testInfo, 'E2E Quad Max')
     const workspace = page.getByTestId('workspace-panel')
     await page.getByTestId('terminal-maximise').click()
@@ -133,7 +149,7 @@ test('quad in the maximised terminal: a 2x2 grid with resizable dividers, and a 
     expect(boxes[0].y).toBeLessThan(boxes[2].y)
     expect(Math.abs(boxes[0].x - boxes[2].x)).toBeLessThan(2)
     for (const box of boxes) {
-      expect(box.width).toBeGreaterThan(300)
+      expect(box.width).toBeGreaterThan(240)
       expect(box.height).toBeGreaterThan(150)
     }
     // Every pane has its own footer folder
@@ -165,7 +181,7 @@ test('quad in the maximised terminal: a 2x2 grid with resizable dividers, and a 
     await page.mouse.down()
     await page.mouse.move(5, divider.y + 40, { steps: 5 })
     await page.mouse.up()
-    expect((await pane(page, 0).boundingBox()).width).toBeGreaterThanOrEqual(298)
+    expect((await pane(page, 0).boundingBox()).width).toBeGreaterThanOrEqual(238)
     expect((await pane(page, 2).boundingBox()).width).toBeCloseTo((await pane(page, 0).boundingBox()).width, 0)
 
     // Restore (un-maximise) keeps quad in the docked terminal
@@ -174,14 +190,24 @@ test('quad in the maximised terminal: a 2x2 grid with resizable dividers, and a 
     await expect(page.locator('.xterm:visible')).toHaveCount(4)
 
     // A window too small for four panes shows only the focused one, and quad comes back when it grows
-    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(800, 600))
+    await setWindowSize(app, 800, 600)
     await expect(page.getByTestId('quad-too-small')).toBeVisible({ timeout: 10_000 })
     await expect(page.locator('.xterm:visible')).toHaveCount(1)
     await page.screenshot({ path: shotPath(testInfo, 'quad-small-window.png') })
-    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1400, 900))
+    await setWindowSize(app, 1400, 900)
     await page.getByTestId('terminal-maximise').click()
     await expect(page.getByTestId('quad-too-small')).toHaveCount(0, { timeout: 10_000 })
     await expect(page.locator('.xterm:visible')).toHaveCount(4)
+
+    // At 1024x677 (CI runners, small laptops) the maximised terminal is still a 2x2 grid
+    await setWindowSize(app, 1024, 677)
+    await expect
+      .poll(async () => (await pane(page, 2).boundingBox()).y - (await pane(page, 0).boundingBox()).y)
+      .toBeGreaterThan(150)
+    expect(Math.abs((await pane(page, 0).boundingBox()).y - (await pane(page, 1).boundingBox()).y)).toBeLessThan(2)
+    await expect(page.getByTestId('quad-too-small')).toHaveCount(0)
+    await page.waitForTimeout(300)
+    await page.screenshot({ path: shotPath(testInfo, 'quad-1024-maximised.png') })
   } finally {
     await app.close()
   }
@@ -189,7 +215,7 @@ test('quad in the maximised terminal: a 2x2 grid with resizable dividers, and a 
 
 test('with restore on, quad comes back after a restart with its four tabs and their folders', async ({}, testInfo) => {
   test.setTimeout(120_000)
-  const first = await launchTerminallySkill(testInfo)
+  const first = await launch(testInfo)
   try {
     const { page } = first
     await openProject(page, testInfo, 'E2E Quad Restore', { restoreTerminalTabs: true })
@@ -210,7 +236,7 @@ test('with restore on, quad comes back after a restart with its four tabs and th
     await first.app.close()
   }
 
-  const second = await launchTerminallySkill(testInfo)
+  const second = await launch(testInfo)
   try {
     const { page } = second
     await expect(page.locator('.xterm:visible')).toHaveCount(4, { timeout: 20_000 })
@@ -232,7 +258,7 @@ test('with restore on, quad comes back after a restart with its four tabs and th
 
 test('with restore off, a project left in quad opens in quad again with fresh terminals', async ({}, testInfo) => {
   test.setTimeout(90_000)
-  const first = await launchTerminallySkill(testInfo)
+  const first = await launch(testInfo)
   try {
     const { page } = first
     await openProject(page, testInfo, 'E2E Quad Fresh')
@@ -243,7 +269,7 @@ test('with restore off, a project left in quad opens in quad again with fresh te
     await first.app.close()
   }
 
-  const second = await launchTerminallySkill(testInfo)
+  const second = await launch(testInfo)
   try {
     const { page } = second
     await page.getByText('E2E Quad Fresh').first().waitFor({ timeout: 20_000 })
