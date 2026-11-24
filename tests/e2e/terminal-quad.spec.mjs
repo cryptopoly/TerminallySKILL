@@ -98,8 +98,8 @@ test('quad on and off: four live terminals, each runs a command, focus moves by 
     }
 
     // A closed pane stays empty with a New terminal button, which fills that pane.
-    // (The panes follow tab order here: the first tab stayed in the first pane.)
-    await page.locator('button:has(> span.font-mono)').nth(3).locator('svg.lucide-x').click()
+    const lastPaneSession = await pane(page, 3).getAttribute('data-session-id')
+    await page.locator(`[data-session-tab="${lastPaneSession}"] svg.lucide-x`).click()
     await expect(page.locator('[data-quad-empty="3"]')).toBeVisible({ timeout: 10_000 })
     await expect(page.locator('.xterm')).toHaveCount(3)
     await page.locator('[data-quad-empty="3"] button').click()

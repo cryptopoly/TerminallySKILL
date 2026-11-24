@@ -378,6 +378,7 @@ export function TerminalPanel({
               <button
                 key={session.id}
                 onClick={() => setActiveSession(session.id)}
+                data-session-tab={session.id}
                 className={`flex items-center gap-2 px-4 py-2 text-xs border-r border-surface-border transition-colors ${
                   isActive
                     ? 'bg-surface-light text-gray-200'
@@ -642,6 +643,7 @@ export function TerminalPanel({
               style={sessionStyle}
               className="flex-col"
               data-quad-pane={isQuadPane ? quadSlots.indexOf(session.id) : undefined}
+              data-session-id={session.id}
               data-focused-pane={multiPane && isVisible && isFocused ? 'true' : undefined}
               // On press, not click: the terminal can redraw between press and release, and the browser then drops the click
               onMouseDownCapture={() => {
