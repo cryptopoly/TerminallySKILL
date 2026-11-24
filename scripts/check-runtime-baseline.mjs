@@ -29,7 +29,7 @@ const checks = [
   {
     label: 'electron-builder stays on the audit-clean packaging baseline',
     value: packageJson.devDependencies?.['electron-builder'],
-    expected: '^26.15.2'
+    expected: '^26.18.0'
   },
   {
     label: 'electron-vite stays on the audit-clean build baseline',
