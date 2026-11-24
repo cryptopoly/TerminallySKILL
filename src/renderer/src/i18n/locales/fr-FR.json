@@ -1140,7 +1140,8 @@
     "folder.revealMac": "Afficher dans le Finder",
     "folder.revealWindows": "Afficher dans l'Explorateur de fichiers",
     "folder.revealLinux": "Ouvrir dans le gestionnaire de fichiers",
-    "folder.copyPath": "Copier le chemin"
+    "folder.copyPath": "Copier le chemin",
+    "openFailed.message": "Impossible d'ouvrir un terminal : {{reason}}"
   },
   "onboarding": {
     "subtitle": "Builder de commandes visuel, espace de travail de terminal, workflows, journaux et outils IA",

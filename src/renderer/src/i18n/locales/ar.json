@@ -1340,7 +1340,8 @@
     "folder.revealMac": "إظهار في Finder",
     "folder.revealWindows": "إظهار في مستكشف الملفات",
     "folder.revealLinux": "فتح في مدير الملفات",
-    "folder.copyPath": "نسخ المسار"
+    "folder.copyPath": "نسخ المسار",
+    "openFailed.message": "تعذّر فتح طرفية: {{reason}}"
   },
   "onboarding": {
     "subtitle": "منشئ أوامر مرئي ومساحة عمل طرفية وسير عمل وسجلات وأدوات ذكاء اصطناعي",

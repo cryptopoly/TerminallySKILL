@@ -5,6 +5,7 @@ import {
   buildWorkspaceTerminalLaunchPlan
 } from '../../../shared/workspace-target'
 import type { TerminalSessionMode } from '../store/terminal-store'
+import { useToastStore } from '../store/toast-store'
 
 /**
  * The shell a new local terminal runs, for building command lines before its session is known.
@@ -35,17 +36,31 @@ export async function createProjectTerminalSession(
     project?.workspaceTarget.type === 'local' && cwdOverride?.trim()
       ? cwdOverride
       : launchPlan.projectWorkingDirectory
-  const sessionId = await window.electronAPI.createTerminal(
-    resolvedCwd,
-    project?.id,
-    project?.name,
-    // No project means null here, but the IPC contract only accepts a string or undefined.
-    resolvedProjectWorkingDirectory ?? undefined,
-    launchPlan.envOverrides
-  )
+  let sessionId: string
+  try {
+    sessionId = await window.electronAPI.createTerminal(
+      resolvedCwd,
+      project?.id,
+      project?.name,
+      // No project means null here, but the IPC contract only accepts a string or undefined.
+      resolvedProjectWorkingDirectory ?? undefined,
+      launchPlan.envOverrides
+    )
+  } catch (error) {
+    // Every caller (Run Script, New Terminal, snippets, the palette...) gets the same visible error.
+    // The error is still thrown so the caller stops.
+    useToastStore.getState().showError('terminal:openFailed.message', { reason: terminalOpenFailureReason(error) })
+    throw error
+  }
 
   addSession(sessionId, project?.id ?? null, mode)
   return sessionId
+}
+
+/** The reason a terminal failed to open, without Electron's "Error invoking remote method" wrapper. */
+export function terminalOpenFailureReason(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error)
+  return message.replace(/^Error invoking remote method '[^']*':\s*(?:Error:\s*)?/, '').trim() || message
 }
 
 export async function ensureProjectExecutionSession(

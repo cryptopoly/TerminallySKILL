@@ -1088,7 +1088,8 @@
     "folder.revealMac": "Mostra nel Finder",
     "folder.revealWindows": "Mostra in Esplora file",
     "folder.revealLinux": "Apri nel gestore file",
-    "folder.copyPath": "Copia percorso"
+    "folder.copyPath": "Copia percorso",
+    "openFailed.message": "Impossibile aprire un terminale: {{reason}}"
   },
   "onboarding": {
     "subtitle": "Builder visuale di comandi, workspace terminale, workflow, log e strumenti IA",

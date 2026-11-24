@@ -1012,7 +1012,8 @@
     "folder.revealMac": "Im Finder zeigen",
     "folder.revealWindows": "Im Explorer anzeigen",
     "folder.revealLinux": "Im Dateimanager öffnen",
-    "folder.copyPath": "Pfad kopieren"
+    "folder.copyPath": "Pfad kopieren",
+    "openFailed.message": "Terminal konnte nicht geöffnet werden: {{reason}}"
   },
   "onboarding": {
     "subtitle": "Visueller Befehls-Builder, Terminal-Workspace, Workflows, Protokolle und KI-Tools",

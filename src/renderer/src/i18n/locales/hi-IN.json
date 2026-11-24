@@ -1204,7 +1204,8 @@
     "folder.revealMac": "Finder में दिखाएँ",
     "folder.revealWindows": "फ़ाइल एक्सप्लोरर में दिखाएँ",
     "folder.revealLinux": "फ़ाइल मैनेजर में खोलें",
-    "folder.copyPath": "पथ कॉपी करें"
+    "folder.copyPath": "पथ कॉपी करें",
+    "openFailed.message": "टर्मिनल नहीं खुल सका: {{reason}}"
   },
   "onboarding": {
     "subtitle": "विज़ुअल कमांड बिल्डर, टर्मिनल वर्कस्पेस, वर्कफ़्लो, लॉग और AI टूल",

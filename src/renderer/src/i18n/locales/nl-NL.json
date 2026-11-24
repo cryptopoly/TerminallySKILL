@@ -1209,7 +1209,8 @@
     "folder.revealMac": "Toon in Finder",
     "folder.revealWindows": "Toon in Verkenner",
     "folder.revealLinux": "Openen in bestandsbeheer",
-    "folder.copyPath": "Pad kopiëren"
+    "folder.copyPath": "Pad kopiëren",
+    "openFailed.message": "Kan geen terminal openen: {{reason}}"
   },
   "onboarding": {
     "subtitle": "Visuele opdrachtbuilder, terminalwerkruimte, workflows, logs en AI-tools",

@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { useToastStore } from '../store/toast-store'
 import { createSSHWorkspaceTarget, type Project } from '../../../shared/project-schema'
 import {
   buildProjectExecutionCommand,
   createProjectTerminalSession,
   defaultLocalShell,
-  openInteractiveProjectShell
+  openInteractiveProjectShell,
+  terminalOpenFailureReason
 } from './workspace-session'
 
 describe('createProjectTerminalSession', () => {
@@ -23,6 +25,34 @@ describe('createProjectTerminalSession', () => {
     // The pty:create IPC validator only accepts a string or undefined; null threw "Invalid projectWorkingDir".
     expect(createTerminal.mock.calls[0][3]).toBeUndefined()
     expect(addSession).toHaveBeenCalledWith('session-1', null, 'workspace-shell')
+  })
+
+  it('shows an error toast with the reason when the terminal cannot open, and still rejects', async () => {
+    useToastStore.setState({ toasts: [] })
+    vi.stubGlobal('window', {
+      electronAPI: {
+        createTerminal: vi.fn().mockRejectedValue(
+          new Error("Error invoking remote method 'pty:create': Error: posix_spawnp failed.")
+        )
+      }
+    })
+    const addSession = vi.fn()
+
+    await expect(createProjectTerminalSession(null, addSession)).rejects.toThrow('posix_spawnp failed.')
+
+    expect(addSession).not.toHaveBeenCalled()
+    expect(useToastStore.getState().toasts).toEqual([
+      expect.objectContaining({
+        messageKey: 'terminal:openFailed.message',
+        values: { reason: 'posix_spawnp failed.' }
+      })
+    ])
+  })
+
+  it('names the failure without the IPC wrapper', () => {
+    expect(terminalOpenFailureReason(new Error('No window found'))).toBe('No window found')
+    expect(terminalOpenFailureReason(new Error("Error invoking remote method 'pty:create': boom"))).toBe('boom')
+    expect(terminalOpenFailureReason('text')).toBe('text')
   })
 })
 

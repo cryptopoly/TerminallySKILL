@@ -21,6 +21,7 @@ import { SettingsPanel } from '../settings/SettingsPanel'
 import { InfoPanel } from '../onboarding/InfoPanel'
 import { WelcomeTour } from '../onboarding/WelcomeTour'
 import { KeepNotificationsTip } from '../onboarding/KeepNotificationsTip'
+import { Toasts } from '../ui/Toasts'
 import { CommandPalette } from '../palette/CommandPalette'
 import { Dashboard } from '../dashboard/Dashboard'
 import { WorkflowRunnerEngine } from '../scripts/WorkflowRunnerHost'
@@ -1135,6 +1136,7 @@ export function AppShell(): JSX.Element {
       )}
 
       <KeepNotificationsTip />
+      <Toasts />
 
       {/* First-run welcome tour */}
       {tourStep !== null && !tourPaused && (

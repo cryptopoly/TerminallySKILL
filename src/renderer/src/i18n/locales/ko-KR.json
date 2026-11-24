@@ -1207,7 +1207,8 @@
     "folder.revealMac": "Finder에서 보기",
     "folder.revealWindows": "파일 탐색기에서 보기",
     "folder.revealLinux": "파일 관리자에서 열기",
-    "folder.copyPath": "경로 복사"
+    "folder.copyPath": "경로 복사",
+    "openFailed.message": "터미널을 열 수 없습니다: {{reason}}"
   },
   "onboarding": {
     "subtitle": "시각적 명령 빌더, 터미널 작업공간, 워크플로, 로그, AI 도구",
