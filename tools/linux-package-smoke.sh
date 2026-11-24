@@ -24,6 +24,8 @@ packaged_spec() { # $1 executable (empty = unpacked default), $2 output dir
 step "unpacked app" packaged_spec "" test-results/pkg-unpacked
 # AppImages need FUSE to mount themselves; unpack-and-run works on machines without it.
 step "AppImage" env APPIMAGE_EXTRACT_AND_RUN=1 bash -c "$(declare -f packaged_spec); packaged_spec '$PWD/${appimage[0]}' test-results/pkg-appimage"
+# Each run unpacks about 330 MB into /tmp, which is often a small RAM disk, and a killed app leaves it behind
+rm -rf /tmp/appimage_extracted_* 2>/dev/null || true
 
 deb_install() {
   $SUDO dpkg -i "${deb[0]}" || { $SUDO apt-get install -f -y && $SUDO dpkg -i "${deb[0]}"; } || return 1
