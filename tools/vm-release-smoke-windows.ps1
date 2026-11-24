@@ -6,7 +6,7 @@ $env:Path = 'C:\tools\node;C:\tools\git\cmd;' + $env:Path
 $local = Join-Path $env:TEMP 'tsk-release-setup.exe'
 Copy-Item $Installer $local -Force
 Start-Process $local -ArgumentList '/S' -Wait
-# The one-click installer finishes its work after the setup process has exited, so wait for the app to appear.
+# Start-Process -Wait already covers the one-click install (about a minute on ARM64); keep a short grace poll.
 $exe = $null
 for ($i = 0; $i -lt 30 -and -not $exe; $i++) {
   Start-Sleep 2
