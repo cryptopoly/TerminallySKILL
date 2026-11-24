@@ -181,7 +181,7 @@ Plus four in-between themes: Slate, Plum, Dove and Clay.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) >= 22.12.0
+- [Node.js](https://nodejs.org/) >= 26.13.0
 - npm (included with Node.js)
 - **macOS:** Xcode Command Line Tools (`xcode-select --install`)
 - **Linux:** `build-essential`, `python3`, `libsecret-1-dev`
