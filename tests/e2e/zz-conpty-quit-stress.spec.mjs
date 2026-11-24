@@ -19,6 +19,7 @@ const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
 test('conpty debug: quit with terminals open, many times', async ({}, testInfo) => {
   test.setTimeout(ROUNDS * 90_000)
   const closeTimes = []
+  const badExitCodes = []
   let hangs = 0
 
   for (let round = 1; round <= ROUNDS; round++) {
@@ -109,12 +110,15 @@ test('conpty debug: quit with terminals open, many times', async ({}, testInfo) 
       await closing
     } else {
       closeTimes.push(closeMs)
-      if (round <= 2 || closeMs > 4000 || !idle) {
-        console.log(`[quit-stress] round ${round}: closed in ${closeMs}ms (shells idle: ${idle}, close began at ${closeAt})`)
+      // The app is started through cmd.exe on Windows, which passes the app's exit code on.
+      const exitCode = app.process().exitCode
+      if (exitCode !== 0) badExitCodes.push(`round ${round}: 0x${((exitCode ?? -1) >>> 0).toString(16).toUpperCase()}`)
+      if (round <= 2 || closeMs > 4000 || !idle || exitCode !== 0) {
+        console.log(`[quit-stress] round ${round}: closed in ${closeMs}ms, exit code ${exitCode} (shells idle: ${idle}, close began at ${closeAt})`)
         console.log(lines.filter((line) => /quit-debug|did not report|Creating terminal|Initial spawn|Error/.test(line)).join('\n'))
       }
     }
-    if (round % 20 === 0) console.log(`[quit-stress] ${round}/${ROUNDS} rounds, ${hangs} hang(s) so far`)
+    if (round % 20 === 0) console.log(`[quit-stress] ${round}/${ROUNDS} rounds, ${hangs} hang(s), ${badExitCodes.length} bad exit code(s) so far`)
   }
 
   const sorted = [...closeTimes].sort((a, b) => a - b)
@@ -124,8 +128,9 @@ test('conpty debug: quit with terminals open, many times', async ({}, testInfo) 
       rounds: ROUNDS,
       terminals: TERMINALS,
       hangs,
+      badExitCodes,
       closeMs: { min: sorted[0], median: sorted[Math.floor(sorted.length / 2)], max: sorted[sorted.length - 1] }
     })}`
   )
-  expect(hangs).toBe(0)
+  expect({ hangs, badExitCodes }).toEqual({ hangs: 0, badExitCodes: [] })
 })
