@@ -84,6 +84,12 @@ test('the terminal maximises and restores from the button, the shortcut and the 
     const workspace = page.getByTestId('workspace-panel')
     const button = page.getByTestId('terminal-maximise')
     const heightOf = async () => (await workspace.boundingBox())?.height ?? 0
+    const savedLayout = () =>
+      page.evaluate(async () => {
+        const data = await window.electronAPI.getAllProjects()
+        const layout = data.projects.find((project) => project.name === 'E2E Maximise')?.workspaceLayout
+        return { maximised: layout?.terminalMaximised, terminalSize: layout?.terminalSize }
+      })
 
     const before = await heightOf()
     expect(before).toBeGreaterThan(100)
@@ -95,6 +101,10 @@ test('the terminal maximises and restores from the button, the shortcut and the 
     await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'chalk'))
     await page.screenshot({ path: shotPath(testInfo, 'maximised-chalk.png') })
     await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'void'))
+
+    // Maximise is saved per project, and the stored split stays the one from before it.
+    await expect.poll(async () => (await savedLayout()).maximised, { timeout: 5_000 }).toBe(true)
+    expect((await savedLayout()).terminalSize).toBeLessThan(80)
 
     // Same shortcut restores the previous split, even with the terminal focused.
     await page.locator('.xterm:visible').click()
@@ -124,13 +134,9 @@ test('the terminal maximises and restores from the button, the shortcut and the 
     await expect.poll(heightOf).toBeGreaterThan(before - 3)
     expect(await heightOf()).toBeLessThan(before + 3)
 
-    // Maximise is never saved: the stored split is the one from before.
-    await page.waitForTimeout(1500)
-    const saved = await page.evaluate(async () => {
-      const data = await window.electronAPI.getAllProjects()
-      return data.projects.find((project) => project.name === 'E2E Maximise')?.workspaceLayout.terminalSize
-    })
-    expect(saved).toBeLessThan(80)
+    // Restored: saved as not maximised, and the stored split is still the one from before maximise.
+    await expect.poll(async () => (await savedLayout()).maximised, { timeout: 5_000 }).toBe(false)
+    expect((await savedLayout()).terminalSize).toBeLessThan(80)
   } finally {
     await app.close()
   }
