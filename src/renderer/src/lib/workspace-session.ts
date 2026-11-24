@@ -89,6 +89,28 @@ export async function openInteractiveProjectShell(
   return sessionId
 }
 
+// Set while a VNC viewer is starting. A double click (or a click repeated while the tunnel comes up) would
+// otherwise open a second viewer on the same server, and each viewer spends its own password attempts.
+let vncViewerStarting = false
+
+export async function openVncViewer(
+  project: Project | null | undefined,
+  addSession: (sessionId: string, projectId: string | null, mode?: TerminalSessionMode, vncWsPort?: number, vncToken?: string) => void
+): Promise<string | null> {
+  if (!project || !isSSHProjectWorkspaceTarget(project.workspaceTarget) || vncViewerStarting) return null
+  vncViewerStarting = true
+  try {
+    const { sessionId, wsPort, token } = await window.electronAPI.startVncSession(
+      project.workspaceTarget,
+      project.workspaceTarget.vncPort ?? 5901
+    )
+    addSession(sessionId, project.id, 'vnc', wsPort, token)
+    return sessionId
+  } finally {
+    vncViewerStarting = false
+  }
+}
+
 export function buildProjectExecutionCommand(
   project: Project | null | undefined,
   commandString: string,
