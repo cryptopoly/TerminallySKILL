@@ -9,6 +9,8 @@ class FakePty {
   pid = 4242
   exitListeners: ExitListener[] = []
   kills: (string | undefined)[] = []
+  /** What node-pty reports with the exit; undefined while its exit thread has not delivered the code. */
+  exitCode: number | undefined = 0
   /** Signals this fake shell dies from; others are ignored (like `trap '' HUP`). */
   constructor(private diesFrom: string[], private index: number) {}
   onData() {
@@ -29,7 +31,7 @@ class FakePty {
   }
   exit() {
     events.push(`exit ${this.index}`)
-    this.exitListeners.forEach((l) => l({ exitCode: 0 }))
+    this.exitListeners.forEach((l) => l({ exitCode: this.exitCode as number }))
   }
 }
 
@@ -167,6 +169,23 @@ describe('ending terminals with conpty.dll', () => {
 
     await vi.advanceTimersByTimeAsync(3000)
     await stopping
+  })
+
+  it('waits the full time when an exit comes without its exit code', async () => {
+    const pty = await loadManager()
+    for (let i = 0; i < 2; i++) await pty.createTerminal(window as never)
+    spawned[0].exitCode = undefined
+    vi.useFakeTimers()
+
+    const stopping = pty.stopAllTerminalsForQuit()
+    await vi.advanceTimersByTimeAsync(200)
+    expect(events).toEqual(['kill 0', 'exit 0'])
+    await vi.advanceTimersByTimeAsync(70)
+    expect(events).toEqual(['kill 0', 'exit 0', 'kill 1'])
+
+    await vi.advanceTimersByTimeAsync(100)
+    await stopping
+    expect(events).toEqual(['kill 0', 'exit 0', 'kill 1', 'exit 1'])
   })
 
   it('does not kill a terminal that ended by itself while waiting its turn', async () => {
