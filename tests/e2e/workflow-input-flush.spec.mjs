@@ -1,6 +1,7 @@
+import { existsSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
-import { shellCommand } from './shell-commands.mjs'
+import { isWindows, shellCommand } from './shell-commands.mjs'
 
 // sudo and apt flush the terminal's pending input, which throws away the step-result marker typed ahead
 // of the next prompt. A step like that used to hang the whole workflow on "running".
@@ -30,31 +31,40 @@ test('a workflow continues past a command that flushes the terminal input', asyn
   }
 })
 
-// The marker typed ahead of a running step is redrawn by the line editor a few characters per chunk.
-test('the step marker never shows in the terminal or in shell history', async ({}, testInfo) => {
-  test.setTimeout(90_000)
-  const { app, page } = await launchTerminallySkill(testInfo)
-  try {
-    const historyStep = shellCommand('fc -ln -5; echo second-step-ran', '(Get-History -Count 5).CommandLine; echo second-step-ran')
-    await page.evaluate(async (historyStep) => {
-      await window.electronAPI.updateSettings({ terminalInputMode: 'classic' })
-      const script = await window.electronAPI.createScript('Marker test', null)
-      await window.electronAPI.addStepToScript(script.id, 'sleep 2; echo long-step-done', null)
-      await window.electronAPI.addStepToScript(script.id, historyStep, null)
-    }, historyStep)
-    await page.reload()
-    await page.locator('.xterm-helper-textarea').first().waitFor({ state: 'attached', timeout: 20_000 }).catch(() => {})
-    await page.getByText('Marker test').first().click()
-    await page.getByRole('button', { name: /Run Script/ }).click()
+// Each line editor draws the typed-ahead marker its own way: zsh a few characters per chunk, readline in
+// macOS /bin/bash 3.2 wraps a long line with " \r". On macOS and Linux the test runs in every shell found.
+const markerShells = isWindows
+  ? [null]
+  : ['/bin/zsh', '/bin/bash', '/opt/homebrew/bin/bash', '/usr/local/bin/bash'].filter((shell) => existsSync(shell))
 
-    const rows = page.locator('.xterm-rows:visible')
-    await expect(rows).toContainText('second-step-ran', { timeout: 30_000 })
-    await expect(rows).toContainText('long-step-done')
-    await expect(rows).not.toContainText('7337')
-  } finally {
-    await app.close()
-  }
-})
+for (const shell of markerShells) {
+  test(`the step marker never shows in the terminal or in shell history${shell ? ` (${shell})` : ''}`, async ({}, testInfo) => {
+    test.setTimeout(90_000)
+    const { app, page } = await launchTerminallySkill(testInfo, shell ? { SHELL: shell } : {})
+    try {
+      const historyStep = shellCommand('fc -ln -5; echo second-step-ran', '(Get-History -Count 5).CommandLine; echo second-step-ran')
+      await page.evaluate(async (historyStep) => {
+        await window.electronAPI.updateSettings({ terminalInputMode: 'classic' })
+        const script = await window.electronAPI.createScript('Marker test', null)
+        await window.electronAPI.addStepToScript(script.id, 'sleep 2; echo long-step-done', null)
+        await window.electronAPI.addStepToScript(script.id, historyStep, null)
+      }, historyStep)
+      await page.reload()
+      await page.locator('.xterm-helper-textarea').first().waitFor({ state: 'attached', timeout: 20_000 }).catch(() => {})
+      await page.getByText('Marker test').first().click()
+      await page.getByRole('button', { name: /Run Script/ }).click()
+
+      const rows = page.locator('.xterm-rows:visible')
+      await expect(rows).toContainText('second-step-ran', { timeout: 30_000 })
+      await expect(rows).toContainText('long-step-done')
+      await expect(rows).not.toContainText('7337')
+      // The end of a wrapped marker line has no 7337 in it
+      await expect(rows).not.toContainText('$?')
+    } finally {
+      await app.close()
+    }
+  })
+}
 
 // A step's marker draws its own prompt, which can arrive after the next step has started.
 test('a long step is not marked done by the prompt of the step before it', async ({}, testInfo) => {
