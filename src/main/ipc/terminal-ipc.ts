@@ -138,6 +138,12 @@ function parseReportedLayout(value: unknown): ReportedTerminalLayout | null {
     tabs,
     activeSessionId: typeof raw.activeSessionId === 'string' ? raw.activeSessionId : null,
     splitSessionId: typeof raw.splitSessionId === 'string' ? raw.splitSessionId : null,
-    splitDirection: raw.splitDirection === 'horizontal' ? 'horizontal' : 'vertical'
+    splitDirection: raw.splitDirection === 'horizontal' ? 'horizontal' : 'vertical',
+    quads: Array.isArray(raw.quads)
+      ? raw.quads
+          .filter((slots): slots is unknown[] => Array.isArray(slots))
+          .slice(0, MAX_SAVED_TERMINAL_TABS)
+          .map((slots) => slots.slice(0, 4).map((id) => (typeof id === 'string' ? id : null)))
+      : []
   }
 }

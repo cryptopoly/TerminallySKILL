@@ -38,6 +38,7 @@ function makeProject(
       terminalVisible: true,
       terminalSize: 35,
       preferredSplitDirection: 'vertical',
+      quadLayout: false,
       openFilePaths: [],
       activeFilePath: null
     },

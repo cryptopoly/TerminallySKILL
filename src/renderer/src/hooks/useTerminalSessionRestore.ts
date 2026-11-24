@@ -46,10 +46,16 @@ async function restoreSavedTabs(): Promise<void> {
     terminals.splitTerminal(saved.split.direction, splitId)
     terminals.setFocusedPane('primary')
   }
+  for (const indexes of saved.quads ?? []) {
+    const slots = indexes.map((index) => (index !== null ? sessionIds[index] ?? null : null))
+    const firstId = slots.find((id): id is string => Boolean(id))
+    const projectId = useTerminalStore.getState().sessions.find((session) => session.id === firstId)?.projectId
+    if (firstId && projectId !== undefined) useTerminalStore.getState().enterQuad(projectId, slots)
+  }
 }
 
 /**
- * Opt-in session restore: at launch, reopen the local terminal tabs, split and folders saved at the
+ * Opt-in session restore: at launch, reopen the local terminal tabs, split, quad splits and folders saved at the
  * last quit; while running, report the tabs to the main process so it can save them on quit.
  * SSH and VNC tabs are never reopened, and no scrollback is kept.
  */
@@ -67,11 +73,16 @@ export function useTerminalSessionRestore(): void {
             .filter((session) => session.mode === 'workspace-shell')
             .map((session) => ({ sessionId: session.id, projectId: session.projectId }))
         : []
+      const reportedIds = new Set(tabs.map((tab) => tab.sessionId))
+      const quads = Object.values(state.quadByProject)
+        .map((quad) => quad.slots.map((id) => (id && reportedIds.has(id) ? id : null)))
+        .filter((slots) => slots.some(Boolean))
       const layout: ReportedTerminalLayout = {
         tabs,
         activeSessionId: state.activeSessionId,
         splitSessionId: state.splitSessionId,
-        splitDirection: state.splitDirection
+        splitDirection: state.splitDirection,
+        quads
       }
       const serialised = JSON.stringify(layout)
       if (serialised === lastReport) return

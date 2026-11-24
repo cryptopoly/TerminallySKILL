@@ -18,7 +18,8 @@ function resetTerminalStore(): void {
     busySessionIds: {},
     agentActivityBySession: {},
     quietSessionIds: {},
-    terminalMaximised: false
+    terminalMaximised: false,
+    quadByProject: {}
   })
 }
 
@@ -155,5 +156,111 @@ describe('terminal-store', () => {
     expect(resolveWatchedSessionId(sessions, 'project-a', 'term-3', null, 'secondary')).toBe('term-3')
     // Sessions of another project are never watched
     expect(resolveWatchedSessionId(sessions, 'project-b', 'term-1', 'term-2', 'primary')).toBeNull()
+  })
+})
+
+describe('terminal-store quad split', () => {
+  beforeEach(() => {
+    resetTerminalStore()
+  })
+
+  const quadOf = (projectId: string | null) => useTerminalStore.getState().quadByProject[projectId ?? '']
+
+  it('enters quad with the open tabs, focus on the tab in use, and leaves it back to the split from before', () => {
+    const store = useTerminalStore.getState()
+    store.addSession('a', 'p')
+    store.addSession('b', 'p')
+    store.addSession('other', 'q')
+    store.setActiveSession('a')
+    store.splitTerminal('horizontal', 'b')
+
+    useTerminalStore.getState().enterQuad('p')
+    let state = useTerminalStore.getState()
+    expect(quadOf('p')?.slots).toEqual(['a', 'b', null, null])
+    expect(quadOf('p')?.autoFill).toBe(true)
+    expect(state.activeSessionId).toBe('a')
+    expect(state.splitSessionId).toBeNull()
+
+    // New terminals fill the empty panes in order
+    state.addSession('c', 'p')
+    state.addSession('d', 'p')
+    expect(quadOf('p')?.slots).toEqual(['a', 'b', 'c', 'd'])
+    expect(useTerminalStore.getState().activeSessionId).toBe('d')
+
+    useTerminalStore.getState().exitQuad('p')
+    state = useTerminalStore.getState()
+    expect(quadOf('p')).toBeUndefined()
+    expect(state.activeSessionId).toBe('a')
+    expect(state.splitSessionId).toBe('b')
+    expect(state.splitDirection).toBe('horizontal')
+    // No terminal was closed
+    expect(state.sessions.map((session) => session.id)).toEqual(['a', 'b', 'other', 'c', 'd'])
+  })
+
+  it('focuses a pane when its tab is chosen and swaps any other tab into the focused pane', () => {
+    const store = useTerminalStore.getState()
+    for (const id of ['a', 'b', 'c', 'd', 'e']) store.addSession(id, 'p')
+    useTerminalStore.getState().setActiveSession('a')
+    useTerminalStore.getState().enterQuad('p')
+    expect(quadOf('p')?.slots).toEqual(['a', 'b', 'c', 'd'])
+
+    useTerminalStore.getState().setActiveSession('c')
+    expect(useTerminalStore.getState().activeSessionId).toBe('c')
+    expect(quadOf('p')?.slots).toEqual(['a', 'b', 'c', 'd'])
+
+    useTerminalStore.getState().setActiveSession('e')
+    expect(useTerminalStore.getState().activeSessionId).toBe('e')
+    expect(quadOf('p')?.slots).toEqual(['a', 'b', 'e', 'd'])
+  })
+
+  it('moves focus with Cmd+] / Cmd+[ through the four panes', () => {
+    const store = useTerminalStore.getState()
+    for (const id of ['a', 'b', 'c', 'd']) store.addSession(id, 'p')
+    useTerminalStore.getState().setActiveSession('a')
+    useTerminalStore.getState().enterQuad('p')
+
+    const cycle = (direction: 1 | -1): string | null => {
+      useTerminalStore.getState().cycleFocusedPane('p', direction)
+      return useTerminalStore.getState().activeSessionId
+    }
+    expect([cycle(1), cycle(1), cycle(1), cycle(1)]).toEqual(['b', 'c', 'd', 'a'])
+    expect(cycle(-1)).toBe('d')
+  })
+
+  it('gives a closed pane a hidden tab, or leaves it empty, and refills only once every pane closed', () => {
+    const store = useTerminalStore.getState()
+    for (const id of ['a', 'b', 'c', 'd', 'e']) store.addSession(id, 'p')
+    useTerminalStore.getState().setActiveSession('a')
+    useTerminalStore.getState().enterQuad('p')
+    useTerminalStore.getState().finishQuadFill('p')
+
+    useTerminalStore.getState().removeSession('a')
+    expect(quadOf('p')?.slots).toEqual(['e', 'b', 'c', 'd'])
+    expect(useTerminalStore.getState().activeSessionId).toBe('e')
+
+    useTerminalStore.getState().removeSession('b')
+    expect(quadOf('p')?.slots).toEqual(['e', null, 'c', 'd'])
+    expect(quadOf('p')?.autoFill).toBe(false)
+
+    for (const id of ['c', 'd', 'e']) useTerminalStore.getState().removeSession(id)
+    expect(quadOf('p')?.slots).toEqual([null, null, null, null])
+    expect(quadOf('p')?.autoFill).toBe(true)
+  })
+
+  it('keeps one quad per project and sets the panes given by session restore', () => {
+    const store = useTerminalStore.getState()
+    for (const id of ['a', 'b', 'c']) store.addSession(id, 'p')
+    store.addSession('x', 'q')
+    useTerminalStore.getState().enterQuad('q')
+    expect(quadOf('q')?.slots).toEqual(['x', null, null, null])
+    expect(quadOf('p')).toBeUndefined()
+
+    useTerminalStore.getState().enterQuad('p', ['c', null, 'a', 'x'])
+    // A session of another project never joins the grid
+    expect(quadOf('p')?.slots).toEqual(['c', null, 'a', null])
+
+    useTerminalStore.getState().toggleQuad('q')
+    expect(quadOf('q')).toBeUndefined()
+    expect(quadOf('p')).toBeDefined()
   })
 })
