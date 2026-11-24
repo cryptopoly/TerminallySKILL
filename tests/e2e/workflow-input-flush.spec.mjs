@@ -61,10 +61,12 @@ test('a long step is not marked done by the prompt of the step before it', async
   test.setTimeout(90_000)
   const { app, page } = await launchTerminallySkill(testInfo)
   try {
+    // PSReadLine colours a typed "third-$(...)" in pieces, so on PowerShell the typed line is found by 'third-'.
     const steps = shellCommand(
       ['echo first-$((1+1))', 'sleep 6; echo long-$((1+1))', 'echo third-$((1+1))'],
-      ['echo "first-$(1+1)"', 'Start-Sleep 6; echo "long-$(1+1)"', 'echo "third-$(1+1)"']
+      ["echo ('first-' + (1+1))", "Start-Sleep 6; echo ('long-' + (1+1))", "echo ('third-' + (1+1))"]
     )
+    const typedThird = shellCommand('third-$', "'third-'")
     await page.evaluate(async (steps) => {
       await window.electronAPI.updateSettings({ terminalInputMode: 'classic' })
       const script = await window.electronAPI.createScript('Long step test', null)
@@ -88,12 +90,12 @@ test('a long step is not marked done by the prompt of the step before it', async
     // The third step's command line must not be typed while the long step is still running
     await page.waitForTimeout(3_000)
     expect(await output()).not.toContain('long-2')
-    expect(await output()).not.toContain('third-$')
+    expect(await output()).not.toContain(typedThird)
 
     await expect.poll(output, { timeout: 30_000 }).toContain('third-2')
     const done = await output()
     expect(done).toContain('long-2')
-    expect(done.indexOf('long-2')).toBeLessThan(done.lastIndexOf('third-$'))
+    expect(done.indexOf('long-2')).toBeLessThan(done.lastIndexOf(typedThird))
     await expect(rows).not.toContainText('7337')
   } finally {
     await app.close()
