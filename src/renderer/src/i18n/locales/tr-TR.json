@@ -1205,7 +1205,8 @@
     "folder.revealMac": "Finder'da göster",
     "folder.revealWindows": "Dosya Gezgini'nde göster",
     "folder.revealLinux": "Dosya yöneticisinde aç",
-    "folder.copyPath": "Yolu kopyala"
+    "folder.copyPath": "Yolu kopyala",
+    "openFailed.message": "Terminal açılamadı: {{reason}}"
   },
   "onboarding": {
     "subtitle": "Görsel komut oluşturucu, terminal çalışma alanı, workflow'lar, günlükler ve AI araçları",

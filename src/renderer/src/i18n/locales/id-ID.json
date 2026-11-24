@@ -1207,7 +1207,8 @@
     "folder.revealMac": "Tampilkan di Finder",
     "folder.revealWindows": "Tampilkan di File Explorer",
     "folder.revealLinux": "Buka di pengelola file",
-    "folder.copyPath": "Salin jalur"
+    "folder.copyPath": "Salin jalur",
+    "openFailed.message": "Tidak dapat membuka terminal: {{reason}}"
   },
   "onboarding": {
     "subtitle": "Command builder visual, workspace terminal, workflow, log, dan alat AI",

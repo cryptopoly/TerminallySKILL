@@ -153,7 +153,8 @@
     "folder.revealMac": "Show in Finder",
     "folder.revealWindows": "Show in File Explorer",
     "folder.revealLinux": "Open in file manager",
-    "folder.copyPath": "Copy path"
+    "folder.copyPath": "Copy path",
+    "openFailed.message": "Could not open a terminal: {{reason}}"
   },
   "native": {
     "menu.file": "File",

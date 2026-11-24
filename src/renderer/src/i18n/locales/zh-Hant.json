@@ -1200,7 +1200,8 @@
     "folder.revealMac": "在 Finder 中顯示",
     "folder.revealWindows": "在檔案總管中顯示",
     "folder.revealLinux": "在檔案管理員中開啟",
-    "folder.copyPath": "複製路徑"
+    "folder.copyPath": "複製路徑",
+    "openFailed.message": "無法開啟終端機：{{reason}}"
   },
   "onboarding": {
     "subtitle": "視覺化命令建構器、終端機工作區、工作流程、日誌與 AI 工具",

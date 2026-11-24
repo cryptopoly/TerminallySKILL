@@ -1082,7 +1082,8 @@
     "folder.revealMac": "Finder で表示",
     "folder.revealWindows": "エクスプローラーで表示",
     "folder.revealLinux": "ファイルマネージャーで開く",
-    "folder.copyPath": "パスをコピー"
+    "folder.copyPath": "パスをコピー",
+    "openFailed.message": "ターミナルを開けませんでした: {{reason}}"
   },
   "onboarding": {
     "subtitle": "ビジュアルコマンドビルダー、ターミナルワークスペース、ワークフロー、ログ、AI ツール",

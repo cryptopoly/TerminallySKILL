@@ -221,7 +221,8 @@
     "folder.revealMac": "在访达中显示",
     "folder.revealWindows": "在文件资源管理器中显示",
     "folder.revealLinux": "在文件管理器中打开",
-    "folder.copyPath": "复制路径"
+    "folder.copyPath": "复制路径",
+    "openFailed.message": "无法打开终端：{{reason}}"
   },
   "native": {
     "menu.file": "文件",

@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { PanelGroup, Panel, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
+import {
+  PanelGroup,
+  Panel,
+  PanelResizeHandle,
+  getPanelGroupElement,
+  type ImperativePanelHandle
+} from 'react-resizable-panels'
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 import { Sidebar } from './Sidebar'
@@ -15,6 +21,7 @@ import { SettingsPanel } from '../settings/SettingsPanel'
 import { InfoPanel } from '../onboarding/InfoPanel'
 import { WelcomeTour } from '../onboarding/WelcomeTour'
 import { KeepNotificationsTip } from '../onboarding/KeepNotificationsTip'
+import { Toasts } from '../ui/Toasts'
 import { CommandPalette } from '../palette/CommandPalette'
 import { Dashboard } from '../dashboard/Dashboard'
 import { WorkflowRunnerEngine } from '../scripts/WorkflowRunnerHost'
@@ -59,6 +66,38 @@ function isPathWithinRoot(pathValue: string, rootPath: string): boolean {
     pathValue.startsWith(`${normalizedRoot}/`) ||
     pathValue.startsWith(`${normalizedRoot}\\`)
   )
+}
+
+const WORKSPACE_SPLIT_ID = 'workspace-split'
+// The terminal panel's tabs, editor prompt and status bar take about 120px whatever the window size, so a
+// percentage split can leave the xterm only a few rows on a small window. Keep the docked panel at least this
+// tall (about 10 rows at the default font), capped so the workspace keeps its own 30% minimum.
+const TERMINAL_DOCK_MIN_HEIGHT_PX = 280
+const TERMINAL_DOCK_MIN_SIZE = 15
+const TERMINAL_DOCK_MAX_MIN_SIZE = 70
+
+/** The docked terminal's minimum size, in percent of the workspace split, for the split's current height. */
+function useTerminalDockMinSize(): number {
+  const [minSize, setMinSize] = useState(TERMINAL_DOCK_MIN_SIZE)
+  useEffect(() => {
+    const element = getPanelGroupElement(WORKSPACE_SPLIT_ID)
+    if (!element) return
+    const update = (): void => {
+      const height = element.getBoundingClientRect().height
+      if (height <= 0) return
+      const next = Math.min(
+        TERMINAL_DOCK_MAX_MIN_SIZE,
+        Math.max(TERMINAL_DOCK_MIN_SIZE, (TERMINAL_DOCK_MIN_HEIGHT_PX / height) * 100)
+      )
+      // Whole tenths, so the panel library does not see a new constraint on every pixel of a window resize.
+      setMinSize(Math.ceil(next * 10) / 10)
+    }
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+  return minSize
 }
 
 export function AppShell(): JSX.Element {
@@ -129,6 +168,7 @@ export function AppShell(): JSX.Element {
   const setTerminalMaximised = useTerminalStore((s) => s.setTerminalMaximised)
   const workspacePanelRef = useRef<ImperativePanelHandle | null>(null)
   const maximised = terminalMaximised && showDockedTerminal
+  const terminalMinSize = useTerminalDockMinSize()
 
   // Maximise collapses the project view; restoring expands it to the size it had before.
   // Runs before the terminal effect below, so hiding a maximised terminal never leaves both at 0.
@@ -145,7 +185,7 @@ export function AppShell(): JSX.Element {
 
     if (showDockedTerminal) {
       if (maximised) return
-      const targetSize = activeProject?.workspaceLayout.terminalSize ?? 35
+      const targetSize = Math.max(activeProject?.workspaceLayout.terminalSize ?? 35, terminalMinSize)
       if (terminalPanel.isCollapsed()) {
         terminalPanel.expand(targetSize)
       } else if (Math.abs(terminalPanel.getSize() - targetSize) > 0.5) {
@@ -157,7 +197,7 @@ export function AppShell(): JSX.Element {
     if (!terminalPanel.isCollapsed()) {
       terminalPanel.collapse()
     }
-  }, [activeProject?.workspaceLayout.terminalSize, maximised, showDockedTerminal])
+  }, [activeProject?.workspaceLayout.terminalSize, maximised, showDockedTerminal, terminalMinSize])
 
   // Keep window title in sync with active project
   useEffect(() => {
@@ -922,6 +962,7 @@ export function AppShell(): JSX.Element {
       )}
 
       <PanelGroup
+        id={WORKSPACE_SPLIT_ID}
         direction="vertical"
         className="flex-1"
         onLayout={(sizes) => {
@@ -930,6 +971,10 @@ export function AppShell(): JSX.Element {
           if (sizes[0] === 0) return
           const nextTerminalSize = sizes[1]
           if (nextTerminalSize === activeProject.workspaceLayout.terminalSize) return
+          // A small window pushed the terminal up to its minimum: keep the user's own split for larger windows.
+          if (nextTerminalSize <= terminalMinSize + 0.1 && activeProject.workspaceLayout.terminalSize < nextTerminalSize) {
+            return
+          }
           queueWorkspaceLayoutSave({
             ...activeProject.workspaceLayout,
             terminalSize: nextTerminalSize
@@ -981,8 +1026,10 @@ export function AppShell(): JSX.Element {
         )}
         <Panel
           ref={terminalDockPanelRef}
-          defaultSize={showDockedTerminal ? (activeProject?.workspaceLayout.terminalSize ?? 35) : 0}
-          minSize={15}
+          defaultSize={
+            showDockedTerminal ? Math.max(activeProject?.workspaceLayout.terminalSize ?? 35, terminalMinSize) : 0
+          }
+          minSize={terminalMinSize}
           collapsible
           collapsedSize={0}
         >
@@ -1089,6 +1136,7 @@ export function AppShell(): JSX.Element {
       )}
 
       <KeepNotificationsTip />
+      <Toasts />
 
       {/* First-run welcome tour */}
       {tourStep !== null && !tourPaused && (

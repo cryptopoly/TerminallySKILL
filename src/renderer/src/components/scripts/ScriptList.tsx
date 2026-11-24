@@ -228,7 +228,8 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
       return
     }
 
-    void executeScript(script, forceNew)
+    // A terminal that fails to open is reported as a toast where it is created.
+    executeScript(script, forceNew).catch(() => undefined)
   }
 
   const handleRunScript = (e: React.MouseEvent, script: Script): void => {
@@ -571,7 +572,7 @@ export function ScriptList({ onSelectScript }: ScriptListProps): JSX.Element {
           onConfirm={(values) => {
             const run = pendingRun
             setPendingRun(null)
-            void executeScript(run.script, run.forceNew, values)
+            executeScript(run.script, run.forceNew, values).catch(() => undefined)
           }}
         />
       )}

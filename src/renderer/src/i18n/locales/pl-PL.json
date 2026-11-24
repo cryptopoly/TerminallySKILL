@@ -1169,7 +1169,8 @@
     "folder.revealMac": "Pokaż w Finderze",
     "folder.revealWindows": "Pokaż w Eksploratorze plików",
     "folder.revealLinux": "Otwórz w menedżerze plików",
-    "folder.copyPath": "Kopiuj ścieżkę"
+    "folder.copyPath": "Kopiuj ścieżkę",
+    "openFailed.message": "Nie można otworzyć terminala: {{reason}}"
   },
   "onboarding": {
     "subtitle": "Wizualny builder poleceń, obszar roboczy terminala, workflow, logi i narzędzia AI",

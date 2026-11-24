@@ -1151,7 +1151,8 @@
     "folder.revealMac": "Показать в Finder",
     "folder.revealWindows": "Показать в проводнике",
     "folder.revealLinux": "Открыть в файловом менеджере",
-    "folder.copyPath": "Копировать путь"
+    "folder.copyPath": "Копировать путь",
+    "openFailed.message": "Не удалось открыть терминал: {{reason}}"
   },
   "onboarding": {
     "subtitle": "Визуальный конструктор команд, терминальное рабочее пространство, workflow, логи и инструменты ИИ",
