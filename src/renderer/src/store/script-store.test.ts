@@ -39,6 +39,9 @@ function makeProject(
       terminalSize: 35,
       preferredSplitDirection: 'vertical',
       quadLayout: false,
+      terminalMaximised: false,
+      splitRatio: 50,
+      quadRatios: { column: 50, row: 50 },
       openFilePaths: [],
       activeFilePath: null
     },
