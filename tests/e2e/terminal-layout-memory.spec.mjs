@@ -148,8 +148,8 @@ test('each project keeps its own maximise and quad, across switches and a restar
   test.setTimeout(120_000)
   const [a, b] = ['E2E Max A', 'E2E Docked B']
   const workspaceHeight = async (page) => (await page.getByTestId('workspace-panel').boundingBox())?.height ?? 0
-  const expectMaximisedQuad = async (page) => {
-    await expect(page.getByTestId('terminal-maximise')).toHaveAttribute('aria-pressed', 'true', { timeout: 10_000 })
+  const expectMaximisedQuad = async (page, where) => {
+    await expect(page.getByTestId('terminal-maximise'), where).toHaveAttribute('aria-pressed', 'true', { timeout: 10_000 })
     await expect.poll(() => workspaceHeight(page)).toBeLessThan(2)
     await expect(page.getByTestId('terminal-quad')).toHaveAttribute('aria-pressed', 'true')
     await expect(page.locator('.xterm:visible')).toHaveCount(4, { timeout: 15_000 })
@@ -171,12 +171,12 @@ test('each project keeps its own maximise and quad, across switches and a restar
     await waitForTerminal(page)
     await page.getByTestId('terminal-quad').click()
     await page.getByTestId('terminal-maximise').click()
-    await expectMaximisedQuad(page)
+    await expectMaximisedQuad(page, 'A check 1')
 
     await switchTo(page, b)
     await expectDockedSingle(page)
     await switchTo(page, a)
-    await expectMaximisedQuad(page)
+    await expectMaximisedQuad(page, 'A check 2')
     await switchTo(page, b)
     await expectDockedSingle(page)
     await expect.poll(async () => (await savedLayout(page, a))?.terminalMaximised, { timeout: 5_000 }).toBe(true)
@@ -194,7 +194,7 @@ test('each project keeps its own maximise and quad, across switches and a restar
     await expect.poll(() => activeName(page), { timeout: 20_000 }).toBe(b)
     await expectDockedSingle(page)
     await switchTo(page, a)
-    await expectMaximisedQuad(page)
+    await expectMaximisedQuad(page, 'A check 3')
     await page.screenshot({ path: shotPath(testInfo, 'project-a-maximised-quad.png') })
     await switchTo(page, b)
     await expectDockedSingle(page)
@@ -202,7 +202,7 @@ test('each project keeps its own maximise and quad, across switches and a restar
 
     // Restoring A returns to its docked size from before maximise
     await switchTo(page, a)
-    await expectMaximisedQuad(page)
+    await expectMaximisedQuad(page, 'A check 4')
     await page.getByTestId('terminal-maximise').click()
     await expect.poll(() => workspaceHeight(page)).toBeGreaterThan(100)
   } finally {
