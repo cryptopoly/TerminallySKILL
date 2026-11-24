@@ -128,11 +128,11 @@ test('split and quad divider positions come back after a restart, and a small wi
 
     // A narrow window: the left quad panes keep their minimum width, and the saved position stays
     await page.getByTestId('terminal-quad').click()
+    await page.getByTestId('terminal-maximise').click()
     await expect(page.locator('.xterm:visible')).toHaveCount(4, { timeout: 15_000 })
     await drag(page, await page.getByTestId('quad-divider-column').boundingBox(), 0, 300)
     await expect.poll(async () => (await savedLayout(page, name))?.quadRatios.column, { timeout: 5_000 }).toBeLessThan(25)
     const savedColumn = (await savedLayout(page, name)).quadRatios.column
-    await page.getByTestId('terminal-maximise').click()
     await setWindowSize(second.app, 1024, 677)
     await expect.poll(async () => (await pane(page, 0).boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(235)
     expect((await pane(page, 0).boundingBox()).width).toBeLessThan(260)
