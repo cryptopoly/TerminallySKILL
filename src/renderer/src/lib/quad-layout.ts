@@ -2,8 +2,8 @@
 
 export const QUAD_PANE_COUNT = 4
 
-/** Smallest useful pane: about 36 columns and a few rows plus the footer and prompt. */
-export const QUAD_MIN_PANE_WIDTH = 300
+/** Smallest useful pane: about 30 columns and a few rows plus the footer. At 1024x677 the maximised terminal fits a 2x2 grid and the docked one four side by side. */
+export const QUAD_MIN_PANE_WIDTH = 240
 export const QUAD_MIN_PANE_HEIGHT = 150
 
 /** Four slots, row by row: top left, top right, bottom left, bottom right. null = no terminal yet. */
