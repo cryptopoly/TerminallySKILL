@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react'
 import {
   PanelGroup,
   Panel,
@@ -76,10 +76,14 @@ const TERMINAL_DOCK_MIN_HEIGHT_PX = 280
 const TERMINAL_DOCK_MIN_SIZE = 15
 const TERMINAL_DOCK_MAX_MIN_SIZE = 70
 
-/** The docked terminal's minimum size, in percent of the workspace split, for the split's current height. */
-function useTerminalDockMinSize(): number {
+/**
+ * The docked terminal's minimum size, in percent of the workspace split, for the split's current height.
+ * `layoutKey` changes with things that take height from the split in the same render (the collapsed terminal bar):
+ * the split is then measured again before paint, so showing the terminal sizes it for the new height, not the old one.
+ */
+function useTerminalDockMinSize(layoutKey: unknown): number {
   const [minSize, setMinSize] = useState(TERMINAL_DOCK_MIN_SIZE)
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = getPanelGroupElement(WORKSPACE_SPLIT_ID)
     if (!element) return
     const update = (): void => {
@@ -96,7 +100,7 @@ function useTerminalDockMinSize(): number {
     const observer = new ResizeObserver(update)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [])
+  }, [layoutKey])
   return minSize
 }
 
@@ -169,29 +173,28 @@ export function AppShell(): JSX.Element {
   const setTerminalMaximised = useTerminalStore((s) => s.setTerminalMaximised)
   const workspacePanelRef = useRef<ImperativePanelHandle | null>(null)
   const maximised = terminalMaximised && showDockedTerminal
-  const terminalMinSize = useTerminalDockMinSize()
+  const terminalMinSize = useTerminalDockMinSize(showCollapsedTerminalBar)
 
   // Maximise collapses the project view; restoring expands it to the size it had before.
   // Runs before the terminal effect below, so hiding a maximised terminal never leaves both at 0.
-  useEffect(() => {
+  // Layout effects, so the panels have their new sizes before paint, never a frame with the terminal shown at 0.
+  useLayoutEffect(() => {
     const workspacePanel = workspacePanelRef.current
     if (!workspacePanel) return
     if (maximised && !workspacePanel.isCollapsed()) workspacePanel.collapse()
     else if (!maximised && workspacePanel.isCollapsed()) workspacePanel.expand()
   }, [maximised])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const terminalPanel = terminalDockPanelRef.current
     if (!terminalPanel) return
 
     if (showDockedTerminal) {
       if (maximised) return
       const targetSize = Math.max(activeProject?.workspaceLayout.terminalSize ?? 35, terminalMinSize)
-      if (terminalPanel.isCollapsed()) {
-        terminalPanel.expand(targetSize)
-      } else if (Math.abs(terminalPanel.getSize() - targetSize) > 0.5) {
-        terminalPanel.resize(targetSize)
-      }
+      // expand() brings back the size from before the collapse when that is larger than its argument, so check after it.
+      if (terminalPanel.isCollapsed()) terminalPanel.expand(targetSize)
+      if (Math.abs(terminalPanel.getSize() - targetSize) > 0.5) terminalPanel.resize(targetSize)
       return
     }
 
