@@ -3,7 +3,7 @@ import { join, resolve } from 'path'
 import { readFileSync, existsSync } from 'fs'
 import { electronApp, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc-handlers'
-import { initTerminalPath, killSessionsForWindow, killAllTerminals, getActiveSessionCountForWindow, getSessionCountForWindow } from './pty-manager'
+import { initTerminalPath, killSessionsForWindow, stopAllTerminalsForQuit, getActiveSessionCountForWindow, getSessionCountForWindow, hasRunningTerminalProcesses } from './pty-manager'
 import { noteWindowClosing, saveTerminalLayoutOnQuit } from './session-restore-manager'
 import { stopVncSessionsForWindow, stopAllVncSessions } from './vnc-manager'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
@@ -324,12 +324,31 @@ app.whenReady().then(() => {
   })
 })
 
-app.on('before-quit', () => {
+let quitStage: 'running' | 'stopping-terminals' | 'ready' = 'running'
+
+app.on('before-quit', (event) => {
+  if (quitStage === 'ready') return
+  if (quitStage === 'stopping-terminals') {
+    event.preventDefault()
+    return
+  }
   markAppQuitting()
   stopScheduler()
   saveTerminalLayoutOnQuit()
-  killAllTerminals()
+  const stopping = stopAllTerminalsForQuit()
   stopAllVncSessions()
+  if (!hasRunningTerminalProcesses()) {
+    quitStage = 'ready'
+    return
+  }
+  // Quit only once the shells have ended (bounded inside stopAllTerminalsForQuit). node-pty reports each
+  // exit through a native callback, and one landing during Node teardown aborts the app.
+  event.preventDefault()
+  quitStage = 'stopping-terminals'
+  void stopping.finally(() => {
+    quitStage = 'ready'
+    app.quit()
+  })
 })
 
 app.on('window-all-closed', () => {
