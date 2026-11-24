@@ -26,8 +26,8 @@ function hasMacCodeSigningIdentity() {
 
 // Package file modes otherwise follow the build machine's umask and checkout modes (a 077 umask
 // ships a deb whose files only root can read). Files electron-builder writes itself (desktop file,
-// install scripts) follow the umask; files copied from the checkout into the app folder keep their
-// modes, so normalise those after packing: 0755 for directories and executables, 0644 for the rest.
+// install scripts) follow the umask; files copied from the checkout (the app folder, build/icons)
+// keep their modes, so normalise those: 0755 for directories and executables, 0644 for the rest.
 process.umask(0o022)
 
 async function normaliseModes(file) {
@@ -40,6 +40,8 @@ async function normaliseModes(file) {
     await chmod(file, stat.mode & 0o100 ? 0o755 : 0o644)
   }
 }
+
+await normaliseModes('build/icons')
 
 const canNotarize =
   Boolean(appleId && appleAppSpecificPassword && appleTeamId) &&
