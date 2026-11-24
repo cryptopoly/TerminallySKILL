@@ -21,6 +21,7 @@ import { buildProjectWorkspaceCommandString } from '../../../../shared/workspace
 import { formatWorkflowRunError } from '../../lib/workflow-run-errors'
 import { isStillWaiting, snapshotWaitingStep, STEP_MARKER_GRACE_MS, type WaitingStepSnapshot } from '../../lib/workflow-step-fallback'
 import { buildWorkflowStepMarkerCommand, shellSupportsWorkflowStepMarkers } from '../../../../shared/workflow-shell'
+import { defaultLocalShell } from '../../lib/workspace-session'
 
 type ScriptTranslator = (key: string, options?: Record<string, unknown>) => string
 
@@ -223,16 +224,17 @@ function WorkflowRunController({
     markSessionExecuting(activeRun.sessionId)
 
     const envOverrides = runProject ? buildEnvOverrides(runProject.envVars) : undefined
-    const command = buildProjectWorkspaceCommandString(runProject, currentStep.commandString, envOverrides)
-    const marker = activeRun.stepMarkers
-      ? buildWorkflowStepMarkerCommand(activeRun.runId, currentStep.stepId)
+    const shell = sessionInfo?.shell ?? defaultLocalShell()
+    const command = buildProjectWorkspaceCommandString(runProject, currentStep.commandString, envOverrides, shell)
+    const marker = activeRun.stepMarkers && shell
+      ? buildWorkflowStepMarkerCommand(activeRun.runId, currentStep.stepId, shell)
       : null
     // The marker goes on its own line so a trailing comment or `&` in the step cannot swallow it
     window.electronAPI.writeToTerminal(
       activeRun.sessionId,
       marker ? `${command}\n${marker}\n` : command + '\n'
     )
-  }, [activeRun.runId, activeRun.sessionId, activeRun.stepMarkers, currentStep, markCurrentCommandRunning, markSessionExecuting, runProject])
+  }, [activeRun.runId, activeRun.sessionId, activeRun.stepMarkers, currentStep, markCurrentCommandRunning, markSessionExecuting, runProject, sessionInfo?.shell])
 
   useEffect(() => {
     if (isTerminalRunStatus(activeRun.status) || activeRun.status === 'awaiting_approval') {

@@ -66,6 +66,35 @@ describe('serializeCommand', () => {
     )
   })
 
+  it('quotes values for PowerShell when that is the shell the command is typed into', () => {
+    expect(
+      serializeCommand(
+        definition,
+        {
+          detach: true,
+          port: '8080:80',
+          env: ['NODE_ENV=production', 'GREETING=hello world', 'COST=$5', 'NAME=O\u2019Neil'],
+          image: 'nginx:latest',
+          cmd: ['sh', '-c', "echo it's live", '@all', 'a,b', 'C:\\Program Files\\x']
+        },
+        'powershell.exe'
+      )
+    ).toBe(
+      "docker run --detach --publish 8080:80 --env=NODE_ENV=production '--env=GREETING=hello world' '--env=COST=$5' " +
+        "'--env=NAME=O\u2019\u2019Neil' nginx:latest sh -c 'echo it''s live' '@all' 'a,b' 'C:\\Program Files\\x'"
+    )
+  })
+
+  it('quotes a PowerShell -name.part argument, which PowerShell 5.1 would split at the dot', () => {
+    const javaLike: CommandDefinition = {
+      ...definition,
+      options: [{ id: 'define', short: '-D', label: 'define', type: 'string', separator: 'none' }],
+      positionalArgs: []
+    }
+    expect(serializeCommand(javaLike, { define: 'app.mode=dev' }, 'powershell.exe')).toBe("docker run '-Dapp.mode=dev'")
+    expect(serializeCommand(javaLike, { define: 'app.mode=dev' }, '/bin/zsh')).toBe('docker run -Dapp.mode=dev')
+  })
+
   it('omits empty values and enum defaults', () => {
     const enumDefinition: CommandDefinition = {
       ...definition,

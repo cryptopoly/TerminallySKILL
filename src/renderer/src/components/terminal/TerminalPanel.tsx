@@ -47,7 +47,8 @@ import type { SensitivePromptKind, TerminalPasteReason } from '../../lib/termina
 import { confirmTerminalClose } from '../../lib/terminal-close'
 import type { Theme } from '../../../../shared/settings-schema'
 import { resolveProjectWorkingDirectory } from '../../../../shared/project-schema'
-import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
+import { createProjectTerminalSession, getSessionShell, openInteractiveProjectShell } from '../../lib/workspace-session'
+import { buildChangeDirectoryCommand } from '../../../../shared/local-shell'
 import { raiseCommandAttention } from '../../lib/attention'
 import { registerAgentAttention } from '../../lib/agent-attention'
 import { COMMAND_ANCHOR_OSC, type ShellIntegrationEvent } from '../../../../shared/shell-integration'
@@ -1560,8 +1561,8 @@ function XTermInstance({
     const folder = await window.electronAPI.openDirectoryDialog(shellCwd ?? undefined)
     if (!folder || folder === shellCwd) return
     // Typed at the prompt for the user to run, so the shell history stays right and nothing runs by surprise
-    insertSuggestedCommand(`cd '${folder.replace(/'/g, `'\\''`)}'`)
-  }, [insertSuggestedCommand, shellCwd])
+    insertSuggestedCommand(buildChangeDirectoryCommand(folder, await getSessionShell(sessionId)))
+  }, [insertSuggestedCommand, sessionId, shellCwd])
 
   const cycleEditorSuggestion = useCallback((direction: 'previous' | 'next') => {
     if (editorSuggestions.length <= 1) return

@@ -23,9 +23,11 @@ import {
   prepareLogContent,
   splitIncompleteMarker,
   MarkerEchoFilter,
+  STEP_MARKER_COMMAND_RE,
   stripWorkflowMarkerEcho
 } from './pty-output'
 import type { TerminalSessionInfo } from '../shared/run-schema'
+import { isPowerShell } from '../shared/local-shell'
 
 interface PtySession {
   process: IPty
@@ -59,7 +61,6 @@ interface PtySession {
 }
 
 const sessions = new Map<string, PtySession>()
-const STEP_MARKER_COMMAND_RE = /printf '\\033\]7337;workflow-step;[^\r\n]*/
 /** A line editor redraws typed-ahead text in one burst, so held text older than this was not the marker. */
 const MARKER_ECHO_HOLD_MS = 100
 let nextId = 1
@@ -537,7 +538,7 @@ export async function createTerminal(
         window.webContents.send(IPC_CHANNELS.WORKFLOW_STEP_RESULT, sessionId, result)
       }
     }
-    data = stripWorkflowMarkerEcho(extracted.data)
+    data = stripWorkflowMarkerEcho(extracted.data, isPowerShell(session.shell))
     for (const event of shellIntegration.events) {
       if (event.type === 'command-start') session.markerEcho.noteCommandStart()
       else session.markerEcho.notePromptReady()
@@ -621,7 +622,7 @@ export function writeToTerminal(sessionId: string, data: string): void {
   const session = sessions.get(sessionId)
   if (!session || data.length > MAX_TERMINAL_WRITE_SIZE) return
   // Arm echo filter for SSH commands so the quoted-arg echo doesn't appear in the terminal
-  if (data.trimStart().startsWith("'ssh'")) {
+  if (/^(?:& )?'ssh'/.test(data.trimStart())) {
     session.sshEchoFilterUntil = Date.now() + 5000
   }
   const stepMarker = data.match(STEP_MARKER_COMMAND_RE)
