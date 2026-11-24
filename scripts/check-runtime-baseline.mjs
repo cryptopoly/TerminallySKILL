@@ -9,7 +9,7 @@ const checks = [
   {
     label: 'Node engine is aligned with Electron 45 installer requirements',
     value: packageJson.engines?.node,
-    expected: '>=22.12.0'
+    expected: '>=26.13.0'
   },
   {
     label: 'Electron stays on the supported v45 runtime baseline',
