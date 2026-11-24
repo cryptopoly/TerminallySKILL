@@ -116,7 +116,7 @@ export function buildBashShellIntegrationInit(): string {
  */
 export function buildPowerShellShellIntegrationInit(): string {
   return [
-    '$global:__TvState = @{ Prompt = $function:prompt; LastError = $null; History = $null; ReadLine = $null; Reading = $false; LineStart = $null }',
+    '$global:__TvState = @{ Prompt = $function:prompt; LastError = $null; History = $null; ReadLine = $null; Reading = $false; LineStart = $null; Code = $null }',
     'if ($global:Error.Count) { $global:__TvState.LastError = $global:Error[0] }',
     'function global:__TvMarker([string]$Payload) { [Console]::Write([string][char]27 + "]7337;shell;" + $Payload + [char]7) }',
     'function global:__TvB64([string]$Text) { [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($Text)) }',
@@ -131,8 +131,12 @@ export function buildPowerShellShellIntegrationInit(): string {
     '    $rows = [Math]::Floor(($start + $MyInvocation.Line.Length - 1) / $width) + 1',
     '    [Console]::Write([string][char]27 + "[" + $rows + "A`r" + [char]27 + "[J")',
     '  }',
-    '  $code = 1',
-    '  if ($Ok) { $code = 0 } elseif ($Native) { $code = $Native }',
+    '  $code = 0',
+    '  if (-not $Ok) {',
+    // The prompt drawn after the step worked the code out; $LASTEXITCODE alone can be left from an earlier command
+    '    $code = $global:__TvState.Code',
+    '    if (-not $code) { $code = 1; if ($Native) { $code = $Native } }',
+    '  }',
     '  [Console]::Write([string][char]27 + "]7337;workflow-step;" + $Run + ";" + $Step + ";" + $code + [char]7)',
     '}',
     'function global:prompt {',
@@ -151,6 +155,7 @@ export function buildPowerShellShellIntegrationInit(): string {
     '      if ($native -is [int] -and $native -ne 0 -and [object]::ReferenceEquals($lastError, $global:__TvState.LastError)) { $code = $native }',
     '    }',
     '    $global:__TvState.LastError = $lastError',
+    '    $global:__TvState.Code = $code',
     // Registry, Env: and other provider locations are not folders; report the FileSystem location instead
     '    __TvMarker ("prompt-ready;" + $code + ";" + (__TvB64 (Get-Location -PSProvider FileSystem).ProviderPath))',
     '  }',

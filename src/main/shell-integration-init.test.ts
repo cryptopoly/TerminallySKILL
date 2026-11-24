@@ -56,7 +56,9 @@ describe('shell integration init scripts', () => {
     expect(body).toContain('[Console]::Write([string][char]27 + "[" + $rows + "A`r" + [char]27 + "[J")')
     // Only a line the line editor drew is erased, and only once
     expect(body).toContain('  $global:__TvState.LineStart = $null\n  if ($null -ne $start -and $MyInvocation.Line) {')
-    expect(body).toContain('if ($Ok) { $code = 0 } elseif ($Native) { $code = $Native }')
+    // A failed step reports the code its prompt worked out, else $LASTEXITCODE, else 1
+    expect(body).toContain("  if (-not $Ok) {\n    $code = $global:__TvState.Code\n    if (-not $code) { $code = 1; if ($Native) { $code = $Native } }")
+    expect(init).toContain('    $global:__TvState.Code = $code')
     expect(body).toContain('"]7337;workflow-step;" + $Run + ";" + $Step + ";" + $code + [char]7')
     // Defined before the prompt and line-editor hooks, so it exists even if a later part fails
     expect(init.indexOf('function global:__TvStep')).toBeLessThan(init.indexOf('function global:prompt'))
