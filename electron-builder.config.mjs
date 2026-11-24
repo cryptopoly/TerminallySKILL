@@ -1,4 +1,6 @@
 import { execSync } from 'node:child_process'
+import { chmod, lstat, readdir } from 'node:fs/promises'
+import path from 'node:path'
 
 const defaultProductName = 'TerminallySKILL'
 const productSlug = 'TerminallySKILL'
@@ -22,6 +24,23 @@ function hasMacCodeSigningIdentity() {
   }
 }
 
+// Package file modes otherwise follow the build machine's umask and checkout modes (a 077 umask
+// ships a deb whose files only root can read). Files electron-builder writes itself (desktop file,
+// install scripts) follow the umask; files copied from the checkout into the app folder keep their
+// modes, so normalise those after packing: 0755 for directories and executables, 0644 for the rest.
+process.umask(0o022)
+
+async function normaliseModes(file) {
+  const stat = await lstat(file)
+  if (stat.isSymbolicLink()) return
+  if (stat.isDirectory()) {
+    await chmod(file, 0o755)
+    for (const entry of await readdir(file)) await normaliseModes(path.join(file, entry))
+  } else {
+    await chmod(file, stat.mode & 0o100 ? 0o755 : 0o644)
+  }
+}
+
 const canNotarize =
   Boolean(appleId && appleAppSpecificPassword && appleTeamId) &&
   (Boolean(process.env.CSC_LINK) || hasMacCodeSigningIdentity())
@@ -40,6 +59,9 @@ const config = {
       to: 'commands'
     }
   ],
+  afterPack: async (context) => {
+    if (context.electronPlatformName === 'linux') await normaliseModes(context.appOutDir)
+  },
   asarUnpack: [
     '**/node-pty/**'
   ],
