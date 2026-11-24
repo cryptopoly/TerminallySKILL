@@ -31,6 +31,8 @@ import { useProjectCycleShortcut } from '../../hooks/useProjectCycleShortcut'
 import { jumpToNextAttention } from '../../lib/attention'
 import { useScheduledRuns } from '../../hooks/useScheduledRuns'
 import { useTerminalSessionRestore, waitForTerminalRestore } from '../../hooks/useTerminalSessionRestore'
+import { useQuadLayout } from '../../hooks/useQuadLayout'
+import { quadKey } from '../../lib/quad-layout'
 import { HelpTip } from '../ui/HelpTip'
 import { UpdateReleaseNotes } from '../ui/UpdateReleaseNotes'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
@@ -159,6 +161,7 @@ export function AppShell(): JSX.Element {
   const startupUpdateCheckedRef = useRef(false)
   const terminalDockPanelRef = useRef<ImperativePanelHandle | null>(null)
   const activeProjectId = activeProject?.id ?? null
+  const quadActive = useTerminalStore((s) => Boolean(s.quadByProject[quadKey(activeProjectId)]))
   const {
     projectSessions,
     activeProjectSessionId,
@@ -226,6 +229,28 @@ export function AppShell(): JSX.Element {
       getFreshTerminalProjectCwd()
     )
   }, [activeProject, addSession, getFreshTerminalProjectCwd])
+
+  // Empty quad panes get new terminals, opened like a normal new tab
+  useQuadLayout(activeProjectId, handleNewTerminal)
+
+  /** Quad split on or off. Shows a hidden terminal first; does nothing without one. */
+  const toggleQuadLayout = useCallback(() => {
+    const state = useTerminalStore.getState()
+    const projectId = activeProject?.id ?? null
+    if (state.quadByProject[quadKey(projectId)]) {
+      state.exitQuad(projectId)
+      return
+    }
+    const { projectSessions: openSessions } = resolveProjectTerminalContext(
+      state.sessions,
+      projectId,
+      state.activeSessionId,
+      state.splitSessionId
+    )
+    if (openSessions.length === 0) return
+    state.setTerminalVisible(true)
+    state.enterQuad(projectId)
+  }, [activeProject?.id])
 
   /** Split the terminal area with a new session */
   const handleSplitTerminal = useCallback(async (direction: 'horizontal' | 'vertical'): Promise<void> => {
@@ -401,7 +426,8 @@ export function AppShell(): JSX.Element {
           state.activeSessionId,
           state.splitSessionId
         )
-        if (state.terminalVisible && projectContext.activeProjectSessionId && !projectContext.splitProjectSessionId) {
+        const inQuad = Boolean(state.quadByProject[quadKey(activeProject?.id ?? null)])
+        if (state.terminalVisible && projectContext.activeProjectSessionId && !projectContext.splitProjectSessionId && !inQuad) {
           e.preventDefault()
           handleSplitTerminal('vertical')
         }
@@ -415,21 +441,26 @@ export function AppShell(): JSX.Element {
           state.activeSessionId,
           state.splitSessionId
         )
-        if (state.terminalVisible && projectContext.activeProjectSessionId && !projectContext.splitProjectSessionId) {
+        const inQuad = Boolean(state.quadByProject[quadKey(activeProject?.id ?? null)])
+        if (state.terminalVisible && projectContext.activeProjectSessionId && !projectContext.splitProjectSessionId && !inQuad) {
           e.preventDefault()
           handleSplitTerminal('horizontal')
         }
       }
-      // Cmd+] / Cmd+[ — switch focused pane
+      // Cmd+] / Cmd+[ — next / previous pane of a split or quad
       if ((e.metaKey || e.ctrlKey) && (e.key === ']' || e.key === '[')) {
         const state = useTerminalStore.getState()
+        const projectId = activeProject?.id ?? null
         const projectContext = resolveProjectTerminalContext(
           state.sessions,
-          activeProject?.id ?? null,
+          projectId,
           state.activeSessionId,
           state.splitSessionId
         )
-        if (projectContext.splitProjectSessionId) {
+        if (state.quadByProject[quadKey(projectId)]) {
+          e.preventDefault()
+          state.cycleFocusedPane(projectId, e.key === ']' ? 1 : -1)
+        } else if (projectContext.splitProjectSessionId) {
           e.preventDefault()
           state.toggleFocusedPane()
         }
@@ -502,6 +533,21 @@ export function AppShell(): JSX.Element {
     return () => window.removeEventListener('keydown', handler, true)
   }, [isMac, toggleTerminalMaximised])
 
+  // Cmd+Shift+G (macOS) / Ctrl+Shift+G — quad split on or off ("grid"). Capture phase, like maximise.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent): void => {
+      const modifier = isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey
+      if (!modifier || !e.shiftKey || e.altKey) return
+      const isG = /^[a-z]$/i.test(e.key) ? e.key.toLowerCase() === 'g' : e.code === 'KeyG'
+      if (!isG) return
+      e.preventDefault()
+      e.stopPropagation()
+      toggleQuadLayout()
+    }
+    window.addEventListener('keydown', handler, true)
+    return () => window.removeEventListener('keydown', handler, true)
+  }, [isMac, toggleQuadLayout])
+
   useEffect(() => {
     if (!activeProject) {
       layoutHydratedProjectIdRef.current = null
@@ -515,6 +561,8 @@ export function AppShell(): JSX.Element {
     sessionVisitedProjectIds.current.add(activeProject.id)
     setTerminalVisible(isFirstVisit ? false : activeProject.workspaceLayout.terminalVisible)
     setSplitDirection(activeProject.workspaceLayout.preferredSplitDirection)
+    // A project saved in quad opens in quad; empty panes get terminals once the project has one.
+    if (activeProject.workspaceLayout.quadLayout) useTerminalStore.getState().enterQuad(activeProject.id)
 
     let cancelled = false
 
@@ -694,6 +742,7 @@ export function AppShell(): JSX.Element {
     const nextLayout = {
       terminalVisible,
       preferredSplitDirection: splitDirection,
+      quadLayout: quadActive,
       openFilePaths: openFiles.map((file) => file.path),
       activeFilePath
     }
@@ -701,12 +750,13 @@ export function AppShell(): JSX.Element {
     if (
       nextLayout.terminalVisible !== activeProject.workspaceLayout.terminalVisible ||
       nextLayout.preferredSplitDirection !== activeProject.workspaceLayout.preferredSplitDirection ||
+      nextLayout.quadLayout !== activeProject.workspaceLayout.quadLayout ||
       nextLayout.activeFilePath !== activeProject.workspaceLayout.activeFilePath ||
       !areStringArraysEqual(nextLayout.openFilePaths, activeProject.workspaceLayout.openFilePaths)
     ) {
       queueWorkspaceLayoutSave(nextLayout)
     }
-  }, [activeFilePath, activeProject, openFiles, queueWorkspaceLayoutSave, splitDirection, terminalVisible])
+  }, [activeFilePath, activeProject, openFiles, queueWorkspaceLayoutSave, quadActive, splitDirection, terminalVisible])
 
   const handleCreateNew = (): void => {
     setEditingProject(null)
@@ -1153,6 +1203,7 @@ export function AppShell(): JSX.Element {
           onOpenInfo={() => setInfoOpen(true)}
           onOpenTour={openWelcomeTour}
           onToggleMaximise={toggleTerminalMaximised}
+          onToggleQuad={toggleQuadLayout}
           onCreateProject={handleCreateNew}
         />
       )}

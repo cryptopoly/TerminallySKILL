@@ -8,6 +8,8 @@ export interface ReportedTerminalLayout {
   activeSessionId: string | null
   splitSessionId: string | null
   splitDirection: SavedSplitDirection
+  /** Quad splits in this window: four session ids each (null = empty pane). Optional: older builds send none. */
+  quads?: (string | null)[][]
 }
 
 export interface SavedTerminalTab {
@@ -20,7 +22,14 @@ export interface SavedTerminalLayout {
   tabs: SavedTerminalTab[]
   activeIndex: number | null
   split: { index: number; direction: SavedSplitDirection } | null
+  /**
+   * Quad splits: four tab indexes each, row by row (null = empty pane). Only present when there is one,
+   * so files from older builds (and older builds reading this one) still work.
+   */
+  quads?: (number | null)[][]
 }
+
+const QUAD_PANES = 4
 
 export const MAX_SAVED_TERMINAL_TABS = 20
 
@@ -32,9 +41,11 @@ export function buildSavedTerminalLayout(
   const tabs: SavedTerminalTab[] = []
   let activeIndex: number | null = null
   let split: SavedTerminalLayout['split'] = null
+  const firstWindowTabIndex = new Map<string, number>()
   layouts.forEach((layout, windowIndex) => {
     for (const tab of layout.tabs) {
       if (tabs.length >= MAX_SAVED_TERMINAL_TABS) return
+      if (windowIndex === 0) firstWindowTabIndex.set(tab.sessionId, tabs.length)
       // Active tab and split come from the first window only; it is the one that reopens them.
       if (windowIndex === 0 && tab.sessionId === layout.activeSessionId) activeIndex = tabs.length
       if (windowIndex === 0 && tab.sessionId === layout.splitSessionId) {
@@ -44,7 +55,22 @@ export function buildSavedTerminalLayout(
     }
   })
   if (tabs.length === 0) return null
-  return { version: 1, tabs, activeIndex, split: split && activeIndex !== null ? split : null }
+  // Quads come from the first window only, like the split.
+  const quads = (layouts[0]?.quads ?? [])
+    .map((slots) =>
+      Array.from({ length: QUAD_PANES }, (_, pane) => {
+        const id = slots[pane]
+        return id ? firstWindowTabIndex.get(id) ?? null : null
+      })
+    )
+    .filter((slots) => slots.some((index) => index !== null))
+  return {
+    version: 1,
+    tabs,
+    activeIndex,
+    split: split && activeIndex !== null ? split : null,
+    ...(quads.length > 0 ? { quads } : {})
+  }
 }
 
 /** Reads a saved layout back, dropping anything malformed. */
@@ -72,5 +98,18 @@ export function parseSavedTerminalLayout(value: unknown): SavedTerminalLayout | 
     (rawSplit.direction === 'horizontal' || rawSplit.direction === 'vertical')
       ? { index: rawSplit.index, direction: rawSplit.direction as SavedSplitDirection }
       : null
-  return { version: 1, tabs, activeIndex, split }
+  // Each quad keeps four panes; a tab can sit in one pane of one quad only.
+  const usedInQuads = new Set<number>()
+  const quads = (Array.isArray(raw.quads) ? raw.quads : [])
+    .filter((slots): slots is unknown[] => Array.isArray(slots))
+    .map((slots) =>
+      Array.from({ length: QUAD_PANES }, (_, pane) => {
+        const index = slots[pane]
+        if (!validIndex(index) || usedInQuads.has(index)) return null
+        usedInQuads.add(index)
+        return index
+      })
+    )
+    .filter((slots) => slots.some((index) => index !== null))
+  return { version: 1, tabs, activeIndex, split, ...(quads.length > 0 ? { quads } : {}) }
 }

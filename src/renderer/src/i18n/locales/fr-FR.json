@@ -1141,7 +1141,11 @@
     "folder.revealWindows": "Afficher dans l'Explorateur de fichiers",
     "folder.revealLinux": "Ouvrir dans le gestionnaire de fichiers",
     "folder.copyPath": "Copier le chemin",
-    "openFailed.message": "Impossible d'ouvrir un terminal : {{reason}}"
+    "openFailed.message": "Impossible d'ouvrir un terminal : {{reason}}",
+    "panel.quad": "Division en quatre",
+    "panel.closeQuad": "Quitter la division en quatre",
+    "panel.quadDescription": "Quatre terminaux dans une grille 2x2. Utilise d'abord vos onglets ouverts et en ouvre de nouveaux pour le reste. Cliquez à nouveau pour revenir à la disposition précédente ; aucun terminal n'est fermé.",
+    "panel.quadTooSmall": "Division en quatre en pause : fenêtre trop petite"
   },
   "onboarding": {
     "subtitle": "Builder de commandes visuel, espace de travail de terminal, workflows, journaux et outils IA",
@@ -1363,7 +1367,9 @@
     "sections.statusDots.steps.idle.label": "Inactif",
     "sections.statusDots.steps.idle.desc": "Anneau gris : un programme est ouvert mais n'a rien affiché depuis un moment, par exemple un agent qui attend sa prochaine tâche. Point seulement, sans notification.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Agrandir le terminal pour qu’il occupe toute la fenêtre, ou le restaurer. Ctrl+Shift+M sous Windows et Linux."
+    "sections.keyboard.steps.maximise.desc": "Agrandir le terminal pour qu’il occupe toute la fenêtre, ou le restaurer. Ctrl+Shift+M sous Windows et Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Active ou désactive la division en quatre (quatre terminaux dans une grille 2x2). Command+] / Command+[ passe d’un volet à l’autre. Ctrl+Shift+G sous Windows et Linux."
   },
   "ai": {
     "explain.label": "Expliquer avec l’IA",

@@ -73,6 +73,7 @@ function backfillWorkspaceLayout(
       raw?.preferredSplitDirection === 'horizontal' || raw?.preferredSplitDirection === 'vertical'
         ? raw.preferredSplitDirection
         : DEFAULT_PROJECT_WORKSPACE_LAYOUT.preferredSplitDirection,
+    quadLayout: raw?.quadLayout === true,
     sidebarTab:
       raw?.sidebarTab === 'commands' ||
       raw?.sidebarTab === 'scripts' ||

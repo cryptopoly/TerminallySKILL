@@ -1170,7 +1170,11 @@
     "folder.revealWindows": "Pokaż w Eksploratorze plików",
     "folder.revealLinux": "Otwórz w menedżerze plików",
     "folder.copyPath": "Kopiuj ścieżkę",
-    "openFailed.message": "Nie można otworzyć terminala: {{reason}}"
+    "openFailed.message": "Nie można otworzyć terminala: {{reason}}",
+    "panel.quad": "Podział na cztery",
+    "panel.closeQuad": "Zakończ podział na cztery",
+    "panel.quadDescription": "Cztery terminale w siatce 2x2. Najpierw używa otwartych kart, a dla reszty otwiera nowe. Kliknij ponownie, aby wrócić do poprzedniego układu; żaden terminal nie zostanie zamknięty.",
+    "panel.quadTooSmall": "Podział na cztery wstrzymany: okno za małe"
   },
   "onboarding": {
     "subtitle": "Wizualny builder poleceń, obszar roboczy terminala, workflow, logi i narzędzia AI",
@@ -1394,7 +1398,9 @@
     "sections.statusDots.steps.idle.label": "Bezczynny",
     "sections.statusDots.steps.idle.desc": "Szary pierścień: program jest otwarty, ale od pewnego czasu nic nie wypisał, na przykład agent czekający na kolejne zadanie. Tylko kropka, bez powiadomienia.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maksymalizuj terminal, aby wypełnił okno, albo przywróć go. Ctrl+Shift+M w systemach Windows i Linux."
+    "sections.keyboard.steps.maximise.desc": "Maksymalizuj terminal, aby wypełnił okno, albo przywróć go. Ctrl+Shift+M w systemach Windows i Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Włącz lub wyłącz podział na cztery (cztery terminale w siatce 2x2). Command+] / Command+[ przełącza między panelami. Ctrl+Shift+G w systemach Windows i Linux."
   },
   "ai": {
     "explain.label": "Wyjaśnij z AI",

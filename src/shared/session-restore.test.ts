@@ -62,3 +62,52 @@ describe('parseSavedTerminalLayout', () => {
     expect(parseSavedTerminalLayout({ version: 1, tabs: [{}, {}], activeIndex: 0, split: { index: 0, direction: 'vertical' } })?.split).toBeNull()
   })
 })
+
+describe('quad splits in the saved layout', () => {
+  it("saves the first window's quads as tab indexes, row by row", () => {
+    const layout = buildSavedTerminalLayout(
+      [
+        {
+          tabs: ['a', 'b', 'c', 'd', 'e'].map((sessionId) => ({ sessionId, projectId: 'p1' })),
+          activeSessionId: 'c',
+          splitSessionId: null,
+          splitDirection: 'vertical',
+          quads: [['c', 'a', null, 'd'], ['gone', null]]
+        },
+        {
+          tabs: [{ sessionId: 'x', projectId: null }],
+          activeSessionId: 'x',
+          splitSessionId: null,
+          splitDirection: 'vertical',
+          quads: [['x', null, null, null]]
+        }
+      ],
+      () => null
+    )
+    expect(layout?.quads).toEqual([[2, 0, null, 3]])
+    expect(layout?.activeIndex).toBe(2)
+  })
+
+  it('leaves the field out when there is no quad, so older builds read the same file', () => {
+    const layout = buildSavedTerminalLayout(
+      [{ tabs: [{ sessionId: 'a', projectId: null }], activeSessionId: 'a', splitSessionId: null, splitDirection: 'vertical', quads: [] }],
+      () => null
+    )
+    expect(layout).not.toHaveProperty('quads')
+  })
+
+  it('reads quads back and drops bad panes', () => {
+    const tabs = [{}, {}, {}, {}]
+    expect(parseSavedTerminalLayout({ version: 1, tabs, activeIndex: 0, split: null, quads: [[0, 1, 2, 3]] })?.quads)
+      .toEqual([[0, 1, 2, 3]])
+    // Out of range, repeated and non-number panes become empty; a quad with no panes left is dropped
+    expect(parseSavedTerminalLayout({ version: 1, tabs, activeIndex: 0, split: null, quads: [[0, 0, 9, 'x'], [null], 'bad'] })?.quads)
+      .toEqual([[0, null, null, null]])
+    expect(parseSavedTerminalLayout({ version: 1, tabs, activeIndex: 0, split: null, quads: [[7]] })).not.toHaveProperty('quads')
+  })
+
+  it('still reads a layout saved before quads existed', () => {
+    const old = { version: 1, tabs: [{ projectId: 'p', cwd: '/a' }], activeIndex: 0, split: null }
+    expect(parseSavedTerminalLayout(old)).toEqual(old)
+  })
+})

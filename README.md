@@ -79,6 +79,7 @@ Save reusable command templates with `{{placeholder}}` variables. Open a snippet
 Full shell sessions powered by node-pty and xterm.js:
 - **Editor Prompt** — command bar with ghost suggestions, history cycling, and safe paste handling
 - **Split panes** — vertical or horizontal splits with independent sessions
+- **Quad split** — four terminals in a 2x2 grid with resizable dividers, in the docked or maximised terminal (`Cmd+Shift+G`)
 - **Command blocks** — a green or red dot on each finished command: copy its output, copy the command, run it again or ask AI to explain it
 - **Reopen tabs** — optionally bring back your local tabs, split and folders at the next launch (Settings → General)
 - **Command queue** — type while a command is running; input fires when the shell is ready
@@ -168,7 +169,8 @@ Plus four in-between themes: Slate, Plum, Dove and Clay.
 | `Cmd+W` (`Ctrl+W`) | Close active tab |
 | `Cmd+D` (`Ctrl+D`) | Split terminal vertically |
 | `Cmd+Shift+D` | Split terminal horizontally |
-| `Cmd+]` / `Cmd+[` | Switch focus between split panes |
+| `Cmd+Shift+G` (`Ctrl+Shift+G`) | Quad split on or off |
+| `Cmd+]` / `Cmd+[` | Next / previous pane of a split or quad |
 | `Cmd+F` (`Ctrl+F`) | Search in terminal |
 | `Cmd+Shift+S` | Capture terminal snapshot |
 | `Cmd+E` (`Ctrl+E`) | Toggle Editor Prompt mode |
