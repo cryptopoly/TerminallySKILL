@@ -86,9 +86,7 @@ function createWindow(projectId?: string): void {
     backgroundColor: '#1a1a2e',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
-      // A test window is invisible, so keep it rendering as if it were in front
-      ...(process.env.TERMINALLYSKILL_BACKGROUND_WINDOW === '1' ? { backgroundThrottling: false } : {})
+      sandbox: false
     }
   })
 
@@ -98,14 +96,8 @@ function createWindow(projectId?: string): void {
 
   win.on('ready-to-show', () => {
     // End-to-end tests open the app in the background so they do not take focus from whoever is at the machine
-    if (process.env.TERMINALLYSKILL_BACKGROUND_WINDOW === '1') {
-      // Invisible and click-through as well, so test windows never cover whoever is using the screen
-      win.setOpacity(0)
-      win.setIgnoreMouseEvents(true)
-      win.showInactive()
-    } else {
-      win.show()
-    }
+    if (process.env.TERMINALLYSKILL_BACKGROUND_WINDOW === '1') win.showInactive()
+    else win.show()
   })
 
   win.on('close', (e) => {
