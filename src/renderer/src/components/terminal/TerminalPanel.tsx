@@ -509,7 +509,11 @@ export function TerminalPanel({
           {activeProjectSessionId && (
             <>
               {isQuad && quadArrangement === 'single' && (
-                <span className="text-[10px] text-gray-500 mr-1 whitespace-nowrap" data-testid="quad-too-small">
+                <span
+                  className="text-[10px] text-gray-500 mr-1 whitespace-nowrap truncate max-w-[8rem]"
+                  title={t('panel.quadTooSmall')}
+                  data-testid="quad-too-small"
+                >
                   {t('panel.quadTooSmall')}
                 </span>
               )}
