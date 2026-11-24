@@ -222,7 +222,9 @@
     "general.attention.keep.title": "保留通知直到關閉",
     "general.attention.keep.description": "通知會一直顯示在螢幕上，直到你關閉它們。實際行為取決於你的桌面環境。",
     "general.attention.keep.macDescription": "這由 macOS 決定。請在系統設定中為 TerminallySKILL 選擇會一直顯示到關閉的樣式。",
-    "general.attention.keep.openSettings": "打開系統設定"
+    "general.attention.keep.openSettings": "打開系統設定",
+    "general.restoreTabs.title": "重新開啟終端機分頁",
+    "general.restoreTabs.description": "啟動時重新開啟上次的本機終端機分頁、分割畫面和資料夾。SSH 與 VNC 分頁不會重新連線，舊輸出不會保留。"
   },
   "commands": {
     "addDialog.title": "新增命令",

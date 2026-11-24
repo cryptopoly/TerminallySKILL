@@ -227,7 +227,9 @@
     "general.attention.keep.title": "Bildirimleri kapatılana kadar göster",
     "general.attention.keep.description": "Bildirimler siz kapatana kadar ekranda kalır. Tam davranış masaüstünüze bağlıdır.",
     "general.attention.keep.macDescription": "Bunu macOS belirler. Sistem Ayarları'nda TerminallySKILL için kapatılana kadar kalan stili seçin.",
-    "general.attention.keep.openSettings": "Sistem Ayarları'nı aç"
+    "general.attention.keep.openSettings": "Sistem Ayarları'nı aç",
+    "general.restoreTabs.title": "Terminal sekmelerini yeniden aç",
+    "general.restoreTabs.description": "Açılışta son seferdeki yerel terminal sekmelerini, bölmeyi ve klasörleri yeniden açar. SSH ve VNC sekmeleri yeniden bağlanmaz, eski çıktı saklanmaz."
   },
   "commands": {
     "addDialog.title": "Komut ekle",

@@ -227,7 +227,9 @@
     "general.attention.keep.title": "닫을 때까지 알림 유지",
     "general.attention.keep.description": "알림을 닫을 때까지 화면에 표시합니다. 정확한 동작은 데스크톱 환경에 따라 다릅니다.",
     "general.attention.keep.macDescription": "macOS에서 결정합니다. 시스템 설정에서 TerminallySKILL에 닫을 때까지 표시되는 스타일을 선택하세요.",
-    "general.attention.keep.openSettings": "시스템 설정 열기"
+    "general.attention.keep.openSettings": "시스템 설정 열기",
+    "general.restoreTabs.title": "터미널 탭 다시 열기",
+    "general.restoreTabs.description": "시작할 때 지난번의 로컬 터미널 탭, 분할, 폴더를 다시 엽니다. SSH와 VNC 탭은 다시 연결하지 않으며 이전 출력은 보관하지 않습니다."
   },
   "commands": {
     "addDialog.title": "명령 추가",

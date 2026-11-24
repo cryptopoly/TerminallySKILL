@@ -145,7 +145,9 @@
     "general.attention.keep.title": "Показывать уведомления до закрытия",
     "general.attention.keep.description": "Уведомления остаются на экране, пока вы их не закроете. Точное поведение зависит от рабочего стола.",
     "general.attention.keep.macDescription": "Это определяет macOS. В Системных настройках выберите для TerminallySKILL стиль, который остаётся до закрытия.",
-    "general.attention.keep.openSettings": "Открыть Системные настройки"
+    "general.attention.keep.openSettings": "Открыть Системные настройки",
+    "general.restoreTabs.title": "Снова открывать вкладки терминала",
+    "general.restoreTabs.description": "При запуске снова открывает локальные вкладки терминала, разделение и папки с прошлого раза. Вкладки SSH и VNC не переподключаются, старый вывод не сохраняется."
   },
   "commands": {
     "addDialog.title": "Добавить команду",

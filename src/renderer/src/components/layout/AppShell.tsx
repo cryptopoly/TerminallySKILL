@@ -23,6 +23,7 @@ import { useAttentionLayer } from '../../hooks/useAttentionLayer'
 import { useProjectCycleShortcut } from '../../hooks/useProjectCycleShortcut'
 import { jumpToNextAttention } from '../../lib/attention'
 import { useScheduledRuns } from '../../hooks/useScheduledRuns'
+import { useTerminalSessionRestore, waitForTerminalRestore } from '../../hooks/useTerminalSessionRestore'
 import { HelpTip } from '../ui/HelpTip'
 import { UpdateReleaseNotes } from '../ui/UpdateReleaseNotes'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
@@ -92,6 +93,7 @@ export function AppShell(): JSX.Element {
   useAttentionLayer()
   useProjectCycleShortcut()
   useScheduledRuns()
+  useTerminalSessionRestore()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -566,7 +568,14 @@ export function AppShell(): JSX.Element {
       return
     }
 
-    void handleNewTerminal().catch((error) => {
+    // Reopened tabs count: only open a fresh one if the restore brought none back for this project.
+    void waitForTerminalRestore().then(() => {
+      if (useTerminalStore.getState().sessions.some((session) => session.projectId === projectId)) {
+        setTerminalVisible(true)
+        return
+      }
+      return handleNewTerminal()
+    }).catch((error) => {
       if (autoOpenedTerminalProjectIdRef.current === projectId) {
         autoOpenedTerminalProjectIdRef.current = null
       }

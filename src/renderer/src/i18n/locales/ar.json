@@ -226,7 +226,9 @@
     "general.attention.keep.title": "إبقاء الإشعارات حتى إغلاقها",
     "general.attention.keep.description": "تبقى الإشعارات على الشاشة حتى تغلقها. يعتمد السلوك الدقيق على سطح المكتب لديك.",
     "general.attention.keep.macDescription": "يتحكم macOS في ذلك. في إعدادات النظام، اختر لـ TerminallySKILL نمط الإشعار الذي يبقى حتى تغلقه.",
-    "general.attention.keep.openSettings": "فتح إعدادات النظام"
+    "general.attention.keep.openSettings": "فتح إعدادات النظام",
+    "general.restoreTabs.title": "إعادة فتح علامات تبويب الطرفية",
+    "general.restoreTabs.description": "عند التشغيل، يعيد فتح علامات تبويب الطرفية المحلية والتقسيم والمجلدات من آخر مرة. لا يُعاد الاتصال بعلامات SSH وVNC، ولا يُحتفظ بالمخرجات القديمة."
   },
   "commands": {
     "addDialog.title": "إضافة أمر",

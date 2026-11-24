@@ -227,7 +227,9 @@
     "general.attention.keep.title": "Manter as notificações até as fechar",
     "general.attention.keep.description": "As notificações ficam no ecrã até as fechar. O comportamento exato depende do seu ambiente de trabalho.",
     "general.attention.keep.macDescription": "O macOS decide isto. Nas Definições do Sistema, escolha para o TerminallySKILL o estilo que fica até o fechar.",
-    "general.attention.keep.openSettings": "Abrir Definições do Sistema"
+    "general.attention.keep.openSettings": "Abrir Definições do Sistema",
+    "general.restoreTabs.title": "Reabrir separadores do terminal",
+    "general.restoreTabs.description": "Ao iniciar, reabre os separadores locais do terminal, a divisão e as pastas da última vez. Os separadores SSH e VNC não são religados e a saída antiga não é guardada."
   },
   "commands": {
     "addDialog.title": "Adicionar comando",

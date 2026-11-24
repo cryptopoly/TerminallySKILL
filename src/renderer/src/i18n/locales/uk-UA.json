@@ -224,7 +224,9 @@
     "general.attention.keep.title": "Показувати сповіщення до закриття",
     "general.attention.keep.description": "Сповіщення залишаються на екрані, доки ви їх не закриєте. Точна поведінка залежить від робочого столу.",
     "general.attention.keep.macDescription": "Це визначає macOS. У Системних параметрах виберіть для TerminallySKILL стиль, який залишається до закриття.",
-    "general.attention.keep.openSettings": "Відкрити Системні параметри"
+    "general.attention.keep.openSettings": "Відкрити Системні параметри",
+    "general.restoreTabs.title": "Знову відкривати вкладки термінала",
+    "general.restoreTabs.description": "Під час запуску знову відкриває локальні вкладки термінала, розділення та папки з минулого разу. Вкладки SSH і VNC не перепідключаються, старий вивід не зберігається."
   },
   "commands": {
     "addDialog.title": "Додати команду",

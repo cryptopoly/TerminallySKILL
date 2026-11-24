@@ -4,6 +4,7 @@ import { readFileSync, existsSync } from 'fs'
 import { electronApp, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc-handlers'
 import { initTerminalPath, killSessionsForWindow, killAllTerminals, getActiveSessionCountForWindow, getSessionCountForWindow } from './pty-manager'
+import { noteWindowClosing, saveTerminalLayoutOnQuit } from './session-restore-manager'
 import { stopVncSessionsForWindow, stopAllVncSessions } from './vnc-manager'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
 import { getUserDataDir, setCustomDataDir } from './user-data-path'
@@ -90,6 +91,8 @@ function createWindow(projectId?: string): void {
   })
 
   windows.add(win)
+  // win.id cannot be read once the window is destroyed
+  const windowId = win.id
 
   win.on('ready-to-show', () => {
     win.show()
@@ -127,6 +130,7 @@ function createWindow(projectId?: string): void {
   })
 
   win.on('closed', () => {
+    noteWindowClosing(windowId, windows.size > 1)
     killSessionsForWindow(win)
     stopVncSessionsForWindow(win)
     forgetWindowBadge(win)
@@ -308,6 +312,7 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   markAppQuitting()
   stopScheduler()
+  saveTerminalLayoutOnQuit()
   killAllTerminals()
   stopAllVncSessions()
 })

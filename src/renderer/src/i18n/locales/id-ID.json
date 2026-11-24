@@ -227,7 +227,9 @@
     "general.attention.keep.title": "Pertahankan notifikasi sampai ditutup",
     "general.attention.keep.description": "Notifikasi tetap di layar sampai Anda menutupnya. Perilaku pastinya bergantung pada desktop Anda.",
     "general.attention.keep.macDescription": "macOS yang menentukan ini. Di Pengaturan Sistem, pilih gaya untuk TerminallySKILL yang tetap tampil sampai ditutup.",
-    "general.attention.keep.openSettings": "Buka Pengaturan Sistem"
+    "general.attention.keep.openSettings": "Buka Pengaturan Sistem",
+    "general.restoreTabs.title": "Buka kembali tab terminal",
+    "general.restoreTabs.description": "Saat dibuka, aplikasi membuka kembali tab terminal lokal, pembagian, dan folder dari sesi terakhir. Tab SSH dan VNC tidak disambungkan ulang, dan output lama tidak disimpan."
   },
   "commands": {
     "addDialog.title": "Tambah perintah",

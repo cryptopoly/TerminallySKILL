@@ -109,6 +109,7 @@ export function backfillSettings(raw: Partial<AppSettings>): AppSettings {
         : DEFAULT_SETTINGS.customDataDirectory,
     startupBehavior:
       raw.startupBehavior === 'last-project' ? 'last-project' : 'dashboard',
+    restoreTerminalTabs: raw.restoreTerminalTabs === true,
     uiLocale: normalizeLocalePreference(raw.uiLocale),
     formatLocale: normalizeLocalePreference(raw.formatLocale),
     aiResponseLocale: normalizeAIResponseLocalePreference(raw.aiResponseLocale),

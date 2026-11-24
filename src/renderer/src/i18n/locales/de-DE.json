@@ -96,7 +96,9 @@
     "general.attention.keep.title": "Benachrichtigungen bis zum Schließen anzeigen",
     "general.attention.keep.description": "Benachrichtigungen bleiben sichtbar, bis du sie schließt. Das genaue Verhalten hängt von deinem Desktop ab.",
     "general.attention.keep.macDescription": "Das entscheidet macOS. Wähle in den Systemeinstellungen für TerminallySKILL den Stil, der sichtbar bleibt, bis du ihn schließt.",
-    "general.attention.keep.openSettings": "Systemeinstellungen öffnen"
+    "general.attention.keep.openSettings": "Systemeinstellungen öffnen",
+    "general.restoreTabs.title": "Terminal-Tabs wieder öffnen",
+    "general.restoreTabs.description": "Öffnet beim Start die lokalen Terminal-Tabs, die Teilung und die Ordner vom letzten Mal. SSH- und VNC-Tabs werden nicht neu verbunden, alte Ausgaben werden nicht gespeichert."
   },
   "commands": {
     "addDialog.title": "Befehl hinzufügen",

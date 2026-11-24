@@ -150,7 +150,9 @@
     "general.attention.keep.title": "Mantener las notificaciones hasta cerrarlas",
     "general.attention.keep.description": "Las notificaciones permanecen en pantalla hasta que las cierres. El comportamiento exacto depende de tu escritorio.",
     "general.attention.keep.macDescription": "Esto lo decide macOS. En Ajustes del Sistema, elige para TerminallySKILL el estilo que permanece hasta que lo cierres.",
-    "general.attention.keep.openSettings": "Abrir Ajustes del Sistema"
+    "general.attention.keep.openSettings": "Abrir Ajustes del Sistema",
+    "general.restoreTabs.title": "Reabrir pestañas del terminal",
+    "general.restoreTabs.description": "Al iniciar, reabre las pestañas locales del terminal, la división y las carpetas de la última vez. Las pestañas SSH y VNC no se reconectan y no se guarda la salida anterior."
   },
   "commands": {
     "addDialog.title": "Añadir comando",

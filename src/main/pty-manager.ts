@@ -643,6 +643,11 @@ export function killTerminal(sessionId: string): void {
   }
 }
 
+/** The folder the shell last reported at its prompt (shell integration), or the folder it started in. */
+export function getSessionCwd(sessionId: string): string | null {
+  return sessions.get(sessionId)?.cwd ?? null
+}
+
 export function getSessionInfo(sessionId: string): TerminalSessionInfo | null {
   const session = sessions.get(sessionId)
   if (!session) return null

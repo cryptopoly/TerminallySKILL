@@ -16,6 +16,7 @@ import type { Snippet } from '../shared/snippet-schema'
 import type { AIActionRequest, AIActionResponse } from '../shared/ai-schema'
 import type { StarterPackPreview } from '../shared/starter-pack-schema'
 import type { RunRecord, TerminalSessionInfo } from '../shared/run-schema'
+import type { ReportedTerminalLayout, SavedTerminalLayout } from '../shared/session-restore'
 import type { WorkflowStepResultEvent } from '../shared/workflow-shell'
 import type { RunStatusFilter } from '../shared/run-history'
 import type { ShellIntegrationEvent } from '../shared/shell-integration'
@@ -402,6 +403,12 @@ export const electronAPI = {
 
   getSessionInfo: (sessionId: string): Promise<TerminalSessionInfo | null> =>
     ipcRenderer.invoke(IPC_CHANNELS.PTY_GET_SESSION_INFO, sessionId),
+
+  reportTerminalLayout: (layout: ReportedTerminalLayout): void =>
+    ipcRenderer.send(IPC_CHANNELS.TERMINAL_LAYOUT_REPORT, layout),
+
+  takeSavedTerminalLayout: (): Promise<SavedTerminalLayout | null> =>
+    ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_LAYOUT_TAKE),
 
   // Shell integration
   onShellReady: (callback: (sessionId: string) => void): (() => void) => {

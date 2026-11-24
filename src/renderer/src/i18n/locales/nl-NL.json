@@ -224,7 +224,9 @@
     "general.attention.keep.title": "Meldingen tonen tot je ze sluit",
     "general.attention.keep.description": "Meldingen blijven op het scherm tot je ze sluit. Het precieze gedrag hangt af van je bureaublad.",
     "general.attention.keep.macDescription": "macOS bepaalt dit. Kies in Systeeminstellingen voor TerminallySKILL de stijl die blijft staan tot je hem sluit.",
-    "general.attention.keep.openSettings": "Systeeminstellingen openen"
+    "general.attention.keep.openSettings": "Systeeminstellingen openen",
+    "general.restoreTabs.title": "Terminaltabbladen opnieuw openen",
+    "general.restoreTabs.description": "Opent bij het starten de lokale terminaltabbladen, splitsing en mappen van de vorige keer. SSH- en VNC-tabbladen worden niet opnieuw verbonden en oude uitvoer wordt niet bewaard."
   },
   "commands": {
     "addDialog.title": "Opdracht toevoegen",

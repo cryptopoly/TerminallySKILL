@@ -225,7 +225,9 @@
     "general.attention.keep.title": "सूचनाएँ बंद करने तक दिखाएँ",
     "general.attention.keep.description": "सूचनाएँ तब तक स्क्रीन पर रहती हैं जब तक आप उन्हें बंद नहीं करते। सटीक व्यवहार आपके डेस्कटॉप पर निर्भर करता है।",
     "general.attention.keep.macDescription": "यह macOS तय करता है। सिस्टम सेटिंग्स में TerminallySKILL के लिए वह शैली चुनें जो बंद करने तक बनी रहती है।",
-    "general.attention.keep.openSettings": "सिस्टम सेटिंग्स खोलें"
+    "general.attention.keep.openSettings": "सिस्टम सेटिंग्स खोलें",
+    "general.restoreTabs.title": "टर्मिनल टैब फिर से खोलें",
+    "general.restoreTabs.description": "लॉन्च पर, पिछली बार के लोकल टर्मिनल टैब, स्प्लिट और फ़ोल्डर फिर से खोलता है। SSH और VNC टैब दोबारा कनेक्ट नहीं होते, और पुराना आउटपुट नहीं रखा जाता।"
   },
   "commands": {
     "addDialog.title": "कमांड जोड़ें",

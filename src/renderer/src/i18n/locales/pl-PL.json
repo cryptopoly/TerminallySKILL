@@ -149,7 +149,9 @@
     "general.attention.keep.title": "Pokazuj powiadomienia do zamknięcia",
     "general.attention.keep.description": "Powiadomienia pozostają na ekranie, dopóki ich nie zamkniesz. Dokładne działanie zależy od środowiska pulpitu.",
     "general.attention.keep.macDescription": "Decyduje o tym macOS. W Ustawieniach systemowych wybierz dla TerminallySKILL styl, który pozostaje do zamknięcia.",
-    "general.attention.keep.openSettings": "Otwórz Ustawienia systemowe"
+    "general.attention.keep.openSettings": "Otwórz Ustawienia systemowe",
+    "general.restoreTabs.title": "Otwieraj ponownie karty terminala",
+    "general.restoreTabs.description": "Przy uruchomieniu ponownie otwiera lokalne karty terminala, podział i foldery z poprzedniej sesji. Karty SSH i VNC nie są łączone ponownie, a stare dane wyjściowe nie są zachowywane."
   },
   "commands": {
     "addDialog.title": "Dodaj polecenie",

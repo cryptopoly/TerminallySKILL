@@ -74,7 +74,9 @@
     "general.attention.keep.title": "Keep notifications until dismissed",
     "general.attention.keep.description": "Notifications stay on screen until you close them. The exact behaviour depends on your desktop.",
     "general.attention.keep.macDescription": "macOS decides this. In System Settings, set TerminallySKILL to Alerts to keep notifications until you close them.",
-    "general.attention.keep.openSettings": "Open System Settings"
+    "general.attention.keep.openSettings": "Open System Settings",
+    "general.restoreTabs.title": "Reopen terminal tabs",
+    "general.restoreTabs.description": "At launch, reopen last time's local terminal tabs, split and folders. SSH and VNC tabs are not reconnected, and old output is not kept."
   },
   "logs": {
     "diagnostics.suspect.exit1a": "The command ran but hit a generic failure, so the real cause is usually in the command output just above this error.",

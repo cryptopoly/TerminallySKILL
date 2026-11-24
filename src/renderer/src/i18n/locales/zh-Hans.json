@@ -75,7 +75,9 @@
     "general.attention.keep.title": "保留通知直到关闭",
     "general.attention.keep.description": "通知会一直显示在屏幕上，直到你关闭它们。具体行为取决于你的桌面环境。",
     "general.attention.keep.macDescription": "这由 macOS 决定。请在系统设置中为 TerminallySKILL 选择会一直显示到关闭的样式。",
-    "general.attention.keep.openSettings": "打开系统设置"
+    "general.attention.keep.openSettings": "打开系统设置",
+    "general.restoreTabs.title": "重新打开终端标签页",
+    "general.restoreTabs.description": "启动时重新打开上次的本地终端标签页、分屏和文件夹。SSH 和 VNC 标签页不会重新连接，旧输出不会保留。"
   },
   "commandBuilder": {
     "referenceHelp.aiProviderFallback": "AI",

@@ -143,7 +143,9 @@
     "general.attention.keep.title": "閉じるまで通知を表示",
     "general.attention.keep.description": "通知は閉じるまで画面に表示されます。実際の動作はデスクトップ環境によって異なります。",
     "general.attention.keep.macDescription": "これは macOS が制御します。システム設定で、TerminallySKILL に閉じるまで表示されるスタイルを選択してください。",
-    "general.attention.keep.openSettings": "システム設定を開く"
+    "general.attention.keep.openSettings": "システム設定を開く",
+    "general.restoreTabs.title": "ターミナルタブを再度開く",
+    "general.restoreTabs.description": "起動時に、前回のローカルターミナルタブ、分割、フォルダーを再度開きます。SSH と VNC のタブは再接続せず、以前の出力は保持しません。"
   },
   "commands": {
     "addDialog.title": "コマンドを追加",
