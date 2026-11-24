@@ -334,7 +334,8 @@ describe('maskSecrets properties', () => {
     expect(result.counts['github-token']).toBeGreaterThan(5)
     expect(result.text).not.toContain(T.ghp)
     console.log(`[secret-mask] 5 MB in ${elapsed.toFixed(1)} ms`)
-    expect(elapsed).toBeLessThan(process.env.CI ? 600 : 200)
+    // A guard against runaway regexes (seconds), not a benchmark: test VMs and busy runners need headroom
+    expect(elapsed).toBeLessThan(600)
   })
 })
 
