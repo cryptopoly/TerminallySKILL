@@ -1,6 +1,9 @@
 import { mkdir } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { PS_FAIL, psWrite, shellCommand } from './shell-commands.mjs'
+
+const BLOCK_COMMAND = shellCommand('echo block-$((40+2))', 'echo "block-$(40+2)"')
 
 test('finished commands get a mark with copy, run again and explain actions', async ({}, testInfo) => {
   test.setTimeout(60_000)
@@ -20,13 +23,13 @@ test('finished commands get a mark with copy, run again and explain actions', as
     const marks = page.locator('.command-block-mark')
 
     await page.locator('.xterm:visible').click()
-    await page.keyboard.type('echo block-$((40+2))')
+    await page.keyboard.type(BLOCK_COMMAND)
     await page.keyboard.press('Enter')
     await expect(rows).toContainText('block-42', { timeout: 15_000 })
     await expect(marks).toHaveCount(1, { timeout: 10_000 })
     await expect(marks.first()).toHaveAttribute('data-exit-code', '0')
 
-    await page.keyboard.type('false')
+    await page.keyboard.type(shellCommand('false', PS_FAIL))
     await page.keyboard.press('Enter')
     await expect(marks).toHaveCount(2, { timeout: 10_000 })
     await expect(marks.nth(1)).toHaveAttribute('data-exit-code', '1')
@@ -46,7 +49,7 @@ test('finished commands get a mark with copy, run again and explain actions', as
 
     await marks.first().dispatchEvent('mousedown')
     await menu.getByRole('menuitem', { name: 'Copy command' }).click()
-    await expect.poll(() => app.evaluate(({ clipboard }) => clipboard.readText())).toBe('echo block-$((40+2))')
+    await expect.poll(() => app.evaluate(({ clipboard }) => clipboard.readText())).toBe(BLOCK_COMMAND)
 
     // Run again types the command at the prompt and leaves Enter to the user
     await marks.first().dispatchEvent('mousedown')
@@ -61,12 +64,12 @@ test('finished commands get a mark with copy, run again and explain actions', as
     await expect(menu).toBeHidden()
 
     // Commands that start or finish on the alternate screen (full-screen apps) get no mark
-    await page.keyboard.type('printf "\\033[?1049h"')
+    await page.keyboard.type(shellCommand('printf "\\033[?1049h"', psWrite('\x1b[?1049h')))
     await page.keyboard.press('Enter')
     await page.waitForTimeout(500)
-    await page.keyboard.type('printf "\\033[?1049l"')
+    await page.keyboard.type(shellCommand('printf "\\033[?1049l"', psWrite('\x1b[?1049l')))
     await page.keyboard.press('Enter')
-    await page.keyboard.type('echo back-$((1+1))')
+    await page.keyboard.type(shellCommand('echo back-$((1+1))', 'echo "back-$(1+1)"'))
     await page.keyboard.press('Enter')
     await expect(rows).toContainText('back-2', { timeout: 15_000 })
     await expect(marks).toHaveCount(4, { timeout: 10_000 })

@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { shellCommand } from './shell-commands.mjs'
 
 test('a scrolled-up view stays put, and scrolling back down follows fast output again', async ({}, testInfo) => {
   test.setTimeout(90_000)
@@ -21,7 +22,11 @@ test('a scrolled-up view stays put, and scrolling back down follows fast output 
 
     // Slow output, then a burst far larger than the 10,000-line scrollback
     await page.keyboard.type(
-      'seq -f start-%g 1 300; for i in $(seq 1 60); do echo slow-$i; sleep 0.1; done; seq -f burst-%g 1 300000; echo stream-finished'
+      shellCommand(
+        'seq -f start-%g 1 300; for i in $(seq 1 60); do echo slow-$i; sleep 0.1; done; seq -f burst-%g 1 300000; echo stream-finished',
+        "1..300 | % { \"start-$_\" }; 1..60 | % { \"slow-$_\"; Start-Sleep -Milliseconds 100 }; " +
+          'foreach ($i in 1..300000) { "burst-$i" }; echo stream-finished'
+      )
     )
     await page.keyboard.press('Enter')
     await expect(rows).toContainText(/slow-\d/, { timeout: 15_000 })

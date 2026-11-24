@@ -2,8 +2,9 @@ import { mkdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { shellCommand } from './shell-commands.mjs'
 
-// zsh says "bck-i-search", bash says "reverse-i-search".
+// zsh and PowerShell (PSReadLine) say "bck-i-search", bash says "reverse-i-search".
 const SEARCH_PROMPT = /bck-i-search|reverse-i-search/
 
 test('Ctrl+R in the editor prompt opens the shell history search', async ({}, testInfo) => {
@@ -29,7 +30,13 @@ test('Ctrl+R in the editor prompt opens the shell history search', async ({}, te
     await expect(editor).toBeFocused({ timeout: 20_000 })
 
     // The file counts the runs, and the count on screen shows the terminal followed the output.
-    await page.keyboard.type('echo needle >> ran.txt; echo ran-$(wc -l < ran.txt | tr -d " ")')
+    await page.keyboard.type(
+      shellCommand(
+        'echo needle >> ran.txt; echo ran-$(wc -l < ran.txt | tr -d " ")',
+        // Add-Content writes plain text; `>>` in Windows PowerShell 5.1 writes UTF-16.
+        'Add-Content ran.txt needle; echo "ran-$((Get-Content ran.txt).Count)"'
+      )
+    )
     await page.keyboard.press('Enter')
     await expect(rows).toContainText('ran-1', { timeout: 15_000 })
     await expect(editor).toBeFocused({ timeout: 15_000 })

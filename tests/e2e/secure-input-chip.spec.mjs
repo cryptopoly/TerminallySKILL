@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { shellCommand } from './shell-commands.mjs'
 
 test('a password prompt shows a small status chip that clears after Enter', async ({}, testInfo) => {
   test.setTimeout(60_000)
@@ -19,7 +20,14 @@ test('a password prompt shows a small status chip that clears after Enter', asyn
     const chip = page.getByTestId('secure-input-chip')
 
     // The shell keeps running after each answer, like an SSH session, so only Enter can clear the chip.
-    await page.keyboard.type('printf "Password: "; read -s a; echo; echo got-$a; printf "Password: "; read -s b; echo; echo got-$b; sleep 8')
+    await page.keyboard.type(
+      shellCommand(
+        'printf "Password: "; read -s a; echo; echo got-$a; printf "Password: "; read -s b; echo; echo got-$b; sleep 8',
+        // Read-Host prints "Password: " and masks the answer; NetworkCredential turns it back into text.
+        "$a = Read-Host -AsSecureString 'Password'; echo \"got-$([Net.NetworkCredential]::new('', $a).Password)\"; " +
+          "$b = Read-Host -AsSecureString 'Password'; echo \"got-$([Net.NetworkCredential]::new('', $b).Password)\"; Start-Sleep 8"
+      )
+    )
     await page.keyboard.press('Enter')
     await expect(chip).toBeVisible({ timeout: 10_000 })
 

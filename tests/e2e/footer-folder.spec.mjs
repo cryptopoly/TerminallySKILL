@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { shellCommand } from './shell-commands.mjs'
 
 test('the footer folder opens a picker that types cd, and its menu copies the path', async ({}, testInfo) => {
   test.setTimeout(60_000)
@@ -26,12 +27,15 @@ test('the footer folder opens a picker that types cd, and its menu copies the pa
       dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [dir] })
     }, otherDir)
     await folderButton.click()
-    await expect(rows).toContainText(`cd '${workspaceDir}/it'\\''s here'`, { timeout: 10_000 })
+    // PowerShell quotes a ' inside single quotes by doubling it.
+    const typedCd = shellCommand(`cd '${workspaceDir}/it'\\''s here'`, `cd '${otherDir.replace(/'/g, "''")}'`)
+    await expect(rows).toContainText(typedCd, { timeout: 10_000 })
     await page.locator('.xterm:visible').click()
     await page.keyboard.press('Enter')
-    await page.keyboard.type('pwd')
+    // PowerShell's pwd prints a table, which cuts a long path to the terminal width.
+    await page.keyboard.type(shellCommand('pwd', '$PWD.Path'))
     await page.keyboard.press('Enter')
-    await expect(rows).toContainText(`${workspaceDir}/it's here`, { timeout: 10_000 })
+    await expect(rows).toContainText(shellCommand(`${workspaceDir}/it's here`, otherDir), { timeout: 10_000 })
     await expect(folderButton).toContainText("it's here")
 
     await page.getByRole('button', { name: 'Folder actions' }).click()

@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { psWrite, shellCommand } from './shell-commands.mjs'
 
 const JUMP_SHORTCUT = process.platform === 'darwin' ? 'Meta+Shift+J' : 'Control+Shift+J'
 
@@ -32,9 +33,13 @@ test('the terminal answers the OSC 7501 support query through the pty', async ({
     await page.waitForTimeout(2000)
 
     // Read the 10-byte reply (ESC ] 7501 ; ? ESC \) raw from the tty and print it with ESC shown as E.
+    // PowerShell reads the reply as ten key presses from the console input.
     await typeInVisibleTerminal(
       page,
-      "stty -echo -icanon min 10 time 20; printf '\\033]7501;?\\007'; head -c 10 | tr '\\033' E; stty sane; echo"
+      shellCommand(
+        "stty -echo -icanon min 10 time 20; printf '\\033]7501;?\\007'; head -c 10 | tr '\\033' E; stty sane; echo",
+        `${psWrite('\x1b]7501;?\x07')}; -join (1..10 | % { $c = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown').Character; if ($c -eq [char]27) { 'E' } else { $c } })`
+      )
     )
     await expect(page.locator('.xterm-rows:visible')).toContainText('E]7501;?E\\', { timeout: 15_000 })
   } finally {
@@ -59,10 +64,22 @@ test('agent escape sequences in background tabs raise dots, and the shortcut jum
     await expect(page.locator('.xterm')).toHaveCount(1)
 
     // Tab 1: an iTerm2-style notification (OSC 9) after 4 seconds.
-    await typeInVisibleTerminal(page, "sleep 4; printf '\\033]9;Agent needs you\\007'; echo tab-one")
+    await typeInVisibleTerminal(
+      page,
+      shellCommand(
+        "sleep 4; printf '\\033]9;Agent needs you\\007'; echo tab-one",
+        `Start-Sleep 4; ${psWrite('\x1b]9;Agent needs you\x07')}; echo tab-one`
+      )
+    )
     // Tab 2: an OSC 7501 error report ("tests failed", base64) after 6 seconds.
     await openNewTab(page, 2)
-    await typeInVisibleTerminal(page, "sleep 6; printf '\\033]7501;state=error:msg=dGVzdHMgZmFpbGVk\\033\\\\'; echo tab-two")
+    await typeInVisibleTerminal(
+      page,
+      shellCommand(
+        "sleep 6; printf '\\033]7501;state=error:msg=dGVzdHMgZmFpbGVk\\033\\\\'; echo tab-two",
+        `Start-Sleep 6; ${psWrite('\x1b]7501;state=error:msg=dGVzdHMgZmFpbGVk\x1b\\')}; echo tab-two`
+      )
+    )
     // Tab 3: the one being watched.
     await openNewTab(page, 3)
 

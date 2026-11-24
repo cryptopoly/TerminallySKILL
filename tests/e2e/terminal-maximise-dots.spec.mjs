@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { PS_FAIL, psWrite, shellCommand } from './shell-commands.mjs'
 
 const MAXIMISE_SHORTCUT = process.platform === 'darwin' ? 'Meta+Shift+M' : 'Control+Shift+M'
 const THEMES = ['void', 'ember', 'dusk', 'forest', 'slate', 'plum', 'chalk', 'sand', 'stone', 'mist', 'dove', 'clay']
@@ -57,7 +58,10 @@ test('a running command shows the running dot at once, and an agent reporting id
     // An agent says it is working, then idle while its command keeps going: the dot follows the agent.
     await typeInVisibleTerminal(
       page,
-      "printf '\\033]7501;state=working\\033\\\\'; sleep 3; printf '\\033]7501;state=idle\\033\\\\'; sleep 4"
+      shellCommand(
+        "printf '\\033]7501;state=working\\033\\\\'; sleep 3; printf '\\033]7501;state=idle\\033\\\\'; sleep 4",
+        `${psWrite('\x1b]7501;state=working\x1b\\')}; Start-Sleep 3; ${psWrite('\x1b]7501;state=idle\x1b\\')}; Start-Sleep 4`
+      )
     )
     await expect(running).toHaveCount(1, { timeout: 2_000 })
     await expect(running).toHaveCount(0, { timeout: 6_000 })
@@ -140,10 +144,16 @@ test('screenshots: the four live dot states on real tabs, the legend, and all fi
     // Tab 1 finishes, tab 2 fails, tab 3 asks for you, tab 4 keeps running, tab 5 is watched.
     await typeInVisibleTerminal(page, 'sleep 6')
     await openNewTab(page, 2)
-    await typeInVisibleTerminal(page, 'sleep 6; false')
+    await typeInVisibleTerminal(page, shellCommand('sleep 6; false', `Start-Sleep 6; ${PS_FAIL}`))
     await openNewTab(page, 3)
     // Delayed until this tab is in the background: alerts are not raised for the watched tab.
-    await typeInVisibleTerminal(page, "sleep 5; printf '\\033]9;Agent needs you\\007'; sleep 60")
+    await typeInVisibleTerminal(
+      page,
+      shellCommand(
+        "sleep 5; printf '\\033]9;Agent needs you\\007'; sleep 60",
+        `Start-Sleep 5; ${psWrite('\x1b]9;Agent needs you\x07')}; Start-Sleep 60`
+      )
+    )
     await openNewTab(page, 4)
     await typeInVisibleTerminal(page, 'sleep 120')
     await openNewTab(page, 5)

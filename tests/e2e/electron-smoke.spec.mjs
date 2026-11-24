@@ -3,6 +3,11 @@ import { delimiter } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { createFakeSshFixture } from '../../scripts/create-fake-ssh-fixture.mjs'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { isWindows } from './shell-commands.mjs'
+
+// The app runs `ssh` with execFile, which on Windows only finds ssh.com or ssh.exe on PATH: the
+// fixture's ssh.cmd shim is never run there, and the system's OpenSSH answers instead.
+const FAKE_SSH_SKIP_REASON = 'execFile cannot run the fake ssh fixture (a .cmd shim) on Windows'
 
 const sshTarget = {
   type: 'ssh',
@@ -62,6 +67,7 @@ test('launches with isolated state and persists a local project', async ({}, tes
 })
 
 test('validates an SSH workspace through the fake ssh fixture', async ({}, testInfo) => {
+  test.skip(isWindows, FAKE_SSH_SKIP_REASON)
   const { app, page, sshLog } = await launchWithFakeSsh(testInfo, 'success')
 
   try {
@@ -86,6 +92,7 @@ test('validates an SSH workspace through the fake ssh fixture', async ({}, testI
 })
 
 test('surfaces fake ssh authentication failures through the real IPC path', async ({}, testInfo) => {
+  test.skip(isWindows, FAKE_SSH_SKIP_REASON)
   const { app, page } = await launchWithFakeSsh(testInfo, 'permission-denied')
 
   try {
