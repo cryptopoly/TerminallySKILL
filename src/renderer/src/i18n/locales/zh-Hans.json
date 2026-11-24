@@ -222,7 +222,11 @@
     "folder.revealWindows": "在文件资源管理器中显示",
     "folder.revealLinux": "在文件管理器中打开",
     "folder.copyPath": "复制路径",
-    "openFailed.message": "无法打开终端：{{reason}}"
+    "openFailed.message": "无法打开终端：{{reason}}",
+    "panel.quad": "四分屏",
+    "panel.closeQuad": "退出四分屏",
+    "panel.quadDescription": "以 2x2 网格显示四个终端。先使用已打开的标签，其余的新开。再次点击回到之前的布局；不会关闭任何终端。",
+    "panel.quadTooSmall": "四分屏已暂停：窗口太小"
   },
   "native": {
     "menu.file": "文件",
@@ -387,6 +391,8 @@
     "sections.statusDots.steps.idle.label": "空闲",
     "sections.statusDots.steps.idle.desc": "灰色圆环：程序已打开，但一段时间没有输出，例如等待下一个任务的智能体。只显示圆点，不发通知。",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "将终端最大化以占满窗口，或恢复原样。在 Windows 和 Linux 上为 Ctrl+Shift+M。"
+    "sections.keyboard.steps.maximise.desc": "将终端最大化以占满窗口，或恢复原样。在 Windows 和 Linux 上为 Ctrl+Shift+M。",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "开启或关闭四分屏（2x2 网格中的四个终端）。Command+] / Command+[ 在窗格之间切换。Windows 和 Linux 上为 Ctrl+Shift+G。"
   }
 }

@@ -1206,7 +1206,11 @@
     "folder.revealWindows": "Dosya Gezgini'nde göster",
     "folder.revealLinux": "Dosya yöneticisinde aç",
     "folder.copyPath": "Yolu kopyala",
-    "openFailed.message": "Terminal açılamadı: {{reason}}"
+    "openFailed.message": "Terminal açılamadı: {{reason}}",
+    "panel.quad": "Dörtlü bölme",
+    "panel.closeQuad": "Dörtlü bölmeden çık",
+    "panel.quadDescription": "Dört terminal 2x2 ızgarada. Önce açık sekmelerinizi kullanır, kalanlar için yenilerini açar. Önceki düzene dönmek için yeniden tıklayın; hiçbir terminal kapanmaz.",
+    "panel.quadTooSmall": "Dörtlü bölme duraklatıldı: pencere çok küçük"
   },
   "onboarding": {
     "subtitle": "Görsel komut oluşturucu, terminal çalışma alanı, workflow'lar, günlükler ve AI araçları",
@@ -1424,7 +1428,9 @@
     "sections.statusDots.steps.idle.label": "Boşta",
     "sections.statusDots.steps.idle.desc": "Gri halka: bir program açık ama bir süredir hiçbir şey yazdırmadı, örneğin bir sonraki görevi bekleyen bir ajan. Yalnızca nokta, bildirim yok.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Terminali pencereyi kaplayacak şekilde büyüt veya geri al. Windows ve Linux’ta Ctrl+Shift+M."
+    "sections.keyboard.steps.maximise.desc": "Terminali pencereyi kaplayacak şekilde büyüt veya geri al. Windows ve Linux’ta Ctrl+Shift+M.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Dörtlü bölmeyi (2x2 ızgarada dört terminal) açar veya kapatır. Command+] / Command+[ bölmeler arasında geçiş yapar. Windows ve Linux’ta Ctrl+Shift+G."
   },
   "ai": {
     "explain.label": "AI ile açıkla",

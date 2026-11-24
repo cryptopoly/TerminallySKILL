@@ -1201,7 +1201,11 @@
     "folder.revealWindows": "在檔案總管中顯示",
     "folder.revealLinux": "在檔案管理員中開啟",
     "folder.copyPath": "複製路徑",
-    "openFailed.message": "無法開啟終端機：{{reason}}"
+    "openFailed.message": "無法開啟終端機：{{reason}}",
+    "panel.quad": "四分割畫面",
+    "panel.closeQuad": "結束四分割畫面",
+    "panel.quadDescription": "以 2x2 網格顯示四個終端機。先使用已開啟的分頁，其餘的另外開啟。再按一次即回到先前的版面；不會關閉任何終端機。",
+    "panel.quadTooSmall": "四分割畫面已暫停：視窗太小"
   },
   "onboarding": {
     "subtitle": "視覺化命令建構器、終端機工作區、工作流程、日誌與 AI 工具",
@@ -1419,7 +1423,9 @@
     "sections.statusDots.steps.idle.label": "閒置",
     "sections.statusDots.steps.idle.desc": "灰色圓環：程式已開啟，但一段時間沒有輸出，例如等待下一個任務的代理程式。只顯示圓點，不發通知。",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "將終端機最大化以占滿視窗，或還原。在 Windows 和 Linux 上為 Ctrl+Shift+M。"
+    "sections.keyboard.steps.maximise.desc": "將終端機最大化以占滿視窗，或還原。在 Windows 和 Linux 上為 Ctrl+Shift+M。",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "開啟或關閉四分割畫面（2x2 網格中的四個終端機）。Command+] / Command+[ 在窗格之間切換。Windows 與 Linux 上為 Ctrl+Shift+G。"
   },
   "ai": {
     "explain.label": "以 AI 說明",

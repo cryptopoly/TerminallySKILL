@@ -1210,7 +1210,11 @@
     "folder.revealWindows": "Toon in Verkenner",
     "folder.revealLinux": "Openen in bestandsbeheer",
     "folder.copyPath": "Pad kopiëren",
-    "openFailed.message": "Kan geen terminal openen: {{reason}}"
+    "openFailed.message": "Kan geen terminal openen: {{reason}}",
+    "panel.quad": "Vierdeling",
+    "panel.closeQuad": "Vierdeling sluiten",
+    "panel.quadDescription": "Vier terminals in een raster van 2x2. Gebruikt eerst je open tabbladen en opent nieuwe voor de rest. Klik opnieuw om terug te gaan naar de vorige indeling; er wordt geen terminal gesloten.",
+    "panel.quadTooSmall": "Vierdeling gepauzeerd: venster te klein"
   },
   "onboarding": {
     "subtitle": "Visuele opdrachtbuilder, terminalwerkruimte, workflows, logs en AI-tools",
@@ -1429,7 +1433,9 @@
     "sections.statusDots.steps.idle.label": "Stil",
     "sections.statusDots.steps.idle.desc": "Grijze ring: een programma is open maar heeft al een tijdje niets getoond, bijvoorbeeld een agent die op de volgende taak wacht. Alleen de stip, geen melding.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "De terminal maximaliseren zodat hij het venster vult, of herstellen. Ctrl+Shift+M op Windows en Linux."
+    "sections.keyboard.steps.maximise.desc": "De terminal maximaliseren zodat hij het venster vult, of herstellen. Ctrl+Shift+M op Windows en Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Zet de vierdeling (vier terminals in een raster van 2x2) aan of uit. Command+] / Command+[ wisselt tussen de vakken. Ctrl+Shift+G op Windows en Linux."
   },
   "ai": {
     "explain.label": "Uitleggen met AI",

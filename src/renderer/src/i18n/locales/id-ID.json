@@ -1208,7 +1208,11 @@
     "folder.revealWindows": "Tampilkan di File Explorer",
     "folder.revealLinux": "Buka di pengelola file",
     "folder.copyPath": "Salin jalur",
-    "openFailed.message": "Tidak dapat membuka terminal: {{reason}}"
+    "openFailed.message": "Tidak dapat membuka terminal: {{reason}}",
+    "panel.quad": "Bagi empat",
+    "panel.closeQuad": "Keluar dari bagi empat",
+    "panel.quadDescription": "Empat terminal dalam kisi 2x2. Memakai tab yang terbuka lebih dulu dan membuka yang baru untuk sisanya. Klik lagi untuk kembali ke tata letak sebelumnya; tidak ada terminal yang ditutup.",
+    "panel.quadTooSmall": "Bagi empat dijeda: jendela terlalu kecil"
   },
   "onboarding": {
     "subtitle": "Command builder visual, workspace terminal, workflow, log, dan alat AI",
@@ -1426,7 +1430,9 @@
     "sections.statusDots.steps.idle.label": "Diam",
     "sections.statusDots.steps.idle.desc": "Cincin abu-abu: program terbuka tetapi sudah lama tidak menampilkan apa pun, misalnya agen yang menunggu tugas berikutnya. Hanya titik, tanpa notifikasi.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maksimalkan terminal agar memenuhi jendela, atau kembalikan. Ctrl+Shift+M di Windows dan Linux."
+    "sections.keyboard.steps.maximise.desc": "Maksimalkan terminal agar memenuhi jendela, atau kembalikan. Ctrl+Shift+M di Windows dan Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Nyalakan atau matikan bagi empat (empat terminal dalam kisi 2x2). Command+] / Command+[ berpindah antar panelnya. Ctrl+Shift+G di Windows dan Linux."
   },
   "ai": {
     "explain.label": "Jelaskan dengan AI",

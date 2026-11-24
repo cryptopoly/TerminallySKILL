@@ -1205,7 +1205,11 @@
     "folder.revealWindows": "फ़ाइल एक्सप्लोरर में दिखाएँ",
     "folder.revealLinux": "फ़ाइल मैनेजर में खोलें",
     "folder.copyPath": "पथ कॉपी करें",
-    "openFailed.message": "टर्मिनल नहीं खुल सका: {{reason}}"
+    "openFailed.message": "टर्मिनल नहीं खुल सका: {{reason}}",
+    "panel.quad": "चार भागों में विभाजन",
+    "panel.closeQuad": "चार भागों वाला विभाजन बंद करें",
+    "panel.quadDescription": "2x2 ग्रिड में चार टर्मिनल। पहले आपके खुले टैब इस्तेमाल होते हैं, बाकी के लिए नए खुलते हैं। पिछले लेआउट पर लौटने के लिए फिर से क्लिक करें; कोई टर्मिनल बंद नहीं होता।",
+    "panel.quadTooSmall": "चार भागों वाला विभाजन रुका: विंडो बहुत छोटी है"
   },
   "onboarding": {
     "subtitle": "विज़ुअल कमांड बिल्डर, टर्मिनल वर्कस्पेस, वर्कफ़्लो, लॉग और AI टूल",
@@ -1424,7 +1428,9 @@
     "sections.statusDots.steps.idle.label": "निष्क्रिय",
     "sections.statusDots.steps.idle.desc": "धूसर घेरा: कोई प्रोग्राम खुला है पर कुछ देर से उसने कुछ नहीं दिखाया, जैसे अगले काम की प्रतीक्षा करता एजेंट। केवल बिंदु, कोई सूचना नहीं।",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "टर्मिनल को पूरी विंडो में बड़ा करें, या वापस लाएँ। Windows और Linux पर Ctrl+Shift+M।"
+    "sections.keyboard.steps.maximise.desc": "टर्मिनल को पूरी विंडो में बड़ा करें, या वापस लाएँ। Windows और Linux पर Ctrl+Shift+M।",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "चार भागों वाला विभाजन (2x2 ग्रिड में चार टर्मिनल) चालू या बंद करें। Command+] / Command+[ से उसके पैनों के बीच जाएँ। Windows और Linux पर Ctrl+Shift+G।"
   },
   "ai": {
     "explain.label": "AI से समझाएं",

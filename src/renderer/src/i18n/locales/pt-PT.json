@@ -1221,7 +1221,11 @@
     "folder.revealWindows": "Mostrar no Explorador de Ficheiros",
     "folder.revealLinux": "Abrir no gestor de ficheiros",
     "folder.copyPath": "Copiar caminho",
-    "openFailed.message": "Não foi possível abrir um terminal: {{reason}}"
+    "openFailed.message": "Não foi possível abrir um terminal: {{reason}}",
+    "panel.quad": "Divisão em quatro",
+    "panel.closeQuad": "Sair da divisão em quatro",
+    "panel.quadDescription": "Quatro terminais numa grelha 2x2. Usa primeiro os separadores abertos e abre novos para o resto. Clique novamente para voltar ao esquema anterior; nenhum terminal é fechado.",
+    "panel.quadTooSmall": "Divisão em quatro em pausa: janela demasiado pequena"
   },
   "onboarding": {
     "subtitle": "Construtor visual de comandos, workspace de terminal, workflows, registos e ferramentas de IA",
@@ -1441,7 +1445,9 @@
     "sections.statusDots.steps.idle.label": "Inativo",
     "sections.statusDots.steps.idle.desc": "Anel cinzento: um programa está aberto, mas não mostra nada há algum tempo, por exemplo um agente à espera da próxima tarefa. Só o ponto, sem notificação.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maximizar o terminal para ocupar a janela inteira, ou repô-lo. Ctrl+Shift+M no Windows e no Linux."
+    "sections.keyboard.steps.maximise.desc": "Maximizar o terminal para ocupar a janela inteira, ou repô-lo. Ctrl+Shift+M no Windows e no Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Liga ou desliga a divisão em quatro (quatro terminais numa grelha 2x2). Command+] / Command+[ alterna entre os painéis. Ctrl+Shift+G no Windows e no Linux."
   },
   "ai": {
     "explain.label": "Explicar com IA",

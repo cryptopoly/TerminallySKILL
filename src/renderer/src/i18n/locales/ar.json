@@ -1341,7 +1341,11 @@
     "folder.revealWindows": "إظهار في مستكشف الملفات",
     "folder.revealLinux": "فتح في مدير الملفات",
     "folder.copyPath": "نسخ المسار",
-    "openFailed.message": "تعذّر فتح طرفية: {{reason}}"
+    "openFailed.message": "تعذّر فتح طرفية: {{reason}}",
+    "panel.quad": "تقسيم رباعي",
+    "panel.closeQuad": "إنهاء التقسيم الرباعي",
+    "panel.quadDescription": "أربع طرفيات في شبكة 2×2. تُستخدم علاماتك المفتوحة أولًا وتُفتح طرفيات جديدة للباقي. انقر مرة أخرى للعودة إلى التخطيط السابق؛ لا تُغلق أي طرفية.",
+    "panel.quadTooSmall": "التقسيم الرباعي متوقف: النافذة صغيرة جدًا"
   },
   "onboarding": {
     "subtitle": "منشئ أوامر مرئي ومساحة عمل طرفية وسير عمل وسجلات وأدوات ذكاء اصطناعي",
@@ -1571,7 +1575,9 @@
     "sections.statusDots.steps.idle.label": "خامل",
     "sections.statusDots.steps.idle.desc": "حلقة رمادية: برنامج مفتوح لكنه لم يطبع شيئًا منذ مدة، مثل وكيل ينتظر مهمته التالية. نقطة فقط، بلا إشعار.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "تكبير الطرفية لتملأ النافذة أو استعادتها. Ctrl+Shift+M على Windows وLinux."
+    "sections.keyboard.steps.maximise.desc": "تكبير الطرفية لتملأ النافذة أو استعادتها. Ctrl+Shift+M على Windows وLinux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "تشغيل التقسيم الرباعي (أربع طرفيات في شبكة 2×2) أو إيقافه. Command+] / Command+[ للتنقل بين أجزائه. Ctrl+Shift+G على Windows وLinux."
   },
   "ai": {
     "explain.label": "اشرح بالذكاء الاصطناعي",

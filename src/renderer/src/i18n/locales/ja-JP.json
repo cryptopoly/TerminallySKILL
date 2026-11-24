@@ -1083,7 +1083,11 @@
     "folder.revealWindows": "エクスプローラーで表示",
     "folder.revealLinux": "ファイルマネージャーで開く",
     "folder.copyPath": "パスをコピー",
-    "openFailed.message": "ターミナルを開けませんでした: {{reason}}"
+    "openFailed.message": "ターミナルを開けませんでした: {{reason}}",
+    "panel.quad": "4分割",
+    "panel.closeQuad": "4分割を終了",
+    "panel.quadDescription": "4つのターミナルを2x2のグリッドに表示します。開いているタブを先に使い、足りない分は新しく開きます。もう一度クリックすると前のレイアウトに戻ります。ターミナルは閉じません。",
+    "panel.quadTooSmall": "4分割を一時停止中: ウィンドウが小さすぎます"
   },
   "onboarding": {
     "subtitle": "ビジュアルコマンドビルダー、ターミナルワークスペース、ワークフロー、ログ、AI ツール",
@@ -1301,7 +1305,9 @@
     "sections.statusDots.steps.idle.label": "待機中",
     "sections.statusDots.steps.idle.desc": "グレーの輪: プログラムは開いているものの、しばらく何も出力していません (次のタスクを待つエージェントなど)。点のみで、通知はしません。",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "ターミナルをウィンドウ全体に最大化、または元に戻します。Windows と Linux では Ctrl+Shift+M。"
+    "sections.keyboard.steps.maximise.desc": "ターミナルをウィンドウ全体に最大化、または元に戻します。Windows と Linux では Ctrl+Shift+M。",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "4分割（4つのターミナルを2x2のグリッドに表示）をオンまたはオフにします。Command+] / Command+[ でペインを移動します。Windows と Linux では Ctrl+Shift+G。"
   },
   "ai": {
     "explain.label": "AI で説明",

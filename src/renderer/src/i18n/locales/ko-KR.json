@@ -1208,7 +1208,11 @@
     "folder.revealWindows": "파일 탐색기에서 보기",
     "folder.revealLinux": "파일 관리자에서 열기",
     "folder.copyPath": "경로 복사",
-    "openFailed.message": "터미널을 열 수 없습니다: {{reason}}"
+    "openFailed.message": "터미널을 열 수 없습니다: {{reason}}",
+    "panel.quad": "4분할",
+    "panel.closeQuad": "4분할 종료",
+    "panel.quadDescription": "터미널 4개를 2x2 격자로 표시합니다. 열린 탭을 먼저 쓰고 나머지는 새로 엽니다. 다시 클릭하면 이전 레이아웃으로 돌아가며, 터미널은 닫히지 않습니다.",
+    "panel.quadTooSmall": "4분할 일시 중지: 창이 너무 작음"
   },
   "onboarding": {
     "subtitle": "시각적 명령 빌더, 터미널 작업공간, 워크플로, 로그, AI 도구",
@@ -1426,7 +1430,9 @@
     "sections.statusDots.steps.idle.label": "대기",
     "sections.statusDots.steps.idle.desc": "회색 고리: 프로그램이 열려 있지만 한동안 아무것도 출력하지 않았습니다. 예: 다음 작업을 기다리는 에이전트. 점만 표시하고 알림은 없습니다.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "터미널을 창 전체로 최대화하거나 복원합니다. Windows와 Linux에서는 Ctrl+Shift+M."
+    "sections.keyboard.steps.maximise.desc": "터미널을 창 전체로 최대화하거나 복원합니다. Windows와 Linux에서는 Ctrl+Shift+M.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "4분할(터미널 4개를 2x2 격자로 표시)을 켜거나 끕니다. Command+] / Command+[로 창 사이를 이동합니다. Windows와 Linux에서는 Ctrl+Shift+G."
   },
   "ai": {
     "explain.label": "AI로 설명",
