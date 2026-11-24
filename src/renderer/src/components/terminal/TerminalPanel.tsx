@@ -25,6 +25,7 @@ import { Tooltip } from '../ui/Tooltip'
 import { useFileStore } from '../../store/file-store'
 import { WorkflowRunPanel } from '../scripts/WorkflowRunnerHost'
 import { extractCommandTranscriptFromLines } from '../../lib/terminal-transcript'
+import { markCommandEnd, markCommandStart } from '../../lib/command-block-anchors'
 import { shortenPathForDisplay } from '../../lib/path-display'
 import { formatCommandForDisplay, isSSHSessionCommand, getSSHHost } from '../../lib/command-display'
 import { formatTime } from '../../i18n/format'
@@ -756,6 +757,9 @@ type AIReviewScope = 'session' | 'last-command' | 'selection'
 
 /** Most finished commands that keep a mark in one terminal; older marks are removed. */
 const MAX_COMMAND_BLOCK_MARKS = 200
+
+/** Windows ConPTY can pass a command anchor through before it draws the line break written before it */
+const COMMAND_ANCHORS_MAY_LAG = /^win/i.test(navigator.platform)
 
 interface PendingCommandBlockMarks {
   command: string
@@ -1828,11 +1832,7 @@ function XTermInstance({
     pendingBlockMarksRef.current = null
     // Full-screen apps draw on the alternate screen; their commands get no mark.
     if (!terminal || terminal.buffer.active.type !== 'normal') return
-    pendingBlockMarksRef.current = {
-      command,
-      commandLine: terminal.registerMarker(-1),
-      outputLine: terminal.registerMarker(0)
-    }
+    pendingBlockMarksRef.current = { command, ...markCommandStart(terminal, COMMAND_ANCHORS_MAY_LAG) }
   }, [])
 
   const finishCommandBlockMarks = useCallback((exitCode: number | null) => {
@@ -1883,7 +1883,7 @@ function XTermInstance({
       exitCode,
       commandLine: pending.commandLine,
       outputLine: pending.outputLine,
-      endLine: terminal.registerMarker(0),
+      endLine: markCommandEnd(terminal, COMMAND_ANCHORS_MAY_LAG),
       decoration
     })
     while (blocks.length > MAX_COMMAND_BLOCK_MARKS) {
