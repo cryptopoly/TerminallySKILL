@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
-import { psWrite, shellCommand } from './shell-commands.mjs'
+import { isWindows, psWrite, shellCommand } from './shell-commands.mjs'
 
 const JUMP_SHORTCUT = process.platform === 'darwin' ? 'Meta+Shift+J' : 'Control+Shift+J'
 
@@ -19,6 +19,8 @@ async function openNewTab(page, expectedCount) {
 }
 
 test('the terminal answers the OSC 7501 support query through the pty', async ({}, testInfo) => {
+  // Checked on Windows 11: ConPTY drops an OSC sequence written to the console's input, even in VT input mode.
+  test.skip(isWindows, 'ConPTY drops the OSC reply on its way in, so no Windows program can read it')
   test.setTimeout(60_000)
   const { app, page } = await launchTerminallySkill(testInfo)
   try {
@@ -33,13 +35,9 @@ test('the terminal answers the OSC 7501 support query through the pty', async ({
     await page.waitForTimeout(2000)
 
     // Read the 10-byte reply (ESC ] 7501 ; ? ESC \) raw from the tty and print it with ESC shown as E.
-    // PowerShell reads the reply as ten key presses from the console input.
     await typeInVisibleTerminal(
       page,
-      shellCommand(
-        "stty -echo -icanon min 10 time 20; printf '\\033]7501;?\\007'; head -c 10 | tr '\\033' E; stty sane; echo",
-        `${psWrite('\x1b]7501;?\x07')}; -join (1..10 | % { $c = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown').Character; if ($c -eq [char]27) { 'E' } else { $c } })`
-      )
+      "stty -echo -icanon min 10 time 20; printf '\\033]7501;?\\007'; head -c 10 | tr '\\033' E; stty sane; echo"
     )
     await expect(page.locator('.xterm-rows:visible')).toContainText('E]7501;?E\\', { timeout: 15_000 })
   } finally {

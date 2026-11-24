@@ -24,8 +24,10 @@ test('a scrolled-up view stays put, and scrolling back down follows fast output 
     await page.keyboard.type(
       shellCommand(
         'seq -f start-%g 1 300; for i in $(seq 1 60); do echo slow-$i; sleep 0.1; done; seq -f burst-%g 1 300000; echo stream-finished',
+        // The burst goes out 1,000 lines per write: one PowerShell output line at a time takes about 40 s.
         "1..300 | % { \"start-$_\" }; 1..60 | % { \"slow-$_\"; Start-Sleep -Milliseconds 100 }; " +
-          'foreach ($i in 1..300000) { "burst-$i" }; echo stream-finished'
+          "foreach ($n in 0..299) { [Console]::WriteLine((($n * 1000 + 1)..($n * 1000 + 1000) -replace '^', 'burst-') -join [Environment]::NewLine) }; " +
+          'echo stream-finished'
       )
     )
     await page.keyboard.press('Enter')

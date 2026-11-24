@@ -69,7 +69,7 @@ test('a secret typed in a terminal is shown as typed but masked in the AI reques
     await page.keyboard.type(
       shellCommand(
         `echo ${FAKE_TOKEN} --password ${FAKE_PASSWORD}; false`,
-        // Quoted: PowerShell would read --password as a parameter of echo (Write-Output).
+        // Quoted: unquoted, PowerShell's echo prints each word on its own line.
         `echo '${FAKE_TOKEN} --password ${FAKE_PASSWORD}'; ${PS_FAIL}`
       )
     )
