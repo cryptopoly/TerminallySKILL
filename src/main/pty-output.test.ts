@@ -146,6 +146,27 @@ describe('pty-output', () => {
     expect(stripWorkflowMarkerEcho(echoed)).toBe('npm test\r\nok\r\n')
   })
 
+  it('removes a marker line that bash 3.2 readline wraps with a space and a carriage return', () => {
+    // Bytes from /bin/bash 3.2 on macOS, 80 columns, picking up a typed-ahead marker at its prompt
+    const wrapped =
+      "bash-3.2$ printf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-5027f432-9b8e-4443-9 \r0c0-360bb1379231' '7f34a700-a826-462c-aee1-a0399e74cdcc' $?\r\nok\r\n"
+    expect(stripWorkflowMarkerEcho(wrapped)).toBe('ok\r\n')
+  })
+
+  it('leaves a marker line without its newline to the echo filter', () => {
+    const marker = "printf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-1' 'step-1' $?"
+    const firstRow = "bash-3.2$ printf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf"
+    expect(stripWorkflowMarkerEcho(firstRow)).toBe(firstRow)
+    const filter = new MarkerEchoFilter()
+    filter.arm(marker)
+    filter.noteCommandStart()
+    filter.notePromptReady()
+    const shown = [firstRow, "-1' 'st \rep-1' $?", '\r\n', 'bash-3.2$ ']
+      .map((chunk) => filter.push(stripWorkflowMarkerEcho(chunk)))
+      .join('')
+    expect(shown).toBe('bash-3.2$ \r\x1b[Kbash-3.2$ ')
+  })
+
   it('arms the echo filter for the zsh/bash marker only; PowerShell erases its own step line', () => {
     const shMarker = buildWorkflowStepMarkerCommand('wf-1', 'step-1', '/bin/zsh', 0)!
     expect(`npm test\n${shMarker}\n`.match(STEP_MARKER_COMMAND_RE)?.[0]).toBe(shMarker)
