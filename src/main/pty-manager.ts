@@ -211,6 +211,42 @@ export async function initTerminalPath(): Promise<void> {
   await getEnrichedPath()
 }
 
+/**
+ * Every pty child until node-pty reports its exit, including ones already killed and dropped from
+ * `sessions`. node-pty delivers the exit through a native thread-safe callback; if that arrives
+ * while Node is tearing down at quit, calling into JS fails and the app aborts (SIGABRT, "quit
+ * unexpectedly"). Quitting therefore waits here until every exit has come in.
+ */
+const runningProcesses = new Map<IPty, Promise<void>>()
+
+function trackProcessExit(ptyProcess: IPty): void {
+  runningProcesses.set(
+    ptyProcess,
+    new Promise((resolve) => {
+      ptyProcess.onExit(() => {
+        runningProcesses.delete(ptyProcess)
+        resolve()
+      })
+    })
+  )
+}
+
+let quitting = false
+
+export function hasRunningTerminalProcesses(): boolean {
+  return runningProcesses.size > 0
+}
+
+async function waitForProcessExits(timeoutMs: number): Promise<void> {
+  if (runningProcesses.size === 0) return
+  let timer: ReturnType<typeof setTimeout> | undefined
+  await Promise.race([
+    Promise.allSettled([...runningProcesses.values()]),
+    new Promise<void>((resolve) => { timer = setTimeout(resolve, timeoutMs) })
+  ])
+  clearTimeout(timer)
+}
+
 function bufferForLog(session: PtySession, data: string): void {
   const expectedSize = session.outputBufferSize + data.length
   const buffered = appendOutputChunk(session.outputBuffer, session.outputBufferSize, data)
@@ -399,6 +435,11 @@ export async function createTerminal(
   )
 
   const pty = await getPtyRuntime()
+  if (quitting) {
+    // A shell started now would outlive the quit wait and end during teardown.
+    cleanup()
+    throw new Error('TerminallySKILL is quitting')
+  }
   const spawnOptions = {
     name: 'xterm-256color',
     cols: 80,
@@ -436,6 +477,8 @@ export async function createTerminal(
       env
     })
   }
+
+  trackProcessExit(ptyProcess)
 
   const session: PtySession = {
     process: ptyProcess,
@@ -726,6 +769,12 @@ export function killSessionsForWindow(targetWindow: BrowserWindow): void {
   }
 }
 
+/** Quitting: end every terminal and wait (bounded) until node-pty has reported each exit. */
+export async function stopAllTerminalsForQuit(): Promise<void> {
+  quitting = true
+  await killAllTerminals()
+}
+
 export async function killAllTerminals(): Promise<void> {
   const saves: Promise<void>[] = []
   for (const [, session] of sessions) {
@@ -736,4 +785,15 @@ export async function killAllTerminals(): Promise<void> {
   }
   sessions.clear()
   await Promise.allSettled(saves)
+
+  // Wait for the shells to end, so their exits are not delivered during quit teardown.
+  // A shell that ignores SIGHUP is killed outright.
+  await waitForProcessExits(1500)
+  if (runningProcesses.size > 0 && process.platform !== 'win32') {
+    for (const ptyProcess of runningProcesses.keys()) ptyProcess.kill('SIGKILL')
+    await waitForProcessExits(1000)
+  }
+  if (runningProcesses.size > 0) {
+    console.warn(`[pty] ${runningProcesses.size} terminal process(es) did not report an exit before quit`)
+  }
 }
