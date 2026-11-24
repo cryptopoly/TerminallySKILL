@@ -47,7 +47,7 @@ import {
 import type { SensitivePromptKind, TerminalPasteReason } from '../../lib/terminal-safety'
 import { confirmTerminalClose } from '../../lib/terminal-close'
 import type { Theme } from '../../../../shared/settings-schema'
-import { resolveProjectWorkingDirectory } from '../../../../shared/project-schema'
+import { resolveProjectWorkingDirectory, type ProjectWorkspaceLayout } from '../../../../shared/project-schema'
 import { createProjectTerminalSession, getSessionShell, openInteractiveProjectShell, openVncViewer } from '../../lib/workspace-session'
 import { buildChangeDirectoryCommand } from '../../../../shared/local-shell'
 import { raiseCommandAttention } from '../../lib/attention'
@@ -69,10 +69,13 @@ import { VncPanel } from './VncPanel'
 
 export function TerminalPanel({
   presentation = 'docked',
-  onRequestClose
+  onRequestClose,
+  onLayoutChange
 }: {
   presentation?: 'docked' | 'quick'
   onRequestClose?: () => void
+  /** Saves layout fields of the active project (divider positions) */
+  onLayoutChange?: (patch: Partial<ProjectWorkspaceLayout>) => void
 } = {}): JSX.Element {
   const { t } = useTranslation('terminal')
   const {
@@ -115,8 +118,16 @@ export function TerminalPanel({
     setTerminalVisible(false)
   }, [onRequestClose, setTerminalVisible])
 
-  /** Draggable split ratio (0-100), default 50% */
-  const [splitRatio, setSplitRatio] = useState(50)
+  // Divider positions are saved per project and come back when the project opens or the split/quad starts.
+  const savedLayoutRef = useRef(activeProject?.workspaceLayout)
+  savedLayoutRef.current = activeProject?.workspaceLayout
+  const savedSplitRatio = (): number => savedLayoutRef.current?.splitRatio ?? 50
+  const savedQuadRatios = (): { column: number; row: number } =>
+    savedLayoutRef.current?.quadRatios ?? { column: 50, row: 50 }
+
+  /** Draggable split ratio (0-100); shown within 20-80% */
+  const [splitRatio, setSplitRatio] = useState(savedSplitRatio)
+  const shownSplitRatio = Math.max(20, Math.min(80, splitRatio))
   const draggingRef = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [snapshotPanelOpen, setSnapshotPanelOpen] = useState(false)
@@ -168,7 +179,7 @@ export function TerminalPanel({
     // Restore the original session as primary, new one becomes the split pane
     if (primaryId) setActiveSession(primaryId)
     splitTerminal(direction, sessionId)
-    setSplitRatio(50)
+    setSplitRatio(savedSplitRatio())
   }
 
   /** An empty quad pane's New terminal button: a normal new tab, placed in that pane */
@@ -216,10 +227,20 @@ export function TerminalPanel({
     return () => observer.disconnect()
   }, [])
   const quadArrangement = isQuad ? resolveQuadArrangement(containerSize.width, containerSize.height) : null
-  const [quadRatios, setQuadRatios] = useState({ column: 50, row: 50 })
+  const [quadRatios, setQuadRatios] = useState(savedQuadRatios)
+  const quadRatiosRef = useRef(quadRatios)
+  quadRatiosRef.current = quadRatios
   useEffect(() => {
-    if (isQuad) setQuadRatios({ column: 50, row: 50 })
-  }, [isQuad])
+    if (isQuad) setQuadRatios(savedQuadRatios())
+    // Only when quad starts or the project changes, not on each save of the project's layout
+      }, [isQuad, activeProjectId])
+  useEffect(() => {
+    setSplitRatio(savedSplitRatio())
+      }, [activeProjectId])
+  const onLayoutChangeRef = useRef(onLayoutChange)
+  onLayoutChangeRef.current = onLayoutChange
+  /** Divider positions are kept to one decimal */
+  const roundPercent = (value: number): number => Math.round(value * 10) / 10
   const quadColumn = clampQuadRatio(quadRatios.column, containerSize.width, QUAD_MIN_PANE_WIDTH)
   const quadRow = clampQuadRatio(quadRatios.row, containerSize.height, QUAD_MIN_PANE_HEIGHT)
   const quadSlots = quad?.slots ?? []
@@ -232,16 +253,20 @@ export function TerminalPanel({
     const container = containerRef.current
     if (!container) return
 
+    let latest = quadRatiosRef.current
+    let moved = false
     const handleMouseMove = (ev: MouseEvent): void => {
       const rect = container.getBoundingClientRect()
-      setQuadRatios((current) => ({
+      latest = {
         column: axis === 'row'
-          ? current.column
+          ? latest.column
           : clampQuadRatio(((ev.clientX - rect.left) / rect.width) * 100, rect.width, QUAD_MIN_PANE_WIDTH),
         row: axis === 'column'
-          ? current.row
+          ? latest.row
           : clampQuadRatio(((ev.clientY - rect.top) / rect.height) * 100, rect.height, QUAD_MIN_PANE_HEIGHT)
-      }))
+      }
+      moved = true
+      setQuadRatios(latest)
     }
 
     const handleMouseUp = (): void => {
@@ -249,6 +274,7 @@ export function TerminalPanel({
       document.removeEventListener('mouseup', handleMouseUp)
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
+      if (moved) onLayoutChangeRef.current?.({ quadRatios: { column: roundPercent(latest.column), row: roundPercent(latest.row) } })
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -285,6 +311,7 @@ export function TerminalPanel({
     const container = containerRef.current
     if (!container) return
 
+    let latest: number | null = null
     const handleMouseMove = (ev: MouseEvent): void => {
       if (!draggingRef.current || !container) return
       const rect = container.getBoundingClientRect()
@@ -294,7 +321,8 @@ export function TerminalPanel({
       } else {
         ratio = ((ev.clientY - rect.top) / rect.height) * 100
       }
-      setSplitRatio(Math.max(20, Math.min(80, ratio)))
+      latest = Math.max(20, Math.min(80, ratio))
+      setSplitRatio(latest)
     }
 
     const handleMouseUp = (): void => {
@@ -303,6 +331,7 @@ export function TerminalPanel({
       document.removeEventListener('mouseup', handleMouseUp)
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
+      if (latest !== null) onLayoutChangeRef.current?.({ splitRatio: roundPercent(latest) })
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -339,16 +368,16 @@ export function TerminalPanel({
     if (sessionId === activeProjectSessionId) {
       // Primary pane
       if (splitDirection === 'vertical') {
-        return { display: 'flex', position: 'absolute', top: 0, left: 0, bottom: 0, width: `calc(${splitRatio}% - 2px)` }
+        return { display: 'flex', position: 'absolute', top: 0, left: 0, bottom: 0, width: `calc(${shownSplitRatio}% - 2px)` }
       }
-      return { display: 'flex', position: 'absolute', top: 0, left: 0, right: 0, height: `calc(${splitRatio}% - 2px)` }
+      return { display: 'flex', position: 'absolute', top: 0, left: 0, right: 0, height: `calc(${shownSplitRatio}% - 2px)` }
     }
     if (sessionId === splitProjectSessionId) {
       // Secondary pane
       if (splitDirection === 'vertical') {
-        return { display: 'flex', position: 'absolute', top: 0, right: 0, bottom: 0, width: `calc(${100 - splitRatio}% - 2px)` }
+        return { display: 'flex', position: 'absolute', top: 0, right: 0, bottom: 0, width: `calc(${100 - shownSplitRatio}% - 2px)` }
       }
-      return { display: 'flex', position: 'absolute', bottom: 0, left: 0, right: 0, height: `calc(${100 - splitRatio}% - 2px)` }
+      return { display: 'flex', position: 'absolute', bottom: 0, left: 0, right: 0, height: `calc(${100 - shownSplitRatio}% - 2px)` }
     }
     // Hidden session
     return { display: 'none', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
@@ -716,8 +745,8 @@ export function TerminalPanel({
             } bg-surface-border transition-colors`}
             style={
               splitDirection === 'vertical'
-                ? { left: `calc(${splitRatio}% - 2px)` }
-                : { top: `calc(${splitRatio}% - 2px)` }
+                ? { left: `calc(${shownSplitRatio}% - 2px)` }
+                : { top: `calc(${shownSplitRatio}% - 2px)` }
             }
           />
         )}
