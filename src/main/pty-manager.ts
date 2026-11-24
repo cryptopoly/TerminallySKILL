@@ -66,6 +66,12 @@ let nextId = 1
 let ptyRuntimePromise: Promise<typeof import('node-pty')> | null = null
 const nodeRequire = createRequire(import.meta.url)
 
+/**
+ * TSK_CONPTY_DLL=1 makes node-pty use its bundled conpty.dll and OpenConsole.exe instead of the
+ * ConPTY built into Windows (decision D0041). Off by default; Windows only.
+ */
+const USE_CONPTY_DLL = process.platform === 'win32' && process.env.TSK_CONPTY_DLL === '1'
+
 /** Cached enriched PATH — resolved once, reused for all sessions */
 let cachedEnrichedPath: string | null = null
 
@@ -387,7 +393,9 @@ export async function createTerminal(
   }
   env = sanitizeSpawnEnv(env)
 
-  console.log(`[pty] Creating terminal ${sessionId}: shell=${shell}, cwd=${resolvedCwd}`)
+  console.log(
+    `[pty] Creating terminal ${sessionId}: shell=${shell}, cwd=${resolvedCwd}${USE_CONPTY_DLL ? ', conpty.dll' : ''}`
+  )
 
   const pty = await getPtyRuntime()
   const spawnOptions = {
@@ -395,7 +403,8 @@ export async function createTerminal(
     cols: 80,
     rows: 24,
     cwd: resolvedCwd,
-    env
+    env,
+    ...(USE_CONPTY_DLL ? { useConptyDll: true } : {})
   }
 
   let ptyProcess: IPty
