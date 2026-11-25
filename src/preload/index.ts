@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
+import { usesBundledConpty } from '../shared/conpty-mode'
 import type { CommandDefinition, DiscoveredCommand, ParsedHelpResult } from '../shared/command-schema'
 import type {
   Project,
@@ -16,6 +17,7 @@ import type { Snippet } from '../shared/snippet-schema'
 import type { AIActionRequest, AIActionResponse } from '../shared/ai-schema'
 import type { StarterPackPreview } from '../shared/starter-pack-schema'
 import type { RunRecord, TerminalSessionInfo } from '../shared/run-schema'
+import type { ReportedTerminalLayout, SavedTerminalLayout } from '../shared/session-restore'
 import type { WorkflowStepResultEvent } from '../shared/workflow-shell'
 import type { RunStatusFilter } from '../shared/run-history'
 import type { ShellIntegrationEvent } from '../shared/shell-integration'
@@ -36,6 +38,9 @@ type ProjectUpdates = Partial<Omit<Project, 'workspaceLayout'>> & {
 }
 
 export const electronAPI = {
+  /** Windows terminals run on node-pty's bundled conpty.dll (same check as the main process) */
+  usesBundledConpty: usesBundledConpty(process.platform, process.env),
+
   getAppVersion: (): Promise<string> =>
     ipcRenderer.invoke(IPC_CHANNELS.APP_GET_VERSION),
 
@@ -130,8 +135,9 @@ export const electronAPI = {
   openFileDialog: (): Promise<string | null> =>
     ipcRenderer.invoke(IPC_CHANNELS.DIALOG_OPEN_FILE),
 
-  openDirectoryDialog: (): Promise<string | null> =>
-    ipcRenderer.invoke(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY),
+  /** startPath: the folder the picker opens in, when it exists */
+  openDirectoryDialog: (startPath?: string): Promise<string | null> =>
+    ipcRenderer.invoke(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY, startPath),
 
   writeClipboard: (text: string): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.CLIPBOARD_WRITE, text),
@@ -401,6 +407,12 @@ export const electronAPI = {
 
   getSessionInfo: (sessionId: string): Promise<TerminalSessionInfo | null> =>
     ipcRenderer.invoke(IPC_CHANNELS.PTY_GET_SESSION_INFO, sessionId),
+
+  reportTerminalLayout: (layout: ReportedTerminalLayout): void =>
+    ipcRenderer.send(IPC_CHANNELS.TERMINAL_LAYOUT_REPORT, layout),
+
+  takeSavedTerminalLayout: (): Promise<SavedTerminalLayout | null> =>
+    ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_LAYOUT_TAKE),
 
   // Shell integration
   onShellReady: (callback: (sessionId: string) => void): (() => void) => {

@@ -94,6 +94,35 @@ describe('workspace-target', () => {
     expect(buildInteractiveWorkspaceConnectCommand(createLocalWorkspaceTarget('/repo'))).toBeNull()
   })
 
+  it('keeps local commands unchanged in PowerShell; env vars reach the shell through its environment', () => {
+    expect(
+      buildWorkspaceCommandString(createLocalWorkspaceTarget('C:\\repo'), 'npm test', { NODE_ENV: 'test' }, 'powershell.exe')
+    ).toBe('npm test')
+  })
+
+  it('quotes the local ssh call for PowerShell and keeps the remote command POSIX', () => {
+    expect(
+      buildWorkspaceCommandString(
+        createSSHWorkspaceTarget('prod.example.com', 'deploy', "/srv/it's app", 2222, String.raw`C:\Users\Dan O'Neil\.ssh\id_ed25519`),
+        'echo "$HOME" ü',
+        { GREETING: "it's $5" },
+        'powershell.exe'
+      )
+    ).toBe(
+      String.raw`& 'ssh' '-p' '2222' '-i' 'C:\Users\Dan O''Neil\.ssh\id_ed25519' 'deploy@prod.example.com' ` +
+        String.raw`'export GREETING=''it''\''''s $5'' && cd ''/srv/it''\''''s app'' && echo \"$HOME\" ü'`
+    )
+  })
+
+  it('builds the interactive ssh connect command for PowerShell', () => {
+    expect(
+      buildInteractiveWorkspaceConnectCommand(
+        createSSHWorkspaceTarget('prod.example.com', 'deploy', '/srv/app'),
+        'powershell.exe'
+      )
+    ).toBe("& 'ssh' '-t' 'deploy@prod.example.com' 'cd ''/srv/app'' && exec \\\"${SHELL:-/bin/sh}\\\" -l'")
+  })
+
   it('builds an ssh test invocation that checks the remote cwd', () => {
     expect(
       buildWorkspaceTargetTestInvocation(

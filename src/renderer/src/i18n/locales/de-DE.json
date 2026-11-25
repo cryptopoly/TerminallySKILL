@@ -96,7 +96,9 @@
     "general.attention.keep.title": "Benachrichtigungen bis zum Schließen anzeigen",
     "general.attention.keep.description": "Benachrichtigungen bleiben sichtbar, bis du sie schließt. Das genaue Verhalten hängt von deinem Desktop ab.",
     "general.attention.keep.macDescription": "Das entscheidet macOS. Wähle in den Systemeinstellungen für TerminallySKILL den Stil, der sichtbar bleibt, bis du ihn schließt.",
-    "general.attention.keep.openSettings": "Systemeinstellungen öffnen"
+    "general.attention.keep.openSettings": "Systemeinstellungen öffnen",
+    "general.restoreTabs.title": "Terminal-Tabs wieder öffnen",
+    "general.restoreTabs.description": "Öffnet beim Start die lokalen Terminal-Tabs, die Teilung und die Ordner vom letzten Mal. SSH- und VNC-Tabs werden nicht neu verbunden, alte Ausgaben werden nicht gespeichert."
   },
   "commands": {
     "addDialog.title": "Befehl hinzufügen",
@@ -919,7 +921,6 @@
     "toolbar.plain": "normal",
     "busy.title": "Shell beschäftigt - Befehle laufen, sobald sie bereit ist",
     "busy.clearQueue": "Warteschlange leeren",
-    "busy.running": "Läuft",
     "search.previous": "Vorheriger Treffer (Shift+Enter)",
     "search.next": "Nächster Treffer (Enter)",
     "search.close": "Schließen (Esc)",
@@ -1000,7 +1001,23 @@
     "dot.idle": "Ruhig",
     "attention.waitingForYes": "Wartet auf dein Ja",
     "attention.bell": "Hat die Terminalglocke geläutet",
-    "attention.stillWaiting": "Wartet noch auf dich ({{duration}})"
+    "attention.stillWaiting": "Wartet noch auf dich ({{duration}})",
+    "blocks.menu": "Befehlsaktionen",
+    "blocks.copyOutput": "Ausgabe kopieren",
+    "blocks.copyCommand": "Befehl kopieren",
+    "blocks.runAgain": "Erneut ausführen",
+    "blocks.explain": "Ausgabe erklären",
+    "folder.change": "Ordner wechseln…",
+    "folder.menu": "Ordneraktionen",
+    "folder.revealMac": "Im Finder zeigen",
+    "folder.revealWindows": "Im Explorer anzeigen",
+    "folder.revealLinux": "Im Dateimanager öffnen",
+    "folder.copyPath": "Pfad kopieren",
+    "openFailed.message": "Terminal konnte nicht geöffnet werden: {{reason}}",
+    "panel.quad": "Viererteilung",
+    "panel.closeQuad": "Viererteilung beenden",
+    "panel.quadDescription": "Vier Terminals in einem 2x2-Raster. Nutzt zuerst deine offenen Tabs und öffnet für den Rest neue. Erneut klicken stellt das vorherige Layout wieder her; kein Terminal wird geschlossen.",
+    "panel.quadTooSmall": "Viererteilung pausiert: Fenster zu klein"
   },
   "onboarding": {
     "subtitle": "Visueller Befehls-Builder, Terminal-Workspace, Workflows, Protokolle und KI-Tools",
@@ -1219,7 +1236,9 @@
     "sections.statusDots.steps.idle.label": "Ruhig",
     "sections.statusDots.steps.idle.desc": "Grauer Ring: Ein Programm ist offen, hat aber eine Weile nichts ausgegeben, zum Beispiel ein Agent, der auf die nächste Aufgabe wartet. Nur der Punkt, keine Benachrichtigung.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Das Terminal maximieren, sodass es das Fenster füllt, oder wiederherstellen. Ctrl+Shift+M unter Windows und Linux."
+    "sections.keyboard.steps.maximise.desc": "Das Terminal maximieren, sodass es das Fenster füllt, oder wiederherstellen. Ctrl+Shift+M unter Windows und Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Die Viererteilung (vier Terminals im 2x2-Raster) ein- oder ausschalten. Command+] / Command+[ wechselt zwischen den Bereichen. Ctrl+Shift+G unter Windows und Linux."
   },
   "ai": {
     "explain.label": "Mit KI erklären",

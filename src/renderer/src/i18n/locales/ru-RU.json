@@ -145,7 +145,9 @@
     "general.attention.keep.title": "Показывать уведомления до закрытия",
     "general.attention.keep.description": "Уведомления остаются на экране, пока вы их не закроете. Точное поведение зависит от рабочего стола.",
     "general.attention.keep.macDescription": "Это определяет macOS. В Системных настройках выберите для TerminallySKILL стиль, который остаётся до закрытия.",
-    "general.attention.keep.openSettings": "Открыть Системные настройки"
+    "general.attention.keep.openSettings": "Открыть Системные настройки",
+    "general.restoreTabs.title": "Снова открывать вкладки терминала",
+    "general.restoreTabs.description": "При запуске снова открывает локальные вкладки терминала, разделение и папки с прошлого раза. Вкладки SSH и VNC не переподключаются, старый вывод не сохраняется."
   },
   "commands": {
     "addDialog.title": "Добавить команду",
@@ -1055,7 +1057,6 @@
     "toolbar.plain": "обычная",
     "busy.title": "Shell занят - команды выполнятся, когда он освободится",
     "busy.clearQueue": "Очистить очередь",
-    "busy.running": "Выполняется",
     "search.previous": "Предыдущее совпадение (Shift+Enter)",
     "search.next": "Следующее совпадение (Enter)",
     "search.close": "Закрыть (Esc)",
@@ -1139,7 +1140,23 @@
     "dot.idle": "Простой",
     "attention.waitingForYes": "Ждёт вашего согласия",
     "attention.bell": "Подал звуковой сигнал терминала",
-    "attention.stillWaiting": "Всё ещё ждёт вас ({{duration}})"
+    "attention.stillWaiting": "Всё ещё ждёт вас ({{duration}})",
+    "blocks.menu": "Действия с командой",
+    "blocks.copyOutput": "Копировать вывод",
+    "blocks.copyCommand": "Копировать команду",
+    "blocks.runAgain": "Запустить снова",
+    "blocks.explain": "Объяснить вывод",
+    "folder.change": "Сменить папку…",
+    "folder.menu": "Действия с папкой",
+    "folder.revealMac": "Показать в Finder",
+    "folder.revealWindows": "Показать в проводнике",
+    "folder.revealLinux": "Открыть в файловом менеджере",
+    "folder.copyPath": "Копировать путь",
+    "openFailed.message": "Не удалось открыть терминал: {{reason}}",
+    "panel.quad": "Деление на четыре",
+    "panel.closeQuad": "Выйти из деления на четыре",
+    "panel.quadDescription": "Четыре терминала в сетке 2x2. Сначала используются открытые вкладки, для остальных открываются новые. Нажмите ещё раз, чтобы вернуться к прежней раскладке; терминалы не закрываются.",
+    "panel.quadTooSmall": "Деление на четыре приостановлено: окно слишком маленькое"
   },
   "onboarding": {
     "subtitle": "Визуальный конструктор команд, терминальное рабочее пространство, workflow, логи и инструменты ИИ",
@@ -1363,7 +1380,9 @@
     "sections.statusDots.steps.idle.label": "Простой",
     "sections.statusDots.steps.idle.desc": "Серое кольцо: программа открыта, но давно ничего не выводит, например агент ждёт следующую задачу. Только точка, без уведомления.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Развернуть терминал на всё окно или вернуть прежний размер. Ctrl+Shift+M в Windows и Linux."
+    "sections.keyboard.steps.maximise.desc": "Развернуть терминал на всё окно или вернуть прежний размер. Ctrl+Shift+M в Windows и Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Включить или выключить деление на четыре (четыре терминала в сетке 2x2). Command+] / Command+[ переключает панели. Ctrl+Shift+G в Windows и Linux."
   },
   "ai": {
     "explain.label": "Объяснить с помощью ИИ",

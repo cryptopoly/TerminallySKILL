@@ -2,6 +2,7 @@ import { createServer } from 'node:http'
 import { mkdir } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { PS_FAIL, shellCommand } from './shell-commands.mjs'
 
 // Built at run time so no token-shaped literal sits in the repository.
 const FAKE_TOKEN = 'gh' + 'p_' + 'E2eFakeTokenForMaskingTest' + '0123456789'
@@ -65,7 +66,13 @@ test('a secret typed in a terminal is shown as typed but masked in the AI reques
     // Submit through the editor prompt so the app records the command block and its exit code.
     const editor = page.getByPlaceholder('Type a command and press Enter')
     await editor.click()
-    await page.keyboard.type(`echo ${FAKE_TOKEN} --password ${FAKE_PASSWORD}; false`)
+    await page.keyboard.type(
+      shellCommand(
+        `echo ${FAKE_TOKEN} --password ${FAKE_PASSWORD}; false`,
+        // Quoted: unquoted, PowerShell's echo prints each word on its own line.
+        `echo '${FAKE_TOKEN} --password ${FAKE_PASSWORD}'; ${PS_FAIL}`
+      )
+    )
     await page.keyboard.press('Enter')
 
     // The live terminal is never altered: the renderer receives and draws the raw text.

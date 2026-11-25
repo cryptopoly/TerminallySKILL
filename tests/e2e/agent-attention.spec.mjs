@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { isWindows, psWrite, shellCommand } from './shell-commands.mjs'
 
 const JUMP_SHORTCUT = process.platform === 'darwin' ? 'Meta+Shift+J' : 'Control+Shift+J'
 
@@ -18,6 +19,8 @@ async function openNewTab(page, expectedCount) {
 }
 
 test('the terminal answers the OSC 7501 support query through the pty', async ({}, testInfo) => {
+  // Checked on Windows 11: ConPTY drops an OSC sequence written to the console's input, even in VT input mode.
+  test.skip(isWindows, 'ConPTY drops the OSC reply on its way in, so no Windows program can read it')
   test.setTimeout(60_000)
   const { app, page } = await launchTerminallySkill(testInfo)
   try {
@@ -59,10 +62,22 @@ test('agent escape sequences in background tabs raise dots, and the shortcut jum
     await expect(page.locator('.xterm')).toHaveCount(1)
 
     // Tab 1: an iTerm2-style notification (OSC 9) after 4 seconds.
-    await typeInVisibleTerminal(page, "sleep 4; printf '\\033]9;Agent needs you\\007'; echo tab-one")
+    await typeInVisibleTerminal(
+      page,
+      shellCommand(
+        "sleep 4; printf '\\033]9;Agent needs you\\007'; echo tab-one",
+        `Start-Sleep 4; ${psWrite('\x1b]9;Agent needs you\x07')}; echo tab-one`
+      )
+    )
     // Tab 2: an OSC 7501 error report ("tests failed", base64) after 6 seconds.
     await openNewTab(page, 2)
-    await typeInVisibleTerminal(page, "sleep 6; printf '\\033]7501;state=error:msg=dGVzdHMgZmFpbGVk\\033\\\\'; echo tab-two")
+    await typeInVisibleTerminal(
+      page,
+      shellCommand(
+        "sleep 6; printf '\\033]7501;state=error:msg=dGVzdHMgZmFpbGVk\\033\\\\'; echo tab-two",
+        `Start-Sleep 6; ${psWrite('\x1b]7501;state=error:msg=dGVzdHMgZmFpbGVk\x1b\\')}; echo tab-two`
+      )
+    )
     // Tab 3: the one being watched.
     await openNewTab(page, 3)
 

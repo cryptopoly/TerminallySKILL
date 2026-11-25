@@ -226,7 +226,9 @@
     "general.attention.keep.title": "إبقاء الإشعارات حتى إغلاقها",
     "general.attention.keep.description": "تبقى الإشعارات على الشاشة حتى تغلقها. يعتمد السلوك الدقيق على سطح المكتب لديك.",
     "general.attention.keep.macDescription": "يتحكم macOS في ذلك. في إعدادات النظام، اختر لـ TerminallySKILL نمط الإشعار الذي يبقى حتى تغلقه.",
-    "general.attention.keep.openSettings": "فتح إعدادات النظام"
+    "general.attention.keep.openSettings": "فتح إعدادات النظام",
+    "general.restoreTabs.title": "إعادة فتح علامات تبويب الطرفية",
+    "general.restoreTabs.description": "عند التشغيل، يعيد فتح علامات تبويب الطرفية المحلية والتقسيم والمجلدات من آخر مرة. لا يُعاد الاتصال بعلامات SSH وVNC، ولا يُحتفظ بالمخرجات القديمة."
   },
   "commands": {
     "addDialog.title": "إضافة أمر",
@@ -1240,7 +1242,6 @@
     "toolbar.plain": "عادي",
     "busy.title": "shell مشغول - ستعمل الأوامر عندما يصبح جاهزًا",
     "busy.clearQueue": "مسح قائمة الانتظار",
-    "busy.running": "قيد التشغيل",
     "search.previous": "التطابق السابق (Shift+Enter)",
     "search.next": "التطابق التالي (Enter)",
     "search.close": "إغلاق (Esc)",
@@ -1328,7 +1329,23 @@
     "dot.idle": "خامل",
     "attention.waitingForYes": "بانتظار موافقتك",
     "attention.bell": "أطلق جرس الطرفية",
-    "attention.stillWaiting": "لا يزال بانتظارك ({{duration}})"
+    "attention.stillWaiting": "لا يزال بانتظارك ({{duration}})",
+    "blocks.menu": "إجراءات الأمر",
+    "blocks.copyOutput": "نسخ المخرجات",
+    "blocks.copyCommand": "نسخ الأمر",
+    "blocks.runAgain": "تشغيل مرة أخرى",
+    "blocks.explain": "شرح المخرجات",
+    "folder.change": "تغيير المجلد…",
+    "folder.menu": "إجراءات المجلد",
+    "folder.revealMac": "إظهار في Finder",
+    "folder.revealWindows": "إظهار في مستكشف الملفات",
+    "folder.revealLinux": "فتح في مدير الملفات",
+    "folder.copyPath": "نسخ المسار",
+    "openFailed.message": "تعذّر فتح طرفية: {{reason}}",
+    "panel.quad": "تقسيم رباعي",
+    "panel.closeQuad": "إنهاء التقسيم الرباعي",
+    "panel.quadDescription": "أربع طرفيات في شبكة 2×2. تُستخدم علاماتك المفتوحة أولًا وتُفتح طرفيات جديدة للباقي. انقر مرة أخرى للعودة إلى التخطيط السابق؛ لا تُغلق أي طرفية.",
+    "panel.quadTooSmall": "التقسيم الرباعي متوقف: النافذة صغيرة جدًا"
   },
   "onboarding": {
     "subtitle": "منشئ أوامر مرئي ومساحة عمل طرفية وسير عمل وسجلات وأدوات ذكاء اصطناعي",
@@ -1558,7 +1575,9 @@
     "sections.statusDots.steps.idle.label": "خامل",
     "sections.statusDots.steps.idle.desc": "حلقة رمادية: برنامج مفتوح لكنه لم يطبع شيئًا منذ مدة، مثل وكيل ينتظر مهمته التالية. نقطة فقط، بلا إشعار.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "تكبير الطرفية لتملأ النافذة أو استعادتها. Ctrl+Shift+M على Windows وLinux."
+    "sections.keyboard.steps.maximise.desc": "تكبير الطرفية لتملأ النافذة أو استعادتها. Ctrl+Shift+M على Windows وLinux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "تشغيل التقسيم الرباعي (أربع طرفيات في شبكة 2×2) أو إيقافه. Command+] / Command+[ للتنقل بين أجزائه. Ctrl+Shift+G على Windows وLinux."
   },
   "ai": {
     "explain.label": "اشرح بالذكاء الاصطناعي",

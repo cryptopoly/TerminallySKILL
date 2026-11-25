@@ -14,6 +14,7 @@ import { useCommandStore } from '../../store/command-store'
 import { useScriptStore } from '../../store/script-store'
 import { useSnippetStore } from '../../store/snippet-store'
 import { useTerminalStore } from '../../store/terminal-store'
+import { quadKey } from '../../lib/quad-layout'
 import { useProjectStore } from '../../store/project-store'
 import { useBuilderStore } from '../../store/builder-store'
 import { useSettingsStore } from '../../store/settings-store'
@@ -51,6 +52,7 @@ interface CommandPaletteProps {
   onOpenInfo: () => void
   onOpenTour: () => void
   onToggleMaximise: () => void
+  onToggleQuad: () => void
   onCreateProject: () => void
 }
 
@@ -61,6 +63,7 @@ export function CommandPalette({
   onOpenInfo,
   onOpenTour,
   onToggleMaximise,
+  onToggleQuad,
   onCreateProject
 }: CommandPaletteProps): JSX.Element {
   const { t } = useTranslation('layout')
@@ -84,6 +87,7 @@ export function CommandPalette({
   const activeProjectId = activeProject?.id ?? null
   const hasProjectTerminal = useTerminalStore((s) => s.sessions.some((session) => session.projectId === activeProjectId))
   const isMaximised = useTerminalStore((s) => s.terminalMaximised && s.terminalVisible)
+  const isQuad = useTerminalStore((s) => Boolean(s.quadByProject[quadKey(activeProjectId)]))
 
   // Build the full item list
   const allItems = useMemo((): PaletteItem[] => {
@@ -128,6 +132,13 @@ export function CommandPalette({
         label: t(isMaximised ? 'panel.restore' : 'panel.maximise', { ns: 'terminal' }),
         detail: t('panel.maximiseDescription', { ns: 'terminal' }),
         action: () => { onClose(); onToggleMaximise() }
+      })
+      items.push({
+        id: 'action:quad-terminal',
+        type: 'action',
+        label: t(isQuad ? 'panel.closeQuad' : 'panel.quad', { ns: 'terminal' }),
+        detail: t('panel.quadDescription', { ns: 'terminal' }),
+        action: () => { onClose(); onToggleQuad() }
       })
     }
     if (activeProject?.workspaceTarget.type === 'ssh') {
@@ -243,7 +254,7 @@ export function CommandPalette({
     }
 
     return items
-  }, [commands, scripts, snippets, history, activeProject, hasAttention, hasProjectTerminal, isMaximised, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onOpenTour, onToggleMaximise, onCreateProject, resetValues, setActiveCommand, setActiveScript, setActiveSnippet, t])
+  }, [commands, scripts, snippets, history, activeProject, hasAttention, hasProjectTerminal, isMaximised, isQuad, hiddenCommandExecutables, onClose, onNewTerminal, onOpenSettings, onOpenInfo, onOpenTour, onToggleMaximise, onToggleQuad, onCreateProject, resetValues, setActiveCommand, setActiveScript, setActiveSnippet, t])
 
   const runHistoryCommand = useCallback(async (cmd: string) => {
     const envOverrides = useProjectStore.getState().getActiveEnvOverrides()

@@ -6,6 +6,22 @@ import { open, readFile, rename, unlink } from 'fs/promises'
  * over the target. rename is atomic on POSIX — an interrupted write (crash, sign-out,
  * power loss) can never leave the target file truncated or half-written.
  */
+/** Windows can refuse a rename for a moment while another handle (a reader, antivirus) has the target open */
+const RENAME_RETRY_CODES = new Set(['EPERM', 'EACCES', 'EBUSY'])
+
+async function renameWithRetry(from: string, to: string): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await rename(from, to)
+      return
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code
+      if (process.platform !== 'win32' || !code || !RENAME_RETRY_CODES.has(code) || attempt >= 6) throw err
+      await new Promise((resolve) => setTimeout(resolve, 20 * 2 ** attempt))
+    }
+  }
+}
+
 export async function writeFileAtomic(
   filePath: string,
   data: string | Uint8Array,
@@ -20,7 +36,7 @@ export async function writeFileAtomic(
     } finally {
       await handle.close()
     }
-    await rename(tmpPath, filePath)
+    await renameWithRetry(tmpPath, filePath)
   } catch (err) {
     try {
       await unlink(tmpPath)

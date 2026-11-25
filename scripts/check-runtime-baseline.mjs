@@ -9,12 +9,12 @@ const checks = [
   {
     label: 'Node engine is aligned with Electron 45 installer requirements',
     value: packageJson.engines?.node,
-    expected: '>=22.12.0'
+    expected: '>=26.13.0'
   },
   {
     label: 'Electron stays on the supported v45 runtime baseline',
     value: packageJson.devDependencies?.electron,
-    expected: '^45.1.0'
+    expected: '^45.5.0'
   },
   {
     label: 'ws stays on the patched runtime baseline',
@@ -29,7 +29,7 @@ const checks = [
   {
     label: 'electron-builder stays on the audit-clean packaging baseline',
     value: packageJson.devDependencies?.['electron-builder'],
-    expected: '^26.15.2'
+    expected: '^26.18.0'
   },
   {
     label: 'electron-vite stays on the audit-clean build baseline',

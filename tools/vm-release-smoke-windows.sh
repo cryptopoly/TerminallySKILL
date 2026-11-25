@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Install the Windows setup .exe from a GitHub release (draft is fine) on the Windows test VM and run the
 # packaged spec against it (app opens, version matches, settings persist, a terminal starts).
-# Leaves the app installed. Usage: tools/vm-release-smoke-windows.sh <version> [--vm "W11 Testing"]
+# Leaves the app installed. Usage: tools/vm-release-smoke-windows.sh <version> [--vm "W11 CLEAN"]
+# Never use the personal "W11" VM.
 set -euo pipefail
 
 VERSION=${1:?version required, e.g. 0.9.103}; shift || true
-VM="W11 Testing"
+VM="W11 CLEAN"
 [ "${1:-}" = "--vm" ] && VM=$2
 HERE=$(cd "$(dirname "$0")" && pwd)
 
@@ -14,6 +15,7 @@ prlctl status "$VM" | grep -q running || { prlctl start "$VM" >/dev/null; sleep 
 stage="$HOME/Downloads/tsk-release-smoke"; mkdir -p "$stage"; rm -f "$stage"/*.exe
 gh release download "v$VERSION" -R cryptopoly/TerminallySKILL -p "*Setup-$VERSION-arm64.exe" -D "$stage" --clobber
 exe=$(ls "$stage"/*.exe)
+SEVENZIP=${SEVENZIP:-7zz} "$HERE/check-nsis-payload.sh" "$exe"
 trap 'rm -rf "$stage"' EXIT
 
 # prlctl exec joins its arguments into one string; ship the script base64-encoded. --current-user runs it in the

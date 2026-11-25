@@ -70,6 +70,8 @@ export interface AppSettings {
   sidebarTabOrder: string[]
   /** What to show on app startup: 'dashboard' or 'last-project' (auto-open last used) */
   startupBehavior: 'dashboard' | 'last-project'
+  /** Reopen local terminal tabs, splits and folders at the next launch */
+  restoreTerminalTabs: boolean
   /** Custom data directory. Empty string = use default Electron userData path */
   customDataDirectory: string
   /** UI language. "system" follows the OS/browser preference. */
@@ -113,6 +115,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   lastBackupAt: null,
   sidebarTabOrder: ['scripts', 'commands', 'snippets', 'files', 'logs'],
   startupBehavior: 'dashboard',
+  restoreTerminalTabs: false,
   customDataDirectory: '',
   uiLocale: DEFAULT_UI_LOCALE,
   formatLocale: DEFAULT_FORMAT_LOCALE,

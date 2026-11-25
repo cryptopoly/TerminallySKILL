@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const settingsManagerMocks = vi.hoisted(() => ({
@@ -76,13 +77,13 @@ describe('path-access', () => {
 
     expect(roots).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: 'user-data', path: '/Users/dan/Library/Application Support/TerminallySKILL' }),
-        expect.objectContaining({ kind: 'custom-data-root', path: '/Users/dan/TerminallySKILLData' }),
-        expect.objectContaining({ kind: 'configured-log-dir', path: '/Users/dan/Logs/TerminallySKILL' }),
-        expect.objectContaining({ kind: 'project-dir', path: '/Users/dan/TerminallySKILL' })
+        expect.objectContaining({ kind: 'user-data', path: resolve('/Users/dan/Library/Application Support/TerminallySKILL') }),
+        expect.objectContaining({ kind: 'custom-data-root', path: resolve('/Users/dan/TerminallySKILLData') }),
+        expect.objectContaining({ kind: 'configured-log-dir', path: resolve('/Users/dan/Logs/TerminallySKILL') }),
+        expect.objectContaining({ kind: 'project-dir', path: resolve('/Users/dan/TerminallySKILL') })
       ])
     )
-    expect(roots.some((root) => root.path === '/srv/app')).toBe(false)
+    expect(roots.some((root) => root.path === resolve('/srv/app'))).toBe(false)
   })
 
   it('recognizes paths that fall within expected project roots', async () => {
@@ -91,7 +92,7 @@ describe('path-access', () => {
       expectedKinds: ['project-dir']
     })
 
-    expect(observed.path).toBe('/Users/dan/TerminallySKILL/src/main/index.ts')
+    expect(observed.path).toBe(resolve('/Users/dan/TerminallySKILL/src/main/index.ts'))
     expect(observed.withinExpectedRoots).toBe(true)
     expect(observed.matchedRoots).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: 'project-dir' })])
@@ -108,11 +109,11 @@ describe('path-access', () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: 'approved-external-file',
-          path: '/tmp/external-note.txt'
+          path: resolve('/tmp/external-note.txt')
         }),
         expect.objectContaining({
           kind: 'approved-external-directory',
-          path: '/tmp/external-workspace'
+          path: resolve('/tmp/external-workspace')
         })
       ])
     )
@@ -161,6 +162,6 @@ describe('path-access', () => {
         expectedKinds: ['logs-dir', 'configured-log-dir'],
         mode: 'enforce'
       })
-    ).rejects.toThrow('[path-access] logs:delete blocked path outside expected roots: /tmp/random.log')
+    ).rejects.toThrow(`[path-access] logs:delete blocked path outside expected roots: ${resolve('/tmp/random.log')}`)
   })
 })

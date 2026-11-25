@@ -24,7 +24,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
 
       - name: Install Linux build dependencies
@@ -43,7 +43,7 @@ jobs:
       - run: npm run test:audit:runtime
 
   # Same checks on the other two desktop platforms. Windows has never passed on GitHub's runners
-  # (see docs/hub/backlog.md, Issues), so it reports without blocking the PR. Drop continue-on-error
+  # (see the ProjectHub backlog, issues B0101 to B0111), so it reports without blocking the PR. Drop continue-on-error
   # once it passes.
   cross-platform:
     name: test (${{ matrix.os }})
@@ -64,7 +64,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
 
       - run: npm ci

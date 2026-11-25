@@ -224,7 +224,9 @@
     "general.attention.keep.title": "Показувати сповіщення до закриття",
     "general.attention.keep.description": "Сповіщення залишаються на екрані, доки ви їх не закриєте. Точна поведінка залежить від робочого столу.",
     "general.attention.keep.macDescription": "Це визначає macOS. У Системних параметрах виберіть для TerminallySKILL стиль, який залишається до закриття.",
-    "general.attention.keep.openSettings": "Відкрити Системні параметри"
+    "general.attention.keep.openSettings": "Відкрити Системні параметри",
+    "general.restoreTabs.title": "Знову відкривати вкладки термінала",
+    "general.restoreTabs.description": "Під час запуску знову відкриває локальні вкладки термінала, розділення та папки з минулого разу. Вкладки SSH і VNC не перепідключаються, старий вивід не зберігається."
   },
   "commands": {
     "addDialog.title": "Додати команду",
@@ -1172,7 +1174,6 @@
     "toolbar.plain": "звичайне",
     "busy.title": "Shell зайнятий - команди виконаються, коли він буде готовий",
     "busy.clearQueue": "Очистити чергу",
-    "busy.running": "Виконується",
     "search.previous": "Попередній збіг (Shift+Enter)",
     "search.next": "Наступний збіг (Enter)",
     "search.close": "Закрити (Esc)",
@@ -1258,7 +1259,23 @@
     "dot.idle": "Простій",
     "attention.waitingForYes": "Чекає на вашу згоду",
     "attention.bell": "Подав звуковий сигнал термінала",
-    "attention.stillWaiting": "Досі чекає на вас ({{duration}})"
+    "attention.stillWaiting": "Досі чекає на вас ({{duration}})",
+    "blocks.menu": "Дії з командою",
+    "blocks.copyOutput": "Копіювати вивід",
+    "blocks.copyCommand": "Копіювати команду",
+    "blocks.runAgain": "Запустити знову",
+    "blocks.explain": "Пояснити вивід",
+    "folder.change": "Змінити папку…",
+    "folder.menu": "Дії з папкою",
+    "folder.revealMac": "Показати у Finder",
+    "folder.revealWindows": "Показати в Провіднику",
+    "folder.revealLinux": "Відкрити у файловому менеджері",
+    "folder.copyPath": "Копіювати шлях",
+    "openFailed.message": "Не вдалося відкрити термінал: {{reason}}",
+    "panel.quad": "Поділ на чотири",
+    "panel.closeQuad": "Вийти з поділу на чотири",
+    "panel.quadDescription": "Чотири термінали в сітці 2x2. Спершу використовуються відкриті вкладки, для решти відкриваються нові. Натисніть ще раз, щоб повернутися до попереднього розкладу; термінали не закриваються.",
+    "panel.quadTooSmall": "Поділ на чотири призупинено: вікно замале"
   },
   "onboarding": {
     "subtitle": "Візуальний конструктор команд, термінальний робочий простір, workflow, логи та інструменти ШІ",
@@ -1482,7 +1499,9 @@
     "sections.statusDots.steps.idle.label": "Простій",
     "sections.statusDots.steps.idle.desc": "Сіре кільце: програма відкрита, але давно нічого не виводить, наприклад агент чекає на наступне завдання. Лише крапка, без сповіщення.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Розгорнути термінал на все вікно або повернути попередній розмір. Ctrl+Shift+M у Windows і Linux."
+    "sections.keyboard.steps.maximise.desc": "Розгорнути термінал на все вікно або повернути попередній розмір. Ctrl+Shift+M у Windows і Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Увімкнути або вимкнути поділ на чотири (чотири термінали в сітці 2x2). Command+] / Command+[ перемикає панелі. Ctrl+Shift+G у Windows і Linux."
   },
   "ai": {
     "explain.label": "Пояснити за допомогою ШІ",

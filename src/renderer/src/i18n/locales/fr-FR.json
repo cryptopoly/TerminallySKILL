@@ -149,7 +149,9 @@
     "general.attention.keep.title": "Garder les notifications jusqu'à leur fermeture",
     "general.attention.keep.description": "Les notifications restent à l'écran jusqu'à ce que vous les fermiez. Le comportement exact dépend de votre bureau.",
     "general.attention.keep.macDescription": "macOS en décide. Dans Réglages Système, choisissez pour TerminallySKILL le style qui reste jusqu'à sa fermeture.",
-    "general.attention.keep.openSettings": "Ouvrir Réglages Système"
+    "general.attention.keep.openSettings": "Ouvrir Réglages Système",
+    "general.restoreTabs.title": "Rouvrir les onglets du terminal",
+    "general.restoreTabs.description": "Au lancement, rouvre les onglets de terminal locaux, la division et les dossiers de la dernière fois. Les onglets SSH et VNC ne sont pas reconnectés, et l'ancienne sortie n'est pas conservée."
   },
   "commands": {
     "addDialog.title": "Ajouter une commande",
@@ -1046,7 +1048,6 @@
     "toolbar.plain": "simple",
     "busy.title": "Shell occupé - les commandes s’exécuteront quand il sera prêt",
     "busy.clearQueue": "Vider la file",
-    "busy.running": "En cours",
     "search.previous": "Correspondance précédente (Shift+Entrée)",
     "search.next": "Correspondance suivante (Entrée)",
     "search.close": "Fermer (Échap)",
@@ -1128,7 +1129,23 @@
     "dot.idle": "Inactif",
     "attention.waitingForYes": "Attend votre accord",
     "attention.bell": "A fait sonner la cloche du terminal",
-    "attention.stillWaiting": "Vous attend toujours ({{duration}})"
+    "attention.stillWaiting": "Vous attend toujours ({{duration}})",
+    "blocks.menu": "Actions de la commande",
+    "blocks.copyOutput": "Copier la sortie",
+    "blocks.copyCommand": "Copier la commande",
+    "blocks.runAgain": "Relancer",
+    "blocks.explain": "Expliquer la sortie",
+    "folder.change": "Changer de dossier…",
+    "folder.menu": "Actions du dossier",
+    "folder.revealMac": "Afficher dans le Finder",
+    "folder.revealWindows": "Afficher dans l'Explorateur de fichiers",
+    "folder.revealLinux": "Ouvrir dans le gestionnaire de fichiers",
+    "folder.copyPath": "Copier le chemin",
+    "openFailed.message": "Impossible d'ouvrir un terminal : {{reason}}",
+    "panel.quad": "Division en quatre",
+    "panel.closeQuad": "Quitter la division en quatre",
+    "panel.quadDescription": "Quatre terminaux dans une grille 2x2. Utilise d'abord vos onglets ouverts et en ouvre de nouveaux pour le reste. Cliquez à nouveau pour revenir à la disposition précédente ; aucun terminal n'est fermé.",
+    "panel.quadTooSmall": "Division en quatre en pause : fenêtre trop petite"
   },
   "onboarding": {
     "subtitle": "Builder de commandes visuel, espace de travail de terminal, workflows, journaux et outils IA",
@@ -1350,7 +1367,9 @@
     "sections.statusDots.steps.idle.label": "Inactif",
     "sections.statusDots.steps.idle.desc": "Anneau gris : un programme est ouvert mais n'a rien affiché depuis un moment, par exemple un agent qui attend sa prochaine tâche. Point seulement, sans notification.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Agrandir le terminal pour qu’il occupe toute la fenêtre, ou le restaurer. Ctrl+Shift+M sous Windows et Linux."
+    "sections.keyboard.steps.maximise.desc": "Agrandir le terminal pour qu’il occupe toute la fenêtre, ou le restaurer. Ctrl+Shift+M sous Windows et Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Active ou désactive la division en quatre (quatre terminaux dans une grille 2x2). Command+] / Command+[ passe d’un volet à l’autre. Ctrl+Shift+G sous Windows et Linux."
   },
   "ai": {
     "explain.label": "Expliquer avec l’IA",

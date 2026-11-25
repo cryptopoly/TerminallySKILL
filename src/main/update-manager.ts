@@ -677,9 +677,9 @@ async function downloadAndInstallViaElectronUpdater(
     }
 
     await updater.downloadUpdate()
-    const { killAllTerminals } = await import('./pty-manager')
+    const { stopAllTerminalsForQuit } = await import('./pty-manager')
     const { stopAllVncSessions } = await import('./vnc-manager')
-    await killAllTerminals()
+    await stopAllTerminalsForQuit()
     stopAllVncSessions()
     setTimeout(() => {
       updater.quitAndInstall(false, true)

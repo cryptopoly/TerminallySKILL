@@ -1,5 +1,13 @@
 import { create } from 'zustand'
 import type { AgentActivity } from '../../../shared/attention'
+import {
+  buildQuadSlots,
+  nextQuadSessionId,
+  placeInQuadSlot,
+  QUAD_PANE_COUNT,
+  quadKey,
+  type QuadSlots
+} from '../lib/quad-layout'
 
 export interface TerminalSession {
   id: string
@@ -12,6 +20,16 @@ export interface TerminalSession {
 
 export type TerminalSessionMode = 'workspace-shell' | 'ssh-interactive' | 'vnc'
 type SplitDirection = 'horizontal' | 'vertical'
+
+/** A project's quad split. The focused pane is the active session, so everything that follows the active tab follows it. */
+export interface QuadLayout {
+  /** Four panes, row by row; null = empty pane */
+  slots: QuadSlots
+  /** The layout to go back to when quad ends */
+  previous: { activeSessionId: string | null; splitSessionId: string | null; splitDirection: SplitDirection }
+  /** Open new terminals for empty panes. On when quad starts (or comes back); off once filled, so a closed pane stays empty. */
+  autoFill: boolean
+}
 
 interface TerminalStore {
   sessions: TerminalSession[]
@@ -49,6 +67,18 @@ interface TerminalStore {
   /** Toggle focus between primary and secondary panes */
   setFocusedPane: (pane: 'primary' | 'secondary') => void
   toggleFocusedPane: () => void
+  /** Quad split per project (key: project id, '' for no project). Kept while the app runs. */
+  quadByProject: Record<string, QuadLayout>
+  /** Start quad with the project's open tabs, or (with slots) set its panes, as session restore does */
+  enterQuad: (projectId: string | null, slots?: QuadSlots) => void
+  /** End quad and go back to the layout from before it. Terminals stay open as tabs. */
+  exitQuad: (projectId: string | null) => void
+  toggleQuad: (projectId: string | null) => void
+  /** Put a session in one pane (an empty pane's New terminal button) */
+  placeQuadSession: (projectId: string | null, index: number, sessionId: string) => void
+  finishQuadFill: (projectId: string | null) => void
+  /** Cmd+] / Cmd+[: the next or previous pane of a split or quad */
+  cycleFocusedPane: (projectId: string | null, direction: 1 | -1) => void
 }
 
 export function filterSessionsForProject(
@@ -122,6 +152,7 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
   agentActivityBySession: {},
   quietSessionIds: {},
   terminalMaximised: false,
+  quadByProject: {},
   setSessionBusy: (id, busy) =>
     set((state) => {
       // The command ended, so any agent it started is gone too: drop what it last reported.
@@ -151,18 +182,31 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
     }),
   setTerminalMaximised: (maximised) => set({ terminalMaximised: maximised }),
   addSession: (id, projectId = null, mode = 'workspace-shell', vncWsPort, vncToken) =>
-    set((state) => ({
-      sessions: [
-        ...state.sessions,
-        {
-          id, active: true, projectId: projectId ?? null, mode,
-          ...(vncWsPort !== undefined ? { vncWsPort } : {}),
-          ...(vncToken !== undefined ? { vncToken } : {})
-        }
-      ],
-      activeSessionId: id,
-      terminalVisible: true
-    })),
+    set((state) => {
+      // In quad, a new terminal takes an empty pane, or else the focused one (that tab stays open).
+      const key = quadKey(projectId ?? null)
+      const quad = state.quadByProject[key]
+      let quadByProject = state.quadByProject
+      if (quad) {
+        const emptyIndex = quad.slots.indexOf(null)
+        const focusedIndex = state.activeSessionId ? quad.slots.indexOf(state.activeSessionId) : -1
+        const index = emptyIndex >= 0 ? emptyIndex : Math.max(focusedIndex, 0)
+        quadByProject = { ...state.quadByProject, [key]: { ...quad, slots: placeInQuadSlot(quad.slots, index, id) } }
+      }
+      return {
+        sessions: [
+          ...state.sessions,
+          {
+            id, active: true, projectId: projectId ?? null, mode,
+            ...(vncWsPort !== undefined ? { vncWsPort } : {}),
+            ...(vncToken !== undefined ? { vncToken } : {})
+          }
+        ],
+        activeSessionId: id,
+        terminalVisible: true,
+        quadByProject
+      }
+    }),
   removeSession: (id) =>
     set((state) => {
       const sessions = state.sessions.filter((s) => s.id !== id)
@@ -174,6 +218,23 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
       } else if (activeSessionId === id && splitSessionId) {
         activeSessionId = splitSessionId
         splitSessionId = null
+      }
+      // A closed quad pane takes a hidden tab of the project, or stays empty
+      let quadByProject = state.quadByProject
+      const closed = state.sessions.find((session) => session.id === id)
+      for (const [key, quad] of Object.entries(state.quadByProject)) {
+        const index = quad.slots.indexOf(id)
+        if (index < 0) continue
+        const spare = sessions.find(
+          (session) => session.projectId === (closed?.projectId ?? null) && !quad.slots.includes(session.id)
+        )
+        const slots = quad.slots.map((slot, i) => (i === index ? spare?.id ?? null : slot))
+        // Every pane closed: open four again the next time a terminal opens for the project
+        const autoFill = quad.autoFill || slots.every((slot) => !slot)
+        quadByProject = { ...quadByProject, [key]: { ...quad, slots, autoFill } }
+        if (state.activeSessionId === id) {
+          activeSessionId = slots[index] ?? slots.find((slot): slot is string => Boolean(slot)) ?? activeSessionId
+        }
       }
       if (activeSessionId === id) {
         activeSessionId = sessions[0]?.id ?? null
@@ -188,6 +249,7 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
         busySessionIds,
         agentActivityBySession,
         quietSessionIds,
+        quadByProject,
         focusedPane: 'primary',
         terminalVisible: sessions.length > 0,
         terminalMaximised: sessions.length > 0 && state.terminalMaximised
@@ -195,6 +257,22 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
     }),
   setActiveSession: (id) =>
     set((state) => {
+      // In quad, choosing a pane's tab focuses that pane; any other tab of the project moves into the focused pane.
+      const session = state.sessions.find((candidate) => candidate.id === id)
+      const key = quadKey(session?.projectId ?? null)
+      const quad = session ? state.quadByProject[key] : undefined
+      if (quad) {
+        if (quad.slots.includes(id)) return { activeSessionId: id, focusedPane: 'primary' }
+        const focusedIndex = state.activeSessionId ? quad.slots.indexOf(state.activeSessionId) : -1
+        const emptyIndex = quad.slots.indexOf(null)
+        const index = focusedIndex >= 0 ? focusedIndex : emptyIndex >= 0 ? emptyIndex : 0
+        return {
+          activeSessionId: id,
+          focusedPane: 'primary',
+          quadByProject: { ...state.quadByProject, [key]: { ...quad, slots: placeInQuadSlot(quad.slots, index, id) } }
+        }
+      }
+
       if (state.splitSessionId && id === state.splitSessionId && state.activeSessionId && state.activeSessionId !== id) {
         return {
           activeSessionId: id,
@@ -257,5 +335,92 @@ export const useTerminalStore = create<TerminalStore>((set) => ({
       focusedPane: state.splitSessionId
         ? (state.focusedPane === 'primary' ? 'secondary' : 'primary')
         : 'primary'
-    }))
+    })),
+  enterQuad: (projectId, slots) =>
+    set((state) => {
+      const key = quadKey(projectId)
+      const existing = state.quadByProject[key]
+      if (existing && !slots) return state
+      const projectSessionIds = filterSessionsForProject(state.sessions, projectId).map((session) => session.id)
+      const context = resolveProjectTerminalContext(state.sessions, projectId, state.activeSessionId, state.splitSessionId)
+      const nextSlots = slots
+        ? Array.from({ length: QUAD_PANE_COUNT }, (_, index) => {
+            const id = slots[index]
+            return id && projectSessionIds.includes(id) ? id : null
+          })
+        : buildQuadSlots(projectSessionIds, context.activeProjectSessionId, context.splitProjectSessionId)
+      const quad: QuadLayout = existing
+        ? { ...existing, slots: nextSlots, autoFill: true }
+        : {
+            slots: nextSlots,
+            previous: {
+              activeSessionId: context.activeProjectSessionId,
+              splitSessionId: context.splitProjectSessionId,
+              splitDirection: state.splitDirection
+            },
+            autoFill: true
+          }
+      const focused =
+        context.activeProjectSessionId && nextSlots.includes(context.activeProjectSessionId)
+          ? context.activeProjectSessionId
+          : nextSlots.find((id): id is string => Boolean(id)) ?? null
+      return {
+        quadByProject: { ...state.quadByProject, [key]: quad },
+        activeSessionId: focused ?? state.activeSessionId,
+        splitSessionId: context.splitProjectSessionId ? null : state.splitSessionId,
+        focusedPane: 'primary'
+      }
+    }),
+  exitQuad: (projectId) =>
+    set((state) => {
+      const key = quadKey(projectId)
+      const quad = state.quadByProject[key]
+      if (!quad) return state
+      const { [key]: _ended, ...quadByProject } = state.quadByProject
+      const projectSessionIds = filterSessionsForProject(state.sessions, projectId).map((session) => session.id)
+      const isOpen = (id: string | null): id is string => id !== null && projectSessionIds.includes(id)
+      const { previous } = quad
+      const activeSessionId = isOpen(previous.activeSessionId)
+        ? previous.activeSessionId
+        : state.activeSessionId
+      const splitSessionId =
+        isOpen(previous.splitSessionId) && previous.splitSessionId !== activeSessionId ? previous.splitSessionId : null
+      return {
+        quadByProject,
+        activeSessionId,
+        splitSessionId,
+        splitDirection: splitSessionId ? previous.splitDirection : state.splitDirection,
+        focusedPane: 'primary'
+      }
+    }),
+  toggleQuad: (projectId) => {
+    const { quadByProject, enterQuad, exitQuad } = useTerminalStore.getState()
+    if (quadByProject[quadKey(projectId)]) exitQuad(projectId)
+    else enterQuad(projectId)
+  },
+  placeQuadSession: (projectId, index, sessionId) =>
+    set((state) => {
+      const key = quadKey(projectId)
+      const quad = state.quadByProject[key]
+      if (!quad) return state
+      return {
+        quadByProject: { ...state.quadByProject, [key]: { ...quad, slots: placeInQuadSlot(quad.slots, index, sessionId) } }
+      }
+    }),
+  finishQuadFill: (projectId) =>
+    set((state) => {
+      const key = quadKey(projectId)
+      const quad = state.quadByProject[key]
+      if (!quad?.autoFill) return state
+      return { quadByProject: { ...state.quadByProject, [key]: { ...quad, autoFill: false } } }
+    }),
+  cycleFocusedPane: (projectId, direction) =>
+    set((state) => {
+      const quad = state.quadByProject[quadKey(projectId)]
+      if (!quad) {
+        return { focusedPane: state.splitSessionId && state.focusedPane === 'primary' ? 'secondary' : 'primary' }
+      }
+      const next = nextQuadSessionId(quad.slots, state.activeSessionId, direction)
+      return next ? { activeSessionId: next, focusedPane: 'primary' } : state
+    })
 }))

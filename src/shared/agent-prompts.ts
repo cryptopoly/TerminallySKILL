@@ -4,7 +4,7 @@
  * every row is one tool and one pattern, so adding a tool is one line plus a test.
  *
  * `verified` says where the text comes from: true means seen in the tool's own source, binary or
- * official docs (see docs/hub/progress/agent-waiting-alerts.md); false means a reasonable guess.
+ * official docs (see the ProjectHub progress note agent-waiting-alerts); false means a reasonable guess.
  */
 export interface ApprovalPromptPattern {
   tool: string

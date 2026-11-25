@@ -149,7 +149,9 @@
     "general.attention.keep.title": "Manter notificações até fechar",
     "general.attention.keep.description": "As notificações ficam na tela até você fechá-las. O comportamento exato depende da sua área de trabalho.",
     "general.attention.keep.macDescription": "O macOS decide isso. Nos Ajustes do Sistema, escolha para o TerminallySKILL o estilo que fica até você fechar.",
-    "general.attention.keep.openSettings": "Abrir Ajustes do Sistema"
+    "general.attention.keep.openSettings": "Abrir Ajustes do Sistema",
+    "general.restoreTabs.title": "Reabrir abas do terminal",
+    "general.restoreTabs.description": "Ao iniciar, reabre as abas locais do terminal, a divisão e as pastas da última vez. Abas SSH e VNC não são reconectadas, e a saída antiga não é mantida."
   },
   "commands": {
     "addDialog.title": "Adicionar comando",
@@ -1009,7 +1011,6 @@
     "toolbar.plain": "simples",
     "busy.title": "Shell ocupado - os comandos serão executados quando estiver pronto",
     "busy.clearQueue": "Limpar fila",
-    "busy.running": "Em execução",
     "search.previous": "Correspondência anterior (Shift+Enter)",
     "search.next": "Próxima correspondência (Enter)",
     "search.close": "Fechar (Esc)",
@@ -1091,7 +1092,23 @@
     "dot.idle": "Ocioso",
     "attention.waitingForYes": "Aguardando seu sim",
     "attention.bell": "Tocou o sino do terminal",
-    "attention.stillWaiting": "Ainda aguardando você ({{duration}})"
+    "attention.stillWaiting": "Ainda aguardando você ({{duration}})",
+    "blocks.menu": "Ações do comando",
+    "blocks.copyOutput": "Copiar saída",
+    "blocks.copyCommand": "Copiar comando",
+    "blocks.runAgain": "Executar novamente",
+    "blocks.explain": "Explicar saída",
+    "folder.change": "Mudar pasta…",
+    "folder.menu": "Ações da pasta",
+    "folder.revealMac": "Mostrar no Finder",
+    "folder.revealWindows": "Mostrar no Explorador de Arquivos",
+    "folder.revealLinux": "Abrir no gerenciador de arquivos",
+    "folder.copyPath": "Copiar caminho",
+    "openFailed.message": "Não foi possível abrir um terminal: {{reason}}",
+    "panel.quad": "Divisão em quatro",
+    "panel.closeQuad": "Sair da divisão em quatro",
+    "panel.quadDescription": "Quatro terminais em uma grade 2x2. Usa primeiro suas abas abertas e abre novas para o resto. Clique de novo para voltar ao layout anterior; nenhum terminal é fechado.",
+    "panel.quadTooSmall": "Divisão em quatro pausada: janela pequena demais"
   },
   "onboarding": {
     "subtitle": "Builder visual de comandos, workspace de terminal, workflows, logs e ferramentas de IA",
@@ -1311,7 +1328,9 @@
     "sections.statusDots.steps.idle.label": "Ocioso",
     "sections.statusDots.steps.idle.desc": "Anel cinza: um programa está aberto, mas não mostra nada há algum tempo, por exemplo um agente esperando a próxima tarefa. Só o ponto, sem notificação.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maximize o terminal para ocupar a janela inteira, ou restaure-o. Ctrl+Shift+M no Windows e no Linux."
+    "sections.keyboard.steps.maximise.desc": "Maximize o terminal para ocupar a janela inteira, ou restaure-o. Ctrl+Shift+M no Windows e no Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Liga ou desliga a divisão em quatro (quatro terminais em uma grade 2x2). Command+] / Command+[ alterna entre os painéis. Ctrl+Shift+G no Windows e no Linux."
   },
   "ai": {
     "explain.label": "Explicar com IA",

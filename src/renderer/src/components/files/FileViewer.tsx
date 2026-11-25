@@ -32,8 +32,10 @@ import { useProjectStore } from '../../store/project-store'
 import { useTerminalStore } from '../../store/terminal-store'
 import {
   createProjectTerminalSession,
-  ensureProjectExecutionSession
+  ensureProjectExecutionSession,
+  getSessionShell
 } from '../../lib/workspace-session'
+import { buildCommandInFolder, quoteForShell } from '../../../../shared/local-shell'
 
 hljs.registerLanguage('javascript', javascript)
 hljs.registerLanguage('typescript', typescript)
@@ -106,14 +108,22 @@ function shellQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`
 }
 
+/** Windows paths (C:\dir\file, \\server\share\file) use backslashes; POSIX file names may contain one. */
+function getPathSeparator(filePath: string): '/' | '\\' {
+  return /^(?:[A-Za-z]:\\|\\\\)/.test(filePath) ? '\\' : '/'
+}
+
 function getParentDirectory(filePath: string): string {
-  const lastSlashIndex = filePath.lastIndexOf('/')
+  const separator = getPathSeparator(filePath)
+  const lastSlashIndex = Math.max(filePath.lastIndexOf('/'), separator === '\\' ? filePath.lastIndexOf('\\') : -1)
   if (lastSlashIndex <= 0) return '/'
-  return filePath.slice(0, lastSlashIndex)
+  const parent = filePath.slice(0, lastSlashIndex)
+  // "C:" alone is the current folder on drive C, not its root
+  return /^[A-Za-z]:$/.test(parent) ? `${parent}\\` : parent
 }
 
 function getBaseName(filePath: string): string {
-  const parts = filePath.split('/')
+  const parts = filePath.split(getPathSeparator(filePath) === '\\' ? /[\\/]/ : '/')
   return parts[parts.length - 1] || filePath
 }
 
@@ -407,7 +417,12 @@ export function FileViewer(): JSX.Element {
 
       const fileDirectory = getParentDirectory(activeFile.path)
       const fileName = getBaseName(activeFile.path)
-      const command = `cd ${shellQuote(fileDirectory)} && ${runnableScript.runtime} ${shellQuote(`./${fileName}`)}`
+      const shell = await getSessionShell(sessionId)
+      const command = buildCommandInFolder(
+        fileDirectory,
+        `${runnableScript.runtime} ${quoteForShell(`./${fileName}`, shell)}`,
+        shell
+      )
       setTerminalVisible(true)
       window.electronAPI.writeToTerminal(sessionId, `${command}\n`)
     } catch (error) {

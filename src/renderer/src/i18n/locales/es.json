@@ -150,7 +150,9 @@
     "general.attention.keep.title": "Mantener las notificaciones hasta cerrarlas",
     "general.attention.keep.description": "Las notificaciones permanecen en pantalla hasta que las cierres. El comportamiento exacto depende de tu escritorio.",
     "general.attention.keep.macDescription": "Esto lo decide macOS. En Ajustes del Sistema, elige para TerminallySKILL el estilo que permanece hasta que lo cierres.",
-    "general.attention.keep.openSettings": "Abrir Ajustes del Sistema"
+    "general.attention.keep.openSettings": "Abrir Ajustes del Sistema",
+    "general.restoreTabs.title": "Reabrir pestañas del terminal",
+    "general.restoreTabs.description": "Al iniciar, reabre las pestañas locales del terminal, la división y las carpetas de la última vez. Las pestañas SSH y VNC no se reconectan y no se guarda la salida anterior."
   },
   "commands": {
     "addDialog.title": "Añadir comando",
@@ -1016,7 +1018,6 @@
     "toolbar.plain": "simple",
     "busy.title": "Shell ocupada: los comandos se ejecutarán cuando esté lista",
     "busy.clearQueue": "Vaciar cola",
-    "busy.running": "En ejecución",
     "search.previous": "Coincidencia anterior (Shift+Enter)",
     "search.next": "Coincidencia siguiente (Enter)",
     "search.close": "Cerrar (Esc)",
@@ -1103,7 +1104,23 @@
     "dot.idle": "Inactivo",
     "attention.waitingForYes": "Esperando tu sí",
     "attention.bell": "Hizo sonar la campana del terminal",
-    "attention.stillWaiting": "Sigue esperándote ({{duration}})"
+    "attention.stillWaiting": "Sigue esperándote ({{duration}})",
+    "blocks.menu": "Acciones del comando",
+    "blocks.copyOutput": "Copiar salida",
+    "blocks.copyCommand": "Copiar comando",
+    "blocks.runAgain": "Ejecutar de nuevo",
+    "blocks.explain": "Explicar salida",
+    "folder.change": "Cambiar carpeta…",
+    "folder.menu": "Acciones de carpeta",
+    "folder.revealMac": "Mostrar en Finder",
+    "folder.revealWindows": "Mostrar en el Explorador de archivos",
+    "folder.revealLinux": "Abrir en el gestor de archivos",
+    "folder.copyPath": "Copiar ruta",
+    "openFailed.message": "No se pudo abrir un terminal: {{reason}}",
+    "panel.quad": "División en cuatro",
+    "panel.closeQuad": "Salir de la división en cuatro",
+    "panel.quadDescription": "Cuatro terminales en una cuadrícula de 2x2. Usa primero tus pestañas abiertas y abre nuevas para el resto. Haz clic de nuevo para volver al diseño anterior; no se cierra ninguna terminal.",
+    "panel.quadTooSmall": "División en cuatro en pausa: ventana demasiado pequeña"
   },
   "onboarding": {
     "subtitle": "Constructor visual de comandos, espacio de trabajo de terminal, workflows, registros y herramientas de IA",
@@ -1321,7 +1338,9 @@
     "sections.statusDots.steps.idle.label": "Inactivo",
     "sections.statusDots.steps.idle.desc": "Anillo gris: un programa está abierto pero lleva un rato sin mostrar nada, por ejemplo un agente que espera su siguiente tarea. Solo el punto, sin notificación.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maximiza la terminal para que ocupe toda la ventana, o restáurala. Ctrl+Shift+M en Windows y Linux."
+    "sections.keyboard.steps.maximise.desc": "Maximiza la terminal para que ocupe toda la ventana, o restáurala. Ctrl+Shift+M en Windows y Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Activa o desactiva la división en cuatro (cuatro terminales en una cuadrícula de 2x2). Command+] / Command+[ cambia entre sus paneles. Ctrl+Shift+G en Windows y Linux."
   },
   "ai": {
     "explain.label": "Explicar con IA",

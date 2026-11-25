@@ -222,7 +222,9 @@
     "general.attention.keep.title": "保留通知直到關閉",
     "general.attention.keep.description": "通知會一直顯示在螢幕上，直到你關閉它們。實際行為取決於你的桌面環境。",
     "general.attention.keep.macDescription": "這由 macOS 決定。請在系統設定中為 TerminallySKILL 選擇會一直顯示到關閉的樣式。",
-    "general.attention.keep.openSettings": "打開系統設定"
+    "general.attention.keep.openSettings": "打開系統設定",
+    "general.restoreTabs.title": "重新開啟終端機分頁",
+    "general.restoreTabs.description": "啟動時重新開啟上次的本機終端機分頁、分割畫面和資料夾。SSH 與 VNC 分頁不會重新連線，舊輸出不會保留。"
   },
   "commands": {
     "addDialog.title": "新增命令",
@@ -1104,7 +1106,6 @@
     "toolbar.plain": "純文字",
     "busy.title": "Shell 忙碌中 - 命令將在就緒後執行",
     "busy.clearQueue": "清除佇列",
-    "busy.running": "執行中",
     "search.previous": "上一個相符項目（Shift+Enter）",
     "search.next": "下一個相符項目（Enter）",
     "search.close": "關閉（Esc）",
@@ -1188,7 +1189,23 @@
     "dot.idle": "閒置",
     "attention.waitingForYes": "等待你的確認",
     "attention.bell": "響了終端機鈴聲",
-    "attention.stillWaiting": "仍在等你（{{duration}}）"
+    "attention.stillWaiting": "仍在等你（{{duration}}）",
+    "blocks.menu": "命令操作",
+    "blocks.copyOutput": "複製輸出",
+    "blocks.copyCommand": "複製命令",
+    "blocks.runAgain": "再次執行",
+    "blocks.explain": "解釋輸出",
+    "folder.change": "變更資料夾…",
+    "folder.menu": "資料夾操作",
+    "folder.revealMac": "在 Finder 中顯示",
+    "folder.revealWindows": "在檔案總管中顯示",
+    "folder.revealLinux": "在檔案管理員中開啟",
+    "folder.copyPath": "複製路徑",
+    "openFailed.message": "無法開啟終端機：{{reason}}",
+    "panel.quad": "四分割畫面",
+    "panel.closeQuad": "結束四分割畫面",
+    "panel.quadDescription": "以 2x2 網格顯示四個終端機。先使用已開啟的分頁，其餘的另外開啟。再按一次即回到先前的版面；不會關閉任何終端機。",
+    "panel.quadTooSmall": "四分割畫面已暫停：視窗太小"
   },
   "onboarding": {
     "subtitle": "視覺化命令建構器、終端機工作區、工作流程、日誌與 AI 工具",
@@ -1406,7 +1423,9 @@
     "sections.statusDots.steps.idle.label": "閒置",
     "sections.statusDots.steps.idle.desc": "灰色圓環：程式已開啟，但一段時間沒有輸出，例如等待下一個任務的代理程式。只顯示圓點，不發通知。",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "將終端機最大化以占滿視窗，或還原。在 Windows 和 Linux 上為 Ctrl+Shift+M。"
+    "sections.keyboard.steps.maximise.desc": "將終端機最大化以占滿視窗，或還原。在 Windows 和 Linux 上為 Ctrl+Shift+M。",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "開啟或關閉四分割畫面（2x2 網格中的四個終端機）。Command+] / Command+[ 在窗格之間切換。Windows 與 Linux 上為 Ctrl+Shift+G。"
   },
   "ai": {
     "explain.label": "以 AI 說明",

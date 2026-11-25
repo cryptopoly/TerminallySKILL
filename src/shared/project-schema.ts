@@ -33,6 +33,14 @@ export interface ProjectWorkspaceLayout {
   terminalSize: number
   terminalVisible: boolean
   preferredSplitDirection: ProjectWorkspaceSplitDirection
+  /** Terminal shown as a quad split (four terminals in a 2x2 grid). Missing in layouts saved before 0.9.105. */
+  quadLayout: boolean
+  /** Terminal maximised (fills the window). Saved per project; terminalSize keeps the docked size. Since 0.9.105. */
+  terminalMaximised: boolean
+  /** Two-pane split divider, percent of the first pane. Since 0.9.105. */
+  splitRatio: number
+  /** Quad dividers, percent: column = left panes' width, row = top panes' height. Since 0.9.105. */
+  quadRatios: { column: number; row: number }
   sidebarTab: ProjectSidebarTab
   openFilePaths: string[]
   activeFilePath: string | null
@@ -107,6 +115,10 @@ export const DEFAULT_PROJECT_WORKSPACE_LAYOUT: ProjectWorkspaceLayout = {
   terminalSize: 35,
   terminalVisible: false,
   preferredSplitDirection: 'vertical',
+  quadLayout: false,
+  terminalMaximised: false,
+  splitRatio: 50,
+  quadRatios: { column: 50, row: 50 },
   sidebarTab: 'scripts',
   openFilePaths: [],
   activeFilePath: null
@@ -157,6 +169,28 @@ export function resolveProjectWorkingDirectory(project: Pick<Project, 'workingDi
     return project.workspaceTarget.cwd
   }
   return project.workingDirectory
+}
+
+/** Finds an existing project on the same machine and folder as `target`. SSH projects match only on the same host, user and port. */
+export function findProjectWithSameWorkspace(
+  projects: Project[],
+  target: ProjectWorkspaceTarget
+): Project | undefined {
+  const dir = target.cwd.trim().toLowerCase()
+  if (!dir) return undefined
+  return projects.find((p) => {
+    const other = p.workspaceTarget ?? createLocalWorkspaceTarget(p.workingDirectory)
+    if (other.type !== target.type) return false
+    if (resolveProjectWorkingDirectory(p).trim().toLowerCase() !== dir) return false
+    if (isSSHProjectWorkspaceTarget(other) && isSSHProjectWorkspaceTarget(target)) {
+      return (
+        other.host.trim().toLowerCase() === target.host.trim().toLowerCase() &&
+        other.user.trim() === target.user.trim() &&
+        (other.port ?? 22) === (target.port ?? 22)
+      )
+    }
+    return true
+  })
 }
 
 export function getProjectWorkspaceTargetLabel(

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState, useMemo, useLayoutEffect } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { Terminal } from '@xterm/xterm'
+import { Terminal, type IDecoration, type IMarker } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { SearchAddon } from '@xterm/addon-search'
@@ -25,6 +25,8 @@ import { Tooltip } from '../ui/Tooltip'
 import { useFileStore } from '../../store/file-store'
 import { WorkflowRunPanel } from '../scripts/WorkflowRunnerHost'
 import { extractCommandTranscriptFromLines } from '../../lib/terminal-transcript'
+import { markCommandEnd, markCommandStart } from '../../lib/command-block-anchors'
+import { shortenPathForDisplay } from '../../lib/path-display'
 import { formatCommandForDisplay, isSSHSessionCommand, getSSHHost } from '../../lib/command-display'
 import { formatTime } from '../../i18n/format'
 import {
@@ -45,24 +47,35 @@ import {
 import type { SensitivePromptKind, TerminalPasteReason } from '../../lib/terminal-safety'
 import { confirmTerminalClose } from '../../lib/terminal-close'
 import type { Theme } from '../../../../shared/settings-schema'
-import { resolveProjectWorkingDirectory } from '../../../../shared/project-schema'
-import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
+import { resolveProjectWorkingDirectory, type ProjectWorkspaceLayout } from '../../../../shared/project-schema'
+import { createProjectTerminalSession, getSessionShell, openInteractiveProjectShell, openVncViewer } from '../../lib/workspace-session'
+import { buildChangeDirectoryCommand } from '../../../../shared/local-shell'
 import { raiseCommandAttention } from '../../lib/attention'
 import { registerAgentAttention } from '../../lib/agent-attention'
-import type { ShellIntegrationEvent } from '../../../../shared/shell-integration'
+import { COMMAND_ANCHOR_OSC, type ShellIntegrationEvent } from '../../../../shared/shell-integration'
 import {
   Plus, X, ChevronDown, Wrench, Loader2, Check, XCircle,
-  ArrowDown, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor,
-  Maximize2, Minimize2
+  ArrowDown, Folder, Search, MessageCircle, Columns2, Rows2, Camera, Sparkles, Server, ShieldAlert, ScrollText, CircleHelp, SendHorizontal, Monitor,
+  Maximize2, Minimize2, Grid2x2
 } from 'lucide-react'
+import {
+  clampQuadRatio,
+  QUAD_MIN_PANE_HEIGHT,
+  QUAD_MIN_PANE_WIDTH,
+  quadKey,
+  resolveQuadArrangement
+} from '../../lib/quad-layout'
 import { VncPanel } from './VncPanel'
 
 export function TerminalPanel({
   presentation = 'docked',
-  onRequestClose
+  onRequestClose,
+  onLayoutChange
 }: {
   presentation?: 'docked' | 'quick'
   onRequestClose?: () => void
+  /** Saves layout fields of the active project (divider positions) */
+  onLayoutChange?: (patch: Partial<ProjectWorkspaceLayout>) => void
 } = {}): JSX.Element {
   const { t } = useTranslation('terminal')
   const {
@@ -93,6 +106,10 @@ export function TerminalPanel({
     () => resolveProjectTerminalContext(sessions, activeProjectId, activeSessionId, splitSessionId),
     [activeProjectId, activeSessionId, sessions, splitSessionId]
   )
+  const quad = useTerminalStore((s) => s.quadByProject[quadKey(activeProjectId)] ?? null)
+  const toggleQuad = useTerminalStore((s) => s.toggleQuad)
+  const placeQuadSession = useTerminalStore((s) => s.placeQuadSession)
+  const isQuad = quad !== null
   const closeTerminalPanel = useCallback(() => {
     if (onRequestClose) {
       onRequestClose()
@@ -101,8 +118,16 @@ export function TerminalPanel({
     setTerminalVisible(false)
   }, [onRequestClose, setTerminalVisible])
 
-  /** Draggable split ratio (0-100), default 50% */
-  const [splitRatio, setSplitRatio] = useState(50)
+  // Divider positions are saved per project and come back when the project opens or the split/quad starts.
+  const savedLayoutRef = useRef(activeProject?.workspaceLayout)
+  savedLayoutRef.current = activeProject?.workspaceLayout
+  const savedSplitRatio = (): number => savedLayoutRef.current?.splitRatio ?? 50
+  const savedQuadRatios = (): { column: number; row: number } =>
+    savedLayoutRef.current?.quadRatios ?? { column: 50, row: 50 }
+
+  /** Draggable split ratio (0-100); shown within 20-80% */
+  const [splitRatio, setSplitRatio] = useState(savedSplitRatio)
+  const shownSplitRatio = Math.max(20, Math.min(80, splitRatio))
   const draggingRef = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [snapshotPanelOpen, setSnapshotPanelOpen] = useState(false)
@@ -154,7 +179,17 @@ export function TerminalPanel({
     // Restore the original session as primary, new one becomes the split pane
     if (primaryId) setActiveSession(primaryId)
     splitTerminal(direction, sessionId)
-    setSplitRatio(50)
+    setSplitRatio(savedSplitRatio())
+  }
+
+  /** An empty quad pane's New terminal button: a normal new tab, placed in that pane */
+  const handleNewQuadPane = async (index: number): Promise<void> => {
+    const sessionId = await createProjectTerminalSession(
+      activeProject,
+      addSession,
+      useProjectStore.getState().getActiveEnvOverrides()
+    )
+    placeQuadSession(activeProjectId, index, sessionId)
   }
 
   const handleOpenInteractiveSSH = async (): Promise<void> => {
@@ -162,16 +197,8 @@ export function TerminalPanel({
   }
 
   const handleOpenVnc = async (): Promise<void> => {
-    if (!activeProject || activeProject.workspaceTarget.type !== 'ssh') return
     try {
-      const vncPort = activeProject.workspaceTarget.type === 'ssh'
-        ? (activeProject.workspaceTarget.vncPort ?? 5901)
-        : 5901
-      const { sessionId, wsPort, token } = await window.electronAPI.startVncSession(
-        activeProject.workspaceTarget,
-        vncPort
-      )
-      addSession(sessionId, activeProject.id, 'vnc', wsPort, token)
+      await openVncViewer(activeProject, addSession)
     } catch (err) {
       console.error('[VNC] Failed to start session:', err)
     }
@@ -186,7 +213,96 @@ export function TerminalPanel({
     removeSession(sessionId)
   }, [closeSplitPane, removeSession, runsBySession, t])
 
-  const isSplit = !!splitProjectSessionId
+  const isSplit = !isQuad && !!splitProjectSessionId
+
+  // Quad: the panes' arrangement follows the space there is, and its dividers start in the middle.
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const update = (): void => setContainerSize({ width: container.clientWidth, height: container.clientHeight })
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
+  const quadArrangement = isQuad ? resolveQuadArrangement(containerSize.width, containerSize.height) : null
+  const [quadRatios, setQuadRatios] = useState(savedQuadRatios)
+  const quadRatiosRef = useRef(quadRatios)
+  quadRatiosRef.current = quadRatios
+  useEffect(() => {
+    if (isQuad) setQuadRatios(savedQuadRatios())
+    // Only when quad starts or the project changes, not on each save of the project's layout
+      }, [isQuad, activeProjectId])
+  useEffect(() => {
+    setSplitRatio(savedSplitRatio())
+      }, [activeProjectId])
+  const onLayoutChangeRef = useRef(onLayoutChange)
+  onLayoutChangeRef.current = onLayoutChange
+  /** Divider positions are kept to one decimal */
+  const roundPercent = (value: number): number => Math.round(value * 10) / 10
+  const quadColumn = clampQuadRatio(quadRatios.column, containerSize.width, QUAD_MIN_PANE_WIDTH)
+  const quadRow = clampQuadRatio(quadRatios.row, containerSize.height, QUAD_MIN_PANE_HEIGHT)
+  const quadSlots = quad?.slots ?? []
+  const isInQuad = (id: string): boolean => quadSlots.includes(id)
+  const multiPane = isSplit || (isQuad && quadArrangement !== 'single')
+
+  /** Drag a quad divider: the vertical one (column), the horizontal one (row) or where they cross (both). */
+  const handleQuadDividerMouseDown = useCallback((e: React.MouseEvent, axis: 'column' | 'row' | 'both') => {
+    e.preventDefault()
+    const container = containerRef.current
+    if (!container) return
+
+    let latest = quadRatiosRef.current
+    let moved = false
+    const handleMouseMove = (ev: MouseEvent): void => {
+      const rect = container.getBoundingClientRect()
+      latest = {
+        column: axis === 'row'
+          ? latest.column
+          : clampQuadRatio(((ev.clientX - rect.left) / rect.width) * 100, rect.width, QUAD_MIN_PANE_WIDTH),
+        row: axis === 'column'
+          ? latest.row
+          : clampQuadRatio(((ev.clientY - rect.top) / rect.height) * 100, rect.height, QUAD_MIN_PANE_HEIGHT)
+      }
+      moved = true
+      setQuadRatios(latest)
+    }
+
+    const handleMouseUp = (): void => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      if (moved) onLayoutChangeRef.current?.({ quadRatios: { column: roundPercent(latest.column), row: roundPercent(latest.row) } })
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    document.body.style.cursor = axis === 'column' ? 'col-resize' : axis === 'row' ? 'row-resize' : 'move'
+    document.body.style.userSelect = 'none'
+  }, [])
+
+  /** Where quad pane `index` (row by row) sits */
+  const getQuadPaneStyle = (index: number): React.CSSProperties => {
+    const base: React.CSSProperties = { display: 'flex', position: 'absolute' }
+    if (quadArrangement === 'row' || quadArrangement === 'column') {
+      // Four in a line with a 4px gap between neighbours
+      const before = index > 0 ? 2 : 0
+      const size = `calc(25% - ${before + (index < 3 ? 2 : 0)}px)`
+      const start = `calc(${index * 25}% + ${before}px)`
+      return quadArrangement === 'row'
+        ? { ...base, top: 0, bottom: 0, left: start, width: size }
+        : { ...base, left: 0, right: 0, top: start, height: size }
+    }
+    const isRight = index % 2 === 1
+    const isBottom = index >= 2
+    return {
+      ...base,
+      ...(isRight ? { right: 0, width: `calc(${100 - quadColumn}% - 2px)` } : { left: 0, width: `calc(${quadColumn}% - 2px)` }),
+      ...(isBottom ? { bottom: 0, height: `calc(${100 - quadRow}% - 2px)` } : { top: 0, height: `calc(${quadRow}% - 2px)` })
+    }
+  }
 
   // Drag handler for the split resize divider
   const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
@@ -195,6 +311,7 @@ export function TerminalPanel({
     const container = containerRef.current
     if (!container) return
 
+    let latest: number | null = null
     const handleMouseMove = (ev: MouseEvent): void => {
       if (!draggingRef.current || !container) return
       const rect = container.getBoundingClientRect()
@@ -204,7 +321,8 @@ export function TerminalPanel({
       } else {
         ratio = ((ev.clientY - rect.top) / rect.height) * 100
       }
-      setSplitRatio(Math.max(20, Math.min(80, ratio)))
+      latest = Math.max(20, Math.min(80, ratio))
+      setSplitRatio(latest)
     }
 
     const handleMouseUp = (): void => {
@@ -213,6 +331,7 @@ export function TerminalPanel({
       document.removeEventListener('mouseup', handleMouseUp)
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
+      if (latest !== null) onLayoutChangeRef.current?.({ splitRatio: roundPercent(latest) })
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -228,6 +347,15 @@ export function TerminalPanel({
       return { display: 'none', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
     }
 
+    if (isQuad) {
+      const index = quadSlots.indexOf(sessionId)
+      if (index >= 0 && quadArrangement !== 'single') return getQuadPaneStyle(index)
+      // Too small for four panes: only the focused one shows, full size
+      return index >= 0 && sessionId === activeProjectSessionId
+        ? { display: 'flex', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
+        : { display: 'none', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
+    }
+
     if (!isSplit) {
       // No split: only active session is visible
       if (sessionId === activeProjectSessionId) {
@@ -240,16 +368,16 @@ export function TerminalPanel({
     if (sessionId === activeProjectSessionId) {
       // Primary pane
       if (splitDirection === 'vertical') {
-        return { display: 'flex', position: 'absolute', top: 0, left: 0, bottom: 0, width: `calc(${splitRatio}% - 2px)` }
+        return { display: 'flex', position: 'absolute', top: 0, left: 0, bottom: 0, width: `calc(${shownSplitRatio}% - 2px)` }
       }
-      return { display: 'flex', position: 'absolute', top: 0, left: 0, right: 0, height: `calc(${splitRatio}% - 2px)` }
+      return { display: 'flex', position: 'absolute', top: 0, left: 0, right: 0, height: `calc(${shownSplitRatio}% - 2px)` }
     }
     if (sessionId === splitProjectSessionId) {
       // Secondary pane
       if (splitDirection === 'vertical') {
-        return { display: 'flex', position: 'absolute', top: 0, right: 0, bottom: 0, width: `calc(${100 - splitRatio}% - 2px)` }
+        return { display: 'flex', position: 'absolute', top: 0, right: 0, bottom: 0, width: `calc(${100 - shownSplitRatio}% - 2px)` }
       }
-      return { display: 'flex', position: 'absolute', bottom: 0, left: 0, right: 0, height: `calc(${100 - splitRatio}% - 2px)` }
+      return { display: 'flex', position: 'absolute', bottom: 0, left: 0, right: 0, height: `calc(${100 - shownSplitRatio}% - 2px)` }
     }
     // Hidden session
     return { display: 'none', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
@@ -271,7 +399,7 @@ export function TerminalPanel({
             const tabColor = project?.color ?? null
             const tabLabel = project ? project.name : session.id
             const isActive = activeProjectSessionId === session.id
-            const isInSplit = isSplit && isSessionInSplit(session.id)
+            const isInSplit = (isSplit && isSessionInSplit(session.id)) || (isQuad && isInQuad(session.id))
             const workflowRun = runsBySession[session.id] ?? null
             const workflowIsActive = workflowRun ? !isTerminalRunStatus(workflowRun.status) : false
 
@@ -279,6 +407,7 @@ export function TerminalPanel({
               <button
                 key={session.id}
                 onClick={() => setActiveSession(session.id)}
+                data-session-tab={session.id}
                 className={`flex items-center gap-2 px-4 py-2 text-xs border-r border-surface-border transition-colors ${
                   isActive
                     ? 'bg-surface-light text-gray-200'
@@ -408,6 +537,15 @@ export function TerminalPanel({
         <div className="flex items-center gap-0.5 mr-1">
           {activeProjectSessionId && (
             <>
+              {isQuad && quadArrangement === 'single' && (
+                <span
+                  className="text-[10px] text-gray-500 mr-1 whitespace-nowrap truncate max-w-[8rem]"
+                  title={t('panel.quadTooSmall')}
+                  data-testid="quad-too-small"
+                >
+                  {t('panel.quadTooSmall')}
+                </span>
+              )}
               <HelpTip
                 label={isSplit && splitDirection === 'vertical' ? t('panel.closeSplit') : t('panel.splitVertical')}
                 description={t('panel.splitVerticalDescription')}
@@ -415,7 +553,8 @@ export function TerminalPanel({
               >
                 <button
                   onClick={() => isSplit ? void handleCloseSplitPane(splitProjectSessionId!) : void handleSplit('vertical')}
-                  className={`p-1.5 transition-colors ${
+                  disabled={isQuad}
+                  className={`p-1.5 transition-colors disabled:opacity-30 disabled:pointer-events-none ${
                     isSplit && splitDirection === 'vertical'
                       ? 'text-accent-light'
                       : 'text-gray-500 hover:text-accent-light'
@@ -431,13 +570,31 @@ export function TerminalPanel({
               >
                 <button
                   onClick={() => isSplit ? void handleCloseSplitPane(splitProjectSessionId!) : void handleSplit('horizontal')}
-                  className={`p-1.5 transition-colors ${
+                  disabled={isQuad}
+                  className={`p-1.5 transition-colors disabled:opacity-30 disabled:pointer-events-none ${
                     isSplit && splitDirection === 'horizontal'
                       ? 'text-accent-light'
                       : 'text-gray-500 hover:text-accent-light'
                   }`}
                 >
                   <Rows2 size={13} />
+                </button>
+              </HelpTip>
+              <HelpTip
+                label={isQuad ? t('panel.closeQuad') : t('panel.quad')}
+                description={t('panel.quadDescription')}
+                shortcut={navigator.platform.toLowerCase().includes('mac') ? '⌘⇧G' : 'Ctrl+Shift+G'}
+              >
+                <button
+                  onClick={() => toggleQuad(activeProjectId)}
+                  aria-label={isQuad ? t('panel.closeQuad') : t('panel.quad')}
+                  aria-pressed={isQuad}
+                  data-testid="terminal-quad"
+                  className={`p-1.5 transition-colors ${
+                    isQuad ? 'text-accent-light' : 'text-gray-500 hover:text-accent-light'
+                  }`}
+                >
+                  <Grid2x2 size={13} />
                 </button>
               </HelpTip>
               <HelpTip
@@ -501,27 +658,35 @@ export function TerminalPanel({
           const project = session.projectId
             ? projects.find((p) => p.id === session.projectId) ?? null
             : null
-          const isVisible = session.id === activeProjectSessionId || (isSplit && session.id === splitProjectSessionId)
+          const sessionStyle = getSessionStyle(session.id)
+          const isVisible = sessionStyle.display !== 'none'
           const isPrimary = session.id === activeProjectSessionId
           const isSecondary = isSplit && session.id === splitProjectSessionId
-          const isFocused = isSplit && (
-            (isPrimary && focusedPane === 'primary') ||
-            (isSecondary && focusedPane === 'secondary')
-          )
+          const isQuadPane = isQuad && isInQuad(session.id)
+          const isFocused = isQuad
+            ? isPrimary
+            : isSplit
+              ? (isPrimary && focusedPane === 'primary') || (isSecondary && focusedPane === 'secondary')
+              : isPrimary
           const workflowRun = runsBySession[session.id] ?? null
 
           return (
             <div
               key={session.id}
-              style={getSessionStyle(session.id)}
+              style={sessionStyle}
               className="flex-col"
-              onClick={() => {
+              data-quad-pane={isQuadPane ? quadSlots.indexOf(session.id) : undefined}
+              data-session-id={session.id}
+              data-focused-pane={multiPane && isVisible && isFocused ? 'true' : undefined}
+              // On press, not click: the terminal can redraw between press and release, and the browser then drops the click
+              onMouseDownCapture={() => {
+                if (isQuadPane && !isPrimary) setActiveSession(session.id)
                 if (isPrimary && isSplit) setFocusedPane('primary')
                 if (isSecondary) setFocusedPane('secondary')
               }}
             >
               {/* Focus indicator */}
-              {isSplit && (isPrimary || isSecondary) && (
+              {multiPane && isVisible && (
                 <div
                   className="h-0.5 shrink-0 transition-colors duration-150"
                   style={{ backgroundColor: isFocused ? 'var(--accent)' : 'var(--surface-border)' }}
@@ -550,6 +715,8 @@ export function TerminalPanel({
                     <XTermInstance
                       sessionId={session.id}
                       visible={isVisible}
+                      focused={isVisible && isFocused}
+                      multiPane={multiPane}
                       projectName={project?.name ?? null}
                       projectWorkingDirectory={project ? resolveProjectWorkingDirectory(project) : null}
                       sessionMode={session.mode}
@@ -578,11 +745,61 @@ export function TerminalPanel({
             } bg-surface-border transition-colors`}
             style={
               splitDirection === 'vertical'
-                ? { left: `calc(${splitRatio}% - 2px)` }
-                : { top: `calc(${splitRatio}% - 2px)` }
+                ? { left: `calc(${shownSplitRatio}% - 2px)` }
+                : { top: `calc(${shownSplitRatio}% - 2px)` }
             }
           />
         )}
+
+        {/* Quad: empty panes offer a new terminal */}
+        {isQuad && quadArrangement !== 'single' && quadSlots.map((id, index) =>
+          id && projectSessions.some((session) => session.id === id) ? null : (
+            <div
+              key={`quad-empty-${index}`}
+              style={getQuadPaneStyle(index)}
+              className="flex-col items-center justify-center bg-surface"
+              data-quad-empty={index}
+            >
+              <button
+                onClick={() => void handleNewQuadPane(index)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-surface-border text-xs text-gray-500 hover:text-accent-light hover:border-accent/40 transition-colors"
+              >
+                <Plus size={12} />
+                {t('panel.newTerminal')}
+              </button>
+            </div>
+          )
+        )}
+
+        {/* Quad dividers — draggable, the crossing moves both */}
+        {isQuad && quadArrangement === 'grid' && (
+          <>
+            <div
+              onMouseDown={(e) => handleQuadDividerMouseDown(e, 'column')}
+              className="absolute z-20 top-0 bottom-0 w-1 cursor-col-resize bg-surface-border hover:bg-accent/50 transition-colors"
+              style={{ left: `calc(${quadColumn}% - 2px)` }}
+              data-testid="quad-divider-column"
+            />
+            <div
+              onMouseDown={(e) => handleQuadDividerMouseDown(e, 'row')}
+              className="absolute z-20 left-0 right-0 h-1 cursor-row-resize bg-surface-border hover:bg-accent/50 transition-colors"
+              style={{ top: `calc(${quadRow}% - 2px)` }}
+              data-testid="quad-divider-row"
+            />
+            <div
+              onMouseDown={(e) => handleQuadDividerMouseDown(e, 'both')}
+              className="absolute z-30 w-3 h-3 cursor-move rounded-sm hover:bg-accent/50 transition-colors"
+              style={{ left: `calc(${quadColumn}% - 6px)`, top: `calc(${quadRow}% - 6px)` }}
+            />
+          </>
+        )}
+        {isQuad && (quadArrangement === 'row' || quadArrangement === 'column') && [1, 2, 3].map((index) => (
+          <div
+            key={`quad-gap-${index}`}
+            className={`absolute z-20 bg-surface-border ${quadArrangement === 'row' ? 'top-0 bottom-0 w-1' : 'left-0 right-0 h-1'}`}
+            style={quadArrangement === 'row' ? { left: `calc(${index * 25}% - 2px)` } : { top: `calc(${index * 25}% - 2px)` }}
+          />
+        ))}
 
         {projectSessions.length === 0 && (
           <div className="h-full flex items-center justify-center text-gray-600 text-sm">
@@ -751,6 +968,49 @@ interface TerminalCommandBlock {
 
 type AIReviewScope = 'session' | 'last-command' | 'selection'
 
+/** Most finished commands that keep a mark in one terminal; older marks are removed. */
+const MAX_COMMAND_BLOCK_MARKS = 200
+
+/**
+ * The ConPTY built into Windows can pass a command anchor through before it draws the line break written
+ * before it. The bundled conpty.dll keeps them in order, so only the TSK_CONPTY_DLL=0 fallback needs this.
+ */
+const COMMAND_ANCHORS_MAY_LAG = /^win/i.test(navigator.platform) && !window.electronAPI?.usesBundledConpty
+
+interface PendingCommandBlockMarks {
+  command: string
+  /** Line of the typed command, where the mark is drawn */
+  commandLine: IMarker
+  /** First line of the command's output */
+  outputLine: IMarker
+}
+
+interface FinishedCommandBlock {
+  id: string
+  command: string
+  exitCode: number | null
+  commandLine: IMarker
+  outputLine: IMarker
+  /** The prompt line after the output */
+  endLine: IMarker
+  decoration: IDecoration | undefined
+}
+
+function decodeBase64Utf8(value: string): string {
+  try {
+    return new TextDecoder().decode(Uint8Array.from(atob(value), (char) => char.charCodeAt(0)))
+  } catch {
+    return ''
+  }
+}
+
+function disposeFinishedCommandBlock(block: FinishedCommandBlock): void {
+  block.decoration?.dispose()
+  block.commandLine.dispose()
+  block.outputLine.dispose()
+  block.endLine.dispose()
+}
+
 type PendingPasteTarget = 'editor' | 'terminal-direct' | 'terminal-queue'
 
 interface PendingPaste {
@@ -820,17 +1080,24 @@ function resolveDirectoryBase(
 function XTermInstance({
   sessionId,
   visible,
+  focused = visible,
+  multiPane = false,
   projectName,
   projectWorkingDirectory,
   sessionMode
 }: {
   sessionId: string
   visible: boolean
+  /** The pane the user works in (always true for a lone visible terminal) */
+  focused?: boolean
+  /** Shown beside other terminals (split or quad) */
+  multiPane?: boolean
   projectName: string | null
   projectWorkingDirectory: string | null
   sessionMode?: string
 }) {
   const { t } = useTranslation('terminal')
+  const rootRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
@@ -901,6 +1168,19 @@ function XTermInstance({
   const bracketedPasteModeRef = useRef(false)
   const secureInputActiveRef = useRef(false)
   const commandBlockCounterRef = useRef(0)
+  const pendingBlockMarksRef = useRef<PendingCommandBlockMarks | null>(null)
+  const finishedBlocksRef = useRef<FinishedCommandBlock[]>([])
+  const [blockMenu, setBlockMenu] = useState<{ blockId: string; x: number; y: number } | null>(null)
+  const [pathMenu, setPathMenu] = useState<{ x: number; y: number } | null>(null)
+  // Narrow panes (splits) get a footer without the less important labels, so nothing overlaps
+  const [footerElement, setFooterElement] = useState<HTMLDivElement | null>(null)
+  const [compactFooter, setCompactFooter] = useState(false)
+  useEffect(() => {
+    if (!footerElement) return
+    const observer = new ResizeObserver(([entry]) => setCompactFooter(entry.contentRect.width < 720))
+    observer.observe(footerElement)
+    return () => observer.disconnect()
+  }, [footerElement])
   const editorInputRef = useRef<HTMLInputElement>(null)
   const shellHasKeyboardRef = useRef(false)
   const editorSelectionRef = useRef({ start: 0, end: 0 })
@@ -1041,9 +1321,15 @@ function XTermInstance({
     }
   }, [editorCommand, shellCwd])
 
-  const runAIReview = useCallback(async (scope: AIReviewScope) => {
+  const runAIReview = useCallback(async (
+    scope: AIReviewScope,
+    block?: { command: string; exitCode: number | null; transcript: string | null }
+  ) => {
+    const target = block ?? (lastCompletedCommandBlock
+      ? { command: lastCompletedCommandBlock.command, exitCode: lastCompletedCommandBlock.exitCode, transcript: null }
+      : null)
     const transcript = scope === 'last-command'
-      ? getLastCommandTranscript()
+      ? (block ? block.transcript : getLastCommandTranscript())
       : getSerializedTerminalText(serializeAddonRef.current).trim()
 
     if (!transcript) {
@@ -1068,7 +1354,7 @@ function XTermInstance({
     setAIReviewScope(scope)
     setAIReviewTargetLabel(
       scope === 'last-command'
-        ? lastCompletedCommandBlock?.command ?? null
+        ? target?.command ?? null
         : projectName ?? sessionId
     )
     try {
@@ -1078,14 +1364,14 @@ function XTermInstance({
         source: 'terminal',
         focus: scope === 'last-command' ? 'command-block' : 'session',
         title: scope === 'last-command'
-          ? `Last command: ${lastCompletedCommandBlock?.command ?? 'Unknown command'}`
+          ? `Last command: ${target?.command ?? 'Unknown command'}`
           : projectName
             ? `Session ${sessionId} (${projectName})`
             : `Session ${sessionId}`,
         transcript,
         cwd: sessionInfo?.cwd ?? projectWorkingDirectory ?? undefined,
         shell: sessionInfo?.shell,
-        exitCode: scope === 'last-command' ? lastCompletedCommandBlock?.exitCode : undefined
+        exitCode: scope === 'last-command' ? target?.exitCode : undefined
       })
       setAIReview(response.content)
       setAISuggestedCommands('suggestedCommands' in response ? response.suggestedCommands ?? [] : [])
@@ -1493,6 +1779,18 @@ function XTermInstance({
     }
   }, [handleEditorCommandChange, terminalInputMode])
 
+  // A local file picker cannot choose folders on a remote machine.
+  const isRemoteShell = sessionMode === 'ssh-interactive' || sessionMode === 'vnc' ||
+    (activeCommandBlock !== null && isSSHSessionCommand(activeCommandBlock.command))
+  const canChangeFolder = Boolean(shellCwd) && shellState === 'idle' && !isRemoteShell
+
+  const changeFolderWithPicker = useCallback(async () => {
+    const folder = await window.electronAPI.openDirectoryDialog(shellCwd ?? undefined)
+    if (!folder || folder === shellCwd) return
+    // Typed at the prompt for the user to run, so the shell history stays right and nothing runs by surprise
+    insertSuggestedCommand(buildChangeDirectoryCommand(folder, await getSessionShell(sessionId)))
+  }, [insertSuggestedCommand, sessionId, shellCwd])
+
   const cycleEditorSuggestion = useCallback((direction: 'previous' | 'next') => {
     if (editorSuggestions.length <= 1) return
 
@@ -1748,6 +2046,108 @@ function XTermInstance({
   // Attention alerts keep their own start marker so they cover every command.
   const attentionStartRef = useRef<{ command: string; startedAt: string } | null>(null)
 
+  // Called by xterm while it parses a command anchor, so the cursor is at the anchor's exact place.
+  const startCommandBlockMarks = useCallback((command: string) => {
+    const terminal = termRef.current
+    const previous = pendingBlockMarksRef.current
+    previous?.commandLine.dispose()
+    previous?.outputLine.dispose()
+    pendingBlockMarksRef.current = null
+    // Full-screen apps draw on the alternate screen; their commands get no mark.
+    if (!terminal || terminal.buffer.active.type !== 'normal') return
+    pendingBlockMarksRef.current = { command, ...markCommandStart(terminal, COMMAND_ANCHORS_MAY_LAG) }
+  }, [])
+
+  const finishCommandBlockMarks = useCallback((exitCode: number | null) => {
+    const terminal = termRef.current
+    const pending = pendingBlockMarksRef.current
+    pendingBlockMarksRef.current = null
+    if (!pending) return
+    if (!terminal || terminal.buffer.active.type !== 'normal' || pending.commandLine.isDisposed || pending.outputLine.isDisposed) {
+      pending.commandLine.dispose()
+      pending.outputLine.dispose()
+      return
+    }
+
+    const id = `${sessionId}-block-${++commandBlockCounterRef.current}`
+    const decoration = terminal.registerDecoration({ marker: pending.commandLine, anchor: 'right', x: 0, width: 1 })
+    decoration?.onRender((element) => {
+      // xterm leaves a right offset of 0 unset, which draws the mark over the first column
+      element.style.right = '0px'
+      element.style.left = ''
+      if (element.dataset.commandBlock) return
+      element.dataset.commandBlock = id
+      element.dataset.exitCode = exitCode === null ? 'unknown' : String(exitCode)
+      element.classList.add('command-block-mark')
+      element.title = t('blocks.menu')
+      element.style.cursor = 'pointer'
+      const dot = document.createElement('span')
+      dot.style.position = 'absolute'
+      dot.style.top = '50%'
+      dot.style.left = '50%'
+      dot.style.transform = 'translate(-50%, -50%)'
+      dot.style.width = '6px'
+      dot.style.height = '6px'
+      dot.style.borderRadius = '9999px'
+      dot.style.background = exitCode === null ? '#6b7280' : exitCode === 0 ? '#22c55e' : '#ef4444'
+      element.appendChild(dot)
+      element.addEventListener('mousedown', (mouseEvent) => {
+        mouseEvent.preventDefault()
+        mouseEvent.stopPropagation()
+        const rect = element.getBoundingClientRect()
+        setBlockMenu({ blockId: id, x: rect.right, y: rect.bottom })
+      })
+    })
+
+    const blocks = finishedBlocksRef.current
+    blocks.push({
+      id,
+      command: pending.command,
+      exitCode,
+      commandLine: pending.commandLine,
+      outputLine: pending.outputLine,
+      endLine: markCommandEnd(terminal, COMMAND_ANCHORS_MAY_LAG),
+      decoration
+    })
+    while (blocks.length > MAX_COMMAND_BLOCK_MARKS) {
+      const oldest = blocks.shift()
+      if (oldest) disposeFinishedCommandBlock(oldest)
+    }
+  }, [sessionId, t])
+
+  const handleCommandAnchor = useCallback((payload: string) => {
+    const [kind, value = ''] = payload.split(';')
+    if (kind === 'start') {
+      startCommandBlockMarks(decodeBase64Utf8(value))
+    } else if (kind === 'end') {
+      const exitCode = Number.parseInt(value, 10)
+      finishCommandBlockMarks(Number.isFinite(exitCode) ? exitCode : null)
+    }
+  }, [finishCommandBlockMarks, startCommandBlockMarks])
+  const handleCommandAnchorRef = useRef(handleCommandAnchor)
+  useEffect(() => {
+    handleCommandAnchorRef.current = handleCommandAnchor
+  }, [handleCommandAnchor])
+
+  useEffect(() => {
+    if (!blockMenu && !pathMenu) return
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return
+      // Capture before the terminal, which would otherwise take the key
+      event.preventDefault()
+      event.stopPropagation()
+      setBlockMenu(null)
+      setPathMenu(null)
+    }
+    window.addEventListener('keydown', closeOnEscape, true)
+    return () => window.removeEventListener('keydown', closeOnEscape, true)
+  }, [blockMenu, pathMenu])
+
+  const getFinishedBlockOutput = useCallback((block: FinishedCommandBlock): string | null => {
+    if (block.outputLine.isDisposed || block.endLine.isDisposed) return null
+    return extractCommandTranscriptFromLines(getTerminalBufferLines(), block.outputLine.line, block.endLine.line)
+  }, [getTerminalBufferLines])
+
   const handleShellEvent = useCallback((event: ShellIntegrationEvent) => {
     if (event.type === 'command-start') {
       attentionStartRef.current ??= { command: event.command, startedAt: event.receivedAt }
@@ -1872,6 +2272,12 @@ function XTermInstance({
     resetEditorComposer()
     shellCwdRef.current = projectWorkingDirectory
     commandBlockCounterRef.current = 0
+    finishedBlocksRef.current.forEach(disposeFinishedCommandBlock)
+    finishedBlocksRef.current = []
+    pendingBlockMarksRef.current?.commandLine.dispose()
+    pendingBlockMarksRef.current?.outputLine.dispose()
+    pendingBlockMarksRef.current = null
+    setBlockMenu(null)
     setShellCwd(projectWorkingDirectory)
     setPromptCount(0)
     setActiveCommandBlock(null)
@@ -1894,15 +2300,27 @@ function XTermInstance({
       terminalInputMode === 'editor' && shellState === 'idle' ? 'bar' : 'block'
   }, [shellState, terminalInputMode])
 
+  // Only the focused pane takes the keyboard, so the editor prompt follows the focus in a split or quad.
   useEffect(() => {
-    if (!visible || terminalInputMode !== 'editor' || shellState !== 'idle') return
+    if (!visible || !focused || terminalInputMode !== 'editor' || shellState !== 'idle') return
 
     const focusTimer = window.setTimeout(() => {
       editorInputRef.current?.focus()
     }, 0)
 
     return () => window.clearTimeout(focusTimer)
-  }, [shellState, terminalInputMode, visible])
+  }, [focused, shellState, terminalInputMode, visible])
+
+  // Moving the focus to this pane by keyboard (Cmd+] / Cmd+[) moves the keyboard here too.
+  useEffect(() => {
+    if (!visible || !focused || !multiPane) return
+    if (terminalInputMode === 'editor' && shellStateRef.current === 'idle') return // the effect above does it
+    const focusTimer = window.setTimeout(() => {
+      if (!rootRef.current?.contains(document.activeElement)) termRef.current?.focus()
+    }, 0)
+    return () => window.clearTimeout(focusTimer)
+    // Only when the focus arrives, not on every input mode change
+  }, [focused, multiPane, visible])
 
   useLayoutEffect(() => {
     const pendingSelection = pendingEditorSelectionRef.current
@@ -1965,6 +2383,10 @@ function XTermInstance({
       fastScrollModifier: 'alt',
       theme: XTERM_THEMES[activeTheme],
       allowProposedApi: true
+    })
+    term.parser.registerOscHandler(COMMAND_ANCHOR_OSC, (payload) => {
+      handleCommandAnchorRef.current(payload)
+      return true
     })
 
     const fitAddon = new FitAddon()
@@ -2081,6 +2503,11 @@ function XTermInstance({
           sendTerminalInputDirectRef.current(data)
           inputBufferRef.current = ''
           setInputPreview('')
+          // Enter or Ctrl+C ends the prompt. Forget the prompt text so only a new prompt turns it back on.
+          if (data.includes('\r') || data.includes('\x03')) {
+            outputBufferRef.current = ''
+            setSecureInputState(false)
+          }
           return
         }
 
@@ -2114,10 +2541,33 @@ function XTermInstance({
     })
 
     let scrollTimer: ReturnType<typeof setTimeout> | null = null
+    // Output moves the view on its own (xterm follows new lines); only the user's own scrolling decides
+    // whether to follow the output or hold the lines they scrolled to.
+    let heldTopLine: IMarker | null = null
+    let userScrollUntil = 0
+    let draggingScrollbar = false
+    const markUserScroll = (): void => {
+      userScrollUntil = performance.now() + 400
+    }
+    const startScrollbarDrag = (): void => {
+      draggingScrollbar = true
+      markUserScroll()
+    }
+    const endScrollbarDrag = (): void => {
+      draggingScrollbar = false
+    }
+    const terminalElement = term.element
+    terminalElement?.addEventListener('wheel', markUserScroll, { capture: true, passive: true })
+    terminalElement?.addEventListener('keydown', markUserScroll, true)
+    terminalElement?.addEventListener('mousedown', startScrollbarDrag, true)
+    window.addEventListener('mouseup', endScrollbarDrag)
     term.onScroll(() => {
+      if (!draggingScrollbar && performance.now() > userScrollUntil) return
       const buf = term.buffer.active
       const atBottom = buf.viewportY >= buf.baseY
       autoScrollRef.current = atBottom
+      heldTopLine?.dispose()
+      heldTopLine = atBottom ? null : term.registerMarker(buf.viewportY - (buf.baseY + buf.cursorY))
       if (scrollTimer) clearTimeout(scrollTimer)
       scrollTimer = setTimeout(() => setShowScrollDown(!atBottom), 150)
     })
@@ -2130,19 +2580,25 @@ function XTermInstance({
           setBracketedPasteMode(nextBracketedPasteMode)
         }
 
-        const wasScrolledUp = !autoScrollRef.current
-        const savedViewportY = wasScrolledUp ? term.buffer.active.viewportY : 0
-
+        // Put a scrolled-up view back on the lines the user scrolled to. Decided when the write is drawn, so
+        // scrolling back to the bottom while fast output is queued follows it again.
         term.write(data, () => {
-          if (wasScrolledUp) {
-            const delta = savedViewportY - term.buffer.active.baseY
-            if (delta < 0) {
-              term.scrollLines(delta)
-            }
+          if (autoScrollRef.current || !heldTopLine) return
+          // Lines the user scrolled to can leave the scrollback during a long burst; there is nothing left to
+          // hold then, so follow the output again. A wheel step can also stop just short of the bottom.
+          if (!heldTopLine.isDisposed && term.buffer.active.viewportY !== heldTopLine.line) {
+            term.scrollToLine(heldTopLine.line)
+          }
+          if (heldTopLine.isDisposed || term.buffer.active.viewportY >= term.buffer.active.baseY) {
+            term.scrollToBottom()
+            heldTopLine.dispose()
+            heldTopLine = null
+            autoScrollRef.current = true
+            setShowScrollDown(false)
           }
         })
 
-        const clean = data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '')
+        const clean = data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/\x1b\]7338;[^\x07]*\x07/g, '')
         outputBufferRef.current += clean
 
         if (outputBufferRef.current.length > 500) {
@@ -2207,6 +2663,7 @@ function XTermInstance({
       unsubExit()
       unsubShellEvent()
       agentAttention.forEach((disposable) => disposable.dispose())
+      window.removeEventListener('mouseup', endScrollbarDrag)
       term.dispose()
     }
   }, [sessionId])
@@ -2249,9 +2706,9 @@ function XTermInstance({
     }
   }, [visible, handleResize])
 
-  // Cmd+F to open search, Cmd+S to capture snapshot
+  // Cmd+F to open search, Cmd+S to capture snapshot (the focused pane only, in a split or quad)
   useEffect(() => {
-    if (!visible) return
+    if (!visible || !focused) return
 
     const handler = (e: KeyboardEvent): void => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
@@ -2266,7 +2723,7 @@ function XTermInstance({
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [visible])
+  }, [focused, visible])
 
   const captureSnapshot = useCallback(() => {
     if (!serializeAddonRef.current || !termRef.current) return
@@ -2292,6 +2749,7 @@ function XTermInstance({
 
   return (
     <div
+      ref={rootRef}
       className="absolute inset-0 flex flex-col"
       style={{ display: visible ? 'flex' : 'none' }}
     >
@@ -2409,21 +2867,6 @@ function XTermInstance({
             />
           )}
 
-          {/* Scroll-to-bottom indicator */}
-          {showScrollDown && (
-            <button
-              onClick={() => {
-                termRef.current?.scrollToBottom()
-                autoScrollRef.current = true
-                setShowScrollDown(false)
-              }}
-              className="absolute bottom-3 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/90 text-white text-xs font-medium shadow-lg hover:bg-accent transition-all backdrop-blur-sm z-10"
-            >
-              <ArrowDown size={12} />
-              {t('panel.latestOutput')}
-            </button>
-          )}
-
           {/* Right-click context menu for selected text */}
           {contextMenu && createPortal(
             <>
@@ -2465,7 +2908,7 @@ function XTermInstance({
           )}
         </div>
 
-        <div className="shrink-0 px-2 pb-2 space-y-2">
+        <div className="shrink-0 px-2 pt-1.5 pb-2 space-y-1.5">
           {(aiReview || aiError || aiLoading) && createPortal(
             <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center overflow-y-auto p-6">
               <div className="w-full max-w-3xl max-h-[calc(100vh-3rem)] rounded-2xl border border-surface-border bg-surface-light shadow-2xl shadow-black/50 overflow-hidden flex flex-col">
@@ -2618,23 +3061,6 @@ function XTermInstance({
             document.body
           )}
 
-          {secureInputActive && (
-            <div className="rounded-lg bg-caution/10 px-3 py-3 shadow-xl">
-              <div className="flex items-center gap-2">
-                <ShieldAlert size={14} className="text-caution shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-caution">
-                    {t('secureInput.title')}
-                  </div>
-                  <div className="text-sm text-gray-200">
-                    {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}.
-                    {' '}{t('secureInput.description')}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {pendingPaste && (
             <div className="rounded-lg bg-surface-light px-3 py-3 shadow-xl">
               <div className="flex items-center gap-2">
@@ -2702,9 +3128,93 @@ function XTermInstance({
           )}
 
           {terminalInputMode === 'editor' && shellState === 'idle' && !(workflowRun && !isTerminalRunStatus(workflowRun.status)) && (
-            <div className="rounded-lg bg-surface-light px-3 py-2 shadow-xl">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider mb-1.5">
-                <span className="text-accent-light font-semibold">{t('editorPrompt.title')}</span>
+            // One slim row like the footer. Suggestions sit inside the row, so typing never changes its
+            // height (which would resize the terminal on every keystroke).
+            <div
+              data-testid="editor-prompt"
+              className="flex h-8 min-w-0 items-center gap-2 rounded-lg bg-surface-light px-2 ring-1 ring-transparent transition-shadow focus-within:ring-accent/30"
+            >
+              <span aria-hidden="true" className="shrink-0 pl-0.5 font-mono text-sm leading-none text-accent">›</span>
+              <div className="relative min-w-0 flex-1">
+                {showInlineEditorSuggestion && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center overflow-hidden text-[13px] font-mono">
+                    <span className="whitespace-pre text-transparent">{editorCommand}</span>
+                    <span className="whitespace-pre text-gray-500">{activeEditorSuggestionSuffix}</span>
+                  </div>
+                )}
+                <input
+                  ref={editorInputRef}
+                  type="text"
+                  value={editorCommand}
+                  onChange={(event) =>
+                    handleEditorCommandChange(event.target.value, {
+                      start: event.target.selectionStart ?? event.target.value.length,
+                      end: event.target.selectionEnd ?? event.target.selectionStart ?? event.target.value.length
+                    })}
+                  onClick={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
+                  onKeyUp={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
+                  onSelect={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
+                  onPaste={handleEditorPaste}
+                  onKeyDown={handleEditorKeyDown}
+                  placeholder={t('editorPrompt.placeholder')}
+                  aria-label={t('editorPrompt.title')}
+                  spellCheck={false}
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  className="relative z-10 w-full bg-transparent text-[13px] text-gray-200 placeholder:text-gray-600 font-mono focus:outline-none"
+                />
+              </div>
+
+              {activeEditorSuggestion && (
+                <div className="flex min-w-0 max-w-[45%] shrink items-center gap-1 overflow-hidden text-[11px]">
+                  {!compactFooter && (
+                    <span className="shrink-0 text-[10px] uppercase tracking-wide text-gray-500">
+                      {t(`editorPrompt.sources.${activeEditorSuggestion.source}`)}
+                    </span>
+                  )}
+                  {(compactFooter ? [activeEditorSuggestion] : editorSuggestions.slice(0, 3)).map((suggestion) => {
+                    const suggestionIndex = editorSuggestions.indexOf(suggestion)
+                    const selected = suggestion === activeEditorSuggestion
+                    const useInlineSuffix =
+                      selected &&
+                      activeEditorSuggestionSuffix &&
+                      suggestion.value.startsWith(editorCommand)
+
+                    return (
+                      <button
+                        key={`${suggestion.source}-${suggestion.value}`}
+                        type="button"
+                        title={`${t(`editorPrompt.sources.${suggestion.source}`)}: ${suggestion.value}`}
+                        onMouseEnter={() => setSelectedEditorSuggestionIndex(suggestionIndex)}
+                        onClick={() => acceptEditorSuggestion(suggestion.value)}
+                        className={clsx(
+                          'min-w-0 max-w-[16rem] truncate rounded-md px-1.5 py-0.5 font-mono transition-colors',
+                          selected
+                            ? 'bg-accent/10 text-accent-light'
+                            : 'bg-surface text-gray-400 hover:text-gray-200'
+                        )}
+                      >
+                        {useInlineSuffix ? (
+                          <>
+                            <span className="text-gray-500">{editorCommand}</span>
+                            <span>{activeEditorSuggestionSuffix}</span>
+                          </>
+                        ) : (
+                          suggestion.value
+                        )}
+                      </button>
+                    )
+                  })}
+                  <kbd
+                    title={t('editorPrompt.tabAccepts')}
+                    className="shrink-0 rounded border border-surface-border bg-surface px-1 font-mono text-[10px] leading-4 text-gray-500"
+                  >
+                    Tab
+                  </kbd>
+                </div>
+              )}
+
+              <span className="inline-flex shrink-0">
                 <HelpTip
                   label={t('editorPrompt.title')}
                   description={
@@ -2715,229 +3225,190 @@ function XTermInstance({
                 >
                   <button
                     type="button"
-                    className="text-gray-500 hover:text-accent-light transition-colors normal-case tracking-normal"
+                    className="inline-flex text-gray-500 hover:text-accent-light transition-colors"
                     aria-label={t('editorPrompt.helpLabel')}
                   >
                     <CircleHelp size={13} />
                   </button>
                 </HelpTip>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2">
-                <span className="text-sm font-mono text-accent shrink-0">›</span>
-                <div className="relative flex-1">
-                  {showInlineEditorSuggestion && (
-                    <div className="pointer-events-none absolute inset-0 flex items-center overflow-hidden text-sm font-mono">
-                      <span className="whitespace-pre text-transparent">{editorCommand}</span>
-                      <span className="whitespace-pre text-gray-500">{activeEditorSuggestionSuffix}</span>
-                    </div>
-                  )}
-                  <input
-                    ref={editorInputRef}
-                    type="text"
-                    value={editorCommand}
-                    onChange={(event) =>
-                      handleEditorCommandChange(event.target.value, {
-                        start: event.target.selectionStart ?? event.target.value.length,
-                        end: event.target.selectionEnd ?? event.target.selectionStart ?? event.target.value.length
-                      })}
-                    onClick={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
-                    onKeyUp={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
-                    onSelect={(event) => syncEditorSelectionFromTarget(event.currentTarget)}
-                    onPaste={handleEditorPaste}
-                    onKeyDown={handleEditorKeyDown}
-                    placeholder={t('editorPrompt.placeholder')}
-                    spellCheck={false}
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    className="relative z-10 w-full bg-transparent text-sm text-gray-200 placeholder:text-gray-600 font-mono focus:outline-none"
-                  />
-                </div>
-                <button
-                  onClick={submitEditorCommand}
-                  className="shrink-0 rounded-md bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent-light hover:bg-accent/20 transition-colors"
-                >
-                  {t('editorPrompt.run')}
-                </button>
-              </div>
-
-              <div className="mt-1.5 min-h-[2rem] flex items-center gap-2 text-[11px]">
-                <span className="text-gray-500 shrink-0">{t('editorPrompt.suggestion')}</span>
-                <div className="min-w-0 flex-1 overflow-hidden">
-                  {editorSuggestions.length > 0 ? (
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-                      {editorSuggestions.slice(0, 3).map((suggestion, index) => {
-                        const suggestionIndex = index
-                        const selected = suggestionIndex === selectedEditorSuggestionIndex
-                        const useInlineSuffix =
-                          selected &&
-                          activeEditorSuggestionSuffix &&
-                          suggestion.value.startsWith(editorCommand)
-
-                        return (
-                          <button
-                            key={`${suggestion.source}-${suggestion.value}`}
-                            type="button"
-                            onMouseEnter={() => setSelectedEditorSuggestionIndex(suggestionIndex)}
-                            onClick={() => acceptEditorSuggestion(suggestion.value)}
-                            className={`shrink-0 rounded-md border px-2 py-1 font-mono transition-colors ${
-                              selected
-                                ? 'border-accent/20 bg-accent/10 text-accent-light'
-                                : 'border-surface-border bg-surface text-gray-400 hover:text-gray-200'
-                            }`}
-                          >
-                            <span className="mr-1.5 rounded px-1 py-0.5 text-[10px] uppercase tracking-wide bg-surface/60 text-gray-500">
-                              {t(`editorPrompt.sources.${suggestion.source}`)}
-                            </span>
-                            {useInlineSuffix ? (
-                              <>
-                                <span className="text-gray-500">{editorCommand}</span>
-                                <span>{activeEditorSuggestionSuffix}</span>
-                              </>
-                            ) : (
-                              suggestion.value
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <div className="flex items-center h-full text-gray-600">
-                      {t('editorPrompt.emptySuggestions')}
-                    </div>
-                  )}
-                </div>
-                <span className="text-gray-600 shrink-0">{t('editorPrompt.tabAccepts')}</span>
-              </div>
+              </span>
+              <button
+                onClick={submitEditorCommand}
+                className="shrink-0 rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent-light hover:bg-accent/20 transition-colors"
+              >
+                {t('editorPrompt.run')}
+              </button>
             </div>
           )}
 
-          <div className="rounded-lg bg-surface-light px-3 py-1.5">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <HelpTip
-                  label={t('toolbar.reviewSession')}
-                  description={
-                    activeAIProvider
-                      ? t('toolbar.reviewSessionEnabled')
-                      : t('toolbar.reviewSessionDisabled')
-                  }
-                >
-                  <button
-                    onClick={() => void runAIReview('session')}
-                    disabled={aiLoading || secureInputActive}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface text-xs text-gray-300 hover:text-gray-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {aiLoading && aiReviewScope !== 'last-command'
-                      ? <Loader2 size={12} className="animate-spin" />
-                      : <Sparkles size={12} />}
-                    {aiReviewScope === 'session' && aiReview ? t('toolbar.refreshSession') : t('toolbar.reviewSession')}
-                  </button>
-                </HelpTip>
-
-              </div>
-
-              <div className="min-w-0 flex-1 text-[11px] text-gray-400">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className="truncate">
-                    {t('toolbar.prompt')} <span className="font-mono text-gray-300">{shellCwd || t('toolbar.waitingForShell')}</span>
-                  </span>
-                  {activeCommandBlock && !isSSHSessionCommand(activeCommandBlock.command) ? (
-                    <span className="truncate">
-                      {t('toolbar.running')} <span className="font-mono text-accent-light">{formatCommandForDisplay(activeCommandBlock.command)}</span>
-                    </span>
-                  ) : activeCommandBlock && isSSHSessionCommand(activeCommandBlock.command) ? (
-                    <span className="truncate text-gray-500">
-                      {t('toolbar.connected')} <span className="font-mono text-gray-400">{getSSHHost(activeCommandBlock.command) ?? t('toolbar.remote')}</span>
-                    </span>
-                  ) : lastCompletedCommandBlock && !isSSHSessionCommand(lastCompletedCommandBlock.command) ? (
-                    <span className="truncate">
-                      {t('toolbar.last')} <span className="font-mono text-gray-300">{formatCommandForDisplay(lastCompletedCommandBlock.command)}</span>
-                      {lastCompletedCommandBlock.exitCode !== null && lastCompletedCommandBlock.exitCode !== 0 && (
-                        <>
-                          {' '}
-                          <span className="font-mono text-destructive">{t('toolbar.exitCode', { code: lastCompletedCommandBlock.exitCode })}</span>
-                          {activeAIProvider && (
-                            <button
-                              onClick={() => void runAIReview('last-command')}
-                              disabled={aiLoading || secureInputActive}
-                              className="ml-2 inline-flex items-center gap-1 rounded-md bg-accent/15 px-2 py-0.5 text-[11px] text-accent-light hover:bg-accent/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                              <Sparkles size={10} />
-                              {t('toolbar.explainFix')}
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </span>
-                  ) : null}
-                  {promptCount > 0 && (
-                    <span className="shrink-0 text-gray-500">
-                      {t('toolbar.promptCount', { count: promptCount })}
-                    </span>
-                  )}
-                  <HelpTip
-                    label={bracketedPasteMode ? t('toolbar.bracketedPaste') : t('toolbar.plainPaste')}
-                    description={
-                      bracketedPasteMode
-                        ? t('toolbar.bracketedPasteDescription')
-                        : t('toolbar.plainPasteDescription')
-                    }
-                  >
-                    <span className={`shrink-0 cursor-default ${bracketedPasteMode ? 'text-accent-light' : 'text-gray-500'}`}>
-                      {t('toolbar.paste')} {bracketedPasteMode ? t('toolbar.bracketed') : t('toolbar.plain')}
-                    </span>
-                  </HelpTip>
-                </div>
-              </div>
-              <div className="ml-auto flex items-center gap-1.5 text-[11px]">
-                {(sessionMode === 'ssh-interactive' || sessionMode === 'vnc') ? null : <HelpTip
-                  label={t('editorPrompt.title')}
-                  description={
-                    terminalInputMode === 'editor'
-                      ? t('editorPrompt.modeOnDescription')
-                      : t('editorPrompt.modeOffDescription')
-                  }
-                  shortcut="⌘E"
-                >
+          <div ref={setFooterElement} className="flex h-7 min-w-0 items-center gap-2 overflow-hidden rounded-lg bg-surface-light px-2 text-[11px] text-gray-400">
+            <span className="inline-flex shrink-0">
+            <HelpTip
+              label={t('toolbar.reviewSession')}
+              description={
+                activeAIProvider
+                  ? t('toolbar.reviewSessionEnabled')
+                  : t('toolbar.reviewSessionDisabled')
+              }
+            >
+              <button
+                onClick={() => void runAIReview('session')}
+                disabled={aiLoading || secureInputActive}
+                aria-label={aiReviewScope === 'session' && aiReview ? t('toolbar.refreshSession') : t('toolbar.reviewSession')}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-surface px-2 py-0.5 text-xs text-gray-300 hover:text-gray-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {aiLoading && aiReviewScope !== 'last-command'
+                  ? <Loader2 size={12} className="animate-spin" />
+                  : <Sparkles size={12} />}
+                {!compactFooter && (aiReviewScope === 'session' && aiReview ? t('toolbar.refreshSession') : t('toolbar.reviewSession'))}
+              </button>
+            </HelpTip>
+            </span>
+            {secureInputActive && (
+              <span className="inline-flex shrink-0">
+              <HelpTip
+                label={t('secureInput.title')}
+                description={`${securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}. ${t('secureInput.description')}`}
+              >
+                <span data-testid="secure-input-chip" className="shrink-0 inline-flex cursor-default items-center gap-1 rounded-full bg-caution/15 px-2 py-0.5 text-caution">
+                  <ShieldAlert size={11} />
+                  {securePromptLabel ? t(`secureInput.prompts.${securePromptLabel}`) : t('secureInput.fallbackPrompt')}
+                </span>
+              </HelpTip>
+              </span>
+            )}
+            {/* A plain title, not HelpTip: its wrapper would stop the path from shrinking in this row */}
+            <span className="inline-flex min-w-0 max-w-[35%] shrink items-center">
+              <button
+                type="button"
+                data-testid="status-cwd"
+                disabled={!canChangeFolder}
+                onClick={() => void changeFolderWithPicker()}
+                title={`${t('toolbar.prompt')} ${shellCwd || t('toolbar.waitingForShell')}${canChangeFolder ? `\n${t('folder.change')}` : ''}`}
+                className="inline-flex min-w-0 items-center gap-1 rounded-l px-1 py-0.5 enabled:hover:bg-surface disabled:cursor-default"
+              >
+                <Folder size={11} className="shrink-0 text-gray-500" />
+                <span className="truncate font-mono text-gray-300">{shellCwd ? shortenPathForDisplay(shellCwd) : t('toolbar.waitingForShell')}</span>
+              </button>
+              {shellCwd && !isRemoteShell && (
                 <button
                   type="button"
-                  onClick={() => void handleTerminalInputModeChange(terminalInputMode === 'editor' ? 'classic' : 'editor')}
-                  className="inline-flex shrink-0 items-center gap-2.5 rounded-full pl-1 pr-1 py-0.5 text-gray-200 transition-colors hover:bg-surface-light/40"
+                  aria-label={t('folder.menu')}
+                  title={t('folder.menu')}
+                  onClick={(event) => {
+                    const rect = event.currentTarget.getBoundingClientRect()
+                    setPathMenu({ x: rect.left, y: rect.top })
+                  }}
+                  className="shrink-0 rounded-r px-0.5 py-0.5 text-gray-500 hover:bg-surface hover:text-gray-300"
                 >
-                  <span className="text-[11px] text-gray-400">{t('editorPrompt.title')}</span>
-                  <span
-                    role="switch"
-                    aria-checked={terminalInputMode === 'editor'}
-                    className={clsx(
-                      'relative isolate shrink-0 inline-flex h-8 w-20 items-center rounded-full border px-1 transition-all',
-                      terminalInputMode === 'editor'
-                        ? 'border-accent/30 bg-accent/10 shadow-[0_0_28px_rgba(6,182,212,0.15)]'
-                        : 'border-gray-500/40 bg-surface-light/60 shadow-inner'
-                    )}
-                  >
-                    <span className="absolute inset-0 rounded-full bg-gradient-to-r from-white/[0.02] via-transparent to-transparent" />
-                    <span
-                      className={clsx(
-                        'absolute top-1 bottom-1 w-[38px] rounded-full border transition-all duration-200',
-                        terminalInputMode === 'editor'
-                          ? 'left-[38px] border-accent/40 bg-gradient-to-r from-accent to-cyan-300 shadow-[0_0_24px_rgba(34,211,238,0.28)]'
-                          : 'left-1 border-gray-500/30 bg-gradient-to-r from-gray-500/50 to-gray-600/40'
-                      )}
-                    />
-                    <span className="relative z-10 flex w-full items-center justify-between px-2 text-[9px] font-semibold uppercase tracking-[0.18em]">
-                      <span className={terminalInputMode === 'editor' ? 'text-gray-500' : 'text-white'}>{t('editorPrompt.off')}</span>
-                      <span className={terminalInputMode === 'editor' ? 'text-slate-950' : 'text-gray-500'}>{t('editorPrompt.on')}</span>
-                    </span>
-                  </span>
+                  <ChevronDown size={11} />
                 </button>
-                </HelpTip>}
-              </div>
-            </div>
+              )}
+            </span>
+            {activeCommandBlock && !isSSHSessionCommand(activeCommandBlock.command) ? (
+              <span className="inline-flex min-w-0 flex-1 items-center gap-1" title={formatCommandForDisplay(activeCommandBlock.command)}>
+                <Loader2 size={11} className="shrink-0 animate-spin text-accent" />
+                <span className="truncate font-mono text-accent-light">{formatCommandForDisplay(activeCommandBlock.command)}</span>
+              </span>
+            ) : activeCommandBlock && isSSHSessionCommand(activeCommandBlock.command) ? (
+              <span className="min-w-0 flex-1 truncate text-gray-500">
+                {t('toolbar.connected')} <span className="font-mono text-gray-400">{getSSHHost(activeCommandBlock.command) ?? t('toolbar.remote')}</span>
+              </span>
+            ) : lastCompletedCommandBlock && !isSSHSessionCommand(lastCompletedCommandBlock.command) ? (
+              <>
+                <span className="min-w-0 flex-1 truncate" title={formatCommandForDisplay(lastCompletedCommandBlock.command)}>
+                  {t('toolbar.last')} <span className="font-mono text-gray-300">{formatCommandForDisplay(lastCompletedCommandBlock.command)}</span>
+                </span>
+                {lastCompletedCommandBlock.exitCode !== null && lastCompletedCommandBlock.exitCode !== 0 && (
+                  <>
+                    <span className="shrink-0 font-mono text-destructive">{t('toolbar.exitCode', { code: lastCompletedCommandBlock.exitCode })}</span>
+                    {activeAIProvider && (
+                      <button
+                        onClick={() => void runAIReview('last-command')}
+                        disabled={aiLoading || secureInputActive}
+                        className="inline-flex shrink-0 items-center gap-1 rounded-md bg-accent/15 px-2 py-0.5 text-[11px] text-accent-light hover:bg-accent/25 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        <Sparkles size={10} />
+                        {t('toolbar.explainFix')}
+                      </button>
+                    )}
+                  </>
+                )}
+              </>
+            ) : (
+              <span className="flex-1" />
+            )}
+            {promptCount > 0 && !compactFooter && (
+              <span className="shrink-0 inline-flex cursor-default items-center rounded-full bg-surface px-2 py-0.5 text-gray-500">
+                {t('toolbar.promptCount', { count: promptCount })}
+              </span>
+            )}
+            {!compactFooter && (
+              <span className="inline-flex shrink-0">
+              <HelpTip
+                label={bracketedPasteMode ? t('toolbar.bracketedPaste') : t('toolbar.plainPaste')}
+                description={
+                  bracketedPasteMode
+                    ? t('toolbar.bracketedPasteDescription')
+                    : t('toolbar.plainPasteDescription')
+                }
+              >
+                <span className={`shrink-0 inline-flex cursor-default items-center rounded-full bg-surface px-2 py-0.5 ${bracketedPasteMode ? 'text-accent-light' : 'text-gray-500'}`}>
+                  {t('toolbar.paste')} {bracketedPasteMode ? t('toolbar.bracketed') : t('toolbar.plain')}
+                </span>
+              </HelpTip>
+              </span>
+            )}
+            {showScrollDown && (
+              <button
+                onClick={() => {
+                  termRef.current?.scrollToBottom()
+                  autoScrollRef.current = true
+                  setShowScrollDown(false)
+                }}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/90 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-accent transition-colors"
+              >
+                <ArrowDown size={11} />
+                {t('panel.latestOutput')}
+              </button>
+            )}
+            {(sessionMode === 'ssh-interactive' || sessionMode === 'vnc') ? null : <span className="inline-flex shrink-0"><HelpTip
+              label={t('editorPrompt.title')}
+              description={
+                terminalInputMode === 'editor'
+                  ? t('editorPrompt.modeOnDescription')
+                  : t('editorPrompt.modeOffDescription')
+              }
+              shortcut="⌘E"
+            >
+              <button
+                type="button"
+                onClick={() => void handleTerminalInputModeChange(terminalInputMode === 'editor' ? 'classic' : 'editor')}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-1 py-0.5 transition-colors hover:bg-surface/60"
+              >
+                {!compactFooter && <span className="text-[11px] text-gray-400">{t('editorPrompt.title')}</span>}
+                <span
+                  role="switch"
+                  aria-label={t('editorPrompt.title')}
+                  aria-checked={terminalInputMode === 'editor'}
+                  className={clsx(
+                    'relative inline-flex h-4 w-8 shrink-0 items-center rounded-full border transition-colors',
+                    terminalInputMode === 'editor' ? 'border-accent/40 bg-accent/80' : 'border-gray-500/40 bg-surface'
+                  )}
+                >
+                  <span
+                    className={clsx(
+                      'absolute h-3 w-3 rounded-full bg-white transition-all duration-200',
+                      terminalInputMode === 'editor' ? 'left-[17px]' : 'left-[1px] bg-gray-400'
+                    )}
+                  />
+                </span>
+              </button>
+            </HelpTip></span>}
           </div>
 
-          {shellState === 'executing' && (activeCommandBlock || inputPreview || queuedCommands.length > 0) && !(workflowRun && !isTerminalRunStatus(workflowRun.status)) && !(activeCommandBlock && isSSHSessionCommand(activeCommandBlock.command) && queuedCommands.length === 0 && !inputPreview) && (
-            <div className="rounded-lg bg-surface-light px-3 py-3 shadow-xl">
+          {shellState === 'executing' && (inputPreview || queuedCommands.length > 0) && !(workflowRun && !isTerminalRunStatus(workflowRun.status)) && (
+            <div className="rounded-lg bg-surface-light px-3 py-2">
               <div className="flex items-center gap-2 mb-1.5">
                 <Loader2 size={11} className="animate-spin text-accent" />
                 <span className="text-[11px] text-gray-400">
@@ -2952,20 +3423,6 @@ function XTermInstance({
                   </button>
                 )}
               </div>
-
-              {activeCommandBlock && (
-                <div className="flex items-center gap-2 mb-2 px-2 py-1 bg-surface rounded">
-                  <span className="text-[11px] text-gray-500 shrink-0">{t('busy.running')}</span>
-                  <span className="text-xs text-gray-300 font-mono flex-1 truncate">
-                    {formatCommandForDisplay(activeCommandBlock.command)}
-                  </span>
-                  {activeCommandBlock.cwd && (
-                    <span className="text-[11px] text-gray-500 truncate max-w-[40%]">
-                      {activeCommandBlock.cwd}
-                    </span>
-                  )}
-                </div>
-              )}
 
               {queuedCommands.map((cmd, i) => (
                 <div
@@ -3011,6 +3468,84 @@ function XTermInstance({
           />
         )}
       </div>
+      {pathMenu && shellCwd && (
+        <div className="fixed inset-0 z-50" onMouseDown={() => setPathMenu(null)}>
+          <div
+            role="menu"
+            aria-label={t('folder.menu')}
+            data-testid="folder-menu"
+            className="fixed w-52 -translate-y-full rounded-lg border border-surface-border bg-surface-light p-1 shadow-2xl shadow-black/50"
+            style={{ left: pathMenu.x, top: pathMenu.y - 4 }}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            {[
+              { label: t('folder.change'), disabled: !canChangeFolder, run: () => void changeFolderWithPicker() },
+              {
+                label: t(navigator.platform.toLowerCase().includes('mac') ? 'folder.revealMac' : navigator.platform.toLowerCase().includes('win') ? 'folder.revealWindows' : 'folder.revealLinux'),
+                disabled: false,
+                run: () => void window.electronAPI.openInExplorer(shellCwd)
+              },
+              { label: t('folder.copyPath'), disabled: false, run: () => void window.electronAPI.writeClipboard(shellCwd) }
+            ].map((item) => (
+              <button
+                key={item.label}
+                role="menuitem"
+                disabled={item.disabled}
+                onClick={() => {
+                  setPathMenu(null)
+                  item.run()
+                }}
+                className="block w-full rounded-md px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {blockMenu && (() => {
+        const block = finishedBlocksRef.current.find((candidate) => candidate.id === blockMenu.blockId)
+        if (!block) return null
+        const output = getFinishedBlockOutput(block)
+        const close = (): void => setBlockMenu(null)
+        const itemClass = 'block w-full rounded-md px-3 py-1.5 text-left text-xs text-gray-200 hover:bg-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+        return (
+          <div className="fixed inset-0 z-50" onMouseDown={close}>
+            <div
+              role="menu"
+              aria-label={t('blocks.menu')}
+              data-testid="command-block-menu"
+              className="fixed w-48 -translate-x-full rounded-lg border border-surface-border bg-surface-light p-1 shadow-2xl shadow-black/50"
+              style={{ left: blockMenu.x, top: Math.min(blockMenu.y, window.innerHeight - 160) }}
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="truncate px-3 py-1 font-mono text-[11px] text-gray-500" title={block.command}>{block.command}</div>
+              <button role="menuitem" className={itemClass} disabled={!output} onClick={() => { if (output) void window.electronAPI.writeClipboard(output); close() }}>
+                {t('blocks.copyOutput')}
+              </button>
+              <button role="menuitem" className={itemClass} onClick={() => { void window.electronAPI.writeClipboard(block.command); close() }}>
+                {t('blocks.copyCommand')}
+              </button>
+              <button role="menuitem" className={itemClass} disabled={shellState !== 'idle'} onClick={() => { insertSuggestedCommand(block.command); close() }}>
+                {t('blocks.runAgain')}
+              </button>
+              {activeAIProvider && (
+                <button
+                  role="menuitem"
+                  className={itemClass}
+                  disabled={!output || aiLoading || secureInputActive}
+                  onClick={() => {
+                    void runAIReview('last-command', { command: block.command, exitCode: block.exitCode, transcript: output })
+                    close()
+                  }}
+                >
+                  {t(block.exitCode !== null && block.exitCode !== 0 ? 'toolbar.explainFix' : 'blocks.explain')}
+                </button>
+              )}
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

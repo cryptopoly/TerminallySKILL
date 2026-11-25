@@ -225,7 +225,9 @@
     "general.attention.keep.title": "सूचनाएँ बंद करने तक दिखाएँ",
     "general.attention.keep.description": "सूचनाएँ तब तक स्क्रीन पर रहती हैं जब तक आप उन्हें बंद नहीं करते। सटीक व्यवहार आपके डेस्कटॉप पर निर्भर करता है।",
     "general.attention.keep.macDescription": "यह macOS तय करता है। सिस्टम सेटिंग्स में TerminallySKILL के लिए वह शैली चुनें जो बंद करने तक बनी रहती है।",
-    "general.attention.keep.openSettings": "सिस्टम सेटिंग्स खोलें"
+    "general.attention.keep.openSettings": "सिस्टम सेटिंग्स खोलें",
+    "general.restoreTabs.title": "टर्मिनल टैब फिर से खोलें",
+    "general.restoreTabs.description": "लॉन्च पर, पिछली बार के लोकल टर्मिनल टैब, स्प्लिट और फ़ोल्डर फिर से खोलता है। SSH और VNC टैब दोबारा कनेक्ट नहीं होते, और पुराना आउटपुट नहीं रखा जाता।"
   },
   "commands": {
     "addDialog.title": "कमांड जोड़ें",
@@ -1108,7 +1110,6 @@
     "toolbar.plain": "सादा",
     "busy.title": "Shell व्यस्त है - तैयार होने पर कमांड चलेंगी",
     "busy.clearQueue": "कतार साफ़ करें",
-    "busy.running": "चल रहा है",
     "search.previous": "पिछला मेल (Shift+Enter)",
     "search.next": "अगला मेल (Enter)",
     "search.close": "बंद करें (Esc)",
@@ -1192,7 +1193,23 @@
     "dot.idle": "निष्क्रिय",
     "attention.waitingForYes": "आपकी हाँ की प्रतीक्षा",
     "attention.bell": "टर्मिनल की घंटी बजाई",
-    "attention.stillWaiting": "अब भी आपकी प्रतीक्षा ({{duration}})"
+    "attention.stillWaiting": "अब भी आपकी प्रतीक्षा ({{duration}})",
+    "blocks.menu": "कमांड क्रियाएँ",
+    "blocks.copyOutput": "आउटपुट कॉपी करें",
+    "blocks.copyCommand": "कमांड कॉपी करें",
+    "blocks.runAgain": "फिर से चलाएँ",
+    "blocks.explain": "आउटपुट समझाएँ",
+    "folder.change": "फ़ोल्डर बदलें…",
+    "folder.menu": "फ़ोल्डर क्रियाएँ",
+    "folder.revealMac": "Finder में दिखाएँ",
+    "folder.revealWindows": "फ़ाइल एक्सप्लोरर में दिखाएँ",
+    "folder.revealLinux": "फ़ाइल मैनेजर में खोलें",
+    "folder.copyPath": "पथ कॉपी करें",
+    "openFailed.message": "टर्मिनल नहीं खुल सका: {{reason}}",
+    "panel.quad": "चार भागों में विभाजन",
+    "panel.closeQuad": "चार भागों वाला विभाजन बंद करें",
+    "panel.quadDescription": "2x2 ग्रिड में चार टर्मिनल। पहले आपके खुले टैब इस्तेमाल होते हैं, बाकी के लिए नए खुलते हैं। पिछले लेआउट पर लौटने के लिए फिर से क्लिक करें; कोई टर्मिनल बंद नहीं होता।",
+    "panel.quadTooSmall": "चार भागों वाला विभाजन रुका: विंडो बहुत छोटी है"
   },
   "onboarding": {
     "subtitle": "विज़ुअल कमांड बिल्डर, टर्मिनल वर्कस्पेस, वर्कफ़्लो, लॉग और AI टूल",
@@ -1411,7 +1428,9 @@
     "sections.statusDots.steps.idle.label": "निष्क्रिय",
     "sections.statusDots.steps.idle.desc": "धूसर घेरा: कोई प्रोग्राम खुला है पर कुछ देर से उसने कुछ नहीं दिखाया, जैसे अगले काम की प्रतीक्षा करता एजेंट। केवल बिंदु, कोई सूचना नहीं।",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "टर्मिनल को पूरी विंडो में बड़ा करें, या वापस लाएँ। Windows और Linux पर Ctrl+Shift+M।"
+    "sections.keyboard.steps.maximise.desc": "टर्मिनल को पूरी विंडो में बड़ा करें, या वापस लाएँ। Windows और Linux पर Ctrl+Shift+M।",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "चार भागों वाला विभाजन (2x2 ग्रिड में चार टर्मिनल) चालू या बंद करें। Command+] / Command+[ से उसके पैनों के बीच जाएँ। Windows और Linux पर Ctrl+Shift+G।"
   },
   "ai": {
     "explain.label": "AI से समझाएं",
