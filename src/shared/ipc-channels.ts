@@ -97,6 +97,8 @@ export const IPC_CHANNELS = {
   RUNS_SEARCH: 'runs:search',
   RUNS_UPSERT: 'runs:upsert',
   PTY_GET_SESSION_INFO: 'pty:get-session-info',
+  TERMINAL_LAYOUT_REPORT: 'terminal:layout-report',
+  TERMINAL_LAYOUT_TAKE: 'terminal:layout-take',
 
   // Settings
   SETTINGS_GET: 'settings:get',

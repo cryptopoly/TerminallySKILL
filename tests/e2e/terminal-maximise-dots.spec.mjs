@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { PS_FAIL, psWrite, shellCommand } from './shell-commands.mjs'
 
 const MAXIMISE_SHORTCUT = process.platform === 'darwin' ? 'Meta+Shift+M' : 'Control+Shift+M'
 const THEMES = ['void', 'ember', 'dusk', 'forest', 'slate', 'plum', 'chalk', 'sand', 'stone', 'mist', 'dove', 'clay']
@@ -57,7 +58,10 @@ test('a running command shows the running dot at once, and an agent reporting id
     // An agent says it is working, then idle while its command keeps going: the dot follows the agent.
     await typeInVisibleTerminal(
       page,
-      "printf '\\033]7501;state=working\\033\\\\'; sleep 3; printf '\\033]7501;state=idle\\033\\\\'; sleep 4"
+      shellCommand(
+        "printf '\\033]7501;state=working\\033\\\\'; sleep 3; printf '\\033]7501;state=idle\\033\\\\'; sleep 4",
+        `${psWrite('\x1b]7501;state=working\x1b\\')}; Start-Sleep 3; ${psWrite('\x1b]7501;state=idle\x1b\\')}; Start-Sleep 4`
+      )
     )
     await expect(running).toHaveCount(1, { timeout: 2_000 })
     await expect(running).toHaveCount(0, { timeout: 6_000 })
@@ -80,6 +84,12 @@ test('the terminal maximises and restores from the button, the shortcut and the 
     const workspace = page.getByTestId('workspace-panel')
     const button = page.getByTestId('terminal-maximise')
     const heightOf = async () => (await workspace.boundingBox())?.height ?? 0
+    const savedLayout = () =>
+      page.evaluate(async () => {
+        const data = await window.electronAPI.getAllProjects()
+        const layout = data.projects.find((project) => project.name === 'E2E Maximise')?.workspaceLayout
+        return { maximised: layout?.terminalMaximised, terminalSize: layout?.terminalSize }
+      })
 
     const before = await heightOf()
     expect(before).toBeGreaterThan(100)
@@ -91,6 +101,10 @@ test('the terminal maximises and restores from the button, the shortcut and the 
     await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'chalk'))
     await page.screenshot({ path: shotPath(testInfo, 'maximised-chalk.png') })
     await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'void'))
+
+    // Maximise is saved per project, and the stored split stays the one from before it.
+    await expect.poll(async () => (await savedLayout()).maximised, { timeout: 5_000 }).toBe(true)
+    expect((await savedLayout()).terminalSize).toBeLessThan(80)
 
     // Same shortcut restores the previous split, even with the terminal focused.
     await page.locator('.xterm:visible').click()
@@ -106,7 +120,8 @@ test('the terminal maximises and restores from the button, the shortcut and the 
     // (Playwright's Meta+K does not reach the page in Electron on macOS, so send the event directly.)
     await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true })))
     await page.keyboard.type('Restore terminal')
-    await page.getByText('Restore terminal size', { exact: true }).click()
+    // The palette shows the name in its list and again in the preview of the highlighted item
+    await page.getByText('Restore terminal size', { exact: true }).first().click()
     await expect.poll(heightOf).toBeGreaterThan(before - 3)
 
     // Minimise (hide) ends maximise; showing again brings back the old split, not a maximised one.
@@ -119,13 +134,9 @@ test('the terminal maximises and restores from the button, the shortcut and the 
     await expect.poll(heightOf).toBeGreaterThan(before - 3)
     expect(await heightOf()).toBeLessThan(before + 3)
 
-    // Maximise is never saved: the stored split is the one from before.
-    await page.waitForTimeout(1500)
-    const saved = await page.evaluate(async () => {
-      const data = await window.electronAPI.getAllProjects()
-      return data.projects.find((project) => project.name === 'E2E Maximise')?.workspaceLayout.terminalSize
-    })
-    expect(saved).toBeLessThan(80)
+    // Restored: saved as not maximised, and the stored split is still the one from before maximise.
+    await expect.poll(async () => (await savedLayout()).maximised, { timeout: 5_000 }).toBe(false)
+    expect((await savedLayout()).terminalSize).toBeLessThan(80)
   } finally {
     await app.close()
   }
@@ -139,10 +150,16 @@ test('screenshots: the four live dot states on real tabs, the legend, and all fi
     // Tab 1 finishes, tab 2 fails, tab 3 asks for you, tab 4 keeps running, tab 5 is watched.
     await typeInVisibleTerminal(page, 'sleep 6')
     await openNewTab(page, 2)
-    await typeInVisibleTerminal(page, 'sleep 6; false')
+    await typeInVisibleTerminal(page, shellCommand('sleep 6; false', `Start-Sleep 6; ${PS_FAIL}`))
     await openNewTab(page, 3)
     // Delayed until this tab is in the background: alerts are not raised for the watched tab.
-    await typeInVisibleTerminal(page, "sleep 5; printf '\\033]9;Agent needs you\\007'; sleep 60")
+    await typeInVisibleTerminal(
+      page,
+      shellCommand(
+        "sleep 5; printf '\\033]9;Agent needs you\\007'; sleep 60",
+        `Start-Sleep 5; ${psWrite('\x1b]9;Agent needs you\x07')}; Start-Sleep 60`
+      )
+    )
     await openNewTab(page, 4)
     await typeInVisibleTerminal(page, 'sleep 120')
     await openNewTab(page, 5)

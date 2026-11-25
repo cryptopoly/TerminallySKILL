@@ -35,6 +35,12 @@ async function launchElectronExecutable({
       ...process.env,
       ELECTRON_DISABLE_SECURITY_WARNINGS: 'true',
       TERMINALLYSKILL_USER_DATA_DIR: resolvedUserDataDir,
+      // Show the window without taking focus from whoever is using the machine
+      TERMINALLYSKILL_BACKGROUND_WINDOW: '1',
+      // Linux: keep the app off the user's D-Bus session, so safeStorage uses its basic backend
+      // as on CI. With a desktop logged in (GDM auto-login) the login keyring is locked, and a
+      // keyring call waits for an unlock prompt on that desktop, which no test can answer.
+      ...(process.platform === 'linux' ? { DBUS_SESSION_BUS_ADDRESS: 'disabled:' } : {}),
       ...env
     }
   })

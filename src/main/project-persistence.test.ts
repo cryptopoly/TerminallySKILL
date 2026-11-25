@@ -104,6 +104,10 @@ describe('project-persistence', () => {
       terminalSize: 40,
       terminalVisible: true,
       preferredSplitDirection: 'horizontal',
+      quadLayout: false,
+      terminalMaximised: false,
+      splitRatio: 50,
+      quadRatios: { column: 50, row: 50 },
       sidebarTab: 'files',
       openFilePaths: ['/repo/src/index.ts', '/repo/README.md'],
       activeFilePath: '/repo/README.md'
@@ -196,9 +200,50 @@ describe('project-persistence', () => {
       terminalSize: DEFAULT_PROJECT_WORKSPACE_LAYOUT.terminalSize,
       terminalVisible: DEFAULT_PROJECT_WORKSPACE_LAYOUT.terminalVisible,
       preferredSplitDirection: DEFAULT_PROJECT_WORKSPACE_LAYOUT.preferredSplitDirection,
+      quadLayout: false,
+      terminalMaximised: false,
+      splitRatio: 50,
+      quadRatios: { column: 50, row: 50 },
       sidebarTab: 'logs',
       openFilePaths: ['/repo/src/app.tsx'],
       activeFilePath: '/repo/src/app.tsx'
     })
+  })
+
+  it('keeps a saved quad split and reads anything else as no quad', () => {
+    const withLayout = (workspaceLayout: unknown) =>
+      backfillProject(
+        { id: 'proj-5', name: 'Quad', workingDirectory: '/repo', workspaceLayout: workspaceLayout as Project['workspaceLayout'] },
+        0,
+        '2026-03-08T16:30:00.000Z'
+      ).workspaceLayout.quadLayout
+
+    expect(withLayout({ quadLayout: true })).toBe(true)
+    expect(withLayout({ quadLayout: 'yes' })).toBe(false)
+    expect(withLayout(undefined)).toBe(false)
+  })
+
+  it('keeps saved divider positions and maximise, and defaults them for layouts saved before they existed', () => {
+    const layoutOf = (workspaceLayout: unknown) =>
+      backfillProject(
+        { id: 'proj-6', name: 'Dividers', workingDirectory: '/repo', workspaceLayout: workspaceLayout as Project['workspaceLayout'] },
+        0,
+        '2026-03-08T16:30:00.000Z'
+      ).workspaceLayout
+
+    const saved = layoutOf({ terminalMaximised: true, splitRatio: 31.5, quadRatios: { column: 64, row: 27.2 } })
+    expect(saved.terminalMaximised).toBe(true)
+    expect(saved.splitRatio).toBe(31.5)
+    expect(saved.quadRatios).toEqual({ column: 64, row: 27.2 })
+
+    const old = layoutOf({ terminalSize: 40, quadLayout: true })
+    expect(old.terminalMaximised).toBe(false)
+    expect(old.splitRatio).toBe(50)
+    expect(old.quadRatios).toEqual({ column: 50, row: 50 })
+
+    const bad = layoutOf({ terminalMaximised: 1, splitRatio: 140, quadRatios: { column: 'x', row: -3 } })
+    expect(bad.terminalMaximised).toBe(false)
+    expect(bad.splitRatio).toBe(50)
+    expect(bad.quadRatios).toEqual({ column: 50, row: 50 })
   })
 })

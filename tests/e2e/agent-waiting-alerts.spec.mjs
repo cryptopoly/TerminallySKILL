@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { launchTerminallySkill } from './electron-app.mjs'
+import { psWrite, shellCommand } from './shell-commands.mjs'
 
 // Test-only: 1.5 s of silence instead of 20 s before a busy, unwatched terminal counts as quiet.
 const QUIET_ENV = { TSK_E2E_ATTENTION_QUIET_MS: '1500' }
@@ -48,7 +49,10 @@ test('a quiet prompt, a bell and a silent command in background tabs: needs-you,
     await typeInVisibleTerminal(page, "echo 'Do you want to proceed? (y/n)'; sleep 60")
     // Tab 2: a busy program rings the bell once it is in the background.
     await openNewTab(page, 2)
-    await typeInVisibleTerminal(page, "sleep 3; printf '\\007'; sleep 60")
+    await typeInVisibleTerminal(
+      page,
+      shellCommand("sleep 3; printf '\\007'; sleep 60", `Start-Sleep 3; ${psWrite('\x07')}; Start-Sleep 60`)
+    )
     // Tab 3: a command that prints nothing.
     await openNewTab(page, 3)
     await typeInVisibleTerminal(page, 'sleep 60')
@@ -152,7 +156,7 @@ test('the first notification brings one tip about keeping notifications on scree
       await page.evaluate(() => {
         document.hasFocus = () => false
       })
-      await typeInVisibleTerminal(page, `printf '\\033]9;${message}\\007'`)
+      await typeInVisibleTerminal(page, shellCommand(`printf '\\033]9;${message}\\007'`, psWrite(`\x1b]9;${message}\x07`)))
     }
 
     await notifyWhileAway('first')

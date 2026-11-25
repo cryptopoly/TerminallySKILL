@@ -143,7 +143,9 @@
     "general.attention.keep.title": "閉じるまで通知を表示",
     "general.attention.keep.description": "通知は閉じるまで画面に表示されます。実際の動作はデスクトップ環境によって異なります。",
     "general.attention.keep.macDescription": "これは macOS が制御します。システム設定で、TerminallySKILL に閉じるまで表示されるスタイルを選択してください。",
-    "general.attention.keep.openSettings": "システム設定を開く"
+    "general.attention.keep.openSettings": "システム設定を開く",
+    "general.restoreTabs.title": "ターミナルタブを再度開く",
+    "general.restoreTabs.description": "起動時に、前回のローカルターミナルタブ、分割、フォルダーを再度開きます。SSH と VNC のタブは再接続せず、以前の出力は保持しません。"
   },
   "commands": {
     "addDialog.title": "コマンドを追加",
@@ -990,7 +992,6 @@
     "toolbar.plain": "通常",
     "busy.title": "shell がビジー - 準備ができたらコマンドを実行します",
     "busy.clearQueue": "キューをクリア",
-    "busy.running": "実行中",
     "search.previous": "前の一致 (Shift+Enter)",
     "search.next": "次の一致 (Enter)",
     "search.close": "閉じる (Esc)",
@@ -1070,7 +1071,23 @@
     "dot.idle": "待機中",
     "attention.waitingForYes": "承認を待っています",
     "attention.bell": "ターミナルのベルを鳴らしました",
-    "attention.stillWaiting": "まだ待っています ({{duration}})"
+    "attention.stillWaiting": "まだ待っています ({{duration}})",
+    "blocks.menu": "コマンド操作",
+    "blocks.copyOutput": "出力をコピー",
+    "blocks.copyCommand": "コマンドをコピー",
+    "blocks.runAgain": "もう一度実行",
+    "blocks.explain": "出力を説明",
+    "folder.change": "フォルダを変更…",
+    "folder.menu": "フォルダの操作",
+    "folder.revealMac": "Finder で表示",
+    "folder.revealWindows": "エクスプローラーで表示",
+    "folder.revealLinux": "ファイルマネージャーで開く",
+    "folder.copyPath": "パスをコピー",
+    "openFailed.message": "ターミナルを開けませんでした: {{reason}}",
+    "panel.quad": "4分割",
+    "panel.closeQuad": "4分割を終了",
+    "panel.quadDescription": "4つのターミナルを2x2のグリッドに表示します。開いているタブを先に使い、足りない分は新しく開きます。もう一度クリックすると前のレイアウトに戻ります。ターミナルは閉じません。",
+    "panel.quadTooSmall": "4分割を一時停止中: ウィンドウが小さすぎます"
   },
   "onboarding": {
     "subtitle": "ビジュアルコマンドビルダー、ターミナルワークスペース、ワークフロー、ログ、AI ツール",
@@ -1288,7 +1305,9 @@
     "sections.statusDots.steps.idle.label": "待機中",
     "sections.statusDots.steps.idle.desc": "グレーの輪: プログラムは開いているものの、しばらく何も出力していません (次のタスクを待つエージェントなど)。点のみで、通知はしません。",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "ターミナルをウィンドウ全体に最大化、または元に戻します。Windows と Linux では Ctrl+Shift+M。"
+    "sections.keyboard.steps.maximise.desc": "ターミナルをウィンドウ全体に最大化、または元に戻します。Windows と Linux では Ctrl+Shift+M。",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "4分割（4つのターミナルを2x2のグリッドに表示）をオンまたはオフにします。Command+] / Command+[ でペインを移動します。Windows と Linux では Ctrl+Shift+G。"
   },
   "ai": {
     "explain.label": "AI で説明",

@@ -9,7 +9,13 @@ import { getAllScanDirs } from './command-detector'
 import { saveSessionLog, shouldSaveSessionLog } from './log-manager'
 import { attachLogToRuns } from './run-manager'
 import { registerTerminalSession, unregisterTerminalSession } from './terminal-session-registry'
-import { buildBashShellIntegrationInit, buildZshEnvForward, buildZshShellIntegrationInit } from './shell-integration-init'
+import {
+  buildBashShellIntegrationInit,
+  buildPowerShellIntegrationArgs,
+  buildPowerShellShellIntegrationInit,
+  buildZshEnvForward,
+  buildZshShellIntegrationInit
+} from './shell-integration-init'
 import {
   appendOutputChunk,
   extractShellIntegrationEvents,
@@ -17,9 +23,11 @@ import {
   prepareLogContent,
   splitIncompleteMarker,
   MarkerEchoFilter,
+  STEP_MARKER_COMMAND_RE,
   stripWorkflowMarkerEcho
 } from './pty-output'
 import type { TerminalSessionInfo } from '../shared/run-schema'
+import { usesBundledConpty } from '../shared/conpty-mode'
 
 interface PtySession {
   process: IPty
@@ -53,12 +61,17 @@ interface PtySession {
 }
 
 const sessions = new Map<string, PtySession>()
-const STEP_MARKER_COMMAND_RE = /printf '\\033\]7337;workflow-step;[^\r\n]*/
 /** A line editor redraws typed-ahead text in one burst, so held text older than this was not the marker. */
 const MARKER_ECHO_HOLD_MS = 100
 let nextId = 1
 let ptyRuntimePromise: Promise<typeof import('node-pty')> | null = null
 const nodeRequire = createRequire(import.meta.url)
+
+/** Windows: node-pty's bundled conpty.dll unless TSK_CONPTY_DLL=0 (see usesBundledConpty) */
+const USE_CONPTY_DLL = usesBundledConpty(process.platform, process.env)
+/** Primary device attributes query, and the answer xterm.js gives to it */
+const DA1_QUERY = '\x1b[c'
+const DA1_REPLY = '\x1b[?1;2c'
 
 /** Cached enriched PATH — resolved once, reused for all sessions */
 let cachedEnrichedPath: string | null = null
@@ -198,6 +211,86 @@ export async function initTerminalPath(): Promise<void> {
   await getEnrichedPath()
 }
 
+/**
+ * Every pty child until node-pty reports its exit, including ones already killed and dropped from
+ * `sessions`. node-pty delivers the exit through a native thread-safe callback; if that arrives
+ * while Node is tearing down at quit, calling into JS fails and the app aborts (SIGABRT, "quit
+ * unexpectedly"). Quitting therefore waits here until every exit has come in.
+ */
+const runningProcesses = new Map<IPty, Promise<void>>()
+
+function trackProcessExit(ptyProcess: IPty): void {
+  runningProcesses.set(
+    ptyProcess,
+    new Promise((resolve) => {
+      ptyProcess.onExit(() => {
+        runningProcesses.delete(ptyProcess)
+        resolve()
+      })
+    })
+  )
+}
+
+let quitting = false
+
+export function hasRunningTerminalProcesses(): boolean {
+  return runningProcesses.size > 0
+}
+
+/** With conpty.dll, how long to wait for a terminal's exit before ending the next one (it takes about 60ms). */
+const KILL_EXIT_TIMEOUT_MS = 250
+/** Settles once every terminal handed to killPty has been ended */
+let killsDone: Promise<void> = Promise.resolve()
+
+/**
+ * Ends a terminal's shell.
+ *
+ * node-pty 1.1.0 keeps its open terminals in a list that each terminal's exit thread edits without a
+ * lock (microsoft/node-pty#921, fixed in 1.2.0-beta.13). With conpty.dll, kill() ends the shell at once,
+ * so ending terminals back to back (quitting, closing a window) makes those threads edit the list
+ * together. About 1 quit in 100 with three terminals open then crashed, or failed an assert in node-pty,
+ * which shows a "Microsoft Visual C++ Runtime Library" dialog and keeps the app from ever exiting.
+ * So with conpty.dll terminals end one at a time, the next one after node-pty has reported the exit of
+ * the one before.
+ */
+function killPty(ptyProcess: IPty): void {
+  if (!USE_CONPTY_DLL) {
+    ptyProcess.kill()
+    return
+  }
+  killsDone = killsDone.then(() => killAndAwaitExit(ptyProcess))
+}
+
+function killAndAwaitExit(ptyProcess: IPty): Promise<void> {
+  // It ended by itself while waiting its turn.
+  if (!runningProcesses.has(ptyProcess)) return Promise.resolve()
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, KILL_EXIT_TIMEOUT_MS)
+    ptyProcess.onExit(({ exitCode }) => {
+      // node-pty has the exit code only once the terminal's exit thread is done with the list.
+      if (typeof exitCode !== 'number') return
+      clearTimeout(timer)
+      resolve()
+    })
+    try {
+      ptyProcess.kill()
+    } catch (error) {
+      // A rejected promise here would keep every later terminal from being ended.
+      console.warn('[pty] Could not end a terminal:', error)
+    }
+  })
+}
+
+async function waitForProcessExits(timeoutMs: number): Promise<void> {
+  if (runningProcesses.size === 0) return
+  let timer: ReturnType<typeof setTimeout> | undefined
+  await Promise.race([
+    Promise.allSettled([...runningProcesses.values()]),
+    new Promise<void>((resolve) => { timer = setTimeout(resolve, timeoutMs) })
+  ])
+  clearTimeout(timer)
+}
+
 function bufferForLog(session: PtySession, data: string): void {
   const expectedSize = session.outputBufferSize + data.length
   const buffered = appendOutputChunk(session.outputBuffer, session.outputBufferSize, data)
@@ -253,6 +346,7 @@ async function autoSaveLog(session: PtySession, exitCode: number | null = null):
  *
  * For zsh: uses ZDOTDIR trick to inject precmd/preexec hooks via temp .zshrc
  * For bash: uses --rcfile to inject prompt-ready and command-start hooks via temp init file
+ * For PowerShell: runs a temp init script with -NoExit -Command, after the user's profile
  */
 function setupShellIntegration(
   shell: string,
@@ -325,6 +419,15 @@ function setupShellIntegration(
     args = ['--rcfile', tmpFile]
     hasIntegration = true
     console.log(`[pty] Shell integration (bash): rcfile=${tmpFile} (prompt-ready + command-start)`)
+  } else if (/(^|[\\/])(powershell|pwsh)(\.exe)?$/i.test(shell)) {
+    const tmpFile = path.join(os.tmpdir(), `tv-ps-${sessionId}.ps1`)
+    tempPaths.push(tmpFile)
+
+    fs.writeFileSync(tmpFile, buildPowerShellShellIntegrationInit())
+
+    args = buildPowerShellIntegrationArgs(tmpFile)
+    hasIntegration = true
+    console.log(`[pty] Shell integration (PowerShell): init=${tmpFile} (prompt-ready + command-start)`)
   } else {
     console.log(`[pty] Shell integration: unsupported shell "${shell}", no hooks installed`)
   }
@@ -371,15 +474,23 @@ export async function createTerminal(
   }
   env = sanitizeSpawnEnv(env)
 
-  console.log(`[pty] Creating terminal ${sessionId}: shell=${shell}, cwd=${resolvedCwd}`)
+  console.log(
+    `[pty] Creating terminal ${sessionId}: shell=${shell}, cwd=${resolvedCwd}${USE_CONPTY_DLL ? ', conpty.dll' : ''}`
+  )
 
   const pty = await getPtyRuntime()
+  if (quitting) {
+    // A shell started now would outlive the quit wait and end during teardown.
+    cleanup()
+    throw new Error('TerminallySKILL is quitting')
+  }
   const spawnOptions = {
     name: 'xterm-256color',
     cols: 80,
     rows: 24,
     cwd: resolvedCwd,
-    env
+    env,
+    ...(USE_CONPTY_DLL ? { useConptyDll: true } : {})
   }
 
   let ptyProcess: IPty
@@ -411,6 +522,8 @@ export async function createTerminal(
     })
   }
 
+  trackProcessExit(ptyProcess)
+
   const session: PtySession = {
     process: ptyProcess,
     sessionId,
@@ -429,7 +542,7 @@ export async function createTerminal(
     saved: false,
     startupBuffer: '',
     markerCarry: '',
-    // Shells without integration (e.g. PowerShell on Windows) never emit a
+    // Shells without integration (e.g. fish, cmd) never emit a
     // prompt-ready event, so we skip startup buffering entirely for them.
     startupFlushed: !hasIntegration,
     sshEchoFilterUntil: 0,
@@ -465,7 +578,7 @@ export async function createTerminal(
     : null
 
   let markerSeen = false
-  // For shells without integration (e.g. PowerShell), we emit SHELL_READY
+  // For shells without integration (e.g. fish, cmd), we emit SHELL_READY
   // on the first data chunk so the renderer knows the shell is alive.
   // This unblocks the editor prompt, script execution, and shell state tracking.
   let syntheticReadySent = false
@@ -502,7 +615,7 @@ export async function createTerminal(
         window.webContents.send(IPC_CHANNELS.SHELL_READY, sessionId)
       }
 
-      // Shells without integration (PowerShell, fish, etc.) never emit
+      // Shells without integration (fish, cmd, etc.) never emit
       // prompt-ready markers. Emit a synthetic SHELL_READY on the first
       // output so the renderer transitions to 'idle' — enabling the editor
       // prompt, script execution, and proper shell-state tracking.
@@ -522,10 +635,6 @@ export async function createTerminal(
       }
     }
     data = stripWorkflowMarkerEcho(extracted.data)
-    for (const event of shellIntegration.events) {
-      if (event.type === 'command-start') session.markerEcho.noteCommandStart()
-      else session.markerEcho.notePromptReady()
-    }
     data = session.markerEcho.push(data)
     if (session.markerEchoTimer) clearTimeout(session.markerEchoTimer)
     session.markerEchoTimer = null
@@ -537,6 +646,12 @@ export async function createTerminal(
         bufferForLog(session, held)
         if (!window.isDestroyed()) window.webContents.send(IPC_CHANNELS.PTY_DATA, sessionId, held)
       }, MARKER_ECHO_HOLD_MS)
+    }
+    if (USE_CONPTY_DLL && !session.startupFlushed && data.includes(DA1_QUERY)) {
+      // OpenConsole asks the terminal for its device attributes at startup and waits up to 3s for the
+      // answer. Startup output is held here until the first prompt, so xterm never sees the question.
+      data = data.split(DA1_QUERY).join('')
+      ptyProcess.write(DA1_REPLY)
     }
     if (!session.startupFlushed) {
       session.startupBuffer += data
@@ -605,7 +720,7 @@ export function writeToTerminal(sessionId: string, data: string): void {
   const session = sessions.get(sessionId)
   if (!session || data.length > MAX_TERMINAL_WRITE_SIZE) return
   // Arm echo filter for SSH commands so the quoted-arg echo doesn't appear in the terminal
-  if (data.trimStart().startsWith("'ssh'")) {
+  if (/^(?:& )?'ssh'/.test(data.trimStart())) {
     session.sshEchoFilterUntil = Date.now() + 5000
   }
   const stepMarker = data.match(STEP_MARKER_COMMAND_RE)
@@ -623,8 +738,11 @@ export function writeToTerminal(sessionId: string, data: string): void {
 
 export function resizeTerminal(sessionId: string, cols: number, rows: number): void {
   const session = sessions.get(sessionId)
-  if (session) {
+  if (!session) return
+  try {
     session.process.resize(cols, rows)
+  } catch {
+    // The shell has exited but its exit is not handled yet; the terminal is closed (EBADF).
   }
 }
 
@@ -633,11 +751,16 @@ export function killTerminal(sessionId: string): void {
   if (session) {
     // Auto-save log BEFORE killing — main process handles all log persistence
     void autoSaveLog(session, null)
-    session.process.kill()
+    killPty(session.process)
     session.cleanupInit()
     unregisterTerminalSession(sessionId)
     sessions.delete(sessionId)
   }
+}
+
+/** The folder the shell last reported at its prompt (shell integration), or the folder it started in. */
+export function getSessionCwd(sessionId: string): string | null {
+  return sessions.get(sessionId)?.cwd ?? null
 }
 
 export function getSessionInfo(sessionId: string): TerminalSessionInfo | null {
@@ -678,7 +801,7 @@ export function killSessionsForWindow(targetWindow: BrowserWindow): void {
   for (const [id, session] of sessions) {
     if (session.window === targetWindow) {
       void autoSaveLog(session, null)
-      session.process.kill()
+      killPty(session.process)
       session.cleanupInit()
       unregisterTerminalSession(id)
       sessions.delete(id)
@@ -686,14 +809,32 @@ export function killSessionsForWindow(targetWindow: BrowserWindow): void {
   }
 }
 
+/** Quitting: end every terminal and wait (bounded) until node-pty has reported each exit. */
+export async function stopAllTerminalsForQuit(): Promise<void> {
+  quitting = true
+  await killAllTerminals()
+}
+
 export async function killAllTerminals(): Promise<void> {
   const saves: Promise<void>[] = []
   for (const [, session] of sessions) {
     saves.push(autoSaveLog(session, null).catch(() => {}))
-    session.process.kill()
+    killPty(session.process)
     session.cleanupInit()
     unregisterTerminalSession(session.sessionId)
   }
   sessions.clear()
   await Promise.allSettled(saves)
+  await killsDone
+
+  // Wait for the shells to end, so their exits are not delivered during quit teardown.
+  // A shell that ignores SIGHUP is killed outright.
+  await waitForProcessExits(1500)
+  if (runningProcesses.size > 0 && process.platform !== 'win32') {
+    for (const ptyProcess of runningProcesses.keys()) ptyProcess.kill('SIGKILL')
+    await waitForProcessExits(1000)
+  }
+  if (runningProcesses.size > 0) {
+    console.warn(`[pty] ${runningProcesses.size} terminal process(es) did not report an exit before quit`)
+  }
 }

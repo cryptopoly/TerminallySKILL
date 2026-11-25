@@ -10,8 +10,10 @@ import {
   splitIncompleteMarker,
   stripAnsi,
   stripWorkflowMarkerEcho,
-  MarkerEchoFilter
+  MarkerEchoFilter,
+  STEP_MARKER_COMMAND_RE
 } from './pty-output'
+import { buildWorkflowStepMarkerCommand } from '../shared/workflow-shell'
 
 describe('pty-output', () => {
   it('strips ANSI escapes and normalizes carriage returns', () => {
@@ -29,7 +31,9 @@ describe('pty-output', () => {
         `middle\x1b]7337;shell;prompt-ready;0;${promptPayload}\x07after`
     )
 
-    expect(extracted.data).toBe('beforemiddleafter')
+    expect(extracted.data).toBe(
+      `before\x1b]7338;start;${commandPayload}\x07middle\x1b]7338;end;0\x07after`
+    )
     expect(extracted.sawMarker).toBe(true)
     expect(extracted.events).toHaveLength(2)
     expect(extracted.events[0]).toMatchObject({
@@ -141,88 +145,132 @@ describe('pty-output', () => {
     const echoed = "npm test\r\nprintf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-1' 'step-1' $?\r\nok\r\n"
     expect(stripWorkflowMarkerEcho(echoed)).toBe('npm test\r\nok\r\n')
   })
+
+  it('removes a marker line that bash 3.2 readline wraps with a space and a carriage return', () => {
+    // Bytes from /bin/bash 3.2 on macOS, 80 columns, picking up a typed-ahead marker at its prompt
+    const wrapped =
+      "bash-3.2$ printf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-5027f432-9b8e-4443-9 \r0c0-360bb1379231' '7f34a700-a826-462c-aee1-a0399e74cdcc' $?\r\nok\r\n"
+    expect(stripWorkflowMarkerEcho(wrapped)).toBe('ok\r\n')
+  })
+
+  it('leaves a marker line without its newline to the echo filter', () => {
+    const firstRow = "bash-3.2$ printf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf"
+    expect(stripWorkflowMarkerEcho(firstRow)).toBe(firstRow)
+  })
+
+  it('never strips the prompt anchor in front of a marker line', () => {
+    const line = "\x1b]7338;end;0\x07bash-3.2$ printf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-1' 'st-1' $?\r\n"
+    expect(stripWorkflowMarkerEcho(line)).toBe('\x1b]7338;end;0\x07')
+  })
+
+  it('arms the echo filter for the zsh/bash marker only; PowerShell erases its own step line', () => {
+    const shMarker = buildWorkflowStepMarkerCommand('wf-1', 'step-1', '/bin/zsh', 0)!
+    expect(`npm test\n${shMarker}\n`.match(STEP_MARKER_COMMAND_RE)?.[0]).toBe(shMarker)
+    const psMarker = buildWorkflowStepMarkerCommand('wf-1', 'step-1', 'powershell.exe', 0)!
+    expect(`npm test\n${psMarker}\n`.match(STEP_MARKER_COMMAND_RE)).toBeNull()
+    expect(stripWorkflowMarkerEcho(`PS C:\\> ${psMarker}\r\n`)).toBe(`PS C:\\> ${psMarker}\r\n`)
+  })
+
+  it('reads the exit code the PowerShell marker prints (checked on Windows PowerShell 5.1)', () => {
+    // Bytes printed on Windows by `cmd /c exit 3` followed by the marker command
+    expect(extractWorkflowStepResults('\x1b]7337;workflow-step;1a2b3c4d;2;3\x07').results).toEqual([
+      { runId: '1a2b3c4d', stepId: '2', exitCode: 3 }
+    ])
+  })
 })
 
 describe('MarkerEchoFilter', () => {
   const marker = "printf '\\033]7337;workflow-step;%s;%s;%d\\007' 'wf-1' 'st-1' $?"
+  const start = (command: string) => `\x1b]7338;start;${Buffer.from(command).toString('base64')}\x07`
+  const end = '\x1b]7338;end;0\x07'
+  const stepStart = start('npm test')
+  const markerStart = start(marker)
   // Chunks captured from zsh picking up a typed-ahead marker after a command ended
-  const zleChunks = ['\rP% \x1b[?2004hp', 'r', 'i', 'n', 't', "f '", '\\', '03', '3', ']', '7', '3', '3', '7', ';w', 'o', 'rk', 'fl', 'o', 'w-', 'st', 'e', 'p', ';%', "s;%s;%d\\007' 'wf-1' 'st", "-1'", ' $?', '\x1b[?2004l\r\r\n', '\rP% ']
+  const zleChunks = ['\rP% \x1b[?2004hp', 'r', 'i', 'n', 't', "f '", '\\', '03', '3', ']', '7', '3', '3', '7', ';w', 'o', 'rk', 'fl', 'o', 'w-', 'st', 'e', 'p', ';%', "s;%s;%d\\007' 'wf-1' 'st", "-1'", ' $?', '\x1b[?2004l\r\r\n']
 
-  it('removes an echo drawn a few characters per chunk', () => {
+  const running = () => {
     const filter = new MarkerEchoFilter()
     filter.arm(marker)
-    filter.noteCommandStart()
-    filter.notePromptReady()
-    const out = zleChunks.map((chunk) => filter.push(chunk)).join('')
-    expect(out).not.toContain('workflow-step')
-    expect(out).not.toContain('printf')
-    expect(out).toBe('\rP% \x1b[?2004h\r\x1b[K\rP% ')
+    expect(filter.push(`${stepStart}ok\r\n`)).toBe(`${stepStart}ok\r\n`)
+    return filter
+  }
+
+  it('drops the prompt and the marker the line editor draws a few characters per chunk', () => {
+    const filter = running()
+    const out = [end, ...zleChunks, markerStart, end, '\rP% '].map((chunk) => filter.push(chunk)).join('')
+    expect(out).toBe(`${end}${markerStart}${end}\rP% `)
+  })
+
+  it('drops a marker line wrapped inside its start, with a long prompt (zsh on CI)', () => {
+    // zsh at the window edge: " \r", erase, the next character, then the row again from its start
+    const prompt = 'runner@sat12-bq165-ee9ebc1c-cd16-42fd-b463-b074e0e23356-36AEEBC4AED3 ~ % '
+    const wrapAt = 100 - prompt.length
+    const drawn = `${prompt}\x1b[?2004h${marker.slice(0, wrapAt)} \r\x1b[K${marker[wrapAt]}\r${marker.slice(wrapAt)}\x1b[?2004l\r\r\n`
+    const filter = running()
+    const out = [end, ...drawn.match(/[\s\S]{1,3}/g)!, markerStart, end].map((chunk) => filter.push(chunk)).join('')
+    expect(out).toBe(`${end}${markerStart}${end}`)
+  })
+
+  it('drops a marker line bash 3.2 readline wraps with " \\r"', () => {
+    const filter = running()
+    const drawn = `bash-3.2$ ${marker.slice(0, 20)} \r${marker.slice(20)}\r\n`
+    expect(filter.push(`${end}${drawn}${markerStart}`)).toBe(`${end}${markerStart}`)
+  })
+
+  it('clears the row when a slow prompt went out before the marker came', () => {
+    const filter = running()
+    expect(filter.push(`${end}bash-3.2$ `)).toBe(end)
+    expect(filter.flush()).toBe('bash-3.2$ ')
+    expect(filter.push(`${marker}\r\n${markerStart}`)).toBe(`\r\x1b[K${markerStart}`)
+  })
+
+  it('gives the prompt back when another command starts instead (marker flushed by sudo)', () => {
+    const filter = running()
+    expect(filter.push(`${end}P% ls\r\n`)).toBe(end)
+    expect(filter.push(`${start('ls')}a\r\n`)).toBe(`P% ls\r\n${start('ls')}a\r\n`)
+    expect(filter.push(`${end}P% `)).toBe(`${end}P% `)
+  })
+
+  it('gives the prompt back at a second prompt (Ctrl+C)', () => {
+    const filter = running()
+    expect(filter.push(`${end}P% ^C\r\n`)).toBe(end)
+    expect(filter.push(`${end}P% `)).toBe(`P% ^C\r\n${end}P% `)
   })
 
   it('passes everything through when not armed', () => {
     const filter = new MarkerEchoFilter()
-    expect(filter.push('printf hello\r\n')).toBe('printf hello\r\n')
+    expect(filter.push(`printf hello\r\n${end}P% `)).toBe(`printf hello\r\n${end}P% `)
     expect(filter.hasHeld).toBe(false)
   })
 
-  it('gives back text that stops matching', () => {
-    const filter = new MarkerEchoFilter()
-    filter.arm(marker)
+  it('gives back text that stops matching while the step runs', () => {
+    const filter = running()
     expect(filter.push('pri')).toBe('')
     expect(filter.push('ce: 3\r\n')).toBe('price: 3\r\n')
   })
 
-  it('lets the caller flush a held prefix so typing is not lost', () => {
-    const filter = new MarkerEchoFilter()
-    filter.arm(marker)
+  it('lets the caller flush a held prefix so output is not lost', () => {
+    const filter = running()
     expect(filter.push('p')).toBe('')
     expect(filter.hasHeld).toBe(true)
     expect(filter.flush()).toBe('p')
   })
 
-  it('tolerates colour codes inside the echo', () => {
-    const filter = new MarkerEchoFilter()
-    filter.arm('printf x')
-    filter.noteCommandStart()
-    filter.notePromptReady()
-    expect(filter.push('pri\x1b[32mntf\x1b[0m x\r\nnext')).toBe('\r\x1b[Knext')
+  it('removes the terminal echo during a step, colour codes included', () => {
+    const filter = running()
+    expect(filter.push(`output pri\x1b[32mntf '\\033]7337;workflow-step;%s' x\r\nmore\r\n`)).toBe('output more\r\n')
   })
 
-  it('disarms at the second prompt when the marker was flushed by Ctrl+C', () => {
+  it('drops the marker after an empty step, which has a prompt but no start', () => {
     const filter = new MarkerEchoFilter()
     filter.arm(marker)
-    filter.noteCommandStart()
-    filter.notePromptReady()
-    filter.notePromptReady()
-    expect(filter.push('p')).toBe('p')
+    expect(filter.push(`P% \r\r\n${end}P% ${marker}\r\r\n${markerStart}${end}P% `)).toBe(`P% \r\r\n${end}${markerStart}${end}P% `)
   })
 
   it('stays armed through the previous marker prompt that arrives before the step starts', () => {
     const filter = new MarkerEchoFilter()
     filter.arm(marker)
-    filter.notePromptReady()
-    filter.noteCommandStart()
-    filter.notePromptReady()
-    expect(filter.push(marker)).toBe('\r\x1b[K')
-  })
-
-  it('removes an echo that wraps at the window edge', () => {
-    const filter = new MarkerEchoFilter()
-    filter.arm(marker)
-    filter.noteCommandStart()
-    filter.notePromptReady()
-    const wrapped = `${marker.slice(0, 60)} \r\x1b[K${marker[60]}\r${marker.slice(60)}\x1b[?2004l\r\r\n`
-    expect(filter.push(wrapped)).toBe('\r\x1b[K')
-    expect(filter.push('next')).toBe('next')
-  })
-
-  it('removes both the terminal echo during a step and the prompt echo after it', () => {
-    const filter = new MarkerEchoFilter()
-    filter.arm(marker)
-    filter.noteCommandStart()
-    expect(filter.push(`output ${marker}\r\nmore\r\n`)).toBe('output more\r\n')
-    filter.notePromptReady()
-    expect(filter.push(marker)).toBe('\r\x1b[K')
-    expect(filter.push('\r\nnext')).toBe('next')
+    expect(filter.push(`${start(marker)}${end}P% `)).toBe(`${start(marker)}${end}P% `)
+    expect(filter.push(`${stepStart}ok\r\n${end}P% ${marker}\r\n${markerStart}`)).toBe(`${stepStart}ok\r\n${end}${markerStart}`)
   })
 })

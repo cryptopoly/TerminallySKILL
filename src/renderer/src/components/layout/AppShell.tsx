@@ -1,5 +1,11 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { PanelGroup, Panel, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels'
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react'
+import {
+  PanelGroup,
+  Panel,
+  PanelResizeHandle,
+  getPanelGroupElement,
+  type ImperativePanelHandle
+} from 'react-resizable-panels'
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 import { Sidebar } from './Sidebar'
@@ -15,6 +21,7 @@ import { SettingsPanel } from '../settings/SettingsPanel'
 import { InfoPanel } from '../onboarding/InfoPanel'
 import { WelcomeTour } from '../onboarding/WelcomeTour'
 import { KeepNotificationsTip } from '../onboarding/KeepNotificationsTip'
+import { Toasts } from '../ui/Toasts'
 import { CommandPalette } from '../palette/CommandPalette'
 import { Dashboard } from '../dashboard/Dashboard'
 import { WorkflowRunnerEngine } from '../scripts/WorkflowRunnerHost'
@@ -23,6 +30,9 @@ import { useAttentionLayer } from '../../hooks/useAttentionLayer'
 import { useProjectCycleShortcut } from '../../hooks/useProjectCycleShortcut'
 import { jumpToNextAttention } from '../../lib/attention'
 import { useScheduledRuns } from '../../hooks/useScheduledRuns'
+import { useTerminalSessionRestore, waitForTerminalRestore } from '../../hooks/useTerminalSessionRestore'
+import { useQuadLayout } from '../../hooks/useQuadLayout'
+import { quadKey } from '../../lib/quad-layout'
 import { HelpTip } from '../ui/HelpTip'
 import { UpdateReleaseNotes } from '../ui/UpdateReleaseNotes'
 import { resolveProjectTerminalContext, useTerminalStore } from '../../store/terminal-store'
@@ -43,7 +53,7 @@ import {
   type Project
 } from '../../../../shared/project-schema'
 import type { AppUpdateCheckResult } from '../../../../shared/update-schema'
-import { createProjectTerminalSession, openInteractiveProjectShell } from '../../lib/workspace-session'
+import { createProjectTerminalSession, openInteractiveProjectShell, openVncViewer } from '../../lib/workspace-session'
 import type { ActiveFile } from '../../store/file-store'
 
 function areStringArraysEqual(left: string[], right: string[]): boolean {
@@ -58,6 +68,42 @@ function isPathWithinRoot(pathValue: string, rootPath: string): boolean {
     pathValue.startsWith(`${normalizedRoot}/`) ||
     pathValue.startsWith(`${normalizedRoot}\\`)
   )
+}
+
+const WORKSPACE_SPLIT_ID = 'workspace-split'
+// The terminal panel's tabs, editor prompt and status bar take about 120px whatever the window size, so a
+// percentage split can leave the xterm only a few rows on a small window. Keep the docked panel at least this
+// tall (about 10 rows at the default font), capped so the workspace keeps its own 30% minimum.
+const TERMINAL_DOCK_MIN_HEIGHT_PX = 280
+const TERMINAL_DOCK_MIN_SIZE = 15
+const TERMINAL_DOCK_MAX_MIN_SIZE = 70
+
+/**
+ * The docked terminal's minimum size, in percent of the workspace split, for the split's current height.
+ * `layoutKey` changes with things that take height from the split in the same render (the collapsed terminal bar):
+ * the split is then measured again before paint, so showing the terminal sizes it for the new height, not the old one.
+ */
+function useTerminalDockMinSize(layoutKey: unknown): number {
+  const [minSize, setMinSize] = useState(TERMINAL_DOCK_MIN_SIZE)
+  useLayoutEffect(() => {
+    const element = getPanelGroupElement(WORKSPACE_SPLIT_ID)
+    if (!element) return
+    const update = (): void => {
+      const height = element.getBoundingClientRect().height
+      if (height <= 0) return
+      const next = Math.min(
+        TERMINAL_DOCK_MAX_MIN_SIZE,
+        Math.max(TERMINAL_DOCK_MIN_SIZE, (TERMINAL_DOCK_MIN_HEIGHT_PX / height) * 100)
+      )
+      // Whole tenths, so the panel library does not see a new constraint on every pixel of a window resize.
+      setMinSize(Math.ceil(next * 10) / 10)
+    }
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [layoutKey])
+  return minSize
 }
 
 export function AppShell(): JSX.Element {
@@ -92,6 +138,7 @@ export function AppShell(): JSX.Element {
   useAttentionLayer()
   useProjectCycleShortcut()
   useScheduledRuns()
+  useTerminalSessionRestore()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -108,11 +155,13 @@ export function AppShell(): JSX.Element {
   const [dismissedStartupUpdateVersion, setDismissedStartupUpdateVersion] = useState<string | null>(null)
   const layoutHydratedProjectIdRef = useRef<string | null>(null)
   const layoutSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const layoutSavePatchRef = useRef<{ projectId: string; patch: Partial<Project['workspaceLayout']> } | null>(null)
   const sessionVisitedProjectIds = useRef<Set<string>>(new Set())
   const autoOpenedTerminalProjectIdRef = useRef<string | null>(null)
   const startupUpdateCheckedRef = useRef(false)
   const terminalDockPanelRef = useRef<ImperativePanelHandle | null>(null)
   const activeProjectId = activeProject?.id ?? null
+  const quadActive = useTerminalStore((s) => Boolean(s.quadByProject[quadKey(activeProjectId)]))
   const {
     projectSessions,
     activeProjectSessionId,
@@ -127,35 +176,35 @@ export function AppShell(): JSX.Element {
   const setTerminalMaximised = useTerminalStore((s) => s.setTerminalMaximised)
   const workspacePanelRef = useRef<ImperativePanelHandle | null>(null)
   const maximised = terminalMaximised && showDockedTerminal
+  const terminalMinSize = useTerminalDockMinSize(showCollapsedTerminalBar)
 
   // Maximise collapses the project view; restoring expands it to the size it had before.
   // Runs before the terminal effect below, so hiding a maximised terminal never leaves both at 0.
-  useEffect(() => {
+  // Layout effects, so the panels have their new sizes before paint, never a frame with the terminal shown at 0.
+  useLayoutEffect(() => {
     const workspacePanel = workspacePanelRef.current
     if (!workspacePanel) return
     if (maximised && !workspacePanel.isCollapsed()) workspacePanel.collapse()
     else if (!maximised && workspacePanel.isCollapsed()) workspacePanel.expand()
   }, [maximised])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const terminalPanel = terminalDockPanelRef.current
     if (!terminalPanel) return
 
     if (showDockedTerminal) {
       if (maximised) return
-      const targetSize = activeProject?.workspaceLayout.terminalSize ?? 35
-      if (terminalPanel.isCollapsed()) {
-        terminalPanel.expand(targetSize)
-      } else if (Math.abs(terminalPanel.getSize() - targetSize) > 0.5) {
-        terminalPanel.resize(targetSize)
-      }
+      const targetSize = Math.max(activeProject?.workspaceLayout.terminalSize ?? 35, terminalMinSize)
+      // expand() brings back the size from before the collapse when that is larger than its argument, so check after it.
+      if (terminalPanel.isCollapsed()) terminalPanel.expand(targetSize)
+      if (Math.abs(terminalPanel.getSize() - targetSize) > 0.5) terminalPanel.resize(targetSize)
       return
     }
 
     if (!terminalPanel.isCollapsed()) {
       terminalPanel.collapse()
     }
-  }, [activeProject?.workspaceLayout.terminalSize, maximised, showDockedTerminal])
+  }, [activeProject?.workspaceLayout.terminalSize, maximised, showDockedTerminal, terminalMinSize])
 
   // Keep window title in sync with active project
   useEffect(() => {
@@ -181,6 +230,28 @@ export function AppShell(): JSX.Element {
     )
   }, [activeProject, addSession, getFreshTerminalProjectCwd])
 
+  // Empty quad panes get new terminals, opened like a normal new tab
+  useQuadLayout(activeProjectId, handleNewTerminal)
+
+  /** Quad split on or off. Shows a hidden terminal first; does nothing without one. */
+  const toggleQuadLayout = useCallback(() => {
+    const state = useTerminalStore.getState()
+    const projectId = activeProject?.id ?? null
+    if (state.quadByProject[quadKey(projectId)]) {
+      state.exitQuad(projectId)
+      return
+    }
+    const { projectSessions: openSessions } = resolveProjectTerminalContext(
+      state.sessions,
+      projectId,
+      state.activeSessionId,
+      state.splitSessionId
+    )
+    if (openSessions.length === 0) return
+    state.setTerminalVisible(true)
+    state.enterQuad(projectId)
+  }, [activeProject?.id])
+
   /** Split the terminal area with a new session */
   const handleSplitTerminal = useCallback(async (direction: 'horizontal' | 'vertical'): Promise<void> => {
     const primaryId = useTerminalStore.getState().activeSessionId
@@ -198,15 +269,8 @@ export function AppShell(): JSX.Element {
   }, [activeProject, addSession])
 
   const handleOpenVnc = useCallback(async (): Promise<void> => {
-    if (!activeProject || activeProject.workspaceTarget.type !== 'ssh') return
     try {
-      const vncPort = activeProject.workspaceTarget.vncPort ?? 5901
-      const { sessionId, wsPort, token } = await window.electronAPI.startVncSession(
-        activeProject.workspaceTarget,
-        vncPort
-      )
-      addSession(sessionId, activeProject.id, 'vnc', wsPort, token)
-      setTerminalVisible(true)
+      if (await openVncViewer(activeProject, addSession)) setTerminalVisible(true)
     } catch (err) {
       console.error('[VNC] Failed to start session:', err)
     }
@@ -362,7 +426,8 @@ export function AppShell(): JSX.Element {
           state.activeSessionId,
           state.splitSessionId
         )
-        if (state.terminalVisible && projectContext.activeProjectSessionId && !projectContext.splitProjectSessionId) {
+        const inQuad = Boolean(state.quadByProject[quadKey(activeProject?.id ?? null)])
+        if (state.terminalVisible && projectContext.activeProjectSessionId && !projectContext.splitProjectSessionId && !inQuad) {
           e.preventDefault()
           handleSplitTerminal('vertical')
         }
@@ -376,21 +441,26 @@ export function AppShell(): JSX.Element {
           state.activeSessionId,
           state.splitSessionId
         )
-        if (state.terminalVisible && projectContext.activeProjectSessionId && !projectContext.splitProjectSessionId) {
+        const inQuad = Boolean(state.quadByProject[quadKey(activeProject?.id ?? null)])
+        if (state.terminalVisible && projectContext.activeProjectSessionId && !projectContext.splitProjectSessionId && !inQuad) {
           e.preventDefault()
           handleSplitTerminal('horizontal')
         }
       }
-      // Cmd+] / Cmd+[ — switch focused pane
+      // Cmd+] / Cmd+[ — next / previous pane of a split or quad
       if ((e.metaKey || e.ctrlKey) && (e.key === ']' || e.key === '[')) {
         const state = useTerminalStore.getState()
+        const projectId = activeProject?.id ?? null
         const projectContext = resolveProjectTerminalContext(
           state.sessions,
-          activeProject?.id ?? null,
+          projectId,
           state.activeSessionId,
           state.splitSessionId
         )
-        if (projectContext.splitProjectSessionId) {
+        if (state.quadByProject[quadKey(projectId)]) {
+          e.preventDefault()
+          state.cycleFocusedPane(projectId, e.key === ']' ? 1 : -1)
+        } else if (projectContext.splitProjectSessionId) {
           e.preventDefault()
           state.toggleFocusedPane()
         }
@@ -463,6 +533,21 @@ export function AppShell(): JSX.Element {
     return () => window.removeEventListener('keydown', handler, true)
   }, [isMac, toggleTerminalMaximised])
 
+  // Cmd+Shift+G (macOS) / Ctrl+Shift+G — quad split on or off ("grid"). Capture phase, like maximise.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent): void => {
+      const modifier = isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey
+      if (!modifier || !e.shiftKey || e.altKey) return
+      const isG = /^[a-z]$/i.test(e.key) ? e.key.toLowerCase() === 'g' : e.code === 'KeyG'
+      if (!isG) return
+      e.preventDefault()
+      e.stopPropagation()
+      toggleQuadLayout()
+    }
+    window.addEventListener('keydown', handler, true)
+    return () => window.removeEventListener('keydown', handler, true)
+  }, [isMac, toggleQuadLayout])
+
   useEffect(() => {
     if (!activeProject) {
       layoutHydratedProjectIdRef.current = null
@@ -475,7 +560,12 @@ export function AppShell(): JSX.Element {
     const isFirstVisit = !sessionVisitedProjectIds.current.has(activeProject.id)
     sessionVisitedProjectIds.current.add(activeProject.id)
     setTerminalVisible(isFirstVisit ? false : activeProject.workspaceLayout.terminalVisible)
+    // Maximise is per project: a project left maximised opens maximised once its terminal shows.
+    // After setTerminalVisible, which ends maximise when it hides the terminal.
+    setTerminalMaximised(activeProject.workspaceLayout.terminalMaximised)
     setSplitDirection(activeProject.workspaceLayout.preferredSplitDirection)
+    // A project saved in quad opens in quad; empty panes get terminals once the project has one.
+    if (activeProject.workspaceLayout.quadLayout) useTerminalStore.getState().enterQuad(activeProject.id)
 
     let cancelled = false
 
@@ -551,7 +641,7 @@ export function AppShell(): JSX.Element {
     return () => {
       cancelled = true
     }
-  }, [activeProject?.id, clearFiles, hydrateFiles, setSplitDirection, setTerminalVisible])
+  }, [activeProject?.id, clearFiles, hydrateFiles, setSplitDirection, setTerminalMaximised, setTerminalVisible])
 
   useEffect(() => {
     if (!activeProject) return
@@ -566,7 +656,14 @@ export function AppShell(): JSX.Element {
       return
     }
 
-    void handleNewTerminal().catch((error) => {
+    // Reopened tabs count: only open a fresh one if the restore brought none back for this project.
+    void waitForTerminalRestore().then(() => {
+      if (useTerminalStore.getState().sessions.some((session) => session.projectId === projectId)) {
+        setTerminalVisible(true)
+        return
+      }
+      return handleNewTerminal()
+    }).catch((error) => {
       if (autoOpenedTerminalProjectIdRef.current === projectId) {
         autoOpenedTerminalProjectIdRef.current = null
       }
@@ -586,21 +683,33 @@ export function AppShell(): JSX.Element {
     }
   }, [activeProject, activeScript, scripts, setActiveScript])
 
-  const queueWorkspaceLayoutSave = useCallback((nextLayout: Project['workspaceLayout']): void => {
+  // Saves only the fields that changed. A whole-layout snapshot taken before the debounce would also carry
+  // the sidebar tab of that moment, and undo a tab switch made in the meantime (such as a jump to Runs & Logs).
+  const queueWorkspaceLayoutSave = useCallback((patch: Partial<Project['workspaceLayout']>): void => {
     if (!activeProject) return
 
-    if (layoutSaveTimeoutRef.current) {
-      clearTimeout(layoutSaveTimeoutRef.current)
-    }
-
-    layoutSaveTimeoutRef.current = setTimeout(() => {
+    const save = (projectId: string, layoutPatch: Partial<Project['workspaceLayout']>): void => {
       void window.electronAPI
-        .updateProject(activeProject.id, { workspaceLayout: nextLayout })
+        .updateProject(projectId, { workspaceLayout: layoutPatch })
         .then((updated) => {
           if (updated) {
             useProjectStore.getState().updateProjectInStore(updated)
           }
         })
+    }
+
+    if (layoutSaveTimeoutRef.current) {
+      clearTimeout(layoutSaveTimeoutRef.current)
+    }
+    const pending = layoutSavePatchRef.current
+    // A change still waiting for another project (switched away within the debounce) is saved now, not dropped.
+    if (pending && pending.projectId !== activeProject.id) save(pending.projectId, pending.patch)
+    const merged = pending?.projectId === activeProject.id ? { ...pending.patch, ...patch } : patch
+    layoutSavePatchRef.current = { projectId: activeProject.id, patch: merged }
+
+    layoutSaveTimeoutRef.current = setTimeout(() => {
+      layoutSavePatchRef.current = null
+      save(activeProject.id, merged)
     }, 150)
   }, [activeProject])
 
@@ -640,9 +749,10 @@ export function AppShell(): JSX.Element {
     if (!activeProject || layoutHydratedProjectIdRef.current !== activeProject.id) return
 
     const nextLayout = {
-      ...activeProject.workspaceLayout,
       terminalVisible,
       preferredSplitDirection: splitDirection,
+      quadLayout: quadActive,
+      terminalMaximised,
       openFilePaths: openFiles.map((file) => file.path),
       activeFilePath
     }
@@ -650,12 +760,14 @@ export function AppShell(): JSX.Element {
     if (
       nextLayout.terminalVisible !== activeProject.workspaceLayout.terminalVisible ||
       nextLayout.preferredSplitDirection !== activeProject.workspaceLayout.preferredSplitDirection ||
+      nextLayout.quadLayout !== activeProject.workspaceLayout.quadLayout ||
+      nextLayout.terminalMaximised !== activeProject.workspaceLayout.terminalMaximised ||
       nextLayout.activeFilePath !== activeProject.workspaceLayout.activeFilePath ||
       !areStringArraysEqual(nextLayout.openFilePaths, activeProject.workspaceLayout.openFilePaths)
     ) {
       queueWorkspaceLayoutSave(nextLayout)
     }
-  }, [activeFilePath, activeProject, openFiles, queueWorkspaceLayoutSave, splitDirection, terminalVisible])
+  }, [activeFilePath, activeProject, openFiles, queueWorkspaceLayoutSave, quadActive, splitDirection, terminalMaximised, terminalVisible])
 
   const handleCreateNew = (): void => {
     setEditingProject(null)
@@ -913,6 +1025,7 @@ export function AppShell(): JSX.Element {
       )}
 
       <PanelGroup
+        id={WORKSPACE_SPLIT_ID}
         direction="vertical"
         className="flex-1"
         onLayout={(sizes) => {
@@ -921,10 +1034,11 @@ export function AppShell(): JSX.Element {
           if (sizes[0] === 0) return
           const nextTerminalSize = sizes[1]
           if (nextTerminalSize === activeProject.workspaceLayout.terminalSize) return
-          queueWorkspaceLayoutSave({
-            ...activeProject.workspaceLayout,
-            terminalSize: nextTerminalSize
-          })
+          // A small window pushed the terminal up to its minimum: keep the user's own split for larger windows.
+          if (nextTerminalSize <= terminalMinSize + 0.1 && activeProject.workspaceLayout.terminalSize < nextTerminalSize) {
+            return
+          }
+          queueWorkspaceLayoutSave({ terminalSize: nextTerminalSize })
         }}
       >
         <Panel
@@ -946,10 +1060,7 @@ export function AppShell(): JSX.Element {
               if (!activeProject || sizes.length < 2) return
               const nextSidebarSize = sizes[0]
               if (nextSidebarSize === activeProject.workspaceLayout.sidebarSize) return
-              queueWorkspaceLayoutSave({
-                ...activeProject.workspaceLayout,
-                sidebarSize: nextSidebarSize
-              })
+              queueWorkspaceLayoutSave({ sidebarSize: nextSidebarSize })
             }}
           >
             <Panel
@@ -972,12 +1083,14 @@ export function AppShell(): JSX.Element {
         )}
         <Panel
           ref={terminalDockPanelRef}
-          defaultSize={showDockedTerminal ? (activeProject?.workspaceLayout.terminalSize ?? 35) : 0}
-          minSize={15}
+          defaultSize={
+            showDockedTerminal ? Math.max(activeProject?.workspaceLayout.terminalSize ?? 35, terminalMinSize) : 0
+          }
+          minSize={terminalMinSize}
           collapsible
           collapsedSize={0}
         >
-          <TerminalPanel />
+          <TerminalPanel onLayoutChange={queueWorkspaceLayoutSave} />
         </Panel>
       </PanelGroup>
 
@@ -1080,6 +1193,7 @@ export function AppShell(): JSX.Element {
       )}
 
       <KeepNotificationsTip />
+      <Toasts />
 
       {/* First-run welcome tour */}
       {tourStep !== null && !tourPaused && (
@@ -1100,6 +1214,7 @@ export function AppShell(): JSX.Element {
           onOpenInfo={() => setInfoOpen(true)}
           onOpenTour={openWelcomeTour}
           onToggleMaximise={toggleTerminalMaximised}
+          onToggleQuad={toggleQuadLayout}
           onCreateProject={handleCreateNew}
         />
       )}

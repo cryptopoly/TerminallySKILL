@@ -224,7 +224,9 @@
     "general.attention.keep.title": "Meldingen tonen tot je ze sluit",
     "general.attention.keep.description": "Meldingen blijven op het scherm tot je ze sluit. Het precieze gedrag hangt af van je bureaublad.",
     "general.attention.keep.macDescription": "macOS bepaalt dit. Kies in Systeeminstellingen voor TerminallySKILL de stijl die blijft staan tot je hem sluit.",
-    "general.attention.keep.openSettings": "Systeeminstellingen openen"
+    "general.attention.keep.openSettings": "Systeeminstellingen openen",
+    "general.restoreTabs.title": "Terminaltabbladen opnieuw openen",
+    "general.restoreTabs.description": "Opent bij het starten de lokale terminaltabbladen, splitsing en mappen van de vorige keer. SSH- en VNC-tabbladen worden niet opnieuw verbonden en oude uitvoer wordt niet bewaard."
   },
   "commands": {
     "addDialog.title": "Opdracht toevoegen",
@@ -1113,7 +1115,6 @@
     "toolbar.plain": "gewoon",
     "busy.title": "Shell bezet - opdrachten worden uitgevoerd zodra hij klaar is",
     "busy.clearQueue": "Wachtrij wissen",
-    "busy.running": "Actief",
     "search.previous": "Vorige treffer (Shift+Enter)",
     "search.next": "Volgende treffer (Enter)",
     "search.close": "Sluiten (Esc)",
@@ -1197,7 +1198,23 @@
     "dot.idle": "Stil",
     "attention.waitingForYes": "Wacht op je ja",
     "attention.bell": "Liet de terminalbel klinken",
-    "attention.stillWaiting": "Wacht nog steeds op je ({{duration}})"
+    "attention.stillWaiting": "Wacht nog steeds op je ({{duration}})",
+    "blocks.menu": "Opdrachtacties",
+    "blocks.copyOutput": "Uitvoer kopiëren",
+    "blocks.copyCommand": "Opdracht kopiëren",
+    "blocks.runAgain": "Opnieuw uitvoeren",
+    "blocks.explain": "Uitvoer uitleggen",
+    "folder.change": "Map wijzigen…",
+    "folder.menu": "Mapacties",
+    "folder.revealMac": "Toon in Finder",
+    "folder.revealWindows": "Toon in Verkenner",
+    "folder.revealLinux": "Openen in bestandsbeheer",
+    "folder.copyPath": "Pad kopiëren",
+    "openFailed.message": "Kan geen terminal openen: {{reason}}",
+    "panel.quad": "Vierdeling",
+    "panel.closeQuad": "Vierdeling sluiten",
+    "panel.quadDescription": "Vier terminals in een raster van 2x2. Gebruikt eerst je open tabbladen en opent nieuwe voor de rest. Klik opnieuw om terug te gaan naar de vorige indeling; er wordt geen terminal gesloten.",
+    "panel.quadTooSmall": "Vierdeling gepauzeerd: venster te klein"
   },
   "onboarding": {
     "subtitle": "Visuele opdrachtbuilder, terminalwerkruimte, workflows, logs en AI-tools",
@@ -1416,7 +1433,9 @@
     "sections.statusDots.steps.idle.label": "Stil",
     "sections.statusDots.steps.idle.desc": "Grijze ring: een programma is open maar heeft al een tijdje niets getoond, bijvoorbeeld een agent die op de volgende taak wacht. Alleen de stip, geen melding.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "De terminal maximaliseren zodat hij het venster vult, of herstellen. Ctrl+Shift+M op Windows en Linux."
+    "sections.keyboard.steps.maximise.desc": "De terminal maximaliseren zodat hij het venster vult, of herstellen. Ctrl+Shift+M op Windows en Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Zet de vierdeling (vier terminals in een raster van 2x2) aan of uit. Command+] / Command+[ wisselt tussen de vakken. Ctrl+Shift+G op Windows en Linux."
   },
   "ai": {
     "explain.label": "Uitleggen met AI",

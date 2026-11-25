@@ -1,6 +1,7 @@
 import { execFile } from 'child_process'
 import { ipcMain } from 'electron'
 import * as fs from 'fs'
+import * as path from 'path'
 import { IPC_CHANNELS } from '../../shared/ipc-channels'
 import {
   listDirectoryContents,
@@ -285,10 +286,10 @@ export function registerFileIpcHandlers(): void {
         for (const entry of entries) {
           if (fileCount >= maxFiles) return
           if (entry.isDirectory()) {
-            if (!skipDirs.has(entry.name)) walkDir(`${dir}/${entry.name}`)
+            if (!skipDirs.has(entry.name)) walkDir(path.join(dir, entry.name))
           } else if (entry.isFile()) {
             fileCount++
-            const fp = `${dir}/${entry.name}`
+            const fp = path.join(dir, entry.name)
             try {
               const stat = fs.statSync(fp)
               if (stat.size > maxFileBytes) continue

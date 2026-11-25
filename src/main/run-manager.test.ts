@@ -454,7 +454,8 @@ describe('run-manager', () => {
     })
   })
 
-  it('preserves loaded runs in memory when persisting recovered history fails', async () => {
+  // chmod cannot make a folder read-only on Windows, so the failed save cannot be staged there
+  it.skipIf(process.platform === 'win32')('preserves loaded runs in memory when persisting recovered history fails', async () => {
     const stale: RunsData = {
       runs: [
         {

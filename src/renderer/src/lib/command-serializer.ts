@@ -1,13 +1,21 @@
 import type { CommandDefinition, CommandOption, PositionalArgument } from '../../../shared/command-schema'
+import { isPowerShell, powerShellSingleQuote } from '../../../shared/local-shell'
 
-function shellEscape(value: string): string {
+function shellEscape(value: string, powerShell = false): string {
   if (value === '') return "''"
+  if (powerShell) {
+    // @ and , are operators, and an unquoted -name.part argument is split at the dot
+    if (/^[a-zA-Z0-9._\-\/=:]+$/.test(value) && !/^-[^-].*\./.test(value)) return value
+    return powerShellSingleQuote(value)
+  }
   if (!/[^a-zA-Z0-9._\-\/=@:,]/.test(value)) return value
   return `'${value.replace(/'/g, "'\\''")}'`
 }
 
-function formatFlagValue(flag: string, value: string, sep: 'space' | 'equals' | 'none'): string {
-  const escaped = shellEscape(value)
+function formatFlagValue(flag: string, value: string, sep: 'space' | 'equals' | 'none', powerShell: boolean): string {
+  // PowerShell reads --flag='value' as one argument, but -Dname.part=value as two
+  if (powerShell && sep !== 'space') return shellEscape(`${flag}${sep === 'equals' ? '=' : ''}${value}`, true)
+  const escaped = shellEscape(value, powerShell)
   switch (sep) {
     case 'space':
       return `${flag} ${escaped}`
@@ -28,10 +36,13 @@ function sortedPositionals(args?: PositionalArgument[]): PositionalArgument[] {
   return [...args].sort((a, b) => a.position - b.position)
 }
 
+/** `shell` is the shell the command will be typed into: values are quoted for PowerShell or for sh. */
 export function serializeCommand(
   definition: CommandDefinition,
-  formState: Record<string, unknown>
+  formState: Record<string, unknown>,
+  shell?: string | null
 ): string {
+  const powerShell = isPowerShell(shell)
   const parts: string[] = [definition.executable]
 
   if (definition.subcommands) {
@@ -55,26 +66,26 @@ export function serializeCommand(
       case 'number':
       case 'file-path':
       case 'directory-path':
-        parts.push(formatFlagValue(flag, String(value), option.separator ?? 'space'))
+        parts.push(formatFlagValue(flag, String(value), option.separator ?? 'space', powerShell))
         break
       case 'enum':
-        parts.push(formatFlagValue(flag, String(value), option.separator ?? 'space'))
+        parts.push(formatFlagValue(flag, String(value), option.separator ?? 'space', powerShell))
         break
       case 'repeatable':
         for (const entry of value as string[]) {
-          if (entry) parts.push(formatFlagValue(flag, entry, option.separator ?? 'space'))
+          if (entry) parts.push(formatFlagValue(flag, entry, option.separator ?? 'space', powerShell))
         }
         break
       case 'multi-select':
         for (const selected of value as string[]) {
-          parts.push(formatFlagValue(flag, selected, option.separator ?? 'space'))
+          parts.push(formatFlagValue(flag, selected, option.separator ?? 'space', powerShell))
         }
         break
       case 'key-value':
         for (const kv of value as { key: string; value: string }[]) {
           if (kv.key) {
             parts.push(
-              formatFlagValue(flag, `${kv.key}=${kv.value}`, option.separator ?? 'space')
+              formatFlagValue(flag, `${kv.key}=${kv.value}`, option.separator ?? 'space', powerShell)
             )
           }
         }
@@ -86,9 +97,9 @@ export function serializeCommand(
     const value = formState[posArg.id]
     if (!value) continue
     if (posArg.variadic && Array.isArray(value)) {
-      parts.push(...(value as string[]).filter(Boolean).map(shellEscape))
+      parts.push(...(value as string[]).filter(Boolean).map((entry) => shellEscape(entry, powerShell)))
     } else if (typeof value === 'string' && value) {
-      parts.push(shellEscape(value))
+      parts.push(shellEscape(value, powerShell))
     }
   }
 

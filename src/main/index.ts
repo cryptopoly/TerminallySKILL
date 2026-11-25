@@ -3,7 +3,8 @@ import { join, resolve } from 'path'
 import { readFileSync, existsSync } from 'fs'
 import { electronApp, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc-handlers'
-import { initTerminalPath, killSessionsForWindow, killAllTerminals, getActiveSessionCountForWindow, getSessionCountForWindow } from './pty-manager'
+import { initTerminalPath, killSessionsForWindow, stopAllTerminalsForQuit, getActiveSessionCountForWindow, getSessionCountForWindow, hasRunningTerminalProcesses } from './pty-manager'
+import { noteWindowClosing, saveTerminalLayoutOnQuit } from './session-restore-manager'
 import { stopVncSessionsForWindow, stopAllVncSessions } from './vnc-manager'
 import { IPC_CHANNELS } from '../shared/ipc-channels'
 import { getUserDataDir, setCustomDataDir } from './user-data-path'
@@ -90,9 +91,13 @@ function createWindow(projectId?: string): void {
   })
 
   windows.add(win)
+  // win.id cannot be read once the window is destroyed
+  const windowId = win.id
 
   win.on('ready-to-show', () => {
-    win.show()
+    // End-to-end tests open the app in the background so they do not take focus from whoever is at the machine
+    if (process.env.TERMINALLYSKILL_BACKGROUND_WINDOW === '1' && process.platform === 'darwin') win.showInactive()
+    else win.show()
   })
 
   win.on('close', (e) => {
@@ -127,6 +132,7 @@ function createWindow(projectId?: string): void {
   })
 
   win.on('closed', () => {
+    noteWindowClosing(windowId, windows.size > 1)
     killSessionsForWindow(win)
     stopVncSessionsForWindow(win)
     forgetWindowBadge(win)
@@ -237,6 +243,11 @@ function watchWindowShortcuts(window: BrowserWindow): void {
 }
 
 app.whenReady().then(() => {
+  // End-to-end tests: no Dock icon and never the active app, so test windows do not take focus
+  if (process.env.TERMINALLYSKILL_BACKGROUND_WINDOW === '1' && process.platform === 'darwin') {
+    app.setActivationPolicy('accessory')
+  }
+
   app.setName(APP_DISPLAY_NAME)
   electronApp.setAppUserModelId('com.terminallyskill.app')
 
@@ -305,11 +316,31 @@ app.whenReady().then(() => {
   })
 })
 
-app.on('before-quit', () => {
+let quitStage: 'running' | 'stopping-terminals' | 'ready' = 'running'
+
+app.on('before-quit', (event) => {
+  if (quitStage === 'ready') return
+  if (quitStage === 'stopping-terminals') {
+    event.preventDefault()
+    return
+  }
   markAppQuitting()
   stopScheduler()
-  killAllTerminals()
+  saveTerminalLayoutOnQuit()
+  const stopping = stopAllTerminalsForQuit()
   stopAllVncSessions()
+  if (!hasRunningTerminalProcesses()) {
+    quitStage = 'ready'
+    return
+  }
+  // Quit only once the shells have ended (bounded inside stopAllTerminalsForQuit). node-pty reports each
+  // exit through a native callback, and one landing during Node teardown aborts the app.
+  event.preventDefault()
+  quitStage = 'stopping-terminals'
+  void stopping.finally(() => {
+    quitStage = 'ready'
+    app.quit()
+  })
 })
 
 app.on('window-all-closed', () => {

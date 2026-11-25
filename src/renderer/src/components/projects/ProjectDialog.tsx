@@ -9,6 +9,7 @@ import { useSettingsStore } from '../../store/settings-store'
 import {
   createLocalWorkspaceTarget,
   createSSHWorkspaceTarget,
+  findProjectWithSameWorkspace,
   getProjectWorkspaceTargetConnectionLabel,
   getProjectWorkspaceTargetDisplayName,
   getProjectWorkspaceTargetLabel,
@@ -231,9 +232,7 @@ export function ProjectDialog({ project, onClose }: ProjectDialogProps): JSX.Ele
 
     // Warn about duplicate working directory (but allow proceeding)
     if (!isEdit && !dupWarningAcknowledged) {
-      const existingProject = allProjects.find(
-        (p) => resolveProjectWorkingDirectory(p).toLowerCase() === workingDirectory.toLowerCase()
-      )
+      const existingProject = findProjectWithSameWorkspace(allProjects, workspaceTarget)
       if (existingProject) {
         setError(t('dialog.errors.duplicateDirectory', { name: existingProject.name }))
         setDupWarningAcknowledged(true)

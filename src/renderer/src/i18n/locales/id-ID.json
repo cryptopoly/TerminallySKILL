@@ -227,7 +227,9 @@
     "general.attention.keep.title": "Pertahankan notifikasi sampai ditutup",
     "general.attention.keep.description": "Notifikasi tetap di layar sampai Anda menutupnya. Perilaku pastinya bergantung pada desktop Anda.",
     "general.attention.keep.macDescription": "macOS yang menentukan ini. Di Pengaturan Sistem, pilih gaya untuk TerminallySKILL yang tetap tampil sampai ditutup.",
-    "general.attention.keep.openSettings": "Buka Pengaturan Sistem"
+    "general.attention.keep.openSettings": "Buka Pengaturan Sistem",
+    "general.restoreTabs.title": "Buka kembali tab terminal",
+    "general.restoreTabs.description": "Saat dibuka, aplikasi membuka kembali tab terminal lokal, pembagian, dan folder dari sesi terakhir. Tab SSH dan VNC tidak disambungkan ulang, dan output lama tidak disimpan."
   },
   "commands": {
     "addDialog.title": "Tambah perintah",
@@ -1111,7 +1113,6 @@
     "toolbar.plain": "biasa",
     "busy.title": "Shell sibuk - perintah akan dijalankan saat siap",
     "busy.clearQueue": "Kosongkan antrean",
-    "busy.running": "Berjalan",
     "search.previous": "Kecocokan sebelumnya (Shift+Enter)",
     "search.next": "Kecocokan berikutnya (Enter)",
     "search.close": "Tutup (Esc)",
@@ -1175,7 +1176,6 @@
     "close.unknownScript": "Skrip tidak dikenal",
     "promotion.defaultCommandName": "Perintah terminal",
     "promotion.defaultWorkflowName": "Workflow terminal",
-    "editorPrompt.off": "Nonaktif",
     "attention.finished": "Perintah selesai",
     "attention.failed": "Perintah gagal (kode keluar {{code}})",
     "attention.approval": "Perlu persetujuan",
@@ -1196,7 +1196,23 @@
     "dot.idle": "Diam",
     "attention.waitingForYes": "Menunggu persetujuan Anda",
     "attention.bell": "Membunyikan bel terminal",
-    "attention.stillWaiting": "Masih menunggu Anda ({{duration}})"
+    "attention.stillWaiting": "Masih menunggu Anda ({{duration}})",
+    "blocks.menu": "Tindakan perintah",
+    "blocks.copyOutput": "Salin output",
+    "blocks.copyCommand": "Salin perintah",
+    "blocks.runAgain": "Jalankan lagi",
+    "blocks.explain": "Jelaskan output",
+    "folder.change": "Ganti folder…",
+    "folder.menu": "Tindakan folder",
+    "folder.revealMac": "Tampilkan di Finder",
+    "folder.revealWindows": "Tampilkan di File Explorer",
+    "folder.revealLinux": "Buka di pengelola file",
+    "folder.copyPath": "Salin jalur",
+    "openFailed.message": "Tidak dapat membuka terminal: {{reason}}",
+    "panel.quad": "Bagi empat",
+    "panel.closeQuad": "Keluar dari bagi empat",
+    "panel.quadDescription": "Empat terminal dalam kisi 2x2. Memakai tab yang terbuka lebih dulu dan membuka yang baru untuk sisanya. Klik lagi untuk kembali ke tata letak sebelumnya; tidak ada terminal yang ditutup.",
+    "panel.quadTooSmall": "Bagi empat dijeda: jendela terlalu kecil"
   },
   "onboarding": {
     "subtitle": "Command builder visual, workspace terminal, workflow, log, dan alat AI",
@@ -1414,7 +1430,9 @@
     "sections.statusDots.steps.idle.label": "Diam",
     "sections.statusDots.steps.idle.desc": "Cincin abu-abu: program terbuka tetapi sudah lama tidak menampilkan apa pun, misalnya agen yang menunggu tugas berikutnya. Hanya titik, tanpa notifikasi.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maksimalkan terminal agar memenuhi jendela, atau kembalikan. Ctrl+Shift+M di Windows dan Linux."
+    "sections.keyboard.steps.maximise.desc": "Maksimalkan terminal agar memenuhi jendela, atau kembalikan. Ctrl+Shift+M di Windows dan Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Nyalakan atau matikan bagi empat (empat terminal dalam kisi 2x2). Command+] / Command+[ berpindah antar panelnya. Ctrl+Shift+G di Windows dan Linux."
   },
   "ai": {
     "explain.label": "Jelaskan dengan AI",

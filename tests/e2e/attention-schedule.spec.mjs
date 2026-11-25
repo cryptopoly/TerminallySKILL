@@ -163,6 +163,14 @@ test('a missed run is recorded, and runs once on relaunch only for schedules tha
     await expect(rows).toHaveCount(1)
     await page.getByRole('button', { name: 'Open in Runs & Logs' }).click()
     await expect(page.getByText('Scheduled', { exact: true }).first()).toBeVisible({ timeout: 10_000 })
+    // A workspace layout save queued just before the jump (the terminal opens on startup) once carried the
+    // old sidebar tab and took the view back to the Dashboard. Give such a save time to land, then check again.
+    await page.waitForTimeout(1000)
+    await expect(page.getByText('Scheduled', { exact: true }).first()).toBeVisible()
+    const layout = await page.evaluate(() =>
+      window.electronAPI.getAllProjects().then((data) => data.projects[0].workspaceLayout)
+    )
+    expect(layout.sidebarTab).toBe('logs')
   } finally {
     await app.close()
   }

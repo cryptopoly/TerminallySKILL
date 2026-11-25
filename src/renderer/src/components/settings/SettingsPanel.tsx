@@ -1035,6 +1035,17 @@ export function SettingsPanel({ hideHeader = false }: { hideHeader?: boolean }):
           </div>
         </div>
 
+        <SettingToggleCard
+          title={t('general.restoreTabs.title', { ns: 'settings' })}
+          description={t('general.restoreTabs.description', { ns: 'settings' })}
+          enabled={settings.restoreTerminalTabs}
+          onToggle={async () => {
+            const next = !settings.restoreTerminalTabs
+            setSettings({ ...settings, restoreTerminalTabs: next })
+            await window.electronAPI.updateSettings({ restoreTerminalTabs: next })
+          }}
+        />
+
         <div className="rounded-xl border border-surface-border bg-surface-light p-4">
           <div className="mb-3">
             <div className="text-sm font-medium text-gray-200">

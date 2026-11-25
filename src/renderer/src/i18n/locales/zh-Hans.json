@@ -75,7 +75,9 @@
     "general.attention.keep.title": "保留通知直到关闭",
     "general.attention.keep.description": "通知会一直显示在屏幕上，直到你关闭它们。具体行为取决于你的桌面环境。",
     "general.attention.keep.macDescription": "这由 macOS 决定。请在系统设置中为 TerminallySKILL 选择会一直显示到关闭的样式。",
-    "general.attention.keep.openSettings": "打开系统设置"
+    "general.attention.keep.openSettings": "打开系统设置",
+    "general.restoreTabs.title": "重新打开终端标签页",
+    "general.restoreTabs.description": "启动时重新打开上次的本地终端标签页、分屏和文件夹。SSH 和 VNC 标签页不会重新连接，旧输出不会保留。"
   },
   "commandBuilder": {
     "referenceHelp.aiProviderFallback": "AI",
@@ -208,7 +210,23 @@
     "dot.idle": "空闲",
     "attention.waitingForYes": "等待你的确认",
     "attention.bell": "响了终端铃声",
-    "attention.stillWaiting": "仍在等你（{{duration}}）"
+    "attention.stillWaiting": "仍在等你（{{duration}}）",
+    "blocks.menu": "命令操作",
+    "blocks.copyOutput": "复制输出",
+    "blocks.copyCommand": "复制命令",
+    "blocks.runAgain": "再次运行",
+    "blocks.explain": "解释输出",
+    "folder.change": "更改文件夹…",
+    "folder.menu": "文件夹操作",
+    "folder.revealMac": "在访达中显示",
+    "folder.revealWindows": "在文件资源管理器中显示",
+    "folder.revealLinux": "在文件管理器中打开",
+    "folder.copyPath": "复制路径",
+    "openFailed.message": "无法打开终端：{{reason}}",
+    "panel.quad": "四分屏",
+    "panel.closeQuad": "退出四分屏",
+    "panel.quadDescription": "以 2x2 网格显示四个终端。先使用已打开的标签，其余的新开。再次点击回到之前的布局；不会关闭任何终端。",
+    "panel.quadTooSmall": "四分屏已暂停：窗口太小"
   },
   "native": {
     "menu.file": "文件",
@@ -373,6 +391,8 @@
     "sections.statusDots.steps.idle.label": "空闲",
     "sections.statusDots.steps.idle.desc": "灰色圆环：程序已打开，但一段时间没有输出，例如等待下一个任务的智能体。只显示圆点，不发通知。",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "将终端最大化以占满窗口，或恢复原样。在 Windows 和 Linux 上为 Ctrl+Shift+M。"
+    "sections.keyboard.steps.maximise.desc": "将终端最大化以占满窗口，或恢复原样。在 Windows 和 Linux 上为 Ctrl+Shift+M。",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "开启或关闭四分屏（2x2 网格中的四个终端）。Command+] / Command+[ 在窗格之间切换。Windows 和 Linux 上为 Ctrl+Shift+G。"
   }
 }

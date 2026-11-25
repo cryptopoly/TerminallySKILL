@@ -149,7 +149,9 @@
     "general.attention.keep.title": "Pokazuj powiadomienia do zamknięcia",
     "general.attention.keep.description": "Powiadomienia pozostają na ekranie, dopóki ich nie zamkniesz. Dokładne działanie zależy od środowiska pulpitu.",
     "general.attention.keep.macDescription": "Decyduje o tym macOS. W Ustawieniach systemowych wybierz dla TerminallySKILL styl, który pozostaje do zamknięcia.",
-    "general.attention.keep.openSettings": "Otwórz Ustawienia systemowe"
+    "general.attention.keep.openSettings": "Otwórz Ustawienia systemowe",
+    "general.restoreTabs.title": "Otwieraj ponownie karty terminala",
+    "general.restoreTabs.description": "Przy uruchomieniu ponownie otwiera lokalne karty terminala, podział i foldery z poprzedniej sesji. Karty SSH i VNC nie są łączone ponownie, a stare dane wyjściowe nie są zachowywane."
   },
   "commands": {
     "addDialog.title": "Dodaj polecenie",
@@ -1074,7 +1076,6 @@
     "toolbar.plain": "zwykłe",
     "busy.title": "Powłoka zajęta - polecenia zostaną uruchomione, gdy będzie gotowa",
     "busy.clearQueue": "Wyczyść kolejkę",
-    "busy.running": "Działa",
     "search.previous": "Poprzednie dopasowanie (Shift+Enter)",
     "search.next": "Następne dopasowanie (Enter)",
     "search.close": "Zamknij (Esc)",
@@ -1157,7 +1158,23 @@
     "dot.idle": "Bezczynny",
     "attention.waitingForYes": "Czeka na Twoją zgodę",
     "attention.bell": "Użył dzwonka terminala",
-    "attention.stillWaiting": "Nadal na Ciebie czeka ({{duration}})"
+    "attention.stillWaiting": "Nadal na Ciebie czeka ({{duration}})",
+    "blocks.menu": "Akcje polecenia",
+    "blocks.copyOutput": "Kopiuj wynik",
+    "blocks.copyCommand": "Kopiuj polecenie",
+    "blocks.runAgain": "Uruchom ponownie",
+    "blocks.explain": "Wyjaśnij wynik",
+    "folder.change": "Zmień folder…",
+    "folder.menu": "Akcje folderu",
+    "folder.revealMac": "Pokaż w Finderze",
+    "folder.revealWindows": "Pokaż w Eksploratorze plików",
+    "folder.revealLinux": "Otwórz w menedżerze plików",
+    "folder.copyPath": "Kopiuj ścieżkę",
+    "openFailed.message": "Nie można otworzyć terminala: {{reason}}",
+    "panel.quad": "Podział na cztery",
+    "panel.closeQuad": "Zakończ podział na cztery",
+    "panel.quadDescription": "Cztery terminale w siatce 2x2. Najpierw używa otwartych kart, a dla reszty otwiera nowe. Kliknij ponownie, aby wrócić do poprzedniego układu; żaden terminal nie zostanie zamknięty.",
+    "panel.quadTooSmall": "Podział na cztery wstrzymany: okno za małe"
   },
   "onboarding": {
     "subtitle": "Wizualny builder poleceń, obszar roboczy terminala, workflow, logi i narzędzia AI",
@@ -1381,7 +1398,9 @@
     "sections.statusDots.steps.idle.label": "Bezczynny",
     "sections.statusDots.steps.idle.desc": "Szary pierścień: program jest otwarty, ale od pewnego czasu nic nie wypisał, na przykład agent czekający na kolejne zadanie. Tylko kropka, bez powiadomienia.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maksymalizuj terminal, aby wypełnił okno, albo przywróć go. Ctrl+Shift+M w systemach Windows i Linux."
+    "sections.keyboard.steps.maximise.desc": "Maksymalizuj terminal, aby wypełnił okno, albo przywróć go. Ctrl+Shift+M w systemach Windows i Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Włącz lub wyłącz podział na cztery (cztery terminale w siatce 2x2). Command+] / Command+[ przełącza między panelami. Ctrl+Shift+G w systemach Windows i Linux."
   },
   "ai": {
     "explain.label": "Wyjaśnij z AI",

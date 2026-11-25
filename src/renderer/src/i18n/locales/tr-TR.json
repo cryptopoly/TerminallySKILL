@@ -227,7 +227,9 @@
     "general.attention.keep.title": "Bildirimleri kapatılana kadar göster",
     "general.attention.keep.description": "Bildirimler siz kapatana kadar ekranda kalır. Tam davranış masaüstünüze bağlıdır.",
     "general.attention.keep.macDescription": "Bunu macOS belirler. Sistem Ayarları'nda TerminallySKILL için kapatılana kadar kalan stili seçin.",
-    "general.attention.keep.openSettings": "Sistem Ayarları'nı aç"
+    "general.attention.keep.openSettings": "Sistem Ayarları'nı aç",
+    "general.restoreTabs.title": "Terminal sekmelerini yeniden aç",
+    "general.restoreTabs.description": "Açılışta son seferdeki yerel terminal sekmelerini, bölmeyi ve klasörleri yeniden açar. SSH ve VNC sekmeleri yeniden bağlanmaz, eski çıktı saklanmaz."
   },
   "commands": {
     "addDialog.title": "Komut ekle",
@@ -1109,7 +1111,6 @@
     "toolbar.plain": "düz",
     "busy.title": "Shell meşgul - komutlar hazır olunca çalışacak",
     "busy.clearQueue": "Kuyruğu temizle",
-    "busy.running": "Çalışıyor",
     "search.previous": "Önceki eşleşme (Shift+Enter)",
     "search.next": "Sonraki eşleşme (Enter)",
     "search.close": "Kapat (Esc)",
@@ -1193,7 +1194,23 @@
     "dot.idle": "Boşta",
     "attention.waitingForYes": "Onayınızı bekliyor",
     "attention.bell": "Terminal zilini çaldı",
-    "attention.stillWaiting": "Hâlâ sizi bekliyor ({{duration}})"
+    "attention.stillWaiting": "Hâlâ sizi bekliyor ({{duration}})",
+    "blocks.menu": "Komut işlemleri",
+    "blocks.copyOutput": "Çıktıyı kopyala",
+    "blocks.copyCommand": "Komutu kopyala",
+    "blocks.runAgain": "Yeniden çalıştır",
+    "blocks.explain": "Çıktıyı açıkla",
+    "folder.change": "Klasörü değiştir…",
+    "folder.menu": "Klasör işlemleri",
+    "folder.revealMac": "Finder'da göster",
+    "folder.revealWindows": "Dosya Gezgini'nde göster",
+    "folder.revealLinux": "Dosya yöneticisinde aç",
+    "folder.copyPath": "Yolu kopyala",
+    "openFailed.message": "Terminal açılamadı: {{reason}}",
+    "panel.quad": "Dörtlü bölme",
+    "panel.closeQuad": "Dörtlü bölmeden çık",
+    "panel.quadDescription": "Dört terminal 2x2 ızgarada. Önce açık sekmelerinizi kullanır, kalanlar için yenilerini açar. Önceki düzene dönmek için yeniden tıklayın; hiçbir terminal kapanmaz.",
+    "panel.quadTooSmall": "Dörtlü bölme duraklatıldı: pencere çok küçük"
   },
   "onboarding": {
     "subtitle": "Görsel komut oluşturucu, terminal çalışma alanı, workflow'lar, günlükler ve AI araçları",
@@ -1411,7 +1428,9 @@
     "sections.statusDots.steps.idle.label": "Boşta",
     "sections.statusDots.steps.idle.desc": "Gri halka: bir program açık ama bir süredir hiçbir şey yazdırmadı, örneğin bir sonraki görevi bekleyen bir ajan. Yalnızca nokta, bildirim yok.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Terminali pencereyi kaplayacak şekilde büyüt veya geri al. Windows ve Linux’ta Ctrl+Shift+M."
+    "sections.keyboard.steps.maximise.desc": "Terminali pencereyi kaplayacak şekilde büyüt veya geri al. Windows ve Linux’ta Ctrl+Shift+M.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Dörtlü bölmeyi (2x2 ızgarada dört terminal) açar veya kapatır. Command+] / Command+[ bölmeler arasında geçiş yapar. Windows ve Linux’ta Ctrl+Shift+G."
   },
   "ai": {
     "explain.label": "AI ile açıkla",

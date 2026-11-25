@@ -74,7 +74,9 @@
     "general.attention.keep.title": "Keep notifications until dismissed",
     "general.attention.keep.description": "Notifications stay on screen until you close them. The exact behaviour depends on your desktop.",
     "general.attention.keep.macDescription": "macOS decides this. In System Settings, set TerminallySKILL to Alerts to keep notifications until you close them.",
-    "general.attention.keep.openSettings": "Open System Settings"
+    "general.attention.keep.openSettings": "Open System Settings",
+    "general.restoreTabs.title": "Reopen terminal tabs",
+    "general.restoreTabs.description": "At launch, reopen last time's local terminal tabs, split and folders. SSH and VNC tabs are not reconnected, and old output is not kept."
   },
   "logs": {
     "diagnostics.suspect.exit1a": "The command ran but hit a generic failure, so the real cause is usually in the command output just above this error.",
@@ -140,7 +142,23 @@
     "dot.idle": "Idle",
     "attention.waitingForYes": "Waiting for your yes",
     "attention.bell": "Rang the terminal bell",
-    "attention.stillWaiting": "Still waiting for you ({{duration}})"
+    "attention.stillWaiting": "Still waiting for you ({{duration}})",
+    "blocks.menu": "Command actions",
+    "blocks.copyOutput": "Copy output",
+    "blocks.copyCommand": "Copy command",
+    "blocks.runAgain": "Run again",
+    "blocks.explain": "Explain output",
+    "folder.change": "Change folder…",
+    "folder.menu": "Folder actions",
+    "folder.revealMac": "Show in Finder",
+    "folder.revealWindows": "Show in File Explorer",
+    "folder.revealLinux": "Open in file manager",
+    "folder.copyPath": "Copy path",
+    "openFailed.message": "Could not open a terminal: {{reason}}",
+    "panel.quad": "Quad split",
+    "panel.closeQuad": "Leave quad split",
+    "panel.quadDescription": "Four terminals in a 2x2 grid. Uses your open tabs first and opens new ones for the rest. Click again to go back to the previous layout; no terminal is closed.",
+    "panel.quadTooSmall": "Quad paused: window too small"
   },
   "native": {
     "menu.file": "File",
@@ -344,6 +362,8 @@
     "sections.statusDots.steps.idle.label": "Idle",
     "sections.statusDots.steps.idle.desc": "Grey ring: a program is open but has printed nothing for a while, for example an agent waiting for its next task. Dot only, no notification.",
     "sections.keyboard.steps.maximise.label": "Command+Shift+M",
-    "sections.keyboard.steps.maximise.desc": "Maximise the terminal so it fills the window, or restore it. Ctrl+Shift+M on Windows and Linux."
+    "sections.keyboard.steps.maximise.desc": "Maximise the terminal so it fills the window, or restore it. Ctrl+Shift+M on Windows and Linux.",
+    "sections.keyboard.steps.quad.label": "Command+Shift+G",
+    "sections.keyboard.steps.quad.desc": "Turn the quad split (four terminals in a 2x2 grid) on or off. Command+] / Command+[ moves between its panes. Ctrl+Shift+G on Windows and Linux."
   }
 }
