@@ -1,7 +1,7 @@
 # Runs inside the Windows test VM as the logged-in user. Started by tools/vm-release-smoke-windows.sh.
 param([string]$Installer, [string]$Ref = 'staging')
 $ErrorActionPreference = 'Stop'
-$env:Path = 'C:\tools\node;C:\tools\git\cmd;' + $env:Path
+$env:Path = 'C:\Program Files\nodejs;C:\tools\node;C:\tools\git\cmd;' + $env:Path
 
 $local = Join-Path $env:TEMP 'tsk-release-setup.exe'
 Copy-Item $Installer $local -Force
@@ -23,7 +23,9 @@ git checkout -q -B $Ref FETCH_HEAD
 # The packaged spec only needs Playwright, not the native modules (those need Visual Studio to build).
 npm ci --ignore-scripts --silent 2>&1 | Out-Host
 
+# Native stderr (Electron's 'Downloading Electron binary...') must not abort the script.
+$ErrorActionPreference = 'Continue'
 $env:RUN_PACKAGED_E2E = '1'
 $env:TERMINALLYSKILL_PACKAGED_EXECUTABLE = $exe.FullName
 npx playwright test tests/e2e/packaged.spec.mjs --output test-results/release-smoke 2>&1 | Tee-Object -Variable out | Out-Host
-if ($out -match ' 1 passed') { "RELEASE SMOKE PASS: $($exe.FullName)" } else { 'RELEASE SMOKE FAIL'; exit 1 }
+if ($out -match ' [1-9][0-9]* passed' -and $out -notmatch ' [1-9][0-9]* failed') { "RELEASE SMOKE PASS: $($exe.FullName)" } else { 'RELEASE SMOKE FAIL'; exit 1 }
