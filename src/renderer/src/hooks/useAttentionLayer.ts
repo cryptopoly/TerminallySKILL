@@ -83,16 +83,30 @@ export function useAttentionLayer(): void {
   // Walked away with the window in front: after a while with no input, nobody is watching any terminal
   useEffect(() => {
     let away = false
-    const check = async (): Promise<void> => {
-      const nowAway = isUserAway(await window.electronAPI.getSystemIdleSeconds())
+    let lastInputAt = 0
+    const update = (nowAway: boolean): void => {
       if (nowAway === away) return
       away = nowAway
       setUserAway(nowAway)
       if (!nowAway) clearWatchedEntries()
     }
+    const check = async (): Promise<void> => {
+      const systemIdle = await window.electronAPI.getSystemIdleSeconds()
+      update(isUserAway(Math.min(systemIdle, (Date.now() - lastInputAt) / 1000)))
+    }
+    // Input in this window proves someone is here, at once and before the click or key acts,
+    // so a tab clicked on return answers its alert without waiting for the next idle poll.
+    const onInput = (): void => {
+      lastInputAt = Date.now()
+      update(false)
+    }
+    window.addEventListener('pointerdown', onInput, true)
+    window.addEventListener('keydown', onInput, true)
     const timer = setInterval(() => void check(), IDLE_POLL_MS)
     return () => {
       clearInterval(timer)
+      window.removeEventListener('pointerdown', onInput, true)
+      window.removeEventListener('keydown', onInput, true)
       setUserAway(false)
     }
   }, [])
