@@ -96,7 +96,7 @@ function createWindow(projectId?: string): void {
 
   win.on('ready-to-show', () => {
     // End-to-end tests open the app in the background so they do not take focus from whoever is at the machine
-    if (process.env.TERMINALLYSKILL_BACKGROUND_WINDOW === '1') win.showInactive()
+    if (process.env.TERMINALLYSKILL_BACKGROUND_WINDOW === '1' && process.platform === 'darwin') win.showInactive()
     else win.show()
   })
 
