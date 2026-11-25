@@ -14,7 +14,7 @@ const checks = [
   {
     label: 'Electron stays on the supported v45 runtime baseline',
     value: packageJson.devDependencies?.electron,
-    expected: '^45.1.0'
+    expected: '^45.5.0'
   },
   {
     label: 'ws stays on the patched runtime baseline',
